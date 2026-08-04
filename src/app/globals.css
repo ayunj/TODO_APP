@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * 색은 전부 여기 한 곳에서만 정한다. 화면 톤을 바꾸려면 이 블록만 고치면 된다.
+ * 컨셉 — 따뜻한 손그림 감성의 다이어리. 무인양품처럼 조용하고 여백이 많게.
+ */
+:root {
+  --bg: #faf6f0; /* Background */
+  --card: #ffffff; /* Surface */
+  --sunk: #f5f0e9; /* 눌린 자리·완료한 카드 */
+  --memo: #fbf6ee; /* 메모 종이 */
+
+  --ink: #615953; /* Text Primary */
+  --ink2: #8c8078; /* 라벨 — 가이드의 Secondary보다 한 톤 진하게 (12.5px에서 읽히게) */
+  --ink3: #a59a92; /* Text Secondary */
+  --line: #efe8df; /* Divider */
+  --line2: #f5efe7;
+
+  --accent: #d97a5e; /* Primary */
+  --accent-soft: #f4d7cc; /* Primary Light */
+  --accent-tint: #fcf2ed; /* 안 눌린 칩 바탕 */
+  --ok: #73b79f; /* Secondary (Sage) — 완료 체크 */
+
+  --cycle: #c9a068; /* 주기 표시 */
+  --high: #d98b7a; /* 삭제·일요일 */
+  --done: #d9d2cb; /* Disabled */
+
+  --track: #f2ece6; /* Progress Bar Background */
+  --star: #f0c58a;
+  --edge: #d8d3ce; /* 안 채운 체크 테두리 */
+  --faint: #d9d2cb;
+  --danger-soft: #fdf1f1;
+  --placeholder: #c7bdb5;
+
+  --bar: 66px;
+}
+
+@layer base {
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    overscroll-behavior-y: none;
+  }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-weight: 400;
+    line-height: 1.55;
+    letter-spacing: -0.01em;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button {
+    font: inherit;
+    color: inherit;
+    text-align: inherit;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 10px;
+  }
+}
+
+@layer components {
+  /* 화면 폭 — 웹페이지가 아니라 앱처럼 보이게 가운데 한 칸 */
+  .wrap {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 0 16px calc(var(--bar) + 36px + env(safe-area-inset-bottom));
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 아래에서 올라오는 시트 */
+  .sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 31;
+    max-width: 520px;
+    max-height: 90vh;
+    margin: 0 auto;
+    overflow: auto;
+    background: var(--bg);
+    border-radius: 26px 26px 0 0;
+    padding: 12px 18px calc(24px + env(safe-area-inset-bottom));
+    transform: translateY(102%);
+    transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .sheet.on {
+    transform: translateY(0);
+  }
+  .sheet::before {
+    content: '';
+    display: block;
+    width: 38px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--line);
+    margin: 0 auto 16px;
+  }
+
+  .field-input {
+    width: 100%;
+    padding: 13px 14px;
+    border: 0;
+    border-radius: 14px;
+    background: var(--card);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    font-family: inherit;
+    font-size: 14.5px;
+    color: var(--ink);
+  }
+  .field-input::placeholder {
+    color: var(--placeholder);
+  }
+  .field-input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
