@@ -7,6 +7,7 @@ export class MemoryRepository implements Repository {
   private tasks = new Map<string, Task>();
   private presets = new Map<string, Preset>();
   private shopping = new Map<string, ShopItem>();
+  private memo = '';
   private settings: Settings = { onboarded: false };
 
   async init() {}
@@ -50,6 +51,12 @@ export class MemoryRepository implements Repository {
   async deleteShopItems(ids: string[]) {
     ids.forEach((id) => this.shopping.delete(id));
   }
+  async loadMemo() {
+    return this.memo;
+  }
+  async saveMemo(text: string) {
+    this.memo = text;
+  }
   async loadSettings(): Promise<Settings> {
     return { ...this.settings };
   }
@@ -61,5 +68,6 @@ export class MemoryRepository implements Repository {
     this.tasks.clear();
     this.presets.clear();
     this.shopping.clear();
+    this.memo = '';
   }
 }

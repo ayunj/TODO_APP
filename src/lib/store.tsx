@@ -61,6 +61,10 @@ interface StoreValue {
   /** 기록에 있는 것을 다시 목록에 올린다 (새 항목으로 — 지난 구매 기록은 그대로 둔다) */
   rebuyShopItem: (id: string) => void;
 
+  /* ── 메모 ── */
+  memo: string;
+  saveMemo: (text: string) => void;
+
   addCategory: (name: string, color: string) => void;
   updateCategory: (id: string, name: string, color: string) => void;
   /** 지운 카테고리의 할 일은 남은 카테고리로 옮긴다. 옮겨진 개수를 돌려준다. */
@@ -87,6 +91,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [presets, setPresets] = useState<Preset[]>([]);
   const [shopping, setShopping] = useState<ShopItem[]>([]);
+  const [memo, setMemo] = useState('');
 
   /** 쓰기는 화면을 먼저 바꾸고 뒤에서 조용히 저장한다 (낙관적 업데이트) */
   const repo = useCallback(() => {
@@ -106,7 +111,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       const r = repo();
       await r.init();
-      const [snap, settings] = await Promise.all([r.loadAll(), r.loadSettings()]);
+      const [snap, settings, savedMemo] = await Promise.all([
+        r.loadAll(),
+        r.loadSettings(),
+        r.loadMemo(),
+      ]);
       if (!alive) return;
 
       let cats = snap.categories;
@@ -142,6 +151,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           boughtOn: i.boughtOn ?? null,
         })),
       );
+      setMemo(savedMemo);
       setOnboarded(settings.onboarded);
       setLoading(false);
     })();
@@ -445,6 +455,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [shopping, addShopItem],
   );
 
+  /* ───────── 메모 ───────── */
+
+  const saveMemo = useCallback(
+    (text: string) => {
+      setMemo(text);
+      write((r) => r.saveMemo(text));
+    },
+    [write],
+  );
+
   /* ───────── 카테고리 ───────── */
 
   const addCategory = useCallback(
@@ -506,6 +526,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setTasks([]);
     setPresets([]);
     setShopping([]);
+    setMemo('');
     setCategories(cats);
     write(async (r) => {
       await r.clearAll();
@@ -536,6 +557,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       toggleShopItem,
       removeShopItem,
       rebuyShopItem,
+      memo,
+      saveMemo,
       addCategory,
       updateCategory,
       removeCategory,
@@ -563,6 +586,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       toggleShopItem,
       removeShopItem,
       rebuyShopItem,
+      memo,
+      saveMemo,
       addCategory,
       updateCategory,
       removeCategory,

@@ -1,15 +1,16 @@
 import type { Repository, Snapshot } from '../repository';
-import type { Category, Preset, Settings, ShopItem, Task } from '../types';
+import type { Category, Memo, Preset, Settings, ShopItem, Task } from '../types';
 
 const DB_NAME = 'todolist';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 /** 초기화가 비우는 것들 */
-const DATA_STORES = ['categories', 'tasks', 'presets', 'shopping'] as const;
+const DATA_STORES = ['categories', 'tasks', 'presets', 'shopping', 'memo'] as const;
 const STORES = [...DATA_STORES, 'settings'] as const;
 type StoreName = (typeof STORES)[number];
 
 const SETTINGS_ID = 'app';
 const DEFAULT_SETTINGS: Settings = { onboarded: false };
+const MEMO_ID = 'main';
 
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -118,6 +119,16 @@ export class IndexedDbRepository implements Repository {
   }
   deleteShopItems(ids: string[]) {
     return this.del('shopping', ids);
+  }
+
+  async loadMemo(): Promise<string> {
+    const rows = await this.readAll<Memo>('memo');
+    return rows.find((m) => m.id === MEMO_ID)?.text ?? '';
+  }
+
+  async saveMemo(text: string): Promise<void> {
+    const memo: Memo = { id: MEMO_ID, roomId: null, text, updatedAt: new Date().toISOString() };
+    return this.put('memo', [memo]);
   }
 
   async loadSettings(): Promise<Settings> {

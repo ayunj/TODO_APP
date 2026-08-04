@@ -78,7 +78,20 @@ export interface ShopItem {
   updatedAt: string;
 }
 
-export type ViewKind = 'day' | 'month' | 'shop' | 'log';
+/**
+ * 흘러가지 않는 종이 한 장. 계좌번호·관리비처럼 한 번 적어두고 계속 보는 것들.
+ * 대화창이 아니다 — 카톡이 불편한 건 대화가 안 돼서가 아니라 위로 흘러가버려서다.
+ */
+export interface Memo {
+  /** 지금은 한 장뿐이라 늘 'main' */
+  id: string;
+  roomId: string | null;
+  text: string;
+  updatedAt: string;
+}
+
+/** shop·memo는 탭이 아니라 헤더에서 밀고 들어가는 화면 */
+export type ViewKind = 'day' | 'month' | 'log' | 'shop' | 'memo';
 
 /** 할 일이 아니라 이 기기의 상태. 초기화해도 지워지지 않는다. */
 export interface Settings {

@@ -8,6 +8,7 @@ import WelcomeScreen from './WelcomeScreen';
 import SheetHost from '@/sheets/SheetHost';
 import DayScreen from '@/screens/DayScreen';
 import LogScreen from '@/screens/LogScreen';
+import MemoScreen from '@/screens/MemoScreen';
 import MonthScreen from '@/screens/MonthScreen';
 import ShopScreen from '@/screens/ShopScreen';
 import { useStore } from '@/lib/store';
@@ -16,6 +17,8 @@ import { useUi } from '@/lib/ui';
 export default function AppShell() {
   const { loading, onboarded } = useStore();
   const { view } = useUi();
+
+  const pushed = view === 'shop' || view === 'memo';
 
   if (loading) {
     return (
@@ -46,14 +49,16 @@ export default function AppShell() {
             <MonthScreen />
           ) : view === 'shop' ? (
             <ShopScreen />
+          ) : view === 'memo' ? (
+            <MemoScreen />
           ) : (
             <LogScreen />
           )}
         </main>
       </div>
 
-      {/* 장보기는 밀고 들어온 화면이라 탭바도 + 버튼도 내린다 (입력 줄이 위에 있다) */}
-      {view !== 'shop' && (
+      {/* 밀고 들어온 화면에서는 탭바도 + 버튼도 내린다 — 나가는 길은 뒤로가기 하나 */}
+      {!pushed && (
         <>
           <Fab />
           <TabBar />

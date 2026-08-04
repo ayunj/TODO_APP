@@ -71,6 +71,15 @@ export function ShopIcon({ className }: Props) {
   );
 }
 
+export function MemoIcon({ className }: Props) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={1.5}>
+      <path d="M5 4.5h14v15H5z" />
+      <path d="M8.5 9h7M8.5 12.5h7M8.5 16h4" />
+    </svg>
+  );
+}
+
 export function LogIcon({ className }: Props) {
   return (
     <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={1.5}>

@@ -24,6 +24,10 @@ export interface Repository {
   saveShopItem(item: ShopItem): Promise<void>;
   deleteShopItems(ids: string[]): Promise<void>;
 
+  /** 메모는 한 장뿐이라 통째로 읽고 쓴다 */
+  loadMemo(): Promise<string>;
+  saveMemo(text: string): Promise<void>;
+
   loadSettings(): Promise<Settings>;
   saveSettings(patch: Partial<Settings>): Promise<void>;
 

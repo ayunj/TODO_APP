@@ -18,10 +18,10 @@ export type Sheet =
 interface UiValue {
   view: ViewKind;
   setView: (v: ViewKind) => void;
-  /** 장보기로 밀고 들어간다 (탭이 아니라 헤더에서) */
-  openShop: () => void;
+  /** 탭이 아닌 화면(장보기·메모)으로 밀고 들어간다 */
+  pushView: (v: 'shop' | 'memo') => void;
   /** 들어오기 전에 보던 탭으로 되돌아간다 */
-  closeShop: () => void;
+  popView: () => void;
   /** 지금 보고 있는 날 (월·기록 탭에서는 그 달의 아무 날) */
   cursor: DateStr;
   setCursor: (d: DateStr) => void;
@@ -46,11 +46,12 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
     () => ({
       view,
       setView,
-      openShop: () => {
-        setBefore(view === 'shop' ? 'day' : view);
-        setView('shop');
+      pushView: (v) => {
+        // 밀린 화면에서 또 밀고 들어가도 돌아갈 탭은 잃지 않는다
+        if (view !== 'shop' && view !== 'memo') setBefore(view);
+        setView(v);
       },
-      closeShop: () => setView(before),
+      popView: () => setView(before),
       cursor,
       setCursor,
       filter,
