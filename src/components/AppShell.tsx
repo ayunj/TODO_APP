@@ -60,9 +60,13 @@ export default function AppShell() {
         </main>
       </div>
 
-      {/* 장보기에는 입력 줄이 늘 떠 있어서 + 버튼이 필요 없다 */}
-      {view !== 'shop' && <Fab />}
-      <TabBar />
+      {/* 장보기는 밀고 들어온 화면이라 탭바도 + 버튼도 내린다 (입력 줄이 위에 있다) */}
+      {view !== 'shop' && (
+        <>
+          <Fab />
+          <TabBar />
+        </>
+      )}
       <SheetHost />
       <Toast />
     </>

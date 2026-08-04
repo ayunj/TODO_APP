@@ -53,12 +53,14 @@ interface StoreValue {
 
   /* ── 장보기 ── */
   shopping: ShopItem[];
-  addShopItem: (title: string) => void;
-  renameShopItem: (id: string, title: string) => void;
+  addShopItem: (title: string, extra?: { note?: string; place?: string }) => void;
+  updateShopItem: (id: string, input: { title: string; note: string; place: string }) => void;
   toggleShopItem: (id: string) => void;
   removeShopItem: (id: string) => void;
-  /** 담은 것만 한 번에 치운다 */
-  clearBoughtShopItems: () => void;
+  /** 담은 것을 기록으로 넘긴다. 지우지 않는다 — 언제 샀는지가 남아야 한다. */
+  archiveBoughtShopItems: () => void;
+  /** 기록에 있는 것을 다시 목록에 올린다 (새 항목으로 — 지난 구매 기록은 그대로 둔다) */
+  rebuyShopItem: (id: string) => void;
 
   addCategory: (name: string, color: string) => void;
   updateCategory: (id: string, name: string, color: string) => void;
@@ -132,7 +134,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setCategories(cats);
       setTasks(snap.tasks);
       setPresets(seeded);
-      setShopping(snap.shopping);
+      // 나중에 생긴 칸들이 없는 옛 항목에는 기본값을 채워준다
+      setShopping(
+        snap.shopping.map((i) => ({
+          ...i,
+          note: i.note ?? '',
+          place: i.place ?? '',
+          archived: i.archived ?? false,
+          boughtOn: i.boughtOn ?? null,
+        })),
+      );
       setOnboarded(settings.onboarded);
       setLoading(false);
     })();
@@ -359,7 +370,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   /* ───────── 장보기 ───────── */
 
   const addShopItem = useCallback(
-    (title: string) => {
+    (title: string, extra?: { note?: string; place?: string }) => {
       const trimmed = title.trim();
       if (!trimmed) return;
       const now = stamp();
@@ -367,8 +378,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         id: uid(),
         roomId: null,
         title: trimmed,
+        note: extra?.note ?? '',
+        place: extra?.place ?? '',
         done: false,
+        boughtOn: null,
         doneBy: null,
+        archived: false,
         createdAt: now,
         updatedAt: now,
       };
@@ -389,10 +404,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [shopping, write],
   );
 
-  const renameShopItem = useCallback(
-    (id: string, title: string) => {
-      const trimmed = title.trim();
-      if (trimmed) patchShopItem(id, { title: trimmed });
+  const updateShopItem = useCallback(
+    (id: string, input: { title: string; note: string; place: string }) => {
+      const title = input.title.trim();
+      if (!title) return;
+      patchShopItem(id, { title, note: input.note.trim(), place: input.place.trim() });
     },
     [patchShopItem],
   );
@@ -400,7 +416,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const toggleShopItem = useCallback(
     (id: string) => {
       const current = shopping.find((i) => i.id === id);
-      if (current) patchShopItem(id, { done: !current.done, doneBy: null });
+      if (!current) return;
+      const done = !current.done;
+      patchShopItem(id, { done, boughtOn: done ? todayStr() : null, doneBy: null });
     },
     [shopping, patchShopItem],
   );
@@ -413,13 +431,39 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [write],
   );
 
-  const clearBoughtShopItems = useCallback(() => {
-    const gone = shopping.filter((i) => i.done).map((i) => i.id);
-    if (gone.length === 0) return;
-    setShopping((prev) => prev.filter((i) => !i.done));
-    write((r) => r.deleteShopItems(gone));
-    toast(`${gone.length}개 치웠습니다`);
+  const archiveBoughtShopItems = useCallback(() => {
+    const moving = shopping.filter((i) => !i.archived && i.done);
+    if (moving.length === 0) return;
+    const now = stamp();
+    const archived = moving.map((i) => ({
+      ...i,
+      archived: true,
+      boughtOn: i.boughtOn ?? todayStr(),
+      updatedAt: now,
+    }));
+    const byId = new Map(archived.map((i) => [i.id, i]));
+    setShopping(shopping.map((i) => byId.get(i.id) ?? i));
+    write(async (r) => {
+      for (const i of archived) await r.saveShopItem(i);
+    });
+    toast(`${moving.length}개 기록으로 넘겼습니다`);
   }, [shopping, write]);
+
+  /** 기록은 그대로 두고 같은 이름으로 새로 담는다 — 살 때마다 한 줄씩 쌓여야 한다 */
+  const rebuyShopItem = useCallback(
+    (id: string) => {
+      const source = shopping.find((i) => i.id === id);
+      if (!source) return;
+      if (shopping.some((i) => !i.archived && i.title === source.title)) {
+        toast(`${source.title} — 이미 목록에 있어요`);
+        return;
+      }
+      // 메모·구입처도 같이 딸려온다 — 늘 쿠팡에서 저지방 우유를 산다면 매번 다시 적을 일이 없다
+      addShopItem(source.title, { note: source.note, place: source.place });
+      toast(`${source.title} 담음`);
+    },
+    [shopping, addShopItem],
+  );
 
   /* ───────── 카테고리 ───────── */
 
@@ -508,10 +552,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       applyPreset,
       shopping,
       addShopItem,
-      renameShopItem,
+      updateShopItem,
       toggleShopItem,
       removeShopItem,
-      clearBoughtShopItems,
+      archiveBoughtShopItems,
+      rebuyShopItem,
       addCategory,
       updateCategory,
       removeCategory,
@@ -535,10 +580,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       applyPreset,
       shopping,
       addShopItem,
-      renameShopItem,
+      updateShopItem,
       toggleShopItem,
       removeShopItem,
-      clearBoughtShopItems,
+      archiveBoughtShopItems,
+      rebuyShopItem,
       addCategory,
       updateCategory,
       removeCategory,

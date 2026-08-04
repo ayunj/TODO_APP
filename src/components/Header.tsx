@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import CategoryFilter from './CategoryFilter';
-import { GearIcon } from './Icons';
+import { BackIcon, GearIcon, ShopIcon } from './Icons';
 import { DOW, addDays, addMonths, dowOf, monthOf, todayStr, yearOf, dayOf } from '@/lib/date';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 
 /** 상단 고정 헤더 — 날짜 제목 + 이전/오늘/다음 + 설정 */
 export default function Header() {
-  const { view, cursor, setCursor, openSheet } = useUi();
+  const { view, cursor, setCursor, openSheet, openShop, closeShop } = useUi();
   const { shopping } = useStore();
   const [stuck, setStuck] = useState(false);
 
@@ -28,7 +28,7 @@ export default function Header() {
     setCursor(view === 'day' ? addDays(cursor, n) : addMonths(cursor, n));
 
   const isToday = cursor === todayStr();
-  const left = shopping.filter((i) => !i.done).length;
+  const left = shopping.filter((i) => !i.archived && !i.done).length;
   const eyebrow =
     view === 'day'
       ? isToday
@@ -47,6 +47,17 @@ export default function Header() {
       className={`sticky top-0 z-[15] -mx-4 bg-bg px-4 ${stuck ? 'shadow-[0_1px_0_var(--line)]' : ''}`}
     >
       <div className="flex items-center gap-2 pb-3 pt-[calc(14px+env(safe-area-inset-top))]">
+        {!dated && (
+          <button
+            type="button"
+            aria-label="돌아가기"
+            onClick={closeShop}
+            className="-ml-1.5 grid h-[38px] w-[38px] flex-none place-items-center rounded-full text-ink2 active:bg-sunk"
+          >
+            <BackIcon className="h-5 w-5" />
+          </button>
+        )}
+
         <div className="min-w-0 flex-1">
           <div className="text-[10.5px] font-medium tracking-[.1em] text-ink3">{eyebrow}</div>
           <h1 className="mt-px font-round text-[21px] font-normal leading-[1.2] tracking-[-.02em]">
@@ -91,6 +102,23 @@ export default function Header() {
             ›
           </button>
         </div>
+
+        {/* 장보기는 탭을 차지하지 않고 여기로 들어간다. 담아둔 게 있으면 점으로 알린다. */}
+        {dated && (
+          <button
+            type="button"
+            aria-label={left > 0 ? `장보기 ${left}개 담아둠` : '장보기'}
+            onClick={openShop}
+            className="relative grid h-[38px] w-[38px] flex-none place-items-center rounded-full bg-card text-ink2 shadow-card active:bg-sunk"
+          >
+            <ShopIcon className="h-[19px] w-[19px]" />
+            {left > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-accent px-1 font-mono text-[10px] font-medium text-white">
+                {left}
+              </span>
+            )}
+          </button>
+        )}
 
         <button
           type="button"

@@ -6,6 +6,7 @@ import PresetListSheet from './PresetListSheet';
 import PresetSheet from './PresetSheet';
 import SettingsSheet from './SettingsSheet';
 import ShareSheet from './ShareSheet';
+import ShopItemSheet from './ShopItemSheet';
 import TaskSheet from './TaskSheet';
 import { useUi } from '@/lib/ui';
 
@@ -27,6 +28,8 @@ export default function SheetHost() {
       return <CategoryListSheet />;
     case 'category':
       return <CategorySheet key={sheet.id ?? 'new'} id={sheet.id} />;
+    case 'shopItem':
+      return <ShopItemSheet key={sheet.id} id={sheet.id} />;
     case 'share':
       return <ShareSheet />;
   }

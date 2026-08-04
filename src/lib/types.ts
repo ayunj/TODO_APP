@@ -61,10 +61,18 @@ export interface ShopItem {
   /** null이면 개인 (2단계에서 방 id가 들어온다) */
   roomId: string | null;
   title: string;
+  /** '저지방으로', '2개' — 마트에서 헷갈리지 않게 */
+  note: string;
+  /** '쿠팡', '이마트' — 어디서 사는지. 자유롭게 적는다 */
+  place: string;
   /** 담았음 */
   done: boolean;
+  /** 담은 날 — 'YYYY-MM-DD'. 언제 샀는지는 이걸로 안다 */
+  boughtOn: DateStr | null;
   /** 담은 사람 표시 이름 (2단계) */
   doneBy: string | null;
+  /** 치우면 목록에서 내려가고 기록으로 남는다. 지우는 게 아니다. */
+  archived: boolean;
   createdAt: string;
   updatedAt: string;
 }

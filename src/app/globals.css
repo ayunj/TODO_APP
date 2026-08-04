@@ -126,6 +126,8 @@
   .field-input:focus {
     outline: 2px solid var(--accent);
     outline-offset: 0;
+    /* 눌렀을 때 브라우저가 스크롤해 올리는데, 고정 헤더 밑으로 들어가면 윗변이 잘린다 */
+    scroll-margin-top: 120px;
   }
 }
 

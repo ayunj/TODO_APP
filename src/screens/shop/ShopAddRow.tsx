@@ -20,7 +20,8 @@ export default function ShopAddRow() {
   };
 
   return (
-    <div className="mb-3 flex items-center gap-2">
+    // 포커스 테두리가 고정 헤더에 닿지 않게 살짝 띄운다
+    <div className="mb-3 mt-0.5 flex items-center gap-2">
       <input
         ref={ref}
         type="text"

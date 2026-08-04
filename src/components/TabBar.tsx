@@ -1,15 +1,15 @@
 'use client';
 
-import { DayIcon, LogIcon, MonthIcon, ShopIcon } from './Icons';
+import { DayIcon, LogIcon, MonthIcon } from './Icons';
 import { useUi } from '@/lib/ui';
 import type { ViewKind } from '@/lib/types';
 
 type IconType = React.ComponentType<{ className?: string }>;
 
+/** 메인은 할 일이다. 장보기는 탭이 아니라 헤더에서 밀고 들어간다. */
 const TABS: { v: ViewKind; label: string; Icon: IconType }[] = [
   { v: 'day', label: '일', Icon: DayIcon },
   { v: 'month', label: '월', Icon: MonthIcon },
-  { v: 'shop', label: '장보기', Icon: ShopIcon },
   { v: 'log', label: '기록', Icon: LogIcon },
 ];
 
