@@ -1,10 +1,10 @@
 import type { Repository, Snapshot } from '../repository';
-import type { Category, Preset, Settings, Task } from '../types';
+import type { Category, Preset, Settings, ShopItem, Task } from '../types';
 
 const DB_NAME = 'todolist';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 /** 초기화가 비우는 것들 */
-const DATA_STORES = ['categories', 'tasks', 'presets'] as const;
+const DATA_STORES = ['categories', 'tasks', 'presets', 'shopping'] as const;
 const STORES = [...DATA_STORES, 'settings'] as const;
 type StoreName = (typeof STORES)[number];
 
@@ -72,15 +72,17 @@ export class IndexedDbRepository implements Repository {
   }
 
   async loadAll(): Promise<Snapshot> {
-    const [categories, tasks, presets] = await Promise.all([
+    const [categories, tasks, presets, shopping] = await Promise.all([
       this.readAll<Category>('categories'),
       this.readAll<Task>('tasks'),
       this.readAll<Preset>('presets'),
+      this.readAll<ShopItem>('shopping'),
     ]);
     return {
       categories: categories.sort((a, b) => a.order - b.order),
       tasks,
       presets,
+      shopping: shopping.sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
     };
   }
 
@@ -109,6 +111,13 @@ export class IndexedDbRepository implements Repository {
   }
   deletePreset(id: string) {
     return this.del('presets', [id]);
+  }
+
+  saveShopItem(item: ShopItem) {
+    return this.put('shopping', [item]);
+  }
+  deleteShopItems(ids: string[]) {
+    return this.del('shopping', ids);
   }
 
   async loadSettings(): Promise<Settings> {

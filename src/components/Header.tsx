@@ -4,12 +4,17 @@ import { useEffect, useState } from 'react';
 import CategoryFilter from './CategoryFilter';
 import { GearIcon } from './Icons';
 import { DOW, addDays, addMonths, dowOf, monthOf, todayStr, yearOf, dayOf } from '@/lib/date';
+import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 
 /** 상단 고정 헤더 — 날짜 제목 + 이전/오늘/다음 + 설정 */
 export default function Header() {
   const { view, cursor, setCursor, openSheet } = useUi();
+  const { shopping } = useStore();
   const [stuck, setStuck] = useState(false);
+
+  // 장보기에는 날짜도 카테고리도 없다 — 날짜 이동과 필터 줄을 아예 내리지 않는다
+  const dated = view !== 'shop';
 
   useEffect(() => {
     const onScroll = () => setStuck(window.scrollY > 4);
@@ -23,6 +28,7 @@ export default function Header() {
     setCursor(view === 'day' ? addDays(cursor, n) : addMonths(cursor, n));
 
   const isToday = cursor === todayStr();
+  const left = shopping.filter((i) => !i.done).length;
   const eyebrow =
     view === 'day'
       ? isToday
@@ -30,7 +36,11 @@ export default function Header() {
         : `${yearOf(cursor)}년`
       : view === 'month'
         ? `${yearOf(cursor)}년`
-        : '자주 하는 일';
+        : view === 'shop'
+          ? left > 0
+            ? `${left}개 담아둠`
+            : '살 것 적어두기'
+          : '자주 하는 일';
 
   return (
     <header
@@ -47,13 +57,15 @@ export default function Header() {
               </>
             ) : view === 'month' ? (
               `${monthOf(cursor)}월`
+            ) : view === 'shop' ? (
+              '장보기'
             ) : (
               `${monthOf(cursor)}월 기록`
             )}
           </h1>
         </div>
 
-        <div className="flex items-center gap-px">
+        <div className={`flex items-center gap-px ${dated ? '' : 'hidden'}`}>
           <button
             type="button"
             aria-label="이전"
@@ -90,7 +102,7 @@ export default function Header() {
         </button>
       </div>
 
-      <CategoryFilter />
+      {dated ? <CategoryFilter /> : <div className="pb-[14px]" />}
     </header>
   );
 }

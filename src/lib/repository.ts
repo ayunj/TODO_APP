@@ -1,4 +1,4 @@
-import type { Category, Preset, Settings, Task } from './types';
+import type { Category, Preset, Settings, ShopItem, Task } from './types';
 
 /**
  * 데이터 접근은 반드시 이 한 겹을 지난다.
@@ -21,6 +21,9 @@ export interface Repository {
   savePreset(preset: Preset): Promise<void>;
   deletePreset(id: string): Promise<void>;
 
+  saveShopItem(item: ShopItem): Promise<void>;
+  deleteShopItems(ids: string[]): Promise<void>;
+
   loadSettings(): Promise<Settings>;
   saveSettings(patch: Partial<Settings>): Promise<void>;
 
@@ -32,4 +35,5 @@ export interface Snapshot {
   categories: Category[];
   tasks: Task[];
   presets: Preset[];
+  shopping: ShopItem[];
 }

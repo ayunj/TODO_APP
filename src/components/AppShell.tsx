@@ -10,6 +10,7 @@ import SheetHost from '@/sheets/SheetHost';
 import DayScreen from '@/screens/DayScreen';
 import LogScreen from '@/screens/LogScreen';
 import MonthScreen from '@/screens/MonthScreen';
+import ShopScreen from '@/screens/ShopScreen';
 import { BASE_ACCENT } from '@/lib/constants';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
@@ -47,11 +48,20 @@ export default function AppShell() {
       <div className="wrap">
         <Header />
         <main>
-          {view === 'day' ? <DayScreen /> : view === 'month' ? <MonthScreen /> : <LogScreen />}
+          {view === 'day' ? (
+            <DayScreen />
+          ) : view === 'month' ? (
+            <MonthScreen />
+          ) : view === 'shop' ? (
+            <ShopScreen />
+          ) : (
+            <LogScreen />
+          )}
         </main>
       </div>
 
-      <Fab />
+      {/* 장보기에는 입력 줄이 늘 떠 있어서 + 버튼이 필요 없다 */}
+      {view !== 'shop' && <Fab />}
       <TabBar />
       <SheetHost />
       <Toast />

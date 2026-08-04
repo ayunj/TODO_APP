@@ -8,7 +8,7 @@ import { baseOf, spawnNext } from './repeat';
 import { getRepository } from './repo';
 import type { Repository } from './repository';
 import { toast } from './toast';
-import type { Category, DateStr, Preset, Priority, Task } from './types';
+import type { Category, DateStr, Preset, Priority, ShopItem, Task } from './types';
 
 export interface TaskInput {
   title: string;
@@ -51,6 +51,15 @@ interface StoreValue {
   /** 칩을 눌러 그 날 목록에 바로 넣기 */
   applyPreset: (presetId: string, date: DateStr) => void;
 
+  /* ── 장보기 ── */
+  shopping: ShopItem[];
+  addShopItem: (title: string) => void;
+  renameShopItem: (id: string, title: string) => void;
+  toggleShopItem: (id: string) => void;
+  removeShopItem: (id: string) => void;
+  /** 담은 것만 한 번에 치운다 */
+  clearBoughtShopItems: () => void;
+
   addCategory: (name: string, color: string) => void;
   updateCategory: (id: string, name: string, color: string) => void;
   /** 지운 카테고리의 할 일은 남은 카테고리로 옮긴다. 옮겨진 개수를 돌려준다. */
@@ -76,6 +85,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [presets, setPresets] = useState<Preset[]>([]);
+  const [shopping, setShopping] = useState<ShopItem[]>([]);
 
   /** 쓰기는 화면을 먼저 바꾸고 뒤에서 조용히 저장한다 (낙관적 업데이트) */
   const repo = useCallback(() => {
@@ -122,6 +132,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setCategories(cats);
       setTasks(snap.tasks);
       setPresets(seeded);
+      setShopping(snap.shopping);
       setOnboarded(settings.onboarded);
       setLoading(false);
     })();
@@ -345,6 +356,71 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [presets, addTask],
   );
 
+  /* ───────── 장보기 ───────── */
+
+  const addShopItem = useCallback(
+    (title: string) => {
+      const trimmed = title.trim();
+      if (!trimmed) return;
+      const now = stamp();
+      const item: ShopItem = {
+        id: uid(),
+        roomId: null,
+        title: trimmed,
+        done: false,
+        doneBy: null,
+        createdAt: now,
+        updatedAt: now,
+      };
+      setShopping((prev) => [...prev, item]);
+      write((r) => r.saveShopItem(item));
+    },
+    [write],
+  );
+
+  const patchShopItem = useCallback(
+    (id: string, patch: Partial<ShopItem>) => {
+      const current = shopping.find((i) => i.id === id);
+      if (!current) return;
+      const updated: ShopItem = { ...current, ...patch, updatedAt: stamp() };
+      setShopping(shopping.map((i) => (i.id === id ? updated : i)));
+      write((r) => r.saveShopItem(updated));
+    },
+    [shopping, write],
+  );
+
+  const renameShopItem = useCallback(
+    (id: string, title: string) => {
+      const trimmed = title.trim();
+      if (trimmed) patchShopItem(id, { title: trimmed });
+    },
+    [patchShopItem],
+  );
+
+  const toggleShopItem = useCallback(
+    (id: string) => {
+      const current = shopping.find((i) => i.id === id);
+      if (current) patchShopItem(id, { done: !current.done, doneBy: null });
+    },
+    [shopping, patchShopItem],
+  );
+
+  const removeShopItem = useCallback(
+    (id: string) => {
+      setShopping((prev) => prev.filter((i) => i.id !== id));
+      write((r) => r.deleteShopItems([id]));
+    },
+    [write],
+  );
+
+  const clearBoughtShopItems = useCallback(() => {
+    const gone = shopping.filter((i) => i.done).map((i) => i.id);
+    if (gone.length === 0) return;
+    setShopping((prev) => prev.filter((i) => !i.done));
+    write((r) => r.deleteShopItems(gone));
+    toast(`${gone.length}개 치웠습니다`);
+  }, [shopping, write]);
+
   /* ───────── 카테고리 ───────── */
 
   const addCategory = useCallback(
@@ -405,6 +481,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const cats = DEFAULT_CATEGORIES.map((c) => ({ ...c, updatedAt: stamp() }));
     setTasks([]);
     setPresets([]);
+    setShopping([]);
     setCategories(cats);
     write(async (r) => {
       await r.clearAll();
@@ -429,6 +506,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       updatePreset,
       removePreset,
       applyPreset,
+      shopping,
+      addShopItem,
+      renameShopItem,
+      toggleShopItem,
+      removeShopItem,
+      clearBoughtShopItems,
       addCategory,
       updateCategory,
       removeCategory,
@@ -450,6 +533,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       updatePreset,
       removePreset,
       applyPreset,
+      shopping,
+      addShopItem,
+      renameShopItem,
+      toggleShopItem,
+      removeShopItem,
+      clearBoughtShopItems,
       addCategory,
       updateCategory,
       removeCategory,

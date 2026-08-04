@@ -52,7 +52,24 @@ export interface Preset {
   updatedAt: string;
 }
 
-export type ViewKind = 'day' | 'month' | 'log';
+/**
+ * 장보기 항목. 할 일이 아니다 — 날짜도 주기도 우선순위도 없다.
+ * 날짜를 붙이면 안 산 우유가 '3일 지남'으로 뜨는데, 그건 밀린 일이 아니다.
+ */
+export interface ShopItem {
+  id: string;
+  /** null이면 개인 (2단계에서 방 id가 들어온다) */
+  roomId: string | null;
+  title: string;
+  /** 담았음 */
+  done: boolean;
+  /** 담은 사람 표시 이름 (2단계) */
+  doneBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ViewKind = 'day' | 'month' | 'shop' | 'log';
 
 /** 할 일이 아니라 이 기기의 상태. 초기화해도 지워지지 않는다. */
 export interface Settings {

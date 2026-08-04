@@ -62,6 +62,15 @@ export function CalendarIcon({ className }: Props) {
   );
 }
 
+export function ShopIcon({ className }: Props) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={1.5}>
+      <path d="M5.5 8h13l-1.1 10.2a2 2 0 0 1-2 1.8H8.6a2 2 0 0 1-2-1.8z" />
+      <path d="M9 8V6.2a3 3 0 0 1 6 0V8" />
+    </svg>
+  );
+}
+
 export function LogIcon({ className }: Props) {
   return (
     <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={1.5}>
