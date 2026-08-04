@@ -2,7 +2,7 @@ import type { Config } from 'tailwindcss';
 
 /**
  * 색은 전부 CSS 변수로 뺀다.
- * 카테고리 필터를 켜면 --accent 하나만 갈아끼워서 화면 전체 강조색이 따라온다.
+ * --accent는 앱 강조색으로 고정이다. 카테고리 색은 그 칩과 점에만 쓴다.
  */
 const config: Config = {
   content: ['./src/**/*.{ts,tsx}'],

@@ -75,9 +75,6 @@ export const PRIORITY_LABEL: Record<Priority, string> = {
   3: '높음',
 };
 
-/** 필터를 껐을 때의 기본 강조색 — globals.css의 --accent 초깃값과 같아야 한다 */
-export const BASE_ACCENT = '#D97A5E';
-
 const KOREAN_NUM = ['', '한', '두', '세', '네', '다섯', '여섯', '일곱', '여덟', '아홉', '열'];
 export const num = (n: number): string => (n <= 10 ? KOREAN_NUM[n] : String(n));
 

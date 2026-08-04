@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import Fab from './Fab';
 import Header from './Header';
 import TabBar from './TabBar';
@@ -11,19 +10,12 @@ import DayScreen from '@/screens/DayScreen';
 import LogScreen from '@/screens/LogScreen';
 import MonthScreen from '@/screens/MonthScreen';
 import ShopScreen from '@/screens/ShopScreen';
-import { BASE_ACCENT } from '@/lib/constants';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 
 export default function AppShell() {
-  const { loading, onboarded, categoryOf } = useStore();
-  const { view, filter } = useUi();
-
-  // 필터를 켜면 UI 강조색이 그 카테고리 색으로 바뀐다
-  useEffect(() => {
-    const color = filter ? categoryOf(filter).color : BASE_ACCENT;
-    document.documentElement.style.setProperty('--accent', color);
-  }, [filter, categoryOf]);
+  const { loading, onboarded } = useStore();
+  const { view } = useUi();
 
   if (loading) {
     return (
