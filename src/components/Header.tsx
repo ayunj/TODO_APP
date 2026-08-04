@@ -28,7 +28,7 @@ export default function Header() {
     setCursor(view === 'day' ? addDays(cursor, n) : addMonths(cursor, n));
 
   const isToday = cursor === todayStr();
-  const left = shopping.filter((i) => !i.archived && !i.done).length;
+  const left = shopping.filter((i) => !i.done).length;
   const eyebrow =
     view === 'day'
       ? isToday

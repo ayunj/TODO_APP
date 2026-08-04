@@ -7,6 +7,7 @@ import { stamp, uid } from './id';
 import { baseOf, spawnNext } from './repeat';
 import { getRepository } from './repo';
 import type { Repository } from './repository';
+import { onShopList } from './selectors';
 import { toast } from './toast';
 import type { Category, DateStr, Preset, Priority, ShopItem, Task } from './types';
 
@@ -57,8 +58,6 @@ interface StoreValue {
   updateShopItem: (id: string, input: { title: string; note: string; place: string }) => void;
   toggleShopItem: (id: string) => void;
   removeShopItem: (id: string) => void;
-  /** 담은 것을 기록으로 넘긴다. 지우지 않는다 — 언제 샀는지가 남아야 한다. */
-  archiveBoughtShopItems: () => void;
   /** 기록에 있는 것을 다시 목록에 올린다 (새 항목으로 — 지난 구매 기록은 그대로 둔다) */
   rebuyShopItem: (id: string) => void;
 
@@ -140,7 +139,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           ...i,
           note: i.note ?? '',
           place: i.place ?? '',
-          archived: i.archived ?? false,
           boughtOn: i.boughtOn ?? null,
         })),
       );
@@ -383,7 +381,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         done: false,
         boughtOn: null,
         doneBy: null,
-        archived: false,
         createdAt: now,
         updatedAt: now,
       };
@@ -431,30 +428,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [write],
   );
 
-  const archiveBoughtShopItems = useCallback(() => {
-    const moving = shopping.filter((i) => !i.archived && i.done);
-    if (moving.length === 0) return;
-    const now = stamp();
-    const archived = moving.map((i) => ({
-      ...i,
-      archived: true,
-      boughtOn: i.boughtOn ?? todayStr(),
-      updatedAt: now,
-    }));
-    const byId = new Map(archived.map((i) => [i.id, i]));
-    setShopping(shopping.map((i) => byId.get(i.id) ?? i));
-    write(async (r) => {
-      for (const i of archived) await r.saveShopItem(i);
-    });
-    toast(`${moving.length}개 기록으로 넘겼습니다`);
-  }, [shopping, write]);
-
   /** 기록은 그대로 두고 같은 이름으로 새로 담는다 — 살 때마다 한 줄씩 쌓여야 한다 */
   const rebuyShopItem = useCallback(
     (id: string) => {
       const source = shopping.find((i) => i.id === id);
       if (!source) return;
-      if (shopping.some((i) => !i.archived && i.title === source.title)) {
+      const today = todayStr();
+      if (shopping.some((i) => onShopList(i, today) && i.title === source.title)) {
         toast(`${source.title} — 이미 목록에 있어요`);
         return;
       }
@@ -555,7 +535,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       updateShopItem,
       toggleShopItem,
       removeShopItem,
-      archiveBoughtShopItems,
       rebuyShopItem,
       addCategory,
       updateCategory,
@@ -583,7 +562,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       updateShopItem,
       toggleShopItem,
       removeShopItem,
-      archiveBoughtShopItems,
       rebuyShopItem,
       addCategory,
       updateCategory,

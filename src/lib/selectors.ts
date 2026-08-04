@@ -1,5 +1,13 @@
 import { monthKey } from './date';
-import type { DateStr, Preset, Task } from './types';
+import type { DateStr, Preset, ShopItem, Task } from './types';
+
+/**
+ * 장보기에서 목록과 기록을 가르는 단 하나의 규칙.
+ * 오늘 담은 것까지는 목록에 남는다 — 마트에서 "이거 담았나" 확인이 돼야 하니까.
+ * 그 전에 담은 것은 다음 날 저절로 기록으로 내려간다. 치우는 버튼이 없는 이유다.
+ */
+export const onShopList = (item: ShopItem, today: DateStr): boolean =>
+  !item.done || item.boughtOn === today;
 
 /** 필터가 null이면 전체 */
 export type Filter = string | null;

@@ -67,12 +67,13 @@ export interface ShopItem {
   place: string;
   /** 담았음 */
   done: boolean;
-  /** 담은 날 — 'YYYY-MM-DD'. 언제 샀는지는 이걸로 안다 */
+  /**
+   * 담은 날 — 'YYYY-MM-DD'. 언제 샀는지는 이걸로 안다.
+   * 목록에 남는지 기록으로 내려가는지도 이 날짜 하나로 갈린다 — 따로 치우는 버튼이 없다.
+   */
   boughtOn: DateStr | null;
   /** 담은 사람 표시 이름 (2단계) */
   doneBy: string | null;
-  /** 치우면 목록에서 내려가고 기록으로 남는다. 지우는 게 아니다. */
-  archived: boolean;
   createdAt: string;
   updatedAt: string;
 }
