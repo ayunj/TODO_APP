@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import ScrollRow from '@/components/ScrollRow';
 import { useStore } from '@/lib/store';
 import type { ShopItem } from '@/lib/types';
 
@@ -29,7 +30,7 @@ export default function FrequentChips({ history, onList }: { history: ShopItem[]
   if (chips.length === 0) return null;
 
   return (
-    <div className="no-scrollbar -mx-4 mb-3 flex gap-[7px] overflow-x-auto px-4">
+    <ScrollRow className="mb-3">
       {chips.map((c) => (
         <button
           key={c.title}
@@ -41,6 +42,6 @@ export default function FrequentChips({ history, onList }: { history: ShopItem[]
           <span className="font-mono text-[10.5px] text-ink3">{c.n}</span>
         </button>
       ))}
-    </div>
+    </ScrollRow>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import ScrollRow from '@/components/ScrollRow';
 import { presetsFor } from '@/lib/selectors';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
@@ -11,7 +12,7 @@ export default function PresetChips() {
   const list = presetsFor(presets, filter);
 
   return (
-    <div className="no-scrollbar -mx-4 mb-[14px] flex gap-[7px] overflow-x-auto px-4">
+    <ScrollRow className="mb-[14px]">
       {list.length > 0 ? (
         list.map((p) => (
           <button
@@ -39,6 +40,6 @@ export default function PresetChips() {
             : '자주 쓰는 일이 아직 없습니다'}
         </span>
       )}
-    </div>
+    </ScrollRow>
   );
 }

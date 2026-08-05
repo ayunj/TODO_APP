@@ -1,5 +1,6 @@
 'use client';
 
+import ScrollRow from './ScrollRow';
 import { CATEGORY_TINT } from '@/lib/constants';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
@@ -17,11 +18,7 @@ export default function CategoryFilter() {
     'flex-none inline-flex items-center rounded-full px-[15px] py-[7px] text-[12.5px] font-medium transition-colors';
 
   return (
-    <div
-      className="no-scrollbar -mx-4 flex gap-[7px] overflow-x-auto px-4 pb-[14px]"
-      role="group"
-      aria-label="카테고리 필터"
-    >
+    <ScrollRow className="pb-[14px]" role="group" aria-label="카테고리 필터">
       <button
         type="button"
         aria-pressed={!filter}
@@ -54,6 +51,6 @@ export default function CategoryFilter() {
           </button>
         );
       })}
-    </div>
+    </ScrollRow>
   );
 }
