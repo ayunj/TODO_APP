@@ -9,7 +9,7 @@ const STORES = [...DATA_STORES, 'settings'] as const;
 type StoreName = (typeof STORES)[number];
 
 const SETTINGS_ID = 'app';
-const DEFAULT_SETTINGS: Settings = { onboarded: false };
+const DEFAULT_SETTINGS: Settings = { onboarded: false, memoSeenAt: '' };
 
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {

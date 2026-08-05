@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import MemoCard from './memo/MemoCard';
 import EmptyBox from '@/components/EmptyBox';
 import { useStore } from '@/lib/store';
@@ -11,9 +11,15 @@ import { useStore } from '@/lib/store';
  * 한 번에 한 장만 펼쳐진다. 새 메모를 누르면 쓰던 건 접히고 빈 칸이 올라온다.
  */
 export default function MemoScreen() {
-  const { memos, addMemo, updateMemo, removeMemo } = useStore();
+  const { memos, addMemo, updateMemo, removeMemo, markMemosSeen } = useStore();
   const [openId, setOpenId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
+
+  // 들어올 때와 나갈 때 '봤다'고 찍는다. 나갈 때도 찍어야 방금 내가 쓴 글에 점이 안 뜬다.
+  useEffect(() => {
+    markMemosSeen();
+    return () => markMemosSeen();
+  }, [markMemosSeen]);
 
   const list = useMemo(() => {
     const sorted = [...memos].sort((a, b) => b.createdAt.localeCompare(a.createdAt));

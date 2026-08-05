@@ -8,7 +8,7 @@ export class MemoryRepository implements Repository {
   private presets = new Map<string, Preset>();
   private shopping = new Map<string, ShopItem>();
   private memos = new Map<string, Memo>();
-  private settings: Settings = { onboarded: false };
+  private settings: Settings = { onboarded: false, memoSeenAt: '' };
 
   async init() {}
 

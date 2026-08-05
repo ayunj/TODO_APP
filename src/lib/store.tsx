@@ -67,6 +67,9 @@ interface StoreValue {
   addMemo: () => Memo;
   updateMemo: (id: string, text: string) => void;
   removeMemo: (id: string) => void;
+  /** 이 시각 뒤에 고쳐진 메모가 있으면 아직 안 본 것이다 */
+  memoSeenAt: string;
+  markMemosSeen: () => void;
 
   addCategory: (name: string, color: string) => void;
   updateCategory: (id: string, name: string, color: string) => void;
@@ -90,6 +93,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const repoRef = useRef<Repository | null>(null);
   const [loading, setLoading] = useState(true);
   const [onboarded, setOnboarded] = useState(false);
+  const [memoSeenAt, setMemoSeenAt] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [presets, setPresets] = useState<Preset[]>([]);
@@ -155,6 +159,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       // 한 장짜리로 쓰던 시절의 메모에는 createdAt이 없다 — 첫 번째 메모로 그대로 넘긴다
       setMemos(snap.memos.map((m) => ({ ...m, createdAt: m.createdAt ?? m.updatedAt })));
       setOnboarded(settings.onboarded);
+      setMemoSeenAt(settings.memoSeenAt ?? '');
       setLoading(false);
     })();
     return () => {
@@ -484,6 +489,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [memos, write],
   );
 
+  /** 메모 화면에 들어올 때와 나갈 때 찍는다 — 내가 쓴 글이 나한테 점으로 뜨지 않게 */
+  const markMemosSeen = useCallback(() => {
+    const now = stamp();
+    setMemoSeenAt(now);
+    write((r) => r.saveSettings({ memoSeenAt: now }));
+  }, [write]);
+
   const removeMemo = useCallback(
     (id: string) => {
       clearTimeout(memoTimers.current.get(id)); // 지운 뒤에 저장이 되살아나지 않게
@@ -590,6 +602,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       addMemo,
       updateMemo,
       removeMemo,
+      memoSeenAt,
+      markMemosSeen,
       addCategory,
       updateCategory,
       removeCategory,
@@ -621,6 +635,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       addMemo,
       updateMemo,
       removeMemo,
+      memoSeenAt,
+      markMemosSeen,
       addCategory,
       updateCategory,
       removeCategory,

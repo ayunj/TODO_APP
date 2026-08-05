@@ -98,4 +98,6 @@ export type ViewKind = 'day' | 'month' | 'log' | 'shop' | 'memo';
 export interface Settings {
   /** 첫 화면을 지났는지 — 한 번 지나면 다시 보이지 않는다 */
   onboarded: boolean;
+  /** 메모를 마지막으로 본 시각. 이보다 나중에 고쳐진 메모가 있으면 점이 뜬다. */
+  memoSeenAt: string;
 }

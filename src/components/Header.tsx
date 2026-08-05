@@ -16,7 +16,9 @@ const round =
  */
 export default function Header() {
   const { view, cursor, setCursor, openSheet, pushView, popView } = useUi();
-  const { shopping, memos } = useStore();
+  const { shopping, memos, memoSeenAt } = useStore();
+  // 마지막으로 본 뒤에 고쳐진 메모가 있으면 점을 띄운다
+  const unseenMemo = memos.some((m) => m.text.trim() && m.updatedAt > memoSeenAt);
   const [stuck, setStuck] = useState(false);
 
   useEffect(() => {
@@ -96,8 +98,16 @@ export default function Header() {
           )}
         </button>
 
-        <button type="button" aria-label="메모" onClick={() => pushView('memo')} className={round}>
+        <button
+          type="button"
+          aria-label={unseenMemo ? '메모 — 새로 적힌 것이 있음' : '메모'}
+          onClick={() => pushView('memo')}
+          className={`relative ${round}`}
+        >
           <MemoIcon className="h-[19px] w-[19px]" />
+          {unseenMemo && (
+            <span className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full border-2 border-card bg-accent" />
+          )}
         </button>
 
         <button
