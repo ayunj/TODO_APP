@@ -1,4 +1,4 @@
-import type { Category, Memo, Preset, Settings, ShopItem, Task } from './types';
+import type { Category, Grave, Memo, Preset, Settings, ShopItem, Task } from './types';
 
 /**
  * 데이터 접근은 반드시 이 한 겹을 지난다.
@@ -30,8 +30,19 @@ export interface Repository {
   loadSettings(): Promise<Settings>;
   saveSettings(patch: Partial<Settings>): Promise<void>;
 
+  /** 지운 것을 적어둔다. 서버에도 알려주기 전까지는 기억해야 한다. */
+  remember(kind: string, ids: string[]): Promise<void>;
+  graves(): Promise<Grave[]>;
+  forget(ids: string[]): Promise<void>;
+
   /** 할 일·자주 쓰는 일·카테고리만 지운다. 설정은 남는다. */
   clearAll(): Promise<void>;
+
+  /**
+   * 서버와 맞추고 새 스냅샷을 돌려준다.
+   * 로그인 전에는 맞출 서버가 없으므로 없는 게 정상이다.
+   */
+  sync?(): Promise<Snapshot>;
 }
 
 export interface Snapshot {

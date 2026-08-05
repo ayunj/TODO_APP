@@ -10,14 +10,15 @@ import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 
 export default function TaskSheet({ id }: { id: string | null }) {
-  const { tasks, presets, addTask, updateTask, removeTask, addPreset } = useStore();
+  const { tasks, presets, categories, addTask, updateTask, removeTask, addPreset } = useStore();
   const { cursor, filter, closeSheet, setCursor } = useUi();
 
   const editing = id ? (tasks.find((t) => t.id === id) ?? null) : null;
   const [alsoPreset, setAlsoPreset] = useState(false);
   const [value, setValue] = useState<FormValue>(() => ({
     title: editing?.title ?? '',
-    categoryId: editing?.categoryId ?? filter ?? 'home',
+    // 카테고리 id는 기기마다 새로 매겨진다 — 고정된 이름을 기본값으로 두면 안 된다
+    categoryId: editing?.categoryId ?? filter ?? categories[0]?.id ?? '',
     priority: editing?.priority ?? 2,
     date: editing?.date ?? cursor,
     repeatDays: editing?.repeatDays ?? 0,

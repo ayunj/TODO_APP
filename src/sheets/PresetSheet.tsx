@@ -11,13 +11,14 @@ import { useUi } from '@/lib/ui';
 
 /** 날짜 필드는 없고 주기·종료일·메모는 있다 */
 export default function PresetSheet({ id }: { id: string | null }) {
-  const { presets, addPreset, updatePreset } = useStore();
+  const { presets, categories, addPreset, updatePreset } = useStore();
   const { filter, openSheet, closeSheet } = useUi();
 
   const editing = id ? (presets.find((p) => p.id === id) ?? null) : null;
   const [value, setValue] = useState<FormValue>(() => ({
     title: editing?.title ?? '',
-    categoryId: editing?.categoryId ?? filter ?? 'home',
+    // 카테고리 id는 기기마다 새로 매겨진다 — 고정된 이름을 기본값으로 두면 안 된다
+    categoryId: editing?.categoryId ?? filter ?? categories[0]?.id ?? '',
     priority: editing?.priority ?? 2,
     date: todayStr(),
     repeatDays: editing?.repeatDays ?? 0,

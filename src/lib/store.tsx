@@ -1,12 +1,13 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useAuth } from './auth';
 import { DEFAULT_CATEGORIES, LEGACY_COLOR } from './constants';
 import { addDays, todayStr } from './date';
 import { stamp, uid } from './id';
 import { baseOf, spawnNext } from './repeat';
 import { getRepository } from './repo';
-import type { Repository } from './repository';
+import type { Repository, Snapshot } from './repository';
 import { onShopList } from './selectors';
 import { toast } from './toast';
 import type { Category, DateStr, Memo, Preset, Priority, ShopItem, Task } from './types';
@@ -92,7 +93,7 @@ const FALLBACK_CATEGORY: Category = {
 };
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const repoRef = useRef<Repository | null>(null);
+  const repoRef = useRef<{ repo: Repository; owner: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [onboarded, setOnboarded] = useState(false);
   const [memoSeenAt, setMemoSeenAt] = useState('');
@@ -104,11 +105,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   /** 메모는 글자마다 저장하지 않고 잠깐 멈출 때 쓴다 — 화면은 이미 바뀌어 있다 */
   const memoTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
+  /** 로그인하면 같은 저장소를 감싼 '서버와 맞추는 것'으로 바뀐다 */
+  const { account } = useAuth();
+  const owner = account?.id ?? null;
+
   /** 쓰기는 화면을 먼저 바꾸고 뒤에서 조용히 저장한다 (낙관적 업데이트) */
   const repo = useCallback(() => {
-    if (!repoRef.current) repoRef.current = getRepository();
-    return repoRef.current;
-  }, []);
+    if (repoRef.current?.owner !== owner) {
+      repoRef.current = { repo: getRepository(owner), owner };
+    }
+    return repoRef.current.repo;
+  }, [owner]);
 
   const write = useCallback(
     (job: (r: Repository) => Promise<unknown>) => {
@@ -117,6 +124,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [repo],
   );
 
+  /** 스냅샷 하나를 화면 상태로 펼친다 */
+  const spread = useCallback((snap: Snapshot) => {
+    setCategories(snap.categories);
+    setTasks(snap.tasks);
+    setPresets(snap.presets);
+    // 나중에 생긴 칸들이 없는 옛 항목에는 기본값을 채워준다
+    setShopping(
+      snap.shopping.map((i) => ({
+        ...i,
+        note: i.note ?? '',
+        place: i.place ?? '',
+        boughtOn: i.boughtOn ?? null,
+      })),
+    );
+    // 한 장짜리로 쓰던 시절의 메모에는 createdAt이 없다 — 첫 번째 메모로 그대로 넘긴다
+    setMemos(snap.memos.map((m) => ({ ...m, createdAt: m.createdAt ?? m.updatedAt })));
+  }, []);
+
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -124,50 +149,33 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       await r.init();
       const [snap, settings] = await Promise.all([r.loadAll(), r.loadSettings()]);
       if (!alive) return;
-
-      let cats = snap.categories;
-      if (cats.length === 0) {
-        cats = DEFAULT_CATEGORIES.map((c) => ({ ...c, updatedAt: stamp() }));
-        await Promise.all(cats.map((c) => r.saveCategory(c)));
-      } else {
-        // 예전 팔레트로 저장된 색은 새 파스텔 색으로 한 번만 옮긴다
-        const repainted = cats
-          .filter((c) => LEGACY_COLOR[c.color])
-          .map((c) => ({ ...c, color: LEGACY_COLOR[c.color], updatedAt: stamp() }));
-        if (repainted.length) {
-          cats = cats.map((c) => repainted.find((x) => x.id === c.id) ?? c);
-          await Promise.all(repainted.map((c) => r.saveCategory(c)));
-        }
-      }
-
-      let seeded = snap.presets;
-      if (seeded.length === 0 && snap.tasks.length === 0) {
-        seeded = seedPresets();
-        await Promise.all(seeded.map((p) => r.savePreset(p)));
-      }
-
-      setCategories(cats);
-      setTasks(snap.tasks);
-      setPresets(seeded);
-      // 나중에 생긴 칸들이 없는 옛 항목에는 기본값을 채워준다
-      setShopping(
-        snap.shopping.map((i) => ({
-          ...i,
-          note: i.note ?? '',
-          place: i.place ?? '',
-          boughtOn: i.boughtOn ?? null,
-        })),
-      );
-      // 한 장짜리로 쓰던 시절의 메모에는 createdAt이 없다 — 첫 번째 메모로 그대로 넘긴다
-      setMemos(snap.memos.map((m) => ({ ...m, createdAt: m.createdAt ?? m.updatedAt })));
       setOnboarded(settings.onboarded);
       setMemoSeenAt(settings.memoSeenAt ?? '');
+
+      let current = snap;
+
+      // 서버와 맞출 참이면 기본값을 먼저 심지 않는다.
+      // 기기마다 같은 이름의 카테고리를 따로 만들어 올리면 두 벌이 되기 때문이다.
+      if (r.sync) {
+        spread(current); // 서버를 기다리는 동안에도 화면은 이미 있다
+        setLoading(false);
+        try {
+          current = await r.sync();
+        } catch {
+          toast('아직 맞추지 못했습니다. 연결되면 다시 시도해요.');
+        }
+        if (!alive) return;
+      }
+
+      current = await furnish(r, current);
+      if (!alive) return;
+      spread(current);
       setLoading(false);
     })();
     return () => {
       alive = false;
     };
-  }, [repo]);
+  }, [repo, spread]);
 
   const categoryOf = useCallback(
     (id: string) => categories.find((c) => c.id === id) ?? categories[0] ?? FALLBACK_CATEGORY,
@@ -599,7 +607,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
 
   const resetAll = useCallback(() => {
-    const cats = DEFAULT_CATEGORIES.map((c) => ({ ...c, updatedAt: stamp() }));
+    const cats = DEFAULT_CATEGORIES.map((c) => ({ ...c, id: uid(), updatedAt: stamp() }));
     setTasks([]);
     setPresets([]);
     setShopping([]);
@@ -691,12 +699,44 @@ export function useStore(): StoreValue {
   return ctx;
 }
 
-function seedPresets(): Preset[] {
+/**
+ * 빈 곳을 채워둔다 — 기본 카테고리, 처음 보여줄 자주 쓰는 일, 옛 팔레트 색 옮기기.
+ * 서버와 맞춘 뒤에 부른다. 맞추기 전에 심으면 기기마다 같은 걸 만들어 두 벌이 된다.
+ */
+async function furnish(r: Repository, snap: Snapshot): Promise<Snapshot> {
+  let categories = snap.categories;
+
+  if (categories.length === 0) {
+    categories = DEFAULT_CATEGORIES.map((c) => ({ ...c, id: uid(), updatedAt: stamp() }));
+    await Promise.all(categories.map((c) => r.saveCategory(c)));
+  } else {
+    // 예전 팔레트로 저장된 색은 새 파스텔 색으로 한 번만 옮긴다
+    const repainted = categories
+      .filter((c) => LEGACY_COLOR[c.color])
+      .map((c) => ({ ...c, color: LEGACY_COLOR[c.color], updatedAt: stamp() }));
+    if (repainted.length) {
+      categories = categories.map((c) => repainted.find((x) => x.id === c.id) ?? c);
+      await Promise.all(repainted.map((c) => r.saveCategory(c)));
+    }
+  }
+
+  let presets = snap.presets;
+  if (presets.length === 0 && snap.tasks.length === 0) {
+    const home = categories.find((c) => c.name === '집안일') ?? categories[0];
+    const body = categories.find((c) => c.name === '건강') ?? categories[0];
+    presets = seedPresets(home?.id ?? '', body?.id ?? '');
+    await Promise.all(presets.map((p) => r.savePreset(p)));
+  }
+
+  return { ...snap, categories, presets };
+}
+
+function seedPresets(homeId: string, bodyId: string): Preset[] {
   const base = { roomId: null, memo: '', repeatUntil: null, updatedAt: stamp() };
   return [
-    { id: uid(), title: '화장실 청소', categoryId: 'home', priority: 2 as Priority, repeatDays: 8, ...base },
-    { id: uid(), title: '빨래', categoryId: 'home', priority: 2 as Priority, repeatDays: 4, ...base },
-    { id: uid(), title: '이불 빨래', categoryId: 'home', priority: 1 as Priority, repeatDays: 30, ...base },
-    { id: uid(), title: '영양제', categoryId: 'body', priority: 1 as Priority, repeatDays: 1, ...base },
+    { id: uid(), title: '화장실 청소', categoryId: homeId, priority: 2 as Priority, repeatDays: 8, ...base },
+    { id: uid(), title: '빨래', categoryId: homeId, priority: 2 as Priority, repeatDays: 4, ...base },
+    { id: uid(), title: '이불 빨래', categoryId: homeId, priority: 1 as Priority, repeatDays: 30, ...base },
+    { id: uid(), title: '영양제', categoryId: bodyId, priority: 1 as Priority, repeatDays: 1, ...base },
   ];
 }

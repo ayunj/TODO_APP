@@ -1,15 +1,15 @@
 import type { Repository, Snapshot } from '../repository';
-import type { Category, Memo, Preset, Settings, ShopItem, Task } from '../types';
+import type { Category, Grave, Memo, Preset, Settings, ShopItem, Task } from '../types';
 
 const DB_NAME = 'todolist';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 /** 초기화가 비우는 것들 */
 const DATA_STORES = ['categories', 'tasks', 'presets', 'shopping', 'memo'] as const;
-const STORES = [...DATA_STORES, 'settings'] as const;
+const STORES = [...DATA_STORES, 'settings', 'graveyard'] as const;
 type StoreName = (typeof STORES)[number];
 
 const SETTINGS_ID = 'app';
-const DEFAULT_SETTINGS: Settings = { onboarded: false, memoSeenAt: '' };
+const DEFAULT_SETTINGS: Settings = { onboarded: false, memoSeenAt: '', syncedAt: '' };
 
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -137,6 +137,20 @@ export class IndexedDbRepository implements Repository {
   async saveSettings(patch: Partial<Settings>): Promise<void> {
     const current = await this.loadSettings();
     return this.put('settings', [{ ...current, ...patch, id: SETTINGS_ID }]);
+  }
+
+  remember(kind: string, ids: string[]) {
+    const at = new Date().toISOString();
+    return this.put(
+      'graveyard',
+      ids.map((id) => ({ id, kind, at })),
+    );
+  }
+  graves() {
+    return this.readAll<Grave>('graveyard');
+  }
+  forget(ids: string[]) {
+    return this.del('graveyard', ids);
   }
 
   async clearAll(): Promise<void> {

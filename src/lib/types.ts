@@ -100,4 +100,17 @@ export interface Settings {
   onboarded: boolean;
   /** 메모를 마지막으로 본 시각. 이보다 나중에 고쳐진 메모가 있으면 점이 뜬다. */
   memoSeenAt: string;
+  /**
+   * 서버와 마지막으로 맞춘 시각.
+   * 서버에 없는 로컬 항목이 '아직 안 올린 것'인지 '남이 지운 것'인지를 이걸로 가른다.
+   */
+  syncedAt: string;
+}
+
+/** 지운 것 기록 — 서버에도 알려줄 때까지 들고 있는다 */
+export interface Grave {
+  id: string;
+  /** 어느 종류였는지 (tasks, memos …) */
+  kind: string;
+  at: string;
 }

@@ -1,5 +1,5 @@
 import type { Repository, Snapshot } from '../repository';
-import type { Category, Memo, Preset, Settings, ShopItem, Task } from '../types';
+import type { Category, Grave, Memo, Preset, Settings, ShopItem, Task } from '../types';
 
 /** SSR·테스트용. IndexedDB가 없는 곳에서 앱이 죽지 않게 한다. */
 export class MemoryRepository implements Repository {
@@ -8,7 +8,8 @@ export class MemoryRepository implements Repository {
   private presets = new Map<string, Preset>();
   private shopping = new Map<string, ShopItem>();
   private memos = new Map<string, Memo>();
-  private settings: Settings = { onboarded: false, memoSeenAt: '' };
+  private graveyard = new Map<string, Grave>();
+  private settings: Settings = { onboarded: false, memoSeenAt: '', syncedAt: '' };
 
   async init() {}
 
@@ -57,6 +58,16 @@ export class MemoryRepository implements Repository {
   }
   async deleteMemo(id: string) {
     this.memos.delete(id);
+  }
+  async remember(kind: string, ids: string[]) {
+    const at = new Date().toISOString();
+    ids.forEach((id) => this.graveyard.set(id, { id, kind, at }));
+  }
+  async graves() {
+    return [...this.graveyard.values()];
+  }
+  async forget(ids: string[]) {
+    ids.forEach((id) => this.graveyard.delete(id));
   }
   async loadSettings(): Promise<Settings> {
     return { ...this.settings };
