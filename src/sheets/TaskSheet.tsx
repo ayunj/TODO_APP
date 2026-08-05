@@ -68,7 +68,7 @@ export default function TaskSheet({ id }: { id: string | null }) {
 
   return (
     <Sheet title={editing ? '할 일 수정' : '할 일 추가'} onClose={closeSheet}>
-      <TaskFormFields value={value} onChange={patch} />
+      <TaskFormFields value={value} onChange={patch} editing={!!editing} />
 
       {!editing && (
         <label className="flex cursor-pointer items-center gap-2.5 pb-3.5 pt-1.5 text-[13.5px] text-ink2">

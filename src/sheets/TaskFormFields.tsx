@@ -5,11 +5,10 @@ import { PRIORITY_LABEL } from '@/lib/constants';
 import { addDays, todayStr } from '@/lib/date';
 import type { DateStr, Priority } from '@/lib/types';
 
-/** 날짜를 손으로 고르기 전에 대개 이 셋 중 하나다 */
+/** 미룰 때 고르는 건 대개 이 셋이다 */
 const QUICK_DAYS = [
   { label: '오늘', days: 0 },
   { label: '내일', days: 1 },
-  { label: '모레', days: 2 },
   { label: '다음 주', days: 7 },
 ];
 
@@ -28,10 +27,13 @@ export default function TaskFormFields({
   value,
   onChange,
   showDate = true,
+  editing = false,
 }: {
   value: FormValue;
   onChange: (patch: Partial<FormValue>) => void;
   showDate?: boolean;
+  /** 고칠 때만 미루기 칩을 보여준다 — 새로 적는 자리에 미루기가 있으면 어수선하다 */
+  editing?: boolean;
 }) {
   return (
     <>
@@ -59,7 +61,7 @@ export default function TaskFormFields({
         {showDate && (
           <Field label="날짜" htmlFor="f-date">
             <DateField id="f-date" value={value.date} onChange={(date) => onChange({ date })} />
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className={`mt-2 flex flex-wrap gap-1.5 ${editing ? '' : 'hidden'}`}>
               {QUICK_DAYS.map(({ label, days }) => {
                 const date = addDays(todayStr(), days);
                 return (
