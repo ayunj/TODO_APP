@@ -29,8 +29,19 @@ Next.js (App Router) · TypeScript · Tailwind CSS · date-fns · IndexedDB · S
 
 ## 문서
 
-- [docs/기능.md](docs/기능.md) — 무엇을 만들었고 **왜 그렇게 했는지**
-- [docs/파일.md](docs/파일.md) — 어느 파일이 무엇을 하는지
+[docs/](docs/) — 기능마다 폴더 하나. 그 안에 `기능.md`(무엇을 왜)와 `파일.md`(어느 파일)가 있다.
+
+```
+docs/
+  tasks/      screens  repeat  postpone  categories  presets
+  shopping/   list  history
+  memo/
+  account/    login  sync  database
+  app/        architecture  navigation  design  pwa
+```
+
+먼저 읽을 것: [반복 주기](docs/tasks/repeat/기능.md) · [층 구조](docs/app/architecture/기능.md) · [동기화](docs/account/sync/기능.md)
+
 - [AGENTS.md](AGENTS.md) — 이 코드를 고칠 때 지켜야 할 것
 - [supabase/schema.sql](supabase/schema.sql) — 테이블·RLS·방 함수
 
