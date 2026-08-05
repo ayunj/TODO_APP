@@ -21,6 +21,11 @@ interface AuthValue {
   /** 초대 링크로 들어온 사람 — 이름만 받고 들여보낸다 */
   signInAsGuest: (displayName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** 재설정 메일 보내기 */
+  sendReset: (email: string) => Promise<void>;
+  /** 메일 링크로 돌아온 참인지 — 새 비밀번호를 정해야 하는 상태 */
+  recovering: boolean;
+  setPassword: (password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -50,6 +55,7 @@ function readable(error: unknown): string {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [account, setAccount] = useState<Account | null>(null);
   const [loading, setLoading] = useState(hasSupabase);
+  const [recovering, setRecovering] = useState(false);
 
   useEffect(() => {
     if (!hasSupabase) return;
@@ -65,7 +71,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAccount(read(data.session?.user));
       setLoading(false);
 
-      const { data: sub } = client.auth.onAuthStateChange((_event, session) => {
+      const { data: sub } = client.auth.onAuthStateChange((event, session) => {
+        // 메일 링크로 돌아오면 세션은 생기지만 아직 새 비밀번호를 안 정한 상태다
+        if (event === 'PASSWORD_RECOVERY') setRecovering(true);
         setAccount(read(session?.user));
         setLoading(false);
       });
@@ -102,6 +110,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const client = await supabase();
     await client.auth.signOut();
     setAccount(null);
+    setRecovering(false);
+  }, []);
+
+  const sendReset = useCallback(async (email: string) => {
+    const client = await supabase();
+    const { error } = await client.auth.resetPasswordForEmail(email.trim(), {
+      // 메일 속 링크를 눌렀을 때 돌아올 곳
+      redirectTo: window.location.origin,
+    });
+    if (error) throw new Error(readable(error));
+  }, []);
+
+  const setPassword = useCallback(async (password: string) => {
+    const client = await supabase();
+    const { error } = await client.auth.updateUser({ password });
+    if (error) throw new Error(readable(error));
+    setRecovering(false);
+    // 주소에 남은 토큰을 지운다 — 새로고침하면 또 재설정 화면이 뜬다
+    window.history.replaceState(null, '', window.location.pathname);
   }, []);
 
   const value = useMemo<AuthValue>(
@@ -113,8 +140,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signUp,
       signInAsGuest,
       signOut,
+      sendReset,
+      recovering,
+      setPassword,
     }),
-    [loading, account, signIn, signUp, signInAsGuest, signOut],
+    [loading, account, signIn, signUp, signInAsGuest, signOut, sendReset, recovering, setPassword],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

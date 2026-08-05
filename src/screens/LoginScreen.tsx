@@ -8,22 +8,37 @@ import { useAuth } from '@/lib/auth';
 const inviteCode = () =>
   typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('join');
 
+type Mode = 'in' | 'up' | 'forgot';
+
+const TITLE: Record<Mode, string> = {
+  in: '로그인',
+  up: '계정 만들기',
+  forgot: '재설정 메일 보내기',
+};
+
 /**
  * 로그인.
  * 초대 링크로 들어온 사람에게는 이름 한 칸만 보여준다 —
  * 가입을 시키려다 앱이 죽는 지점이 대부분 여기다.
  */
 export default function LoginScreen() {
-  const { signIn, signUp, signInAsGuest } = useAuth();
+  const { signIn, signUp, signInAsGuest, sendReset } = useAuth();
   const [invited, setInvited] = useState(false);
-  const [isNew, setIsNew] = useState(false);
+  const [mode, setMode] = useState<Mode>('in');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => setInvited(Boolean(inviteCode())), []);
+
+  const go = (next: Mode) => {
+    setMode(next);
+    setError('');
+    setSent(false);
+  };
 
   const run = async (job: () => Promise<void>) => {
     setError('');
@@ -43,8 +58,15 @@ export default function LoginScreen() {
       return run(() => signInAsGuest(name));
     }
     if (!email.trim()) return setError('이메일을 적어주세요');
+
+    if (mode === 'forgot') {
+      return run(async () => {
+        await sendReset(email);
+        setSent(true);
+      });
+    }
     if (password.length < 6) return setError('비밀번호는 여섯 자 이상으로 해주세요');
-    return run(() => (isNew ? signUp(email.trim(), password) : signIn(email.trim(), password)));
+    return run(() => (mode === 'up' ? signUp(email.trim(), password) : signIn(email.trim(), password)));
   };
 
   return (
@@ -58,7 +80,7 @@ export default function LoginScreen() {
       <WelcomeArt />
 
       <h2 className="text-center font-round text-[25px] font-normal tracking-[-0.02em]">
-        {invited ? '함께 쓰기' : '오늘도 하나씩'}
+        {invited ? '함께 쓰기' : mode === 'forgot' ? '비밀번호 찾기' : '오늘도 하나씩'}
       </h2>
       <p className="mb-[26px] mt-[9px] text-center text-[13.5px] leading-[1.7] text-ink3">
         {invited ? (
@@ -66,6 +88,12 @@ export default function LoginScreen() {
             초대를 받으셨네요.
             <br />
             이름만 적으면 바로 시작합니다.
+          </>
+        ) : mode === 'forgot' ? (
+          <>
+            가입하신 이메일을 적어주세요.
+            <br />
+            새로 정할 수 있는 링크를 보내드립니다.
           </>
         ) : (
           <>
@@ -76,70 +104,96 @@ export default function LoginScreen() {
         )}
       </p>
 
-      <form
-        className="flex flex-col gap-2.5"
-        onSubmit={(e) => {
-          e.preventDefault();
-          submit();
-        }}
-      >
-        {invited ? (
-          <input
-            type="text"
-            className="field-input"
-            placeholder="이름 (완료 기록에 남아요)"
-            autoComplete="nickname"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        ) : (
-          <>
-            <input
-              type="email"
-              className="field-input"
-              placeholder="이메일"
-              autoComplete="email"
-              inputMode="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <input
-              type="password"
-              className="field-input"
-              placeholder="비밀번호 (여섯 자 이상)"
-              autoComplete={isNew ? 'new-password' : 'current-password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </>
-        )}
-
-        {error && (
-          <p role="alert" className="px-1 text-[12.5px] leading-[1.6] text-high">
-            {error}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={busy}
-          className="mt-1.5 w-full rounded-[18px] bg-accent py-[17px] text-[15.5px] font-medium text-white shadow-fab active:scale-[.99] disabled:opacity-60"
+      {sent ? (
+        <div className="rounded-card bg-card px-[18px] py-6 text-center text-[13px] leading-[1.8] text-ink3 shadow-card">
+          <b className="mb-1.5 block font-round text-[15px] font-medium text-ink2">
+            메일을 보냈습니다
+          </b>
+          <span className="break-all text-ink2">{email}</span>
+          <br />
+          메일 속 링크를 누르면 새 비밀번호를 정할 수 있어요.
+          <br />
+          안 왔으면 스팸함도 살펴봐 주세요.
+        </div>
+      ) : (
+        <form
+          className="flex flex-col gap-2.5"
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit();
+          }}
         >
-          {busy ? '잠시만요…' : invited ? '시작하기' : isNew ? '계정 만들기' : '로그인'}
-        </button>
-      </form>
+          {invited ? (
+            <input
+              type="text"
+              className="field-input"
+              placeholder="이름 (완료 기록에 남아요)"
+              autoComplete="nickname"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          ) : (
+            <>
+              <input
+                type="email"
+                className="field-input"
+                placeholder="이메일"
+                autoComplete="email"
+                inputMode="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              {mode !== 'forgot' && (
+                <input
+                  type="password"
+                  className="field-input"
+                  placeholder="비밀번호 (여섯 자 이상)"
+                  autoComplete={mode === 'up' ? 'new-password' : 'current-password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              )}
+            </>
+          )}
+
+          {error && (
+            <p role="alert" className="px-1 text-[12.5px] leading-[1.6] text-high">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={busy}
+            className="mt-1.5 w-full rounded-[18px] bg-accent py-[17px] text-[15.5px] font-medium text-white shadow-fab active:scale-[.99] disabled:opacity-60"
+          >
+            {busy ? '잠시만요…' : invited ? '시작하기' : TITLE[mode]}
+          </button>
+        </form>
+      )}
 
       {!invited && (
-        <button
-          type="button"
-          onClick={() => {
-            setIsNew(!isNew);
-            setError('');
-          }}
-          className="mt-3.5 py-2 text-center text-[13px] text-ink3"
-        >
-          {isNew ? '이미 계정이 있어요' : '계정이 없으신가요? 새로 만들기'}
-        </button>
+        <div className="mt-3.5 flex flex-col items-center gap-1">
+          {mode === 'in' && (
+            <>
+              <button type="button" onClick={() => go('up')} className="py-2 text-[13px] text-ink3">
+                계정이 없으신가요? 새로 만들기
+              </button>
+              <button
+                type="button"
+                onClick={() => go('forgot')}
+                className="py-1 text-[12.5px] text-ink3"
+              >
+                비밀번호를 잊으셨나요?
+              </button>
+            </>
+          )}
+          {mode !== 'in' && (
+            <button type="button" onClick={() => go('in')} className="py-2 text-[13px] text-ink3">
+              로그인으로 돌아가기
+            </button>
+          )}
+        </div>
       )}
 
       <p className="mb-auto mt-6 px-1 text-center text-[11.5px] leading-[1.7] text-ink3">

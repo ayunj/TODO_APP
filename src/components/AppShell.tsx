@@ -10,6 +10,7 @@ import DayScreen from '@/screens/DayScreen';
 import LoginScreen from '@/screens/LoginScreen';
 import LogScreen from '@/screens/LogScreen';
 import MemoScreen from '@/screens/MemoScreen';
+import NewPasswordScreen from '@/screens/NewPasswordScreen';
 import MonthScreen from '@/screens/MonthScreen';
 import ShopScreen from '@/screens/ShopScreen';
 import { useAuth } from '@/lib/auth';
@@ -18,7 +19,7 @@ import { useUi } from '@/lib/ui';
 
 export default function AppShell() {
   const { loading, onboarded } = useStore();
-  const { enabled, loading: checking, account } = useAuth();
+  const { enabled, loading: checking, account, recovering } = useAuth();
   const { view } = useUi();
 
   const pushed = view === 'shop' || view === 'memo';
@@ -46,6 +47,16 @@ export default function AppShell() {
     return (
       <>
         <LoginScreen />
+        <Toast />
+      </>
+    );
+  }
+
+  // 재설정 메일로 돌아온 참이면 새 비밀번호를 정하기 전까지 여기 머문다
+  if (recovering) {
+    return (
+      <>
+        <NewPasswordScreen />
         <Toast />
       </>
     );

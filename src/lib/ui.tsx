@@ -13,7 +13,7 @@ export type Sheet =
   | { kind: 'categoryList' }
   | { kind: 'category'; id: string | null }
   | { kind: 'shopItem'; id: string }
-  | { kind: 'share' };
+  | { kind: 'account' };
 
 interface UiValue {
   view: ViewKind;

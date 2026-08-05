@@ -23,8 +23,9 @@ export function supabase(): Promise<SupabaseClient> {
         auth: {
           persistSession: true,
           autoRefreshToken: true,
-          // 초대 링크의 ?join=코드를 Supabase가 자기 것으로 오해하지 않게
-          detectSessionInUrl: false,
+          // 비밀번호 재설정 메일의 링크를 받아내야 한다. 그 값은 주소의 # 뒤에 실려 오고,
+          // 초대 링크의 ?join=코드는 ? 뒤라서 서로 건드리지 않는다.
+          detectSessionInUrl: true,
         },
       }),
     );

@@ -1,13 +1,15 @@
 'use client';
 
 import Sheet from '@/components/Sheet';
+import { useAuth } from '@/lib/auth';
 import { toast } from '@/lib/toast';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 
-/** 설정·자주 쓰는 일·카테고리·함께 쓰기·초기화는 전부 톱니 안에 있다 */
+/** 설정·자주 쓰는 일·카테고리·계정·초기화는 전부 톱니 안에 있다 */
 export default function SettingsSheet() {
   const { presets, categories, resetAll } = useStore();
+  const { enabled, account } = useAuth();
   const { closeSheet, openSheet } = useUi();
 
   const item =
@@ -24,10 +26,14 @@ export default function SettingsSheet() {
           카테고리
           <span className="ml-auto text-[12px] text-ink3">{categories.length}개</span>
         </button>
-        <button type="button" className={item} onClick={() => openSheet({ kind: 'share' })}>
-          함께 쓰기
-          <span className="ml-auto text-[12px] text-ink3">2단계</span>
-        </button>
+        {enabled && account && (
+          <button type="button" className={item} onClick={() => openSheet({ kind: 'account' })}>
+            계정
+            <span className="ml-auto max-w-[55%] truncate text-[12px] text-ink3">
+              {account.email ?? '초대로 들어옴'}
+            </span>
+          </button>
+        )}
         <button
           type="button"
           className={`${item} text-high`}
