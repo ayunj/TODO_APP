@@ -55,7 +55,11 @@
   button {
     font: inherit;
     color: inherit;
-    text-align: inherit;
+    /*
+     * text-align은 물려받지 않는다.
+     * 물려받게 두면 버튼 글자가 죄다 왼쪽으로 붙는다 (브라우저 기본값은 가운데다).
+     * 줄처럼 쓰는 버튼은 각자 text-left를 달고 있다.
+     */
   }
   :focus-visible {
     outline: 2px solid var(--accent);
