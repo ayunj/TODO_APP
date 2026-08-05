@@ -51,7 +51,7 @@ export default function MemoScreen() {
   return (
     <>
       {/* 찾기는 평소엔 돋보기로 접어둔다 — 늘 열어두면 자리만 먹는다 */}
-      <div className="mb-3 flex items-stretch gap-2">
+      <div className="mb-3 mt-0.5 flex items-stretch gap-2">
         {searching ? (
           <>
             <input

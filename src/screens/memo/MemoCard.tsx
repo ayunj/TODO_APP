@@ -55,7 +55,7 @@ export default function MemoCard({ memo, open, onOpen, onChange, onRemove }: Pro
   }
 
   return (
-    <div className="rounded-card bg-card px-[18px] py-4 shadow-card outline-2 outline-accent focus-within:outline">
+    <div className="rounded-card bg-card px-[18px] py-4 shadow-card outline-2 [outline-offset:-2px] outline-accent focus-within:outline">
       <textarea
         ref={ref}
         autoFocus
