@@ -1,0 +1,152 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import WelcomeArt from '@/components/WelcomeArt';
+import { useAuth } from '@/lib/auth';
+
+/** 초대 링크로 들어왔는지 — ?join=코드 */
+const inviteCode = () =>
+  typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('join');
+
+/**
+ * 로그인.
+ * 초대 링크로 들어온 사람에게는 이름 한 칸만 보여준다 —
+ * 가입을 시키려다 앱이 죽는 지점이 대부분 여기다.
+ */
+export default function LoginScreen() {
+  const { signIn, signUp, signInAsGuest } = useAuth();
+  const [invited, setInvited] = useState(false);
+  const [isNew, setIsNew] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => setInvited(Boolean(inviteCode())), []);
+
+  const run = async (job: () => Promise<void>) => {
+    setError('');
+    setBusy(true);
+    try {
+      await job();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '잠시 뒤에 다시 시도해주세요');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submit = () => {
+    if (invited) {
+      if (!name.trim()) return setError('이름을 적어주세요');
+      return run(() => signInAsGuest(name));
+    }
+    if (!email.trim()) return setError('이메일을 적어주세요');
+    if (password.length < 6) return setError('비밀번호는 여섯 자 이상으로 해주세요');
+    return run(() => (isNew ? signUp(email.trim(), password) : signIn(email.trim(), password)));
+  };
+
+  return (
+    <div
+      className="mx-auto flex min-h-[100dvh] max-w-[520px] flex-col px-5"
+      style={{
+        paddingTop: 'calc(24px + env(safe-area-inset-top))',
+        paddingBottom: 'calc(30px + env(safe-area-inset-bottom))',
+      }}
+    >
+      <WelcomeArt />
+
+      <h2 className="text-center font-round text-[25px] font-normal tracking-[-0.02em]">
+        {invited ? '함께 쓰기' : '오늘도 하나씩'}
+      </h2>
+      <p className="mb-[26px] mt-[9px] text-center text-[13.5px] leading-[1.7] text-ink3">
+        {invited ? (
+          <>
+            초대를 받으셨네요.
+            <br />
+            이름만 적으면 바로 시작합니다.
+          </>
+        ) : (
+          <>
+            로그인하면 백업되고, 다른 기기에서도
+            <br />
+            같이 쓸 수도 있어요.
+          </>
+        )}
+      </p>
+
+      <form
+        className="flex flex-col gap-2.5"
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
+      >
+        {invited ? (
+          <input
+            type="text"
+            className="field-input"
+            placeholder="이름 (완료 기록에 남아요)"
+            autoComplete="nickname"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        ) : (
+          <>
+            <input
+              type="email"
+              className="field-input"
+              placeholder="이메일"
+              autoComplete="email"
+              inputMode="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <input
+              type="password"
+              className="field-input"
+              placeholder="비밀번호 (여섯 자 이상)"
+              autoComplete={isNew ? 'new-password' : 'current-password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </>
+        )}
+
+        {error && (
+          <p role="alert" className="px-1 text-[12.5px] leading-[1.6] text-high">
+            {error}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={busy}
+          className="mt-1.5 w-full rounded-[18px] bg-accent py-[17px] text-[15.5px] font-medium text-white shadow-fab active:scale-[.99] disabled:opacity-60"
+        >
+          {busy ? '잠시만요…' : invited ? '시작하기' : isNew ? '계정 만들기' : '로그인'}
+        </button>
+      </form>
+
+      {!invited && (
+        <button
+          type="button"
+          onClick={() => {
+            setIsNew(!isNew);
+            setError('');
+          }}
+          className="mt-3.5 py-2 text-center text-[13px] text-ink3"
+        >
+          {isNew ? '이미 계정이 있어요' : '계정이 없으신가요? 새로 만들기'}
+        </button>
+      )}
+
+      <p className="mb-auto mt-6 px-1 text-center text-[11.5px] leading-[1.7] text-ink3">
+        {invited
+          ? '설치도 가입도 필요 없어요. 이 링크만 있으면 됩니다.'
+          : '적어둔 것은 계정에 저장돼요. 폰을 바꿔도 그대로 있습니다.'}
+      </p>
+    </div>
+  );
+}

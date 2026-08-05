@@ -1,0 +1,33 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+/**
+ * 열쇠가 아직 없으면 로그인도 동기화도 없는 1단계 그대로 돈다.
+ * 반쯤 붙은 상태로 로그인 벽만 세워두면 앱을 아예 못 쓰게 된다.
+ */
+export const hasSupabase = Boolean(url && anonKey);
+
+let pending: Promise<SupabaseClient> | null = null;
+
+/**
+ * 클라이언트는 쓸 때 가서 받아온다.
+ * 위에서 그냥 import하면 60KB짜리 짐이 열쇠 없는 사람 화면에도 실린다.
+ */
+export function supabase(): Promise<SupabaseClient> {
+  if (!hasSupabase) return Promise.reject(new Error('Supabase 설정이 없습니다'));
+  if (!pending) {
+    pending = import('@supabase/supabase-js').then(({ createClient }) =>
+      createClient(url!, anonKey!, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          // 초대 링크의 ?join=코드를 Supabase가 자기 것으로 오해하지 않게
+          detectSessionInUrl: false,
+        },
+      }),
+    );
+  }
+  return pending;
+}

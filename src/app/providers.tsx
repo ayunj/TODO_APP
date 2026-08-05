@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { AuthProvider } from '@/lib/auth';
 import { StoreProvider } from '@/lib/store';
 import { UiProvider } from '@/lib/ui';
 
@@ -12,8 +13,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <StoreProvider>
-      <UiProvider>{children}</UiProvider>
-    </StoreProvider>
+    <AuthProvider>
+      <StoreProvider>
+        <UiProvider>{children}</UiProvider>
+      </StoreProvider>
+    </AuthProvider>
   );
 }

@@ -7,20 +7,23 @@ import Toast from './Toast';
 import WelcomeScreen from './WelcomeScreen';
 import SheetHost from '@/sheets/SheetHost';
 import DayScreen from '@/screens/DayScreen';
+import LoginScreen from '@/screens/LoginScreen';
 import LogScreen from '@/screens/LogScreen';
 import MemoScreen from '@/screens/MemoScreen';
 import MonthScreen from '@/screens/MonthScreen';
 import ShopScreen from '@/screens/ShopScreen';
+import { useAuth } from '@/lib/auth';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 
 export default function AppShell() {
   const { loading, onboarded } = useStore();
+  const { enabled, loading: checking, account } = useAuth();
   const { view } = useUi();
 
   const pushed = view === 'shop' || view === 'memo';
 
-  if (loading) {
+  if (loading || checking) {
     return (
       <div className="wrap">
         <div className="py-20 text-center text-[13px] text-ink3">불러오는 중…</div>
@@ -33,6 +36,16 @@ export default function AppShell() {
     return (
       <>
         <WelcomeScreen />
+        <Toast />
+      </>
+    );
+  }
+
+  // 열쇠가 없으면(enabled=false) 로그인 자체를 걸지 않는다 — 1단계처럼 그냥 쓴다
+  if (enabled && !account) {
+    return (
+      <>
+        <LoginScreen />
         <Toast />
       </>
     );
