@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Sheet from '@/components/Sheet';
 import { DangerButton, GoButton } from '@/components/form';
 import TaskFormFields, { type FormValue } from './TaskFormFields';
+import { shortDate } from '@/lib/date';
 import { toast } from '@/lib/toast';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
@@ -86,7 +87,12 @@ export default function TaskSheet({ id }: { id: string | null }) {
       {editing && (
         <DangerButton
           onClick={() => {
-            if (!confirm('이 할 일을 지웁니다.')) return;
+            // 다음 회차가 잡혀 있으면 그건 안 지운다는 걸 미리 알려준다
+            const pending = tasks.find((t) => t.parentId === editing.id && !t.done);
+            const message = pending
+              ? `이 할 일을 지웁니다. 다음 회차(${shortDate(pending.date)})는 그대로 남습니다.`
+              : '이 할 일을 지웁니다.';
+            if (!confirm(message)) return;
             removeTask(editing.id);
             closeSheet();
           }}

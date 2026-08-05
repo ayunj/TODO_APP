@@ -272,11 +272,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [tasks, write],
   );
 
+  /**
+   * 지우는 건 이 한 건뿐이다.
+   * 완료해서 이미 잡혀 있는 다음 회차는 그대로 둔다 — 기록을 지운 것이지 반복을 그만둔 게 아니다.
+   * 반복을 그만두려면 앞으로 잡힌 그 회차를 지우면 된다.
+   */
   const removeTask = useCallback(
     (id: string) => {
-      const orphans = tasks.filter((t) => t.parentId === id && !t.done).map((t) => t.id);
-      setTasks(tasks.filter((t) => t.id !== id && !orphans.includes(t.id)));
-      write((r) => r.deleteTasks([id, ...orphans]));
+      // 지워진 항목을 부모로 가리키고 있으면 끊어준다 (없는 줄을 가리키지 않게)
+      const freed = tasks
+        .filter((t) => t.parentId === id)
+        .map((t) => ({ ...t, parentId: null, updatedAt: stamp() }));
+
+      setTasks(
+        tasks.filter((t) => t.id !== id).map((t) => freed.find((f) => f.id === t.id) ?? t),
+      );
+
+      write(async (r) => {
+        await r.deleteTask(id);
+        if (freed.length) await r.saveTasks(freed);
+      });
     },
     [tasks, write],
   );
