@@ -83,10 +83,11 @@ export interface ShopItem {
  * 대화창이 아니다 — 카톡이 불편한 건 대화가 안 돼서가 아니라 위로 흘러가버려서다.
  */
 export interface Memo {
-  /** 지금은 한 장뿐이라 늘 'main' */
   id: string;
   roomId: string | null;
+  /** 제목 칸을 따로 두지 않는다 — 접었을 때 첫 줄이 제목 노릇을 한다 */
   text: string;
+  createdAt: string;
   updatedAt: string;
 }
 

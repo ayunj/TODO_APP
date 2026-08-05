@@ -9,7 +9,7 @@ import { getRepository } from './repo';
 import type { Repository } from './repository';
 import { onShopList } from './selectors';
 import { toast } from './toast';
-import type { Category, DateStr, Preset, Priority, ShopItem, Task } from './types';
+import type { Category, DateStr, Memo, Preset, Priority, ShopItem, Task } from './types';
 
 export interface TaskInput {
   title: string;
@@ -62,8 +62,11 @@ interface StoreValue {
   rebuyShopItem: (id: string) => void;
 
   /* ── 메모 ── */
-  memo: string;
-  saveMemo: (text: string) => void;
+  memos: Memo[];
+  /** 빈 메모를 만들고 돌려준다 (바로 펼쳐서 적게) */
+  addMemo: () => Memo;
+  updateMemo: (id: string, text: string) => void;
+  removeMemo: (id: string) => void;
 
   addCategory: (name: string, color: string) => void;
   updateCategory: (id: string, name: string, color: string) => void;
@@ -91,7 +94,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [presets, setPresets] = useState<Preset[]>([]);
   const [shopping, setShopping] = useState<ShopItem[]>([]);
-  const [memo, setMemo] = useState('');
+  const [memos, setMemos] = useState<Memo[]>([]);
+  /** 메모는 글자마다 저장하지 않고 잠깐 멈출 때 쓴다 — 화면은 이미 바뀌어 있다 */
+  const memoTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
   /** 쓰기는 화면을 먼저 바꾸고 뒤에서 조용히 저장한다 (낙관적 업데이트) */
   const repo = useCallback(() => {
@@ -111,11 +116,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     (async () => {
       const r = repo();
       await r.init();
-      const [snap, settings, savedMemo] = await Promise.all([
-        r.loadAll(),
-        r.loadSettings(),
-        r.loadMemo(),
-      ]);
+      const [snap, settings] = await Promise.all([r.loadAll(), r.loadSettings()]);
       if (!alive) return;
 
       let cats = snap.categories;
@@ -151,7 +152,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           boughtOn: i.boughtOn ?? null,
         })),
       );
-      setMemo(savedMemo);
+      // 한 장짜리로 쓰던 시절의 메모에는 createdAt이 없다 — 첫 번째 메모로 그대로 넘긴다
+      setMemos(snap.memos.map((m) => ({ ...m, createdAt: m.createdAt ?? m.updatedAt })));
       setOnboarded(settings.onboarded);
       setLoading(false);
     })();
@@ -457,10 +459,37 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   /* ───────── 메모 ───────── */
 
-  const saveMemo = useCallback(
-    (text: string) => {
-      setMemo(text);
-      write((r) => r.saveMemo(text));
+  const addMemo = useCallback((): Memo => {
+    const now = stamp();
+    const memo: Memo = { id: uid(), roomId: null, text: '', createdAt: now, updatedAt: now };
+    setMemos((prev) => [...prev, memo]);
+    write((r) => r.saveMemo(memo));
+    return memo;
+  }, [write]);
+
+  const updateMemo = useCallback(
+    (id: string, text: string) => {
+      const found = memos.find((m) => m.id === id);
+      if (!found || found.text === text) return;
+      const updated: Memo = { ...found, text, updatedAt: stamp() };
+      setMemos(memos.map((m) => (m.id === id ? updated : m)));
+
+      const timers = memoTimers.current;
+      clearTimeout(timers.get(id));
+      timers.set(
+        id,
+        setTimeout(() => write((r) => r.saveMemo(updated)), 600),
+      );
+    },
+    [memos, write],
+  );
+
+  const removeMemo = useCallback(
+    (id: string) => {
+      clearTimeout(memoTimers.current.get(id)); // 지운 뒤에 저장이 되살아나지 않게
+      memoTimers.current.delete(id);
+      setMemos((prev) => prev.filter((m) => m.id !== id));
+      write((r) => r.deleteMemo(id));
     },
     [write],
   );
@@ -526,7 +555,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setTasks([]);
     setPresets([]);
     setShopping([]);
-    setMemo('');
+    setMemos([]);
     setCategories(cats);
     write(async (r) => {
       await r.clearAll();
@@ -557,8 +586,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       toggleShopItem,
       removeShopItem,
       rebuyShopItem,
-      memo,
-      saveMemo,
+      memos,
+      addMemo,
+      updateMemo,
+      removeMemo,
       addCategory,
       updateCategory,
       removeCategory,
@@ -586,8 +617,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       toggleShopItem,
       removeShopItem,
       rebuyShopItem,
-      memo,
-      saveMemo,
+      memos,
+      addMemo,
+      updateMemo,
+      removeMemo,
       addCategory,
       updateCategory,
       removeCategory,

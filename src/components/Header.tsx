@@ -16,7 +16,7 @@ const round =
  */
 export default function Header() {
   const { view, cursor, setCursor, openSheet, pushView, popView } = useUi();
-  const { shopping } = useStore();
+  const { shopping, memos } = useStore();
   const [stuck, setStuck] = useState(false);
 
   useEffect(() => {
@@ -49,7 +49,9 @@ export default function Header() {
                 ? left > 0
                   ? `${left}개 담아둠`
                   : '살 것 적어두기'
-                : '흘러가지 않는 한 장'}
+                : memos.length > 0
+                  ? `${memos.length}장`
+                  : '흘러가지 않는 것들'}
             </div>
             <h1 className="mt-px font-round text-[21px] font-normal leading-[1.2] tracking-[-.02em]">
               {view === 'shop' ? '장보기' : '메모'}

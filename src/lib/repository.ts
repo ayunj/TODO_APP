@@ -1,4 +1,4 @@
-import type { Category, Preset, Settings, ShopItem, Task } from './types';
+import type { Category, Memo, Preset, Settings, ShopItem, Task } from './types';
 
 /**
  * 데이터 접근은 반드시 이 한 겹을 지난다.
@@ -24,9 +24,8 @@ export interface Repository {
   saveShopItem(item: ShopItem): Promise<void>;
   deleteShopItems(ids: string[]): Promise<void>;
 
-  /** 메모는 한 장뿐이라 통째로 읽고 쓴다 */
-  loadMemo(): Promise<string>;
-  saveMemo(text: string): Promise<void>;
+  saveMemo(memo: Memo): Promise<void>;
+  deleteMemo(id: string): Promise<void>;
 
   loadSettings(): Promise<Settings>;
   saveSettings(patch: Partial<Settings>): Promise<void>;
@@ -40,4 +39,5 @@ export interface Snapshot {
   tasks: Task[];
   presets: Preset[];
   shopping: ShopItem[];
+  memos: Memo[];
 }

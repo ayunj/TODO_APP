@@ -1,5 +1,5 @@
 import type { Repository, Snapshot } from '../repository';
-import type { Category, Preset, Settings, ShopItem, Task } from '../types';
+import type { Category, Memo, Preset, Settings, ShopItem, Task } from '../types';
 
 /** SSR·테스트용. IndexedDB가 없는 곳에서 앱이 죽지 않게 한다. */
 export class MemoryRepository implements Repository {
@@ -7,7 +7,7 @@ export class MemoryRepository implements Repository {
   private tasks = new Map<string, Task>();
   private presets = new Map<string, Preset>();
   private shopping = new Map<string, ShopItem>();
-  private memo = '';
+  private memos = new Map<string, Memo>();
   private settings: Settings = { onboarded: false };
 
   async init() {}
@@ -18,6 +18,7 @@ export class MemoryRepository implements Repository {
       tasks: [...this.tasks.values()],
       presets: [...this.presets.values()],
       shopping: [...this.shopping.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
+      memos: [...this.memos.values()],
     };
   }
 
@@ -51,11 +52,11 @@ export class MemoryRepository implements Repository {
   async deleteShopItems(ids: string[]) {
     ids.forEach((id) => this.shopping.delete(id));
   }
-  async loadMemo() {
-    return this.memo;
+  async saveMemo(m: Memo) {
+    this.memos.set(m.id, m);
   }
-  async saveMemo(text: string) {
-    this.memo = text;
+  async deleteMemo(id: string) {
+    this.memos.delete(id);
   }
   async loadSettings(): Promise<Settings> {
     return { ...this.settings };
@@ -68,6 +69,6 @@ export class MemoryRepository implements Repository {
     this.tasks.clear();
     this.presets.clear();
     this.shopping.clear();
-    this.memo = '';
+    this.memos.clear();
   }
 }

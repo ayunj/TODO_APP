@@ -10,7 +10,6 @@ type StoreName = (typeof STORES)[number];
 
 const SETTINGS_ID = 'app';
 const DEFAULT_SETTINGS: Settings = { onboarded: false };
-const MEMO_ID = 'main';
 
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -73,17 +72,19 @@ export class IndexedDbRepository implements Repository {
   }
 
   async loadAll(): Promise<Snapshot> {
-    const [categories, tasks, presets, shopping] = await Promise.all([
+    const [categories, tasks, presets, shopping, memos] = await Promise.all([
       this.readAll<Category>('categories'),
       this.readAll<Task>('tasks'),
       this.readAll<Preset>('presets'),
       this.readAll<ShopItem>('shopping'),
+      this.readAll<Memo>('memo'),
     ]);
     return {
       categories: categories.sort((a, b) => a.order - b.order),
       tasks,
       presets,
       shopping: shopping.sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
+      memos,
     };
   }
 
@@ -121,14 +122,11 @@ export class IndexedDbRepository implements Repository {
     return this.del('shopping', ids);
   }
 
-  async loadMemo(): Promise<string> {
-    const rows = await this.readAll<Memo>('memo');
-    return rows.find((m) => m.id === MEMO_ID)?.text ?? '';
-  }
-
-  async saveMemo(text: string): Promise<void> {
-    const memo: Memo = { id: MEMO_ID, roomId: null, text, updatedAt: new Date().toISOString() };
+  saveMemo(memo: Memo) {
     return this.put('memo', [memo]);
+  }
+  deleteMemo(id: string) {
+    return this.del('memo', [id]);
   }
 
   async loadSettings(): Promise<Settings> {
