@@ -2,7 +2,16 @@
 
 import { CategoryPicker, DateField, Field, Hint, PriorityStars } from '@/components/form';
 import { PRIORITY_LABEL } from '@/lib/constants';
+import { addDays, todayStr } from '@/lib/date';
 import type { DateStr, Priority } from '@/lib/types';
+
+/** 날짜를 손으로 고르기 전에 대개 이 셋 중 하나다 */
+const QUICK_DAYS = [
+  { label: '오늘', days: 0 },
+  { label: '내일', days: 1 },
+  { label: '모레', days: 2 },
+  { label: '다음 주', days: 7 },
+];
 
 export interface FormValue {
   title: string;
@@ -50,6 +59,24 @@ export default function TaskFormFields({
         {showDate && (
           <Field label="날짜" htmlFor="f-date">
             <DateField id="f-date" value={value.date} onChange={(date) => onChange({ date })} />
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {QUICK_DAYS.map(({ label, days }) => {
+                const date = addDays(todayStr(), days);
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    aria-pressed={value.date === date}
+                    onClick={() => onChange({ date })}
+                    className={`rounded-full px-3 py-1.5 text-[12px] font-medium ${
+                      value.date === date ? 'bg-accent text-white' : 'bg-card text-ink2 shadow-card'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
           </Field>
         )}
         <Field label="주기 (일)" htmlFor="f-rep">

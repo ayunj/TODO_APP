@@ -71,6 +71,15 @@ export function ShopIcon({ className }: Props) {
   );
 }
 
+/** 다음 날로 넘긴다 */
+export function PostponeIcon({ className }: Props) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={1.7}>
+      <path d="M4 12h13M12.5 7.5l4.5 4.5-4.5 4.5M20 6v12" />
+    </svg>
+  );
+}
+
 export function SearchIcon({ className }: Props) {
   return (
     <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={1.7}>

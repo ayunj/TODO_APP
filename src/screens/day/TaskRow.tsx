@@ -1,14 +1,16 @@
 'use client';
 
-import { diffDays, shortDate, todayStr } from '@/lib/date';
+import { PostponeIcon } from '@/components/Icons';
+import { addDays, diffDays, shortDate, todayStr } from '@/lib/date';
 import { cycleProgress } from '@/lib/repeat';
 import { useStore } from '@/lib/store';
+import { toast } from '@/lib/toast';
 import { useUi } from '@/lib/ui';
 import type { Task } from '@/lib/types';
 
 /** 메모는 일별 화면에서만 보인다 — 이 컴포넌트만 메모를 그린다 */
 export default function TaskRow({ task, showDate = false }: { task: Task; showDate?: boolean }) {
-  const { categoryOf, toggleTask, removeTask } = useStore();
+  const { categoryOf, toggleTask, removeTask, postponeTasks } = useStore();
   const { openSheet } = useUi();
   const today = todayStr();
   const category = categoryOf(task.categoryId);
@@ -110,14 +112,33 @@ export default function TaskRow({ task, showDate = false }: { task: Task; showDa
         )}
       </button>
 
-      <button
-        type="button"
-        aria-label="삭제"
-        onClick={() => removeTask(task.id)}
-        className="grid h-7 w-7 flex-none place-items-center rounded-[10px] text-[16px] text-faint active:bg-sunk active:text-high"
-      >
-        ×
-      </button>
+      <span className="flex flex-none flex-col items-center gap-0.5">
+        {/* 오늘 지나면 안 해도 되는 일이 있으니 한 건씩도 넘길 수 있게 */}
+        {!task.done && (
+          <button
+            type="button"
+            aria-label="내일로 미루기"
+            onClick={() => {
+              // 앞날짜 항목을 보고 있을 수도 있어서 '그 날의 다음 날'로 옮긴다
+              const next = addDays(task.date > today ? task.date : today, 1);
+              postponeTasks([task.id], next);
+              toast(`${task.title} — ${shortDate(next)}로 미뤘어요`);
+            }}
+            className="grid h-7 w-7 place-items-center rounded-[10px] text-faint active:bg-sunk active:text-accent"
+          >
+            <PostponeIcon className="h-4 w-4" />
+          </button>
+        )}
+
+        <button
+          type="button"
+          aria-label="삭제"
+          onClick={() => removeTask(task.id)}
+          className="grid h-7 w-7 place-items-center rounded-[10px] text-[16px] text-faint active:bg-sunk active:text-high"
+        >
+          ×
+        </button>
+      </span>
     </li>
   );
 }

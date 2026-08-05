@@ -45,6 +45,8 @@ interface StoreValue {
   updateTask: (id: string, input: TaskInput) => void;
   removeTask: (id: string) => void;
   toggleTask: (id: string) => void;
+  /** 못 끝낸 일을 다른 날로 옮긴다. 주기 계산은 건드리지 않는다. */
+  postponeTasks: (ids: string[], date: DateStr) => void;
 
   addPreset: (input: PresetInput) => void;
   updatePreset: (id: string, input: PresetInput) => void;
@@ -292,6 +294,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         await r.deleteTask(id);
         if (freed.length) await r.saveTasks(freed);
       });
+    },
+    [tasks, write],
+  );
+
+  /**
+   * 날짜만 옮긴다. cycleSince는 그대로 둔다 — 이번 주기가 시작된 날이 바뀐 건 아니니까.
+   * 다음 회차 기준일이 '완료한 날과 할 일 날짜 중 늦은 쪽'이라, 미뤄도 주기가 틀어지지 않는다.
+   */
+  const postponeTasks = useCallback(
+    (ids: string[], date: DateStr) => {
+      const target = new Set(ids);
+      const moved = tasks
+        .filter((t) => target.has(t.id) && t.date !== date)
+        .map((t) => ({ ...t, date, updatedAt: stamp() }));
+      if (moved.length === 0) return;
+
+      const byId = new Map(moved.map((t) => [t.id, t]));
+      setTasks(tasks.map((t) => byId.get(t.id) ?? t));
+      write((r) => r.saveTasks(moved));
     },
     [tasks, write],
   );
@@ -603,6 +624,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       updateTask,
       removeTask,
       toggleTask,
+      postponeTasks,
       addPreset,
       updatePreset,
       removePreset,
@@ -636,6 +658,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       updateTask,
       removeTask,
       toggleTask,
+      postponeTasks,
       addPreset,
       updatePreset,
       removePreset,

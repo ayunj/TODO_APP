@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import ProgressStrip from './day/ProgressStrip';
+import PostponeRow from './day/PostponeRow';
 import PresetChips from './day/PresetChips';
 import TaskRow from './day/TaskRow';
 import StaleSection from './day/StaleSection';
@@ -71,6 +72,8 @@ export default function DayScreen() {
           )}
         </>
       )}
+
+      {open.length > 0 && <PostponeRow tasks={open} from={cursor} />}
 
       <button
         type="button"
