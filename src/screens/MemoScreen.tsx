@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import MemoCard from './memo/MemoCard';
 import EmptyBox from '@/components/EmptyBox';
+import { SearchIcon } from '@/components/Icons';
 import { useStore } from '@/lib/store';
 
 /**
@@ -14,6 +15,7 @@ export default function MemoScreen() {
   const { memos, addMemo, updateMemo, removeMemo, markMemosSeen } = useStore();
   const [openId, setOpenId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
+  const [searching, setSearching] = useState(false);
 
   // 들어올 때와 나갈 때 '봤다'고 찍는다. 나갈 때도 찍어야 방금 내가 쓴 글에 점이 안 뜬다.
   useEffect(() => {
@@ -48,23 +50,52 @@ export default function MemoScreen() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={create}
-        className="mb-3 w-full rounded-card border-[1.5px] border-dashed border-edge p-[15px] text-[13.5px] font-medium text-accent active:bg-accent-soft"
-      >
-        + 새 메모
-      </button>
-
-      {memos.length > 1 && (
-        <input
-          type="search"
-          className="field-input mb-3"
-          placeholder="메모 안에서 찾기"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      )}
+      {/* 찾기는 평소엔 돋보기로 접어둔다 — 늘 열어두면 자리만 먹는다 */}
+      <div className="mb-3 flex items-stretch gap-2">
+        {searching ? (
+          <>
+            <input
+              type="search"
+              autoFocus
+              className="field-input flex-1"
+              placeholder="메모 안에서 찾기"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <button
+              type="button"
+              aria-label="찾기 닫기"
+              onClick={() => {
+                setSearching(false);
+                setQuery('');
+              }}
+              className="w-[52px] flex-none rounded-[14px] text-[18px] text-ink3 active:bg-sunk"
+            >
+              ×
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={create}
+              className="flex-1 rounded-card border-[1.5px] border-dashed border-edge p-[15px] text-[13.5px] font-medium text-accent active:bg-accent-soft"
+            >
+              + 새 메모
+            </button>
+            {memos.length > 1 && (
+              <button
+                type="button"
+                aria-label="메모 찾기"
+                onClick={() => setSearching(true)}
+                className="grid w-[52px] flex-none place-items-center rounded-card bg-card text-ink2 shadow-card active:bg-sunk"
+              >
+                <SearchIcon className="h-[19px] w-[19px]" />
+              </button>
+            )}
+          </>
+        )}
+      </div>
 
       {list.length === 0 ? (
         <EmptyBox title={query ? '찾는 말이 없습니다' : '아직 적어둔 것이 없습니다'}>

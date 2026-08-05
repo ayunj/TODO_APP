@@ -71,6 +71,15 @@ export function ShopIcon({ className }: Props) {
   );
 }
 
+export function SearchIcon({ className }: Props) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={1.7}>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="M15.8 15.8L20 20" />
+    </svg>
+  );
+}
+
 export function MemoIcon({ className }: Props) {
   return (
     <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={1.5}>
