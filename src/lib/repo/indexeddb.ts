@@ -9,7 +9,12 @@ const STORES = [...DATA_STORES, 'settings', 'graveyard'] as const;
 type StoreName = (typeof STORES)[number];
 
 const SETTINGS_ID = 'app';
-const DEFAULT_SETTINGS: Settings = { onboarded: false, memoSeenAt: '', syncedAt: '' };
+const DEFAULT_SETTINGS: Settings = {
+  onboarded: false,
+  memoSeenAt: '',
+  syncedAt: '',
+  ownerId: '',
+};
 
 function open(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {

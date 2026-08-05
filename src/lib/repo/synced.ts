@@ -118,7 +118,7 @@ export class SyncedRepository implements Repository {
 
   async sync(): Promise<Snapshot> {
     const settings = await this.local.loadSettings();
-    const since = settings.syncedAt ?? '';
+    const since = (await this.handOver(settings.ownerId)) ? '' : (settings.syncedAt ?? '');
 
     await this.uuidify();
     await this.flushGraves();
@@ -135,8 +135,24 @@ export class SyncedRepository implements Repository {
       memos: await this.settle('memos', mine.memos, theirs.memos, since),
     };
 
-    await this.local.saveSettings({ syncedAt: new Date().toISOString() });
+    await this.local.saveSettings({ syncedAt: new Date().toISOString(), ownerId: this.owner });
     return merged;
+  }
+
+  /**
+   * 이 기기에 남아 있던 게 다른 사람 목록이면 비우고 시작한다.
+   *
+   * 저장소는 계정별이 아니라 브라우저별이다. 앞사람 목록을 그대로 두면
+   * 그게 '아직 안 올린 것'으로 보여서 뒷사람 계정으로 올라간다.
+   * 앞사람 것은 이미 서버에 있으니, 여기서 비워도 잃는 게 아니다.
+   */
+  private async handOver(previous: string): Promise<boolean> {
+    if (!previous || previous === this.owner) return false;
+    const graves = await this.local.graves();
+    await this.local.clearAll(); // 로컬만 비운다 — 앞사람 서버 목록은 그대로 둔다
+    await this.local.forget(graves.map((g) => g.id));
+    await this.local.saveSettings({ syncedAt: '', ownerId: this.owner });
+    return true;
   }
 
   /**
