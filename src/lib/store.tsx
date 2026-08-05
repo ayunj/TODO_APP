@@ -700,7 +700,12 @@ export function useStore(): StoreValue {
 }
 
 /**
- * 빈 곳을 채워둔다 — 기본 카테고리, 처음 보여줄 자주 쓰는 일, 옛 팔레트 색 옮기기.
+ * 카테고리가 하나도 없을 때만 기본 둘을 깔아준다. 그 외에는 손대지 않는다.
+ *
+ * 자주 쓰는 일은 심지 않는다 — 비워두고 직접 채우는 게 맞다.
+ * 예전에는 비어 있으면 채워 넣었는데, 그러면 전체 초기화하고 새로고침할 때마다
+ * 지운 것이 도로 살아났다.
+ *
  * 서버와 맞춘 뒤에 부른다. 맞추기 전에 심으면 기기마다 같은 걸 만들어 두 벌이 된다.
  */
 async function furnish(r: Repository, snap: Snapshot): Promise<Snapshot> {
@@ -709,34 +714,17 @@ async function furnish(r: Repository, snap: Snapshot): Promise<Snapshot> {
   if (categories.length === 0) {
     categories = DEFAULT_CATEGORIES.map((c) => ({ ...c, id: uid(), updatedAt: stamp() }));
     await Promise.all(categories.map((c) => r.saveCategory(c)));
-  } else {
-    // 예전 팔레트로 저장된 색은 새 파스텔 색으로 한 번만 옮긴다
-    const repainted = categories
-      .filter((c) => LEGACY_COLOR[c.color])
-      .map((c) => ({ ...c, color: LEGACY_COLOR[c.color], updatedAt: stamp() }));
-    if (repainted.length) {
-      categories = categories.map((c) => repainted.find((x) => x.id === c.id) ?? c);
-      await Promise.all(repainted.map((c) => r.saveCategory(c)));
-    }
+    return { ...snap, categories };
   }
 
-  let presets = snap.presets;
-  if (presets.length === 0 && snap.tasks.length === 0) {
-    const home = categories.find((c) => c.name === '집안일') ?? categories[0];
-    const body = categories.find((c) => c.name === '건강') ?? categories[0];
-    presets = seedPresets(home?.id ?? '', body?.id ?? '');
-    await Promise.all(presets.map((p) => r.savePreset(p)));
+  // 예전 팔레트로 저장된 색은 새 파스텔 색으로 한 번만 옮긴다
+  const repainted = categories
+    .filter((c) => LEGACY_COLOR[c.color])
+    .map((c) => ({ ...c, color: LEGACY_COLOR[c.color], updatedAt: stamp() }));
+  if (repainted.length) {
+    categories = categories.map((c) => repainted.find((x) => x.id === c.id) ?? c);
+    await Promise.all(repainted.map((c) => r.saveCategory(c)));
   }
 
-  return { ...snap, categories, presets };
-}
-
-function seedPresets(homeId: string, bodyId: string): Preset[] {
-  const base = { roomId: null, memo: '', repeatUntil: null, updatedAt: stamp() };
-  return [
-    { id: uid(), title: '화장실 청소', categoryId: homeId, priority: 2 as Priority, repeatDays: 8, ...base },
-    { id: uid(), title: '빨래', categoryId: homeId, priority: 2 as Priority, repeatDays: 4, ...base },
-    { id: uid(), title: '이불 빨래', categoryId: homeId, priority: 1 as Priority, repeatDays: 30, ...base },
-    { id: uid(), title: '영양제', categoryId: bodyId, priority: 1 as Priority, repeatDays: 1, ...base },
-  ];
+  return { ...snap, categories };
 }

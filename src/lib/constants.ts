@@ -31,13 +31,14 @@ export const CATEGORY_TINT: Record<string, string> = {
   '#A8C9A5': '#F2F7EE',
 };
 
-/** 처음 5개. 사용자가 이름·색을 고치고 추가·삭제할 수 있다. */
+/**
+ * 처음에 깔아두는 것은 둘뿐이다. 나머지는 필요할 때 직접 만든다.
+ * 안 쓰는 칸이 늘어서 있으면 필터 줄만 길어진다.
+ * id는 쓸 때 새로 매긴다 — 기기마다 달라야 서버에서 안 부딪힌다.
+ */
 export const DEFAULT_CATEGORIES: Omit<Category, 'updatedAt'>[] = [
   { id: 'home', name: '집안일', color: '#8EC9B5', order: 0 },
-  { id: 'work', name: '업무', color: '#A9B8F4', order: 1 },
-  { id: 'life', name: '개인', color: '#F0C58A', order: 2 },
-  { id: 'study', name: '공부', color: '#DDB9E9', order: 3 },
-  { id: 'body', name: '건강', color: '#A8D8F0', order: 4 },
+  { id: 'body', name: '건강', color: '#A8D8F0', order: 1 },
 ];
 
 /**
