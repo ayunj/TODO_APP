@@ -29,7 +29,7 @@ export default function PostponeRow({ tasks, from }: { tasks: Task[]; from: Date
       <button
         type="button"
         onClick={() => move(tomorrow)}
-        className="flex-1 rounded-card bg-card p-[15px] text-[14.5px] font-medium text-ink2 shadow-card active:bg-sunk"
+        className="flex-1 rounded-card bg-card p-[15px] text-[14px] font-medium text-ink2 shadow-card active:bg-sunk"
       >
         남은 {tasks.length}개 내일로 미루기
       </button>

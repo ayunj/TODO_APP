@@ -31,7 +31,7 @@ export default function ShopHistory({ items }: { items: ShopItem[] }) {
 
   return (
     <details className="mt-6">
-      <summary className="cursor-pointer list-none border-t border-line py-3 text-[13px] text-ink3 [&::-webkit-details-marker]:hidden">
+      <summary className="cursor-pointer list-none border-t border-line py-3 text-[12.5px] text-ink3 [&::-webkit-details-marker]:hidden">
         지난 장보기 {items.length}개 보기
       </summary>
 
@@ -39,8 +39,8 @@ export default function ShopHistory({ items }: { items: ShopItem[] }) {
         {days.map(([day, list]) => (
           <div key={day} className="mb-3.5">
             <div className="mb-1.5 flex items-baseline justify-between gap-2">
-              <span className="text-[13px] font-medium text-ink2">{label(day)}</span>
-              <span className="font-mono text-[12px] text-ink3">{list.length}</span>
+              <span className="text-[12.5px] font-medium text-ink2">{label(day)}</span>
+              <span className="font-mono text-[11.5px] text-ink3">{list.length}</span>
             </div>
             <ul className="flex list-none flex-wrap gap-1.5 p-0">
               {list.map((i) => (
@@ -49,7 +49,7 @@ export default function ShopHistory({ items }: { items: ShopItem[] }) {
                     type="button"
                     onClick={() => rebuyShopItem(i.id)}
                     title="다시 담기"
-                    className="rounded-full bg-card px-3 py-1.5 text-[13.5px] text-ink2 shadow-card active:scale-95"
+                    className="rounded-full bg-card px-3 py-1.5 text-[13px] text-ink2 shadow-card active:scale-95"
                   >
                     {i.title}
                   </button>
@@ -58,7 +58,7 @@ export default function ShopHistory({ items }: { items: ShopItem[] }) {
             </ul>
           </div>
         ))}
-        <p className="pb-1 text-[12.5px] leading-[1.6] text-ink3">
+        <p className="pb-1 text-[12px] leading-[1.6] text-ink3">
           눌러서 다시 담을 수 있어요. 지난 기록은 그대로 남습니다.
         </p>
       </div>

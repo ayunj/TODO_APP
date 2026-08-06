@@ -41,15 +41,15 @@ export default function CategoryListSheet() {
           >
             <span className="h-3 w-3 flex-none rounded-full" style={{ background: c.color }} />
             <span className="min-w-0 flex-1">
-              <span className="block break-words text-[15.5px]">{c.name}</span>
-              <span className="text-[12.5px] text-ink3">
+              <span className="block break-words text-[15px]">{c.name}</span>
+              <span className="text-[12px] text-ink3">
                 {tasks.filter((t) => t.categoryId === c.id).length}개 사용 중
               </span>
             </span>
             <button
               type="button"
               onClick={() => openSheet({ kind: 'category', id: c.id })}
-              className="flex-none rounded-[11px] bg-sunk px-3 py-2 text-[13px] text-ink2"
+              className="flex-none rounded-[11px] bg-sunk px-3 py-2 text-[12.5px] text-ink2"
             >
               수정
             </button>
@@ -57,7 +57,7 @@ export default function CategoryListSheet() {
               <button
                 type="button"
                 onClick={() => kill(c.id)}
-                className="flex-none rounded-[11px] bg-danger-soft px-3 py-2 text-[13px] text-high"
+                className="flex-none rounded-[11px] bg-danger-soft px-3 py-2 text-[12.5px] text-high"
               >
                 삭제
               </button>

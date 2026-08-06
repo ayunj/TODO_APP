@@ -19,12 +19,12 @@ export default function LogScreen() {
   return (
     <>
       <div className="mb-2 rounded-card px-[18px] pb-4 pt-[18px] shadow-card [background:var(--card)]">
-        <span className="text-[13px] text-ink3">이번 달 완료율</span>
-        <span className="my-0.5 mb-3 block font-round text-[39px] leading-[1.1]">
+        <span className="text-[12.5px] text-ink3">이번 달 완료율</span>
+        <span className="my-0.5 mb-3 block font-round text-[38.5px] leading-[1.1]">
           {rate}
-          <small className="ml-0.5 text-[17px] text-ink3">%</small>
+          <small className="ml-0.5 text-[16.5px] text-ink3">%</small>
           {rate === 100 && monthTasks.length > 0 && (
-            <span className="float-right text-[31px]">🏆</span>
+            <span className="float-right text-[30.5px]">🏆</span>
           )}
         </span>
         <span className="block h-[9px] overflow-hidden rounded-full bg-track">

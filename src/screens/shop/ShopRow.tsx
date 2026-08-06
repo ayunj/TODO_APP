@@ -21,7 +21,7 @@ export default function ShopRow({ item }: { item: ShopItem }) {
         aria-label="담음 표시"
         aria-pressed={item.done}
         onClick={() => toggleShopItem(item.id)}
-        className={`mt-px grid h-[25px] w-[25px] flex-none place-items-center rounded-full border-[1.8px] text-[13px] font-bold active:scale-90 ${
+        className={`mt-px grid h-[25px] w-[25px] flex-none place-items-center rounded-full border-[1.8px] text-[12.5px] font-bold active:scale-90 ${
           item.done ? 'border-ok bg-ok text-white' : 'border-edge text-transparent'
         }`}
       >
@@ -35,7 +35,7 @@ export default function ShopRow({ item }: { item: ShopItem }) {
         className="min-w-0 flex-1 bg-transparent text-left"
       >
         <span
-          className={`block break-words text-[16px] ${
+          className={`block break-words text-[15.5px] ${
             item.done ? 'text-done line-through decoration-1' : ''
           }`}
         >
@@ -44,7 +44,7 @@ export default function ShopRow({ item }: { item: ShopItem }) {
 
         {item.note && (
           <span
-            className={`mt-1.5 block whitespace-pre-wrap break-words rounded-xl px-3 py-2 text-[13.5px] leading-[1.55] ${
+            className={`mt-1.5 block whitespace-pre-wrap break-words rounded-xl px-3 py-2 text-[13px] leading-[1.55] ${
               item.done ? 'text-done' : 'bg-memo text-ink2'
             }`}
           >
@@ -53,9 +53,9 @@ export default function ShopRow({ item }: { item: ShopItem }) {
         )}
 
         {(item.place || (item.done && item.boughtOn)) && (
-          <span className="mt-1.5 flex flex-wrap items-center gap-2 text-[12.5px] text-ink3">
+          <span className="mt-1.5 flex flex-wrap items-center gap-2 text-[12px] text-ink3">
             {item.place && (
-              <span className="rounded-full bg-accent-tint px-2.5 py-1 text-[12px] font-medium text-accent">
+              <span className="rounded-full bg-accent-tint px-2.5 py-1 text-[11.5px] font-medium text-accent">
                 {item.place}
               </span>
             )}

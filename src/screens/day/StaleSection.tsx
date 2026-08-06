@@ -16,7 +16,7 @@ export default function StaleSection() {
 
   return (
     <details className="mt-6">
-      <summary className="cursor-pointer list-none border-t border-line py-3 text-[13px] text-ink3 [&::-webkit-details-marker]:hidden">
+      <summary className="cursor-pointer list-none border-t border-line py-3 text-[12.5px] text-ink3 [&::-webkit-details-marker]:hidden">
         지난 미완료 {stale.length}개 보기
       </summary>
       <ul className="mt-2.5 flex list-none flex-col gap-[9px] p-0">

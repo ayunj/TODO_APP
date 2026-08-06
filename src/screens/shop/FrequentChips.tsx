@@ -36,10 +36,10 @@ export default function FrequentChips({ history, onList }: { history: ShopItem[]
           key={c.title}
           type="button"
           onClick={() => rebuyShopItem(c.id)}
-          className="inline-flex flex-none items-center gap-1.5 rounded-full bg-card px-[15px] py-2.5 text-[14px] font-medium text-ink2 shadow-card active:scale-95"
+          className="inline-flex flex-none items-center gap-1.5 rounded-full bg-card px-[15px] py-2.5 text-[13.5px] font-medium text-ink2 shadow-card active:scale-95"
         >
           {c.title}
-          <span className="font-mono text-[11.5px] text-ink3">{c.n}</span>
+          <span className="font-mono text-[11px] text-ink3">{c.n}</span>
         </button>
       ))}
     </ScrollRow>

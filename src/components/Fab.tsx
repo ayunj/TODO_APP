@@ -11,7 +11,7 @@ export default function Fab() {
       type="button"
       aria-label="할 일 추가"
       onClick={() => openSheet({ kind: 'task', id: null })}
-      className="fixed z-[26] grid h-14 w-14 place-items-center rounded-full bg-accent text-[28px] font-light leading-none text-white shadow-fab active:scale-95"
+      className="fixed z-[26] grid h-14 w-14 place-items-center rounded-full bg-accent text-[27.5px] font-light leading-none text-white shadow-fab active:scale-95"
       style={{
         right: 'max(18px, calc(50vw - 242px))',
         bottom: 'calc(var(--bar) + 20px + env(safe-area-inset-bottom))',

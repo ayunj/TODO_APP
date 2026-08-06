@@ -20,10 +20,10 @@ export default function WelcomeScreen() {
     >
       <WelcomeArt />
 
-      <h2 className="text-center font-round text-[26px] font-normal tracking-[-0.02em]">
+      <h2 className="text-center font-round text-[25.5px] font-normal tracking-[-0.02em]">
         오늘도 하나씩
       </h2>
-      <p className="mb-[26px] mt-[9px] text-center text-[14.5px] leading-[1.7] text-ink3">
+      <p className="mb-[26px] mt-[9px] text-center text-[14px] leading-[1.7] text-ink3">
         반복되는 집안일, 언제 했는지
         <br />더 이상 기억하지 않아도 됩니다.
       </p>
@@ -32,7 +32,7 @@ export default function WelcomeScreen() {
         <button
           type="button"
           onClick={finishWelcome}
-          className="w-full rounded-[18px] bg-accent py-[17px] text-center text-[16.5px] font-medium text-white shadow-fab active:scale-[.99]"
+          className="w-full rounded-[18px] bg-accent py-[17px] text-center text-[16px] font-medium text-white shadow-fab active:scale-[.99]"
         >
           시작하기
         </button>

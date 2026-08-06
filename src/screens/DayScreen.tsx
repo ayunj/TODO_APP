@@ -60,7 +60,7 @@ export default function DayScreen() {
           {/* 완료한 것은 숨기지 않는다. 아래로 내리고 취소선만 긋는다. */}
           {shut.length > 0 && (
             <>
-              <div className="mb-2.5 mt-[22px] text-[13px] font-medium text-ink3">
+              <div className="mb-2.5 mt-[22px] text-[12.5px] font-medium text-ink3">
                 완료 {shut.length}
               </div>
               <ul className="flex list-none flex-col gap-[9px] p-0">
@@ -79,7 +79,7 @@ export default function DayScreen() {
       <button
         type="button"
         onClick={() => openSheet({ kind: 'task', id: null })}
-        className="mt-[11px] w-full rounded-card border-[1.5px] border-dashed border-edge p-[15px] text-[14.5px] font-medium text-accent active:bg-accent-soft"
+        className="mt-[11px] w-full rounded-card border-[1.5px] border-dashed border-edge p-[15px] text-[14px] font-medium text-accent active:bg-accent-soft"
       >
         + 새 할 일 추가하기
       </button>

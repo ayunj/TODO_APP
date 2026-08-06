@@ -37,10 +37,10 @@ export default function NewPasswordScreen() {
     >
       <WelcomeArt />
 
-      <h2 className="text-center font-round text-[26px] font-normal tracking-[-0.02em]">
+      <h2 className="text-center font-round text-[25.5px] font-normal tracking-[-0.02em]">
         새 비밀번호
       </h2>
-      <p className="mb-[26px] mt-[9px] text-center text-[14.5px] leading-[1.7] text-ink3">
+      <p className="mb-[26px] mt-[9px] text-center text-[14px] leading-[1.7] text-ink3">
         새로 쓸 비밀번호를 정해주세요.
         <br />
         정하고 나면 바로 들어갑니다.
@@ -72,7 +72,7 @@ export default function NewPasswordScreen() {
         />
 
         {error && (
-          <p role="alert" className="px-1 text-[13.5px] leading-[1.6] text-high">
+          <p role="alert" className="px-1 text-[13px] leading-[1.6] text-high">
             {error}
           </p>
         )}
@@ -80,7 +80,7 @@ export default function NewPasswordScreen() {
         <button
           type="submit"
           disabled={busy}
-          className="mt-1.5 w-full rounded-[18px] bg-accent py-[17px] text-[16.5px] font-medium text-white shadow-fab active:scale-[.99] disabled:opacity-60"
+          className="mt-1.5 w-full rounded-[18px] bg-accent py-[17px] text-[16px] font-medium text-white shadow-fab active:scale-[.99] disabled:opacity-60"
         >
           {busy ? '잠시만요…' : '이걸로 정하기'}
         </button>
@@ -89,7 +89,7 @@ export default function NewPasswordScreen() {
       <button
         type="button"
         onClick={() => void signOut()}
-        className="mb-auto mt-3.5 py-2 text-center text-[14px] text-ink3"
+        className="mb-auto mt-3.5 py-2 text-center text-[13.5px] text-ink3"
       >
         그만두기
       </button>

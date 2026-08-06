@@ -13,8 +13,8 @@ export default function AccountSheet() {
   return (
     <Sheet title="계정" onClose={closeSheet} onBack={() => openSheet({ kind: 'settings' })}>
       <div className="mb-4 rounded-card bg-card px-[18px] py-4 shadow-card">
-        <span className="block text-[12.5px] text-ink3">{account?.guest ? '초대로 들어옴' : '로그인'}</span>
-        <span className="mt-1 block break-all text-[15.5px]">
+        <span className="block text-[12px] text-ink3">{account?.guest ? '초대로 들어옴' : '로그인'}</span>
+        <span className="mt-1 block break-all text-[15px]">
           {account?.email ?? '이름만 적고 들어온 상태'}
         </span>
       </div>
