@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from './auth';
 import { DEFAULT_CATEGORIES, LEGACY_COLOR } from './constants';
-import { addDays, todayStr } from './date';
+import { addDays, shortDate, todayStr } from './date';
 import { stamp, uid } from './id';
 import { baseOf, spawnNext } from './repeat';
 import { getRepository } from './repo';
@@ -244,7 +244,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (input.repeatDays <= 0) {
           dropPending = true; // 주기를 0으로 바꾸면 대기 중인 회차를 지운다
         } else {
-          const since = baseOf(updated, today);
+          const since = baseOf(updated);
           const date = addDays(since, input.repeatDays);
           if (input.repeatUntil && date > input.repeatUntil) {
             dropPending = true; // 종료일을 앞당겼고 대기 회차가 그 날짜를 넘긴다
@@ -308,7 +308,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * 날짜만 옮긴다. cycleSince는 그대로 둔다 — 이번 주기가 시작된 날이 바뀐 건 아니니까.
-   * 다음 회차 기준일이 '완료한 날과 할 일 날짜 중 늦은 쪽'이라, 미뤄도 주기가 틀어지지 않는다.
+   * 다음 회차 기준일이 date라, 미룬 만큼 다음 회차도 밀린다. 8/5에 하겠다고 옮긴 거니 그게 맞다.
    */
   const postponeTasks = useCallback(
     (ids: string[], date: DateStr) => {
@@ -352,7 +352,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const done: Task = {
         ...current,
         done: true,
-        doneOn: today,
+        // 그 날 한 걸로 적는다. 앞날짜를 미리 체크한 것만 오늘로 —  하지도 않은 날을 적을 수는 없다.
+        doneOn: current.date < today ? current.date : today,
         doneBy: null,
         updatedAt: stamp(),
       };
@@ -361,8 +362,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const hasPending = tasks.some((t) => t.parentId === id && !t.done);
       let next: Task | null = null;
       if (current.repeatDays > 0 && !hasPending) {
-        next = spawnNext(done, today);
-        if (next) toast(`다음 ${done.title} → ${done.repeatDays}일 뒤`);
+        next = spawnNext(done);
+        // '8일 뒤'가 아니라 날짜를 적는다 — 지난 날짜를 체크하면 그 날 기준이라 뒤가 아닐 수 있다
+        if (next) toast(`다음 ${done.title} → ${shortDate(next.date)}`);
         else toast(`${done.title} — 반복이 끝났습니다`);
       }
 
