@@ -6,7 +6,7 @@
  * 홈 화면용은 모서리를 깎지 않은 꽉 찬 사각형으로 뽑는다. 둥글리기는 iOS가 알아서 한다.
  */
 import sharp from 'sharp';
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
 const BRAND = '#D97A5E';
@@ -37,4 +37,31 @@ for (const { name, size, opts } of FILES) {
   const out = fileURLToPath(new URL(name, OUT));
   await sharp(Buffer.from(svg(opts))).resize(size, size).png().toFile(out);
   console.log(`${name}  ${size}x${size}`);
+}
+
+/*
+ * 안드로이드 앱(Capacitor)용 원본 — `npx capacitor-assets generate`가 여기서 모든 밀도를 뽑는다.
+ * 웹 아이콘과 달리 모서리를 안 깎는다. 런처가 기기 모양대로 잘라내기 때문에
+ * 미리 깎아두면 두 번 깎인다. 앞면(foreground)은 잘려도 살아남게 안쪽 70%에만 그린다.
+ */
+const bare = (inner) => `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">${inner}</svg>`;
+const check = (scale, stroke = '#fff') => `
+  <g transform="translate(256 256) scale(${scale}) translate(-256 -256)">
+    <path d="${CHECK}" fill="none" stroke="${stroke}" stroke-width="42"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </g>`;
+
+const APP = [
+  { name: 'icon.png', size: 1024, svg: svg({}) },
+  { name: 'icon-foreground.png', size: 1024, svg: bare(check(0.7)) },
+  { name: 'icon-background.png', size: 1024, svg: bare(`<rect width="512" height="512" fill="${BRAND}"/>`) },
+  { name: 'splash.png', size: 2732, svg: bare(`<rect width="512" height="512" fill="#FAF6F0"/>${check(0.5, BRAND)}`) },
+];
+
+await mkdir(new URL('../assets/', import.meta.url), { recursive: true });
+for (const { name, size, svg: src } of APP) {
+  const out = fileURLToPath(new URL(`../assets/${name}`, import.meta.url));
+  await sharp(Buffer.from(src)).resize(size, size).png().toFile(out);
+  console.log(`assets/${name}  ${size}x${size}`);
 }

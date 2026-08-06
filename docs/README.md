@@ -11,7 +11,7 @@ docs/
   shopping/   list  history
   memo/
   account/    login  sync  database
-  app/        architecture  navigation  design  pwa
+  app/        architecture  navigation  design  pwa  native
 ```
 
 ---
@@ -52,7 +52,8 @@ docs/
 | [architecture](app/architecture/기능.md) | ★ 층 구조와 저장소 인터페이스 |
 | [navigation](app/navigation/기능.md) | 헤더, 탭바, 시트, 화면 이동 |
 | [design](app/design/기능.md) | 색 토큰, 말투 |
-| [pwa](app/pwa/기능.md) | 설치, 아이콘, 서비스워커 |
+| [pwa](app/pwa/기능.md) | 홈 화면 설치, 아이콘, 서비스워커 |
+| [native](app/native/기능.md) | 안드로이드 앱 (Capacitor) — APK 굽기 |
 
 ---
 
