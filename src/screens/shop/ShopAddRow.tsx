@@ -43,7 +43,7 @@ export default function ShopAddRow() {
         aria-label="담기"
         onClick={submit}
         disabled={!text.trim()}
-        className="grid h-[46px] w-[46px] flex-none place-items-center rounded-[14px] bg-accent text-[24px] font-light leading-none text-white shadow-card active:scale-95 disabled:bg-edge disabled:text-white/70"
+        className="grid h-[46px] w-[46px] flex-none place-items-center rounded-[14px] bg-accent text-[25px] font-light leading-none text-white shadow-card active:scale-95 disabled:bg-edge disabled:text-white/70"
       >
         +
       </button>

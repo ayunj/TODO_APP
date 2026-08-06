@@ -13,23 +13,23 @@ export default function SettingsSheet() {
   const { closeSheet, openSheet } = useUi();
 
   const item =
-    'flex items-center gap-3 rounded-2xl bg-card px-[15px] py-4 text-[14.5px] shadow-card';
+    'flex items-center gap-3 rounded-2xl bg-card px-[15px] py-4 text-[15.5px] shadow-card';
 
   return (
     <Sheet title="설정" onClose={closeSheet}>
       <div className="mb-2 flex flex-col gap-[9px]">
         <button type="button" className={item} onClick={() => openSheet({ kind: 'presetList' })}>
           즐겨찾기
-          <span className="ml-auto text-[12px] text-ink3">{presets.length}개</span>
+          <span className="ml-auto text-[13px] text-ink3">{presets.length}개</span>
         </button>
         <button type="button" className={item} onClick={() => openSheet({ kind: 'categoryList' })}>
           카테고리
-          <span className="ml-auto text-[12px] text-ink3">{categories.length}개</span>
+          <span className="ml-auto text-[13px] text-ink3">{categories.length}개</span>
         </button>
         {enabled && account && (
           <button type="button" className={item} onClick={() => openSheet({ kind: 'account' })}>
             계정
-            <span className="ml-auto max-w-[55%] truncate text-[12px] text-ink3">
+            <span className="ml-auto max-w-[55%] truncate text-[13px] text-ink3">
               {account.email ?? '초대로 들어옴'}
             </span>
           </button>

@@ -35,10 +35,10 @@ export default function MonthScreen() {
           { k: '달성률', v: `${rate}`, unit: '%' },
         ].map((s) => (
           <div key={s.k} className="flex-1 rounded-2xl bg-card px-[13px] py-3 shadow-card">
-            <span className="block text-[10.5px] text-ink3">{s.k}</span>
-            <span className="mt-0.5 block font-round text-[20px] font-medium">
+            <span className="block text-[11.5px] text-ink3">{s.k}</span>
+            <span className="mt-0.5 block font-round text-[21px] font-medium">
               <span className="font-mono">{s.v}</span>
-              {s.unit && <small className="text-[12px] text-ink3">{s.unit}</small>}
+              {s.unit && <small className="text-[13px] text-ink3">{s.unit}</small>}
             </span>
           </div>
         ))}
@@ -48,7 +48,7 @@ export default function MonthScreen() {
         {DOW.map((w, i) => (
           <span
             key={w}
-            className={`pb-[7px] text-center text-[11px] ${i === 0 ? 'text-high' : 'text-ink3'}`}
+            className={`pb-[7px] text-center text-[12px] ${i === 0 ? 'text-high' : 'text-ink3'}`}
           >
             {w}
           </span>

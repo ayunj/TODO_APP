@@ -1,13 +1,9 @@
 'use client';
 
 import ScrollRow from './ScrollRow';
-import { CATEGORY_TINT } from '@/lib/constants';
+import { tintOf } from '@/lib/constants';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
-
-/** 팔레트 색에는 정해둔 틴트를, 직접 고른 색에는 섞어 만든 틴트를 쓴다 */
-const tintOf = (color: string) =>
-  CATEGORY_TINT[color.toUpperCase()] ?? `color-mix(in srgb, ${color} 14%, #fff)`;
 
 /** 헤더 아래 가로 스크롤 한 줄. 세 화면 모두에 적용된다. */
 export default function CategoryFilter() {
@@ -15,7 +11,7 @@ export default function CategoryFilter() {
   const { filter, setFilter } = useUi();
 
   const chip =
-    'flex-none inline-flex items-center rounded-full px-[15px] py-[7px] text-[12.5px] font-medium transition-colors';
+    'flex-none inline-flex items-center rounded-full px-[15px] py-[7px] text-[13.5px] font-medium transition-colors';
 
   return (
     <ScrollRow className="pb-[14px]" role="group" aria-label="카테고리 필터">

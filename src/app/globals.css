@@ -121,7 +121,7 @@
     background: var(--card);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
     font-family: inherit;
-    font-size: 14.5px;
+    font-size: 15.5px;
     color: var(--ink);
   }
   .field-input::placeholder {

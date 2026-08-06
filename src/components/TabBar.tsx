@@ -32,7 +32,7 @@ export default function TabBar() {
               role="tab"
               aria-selected={on}
               onClick={() => setView(v)}
-              className={`flex flex-1 flex-col items-center gap-1 rounded-[14px] py-[5px] text-[10.5px] font-medium ${
+              className={`flex flex-1 flex-col items-center gap-1 rounded-[14px] py-[5px] text-[11.5px] font-medium ${
                 on ? 'text-accent' : 'text-ink3'
               }`}
             >

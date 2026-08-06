@@ -47,7 +47,7 @@ export default function Sheet({ title, onClose, onBack, children }: Props) {
           >
             {onBack ? <BackIcon className="h-5 w-5" /> : <DownIcon className="h-5 w-5" />}
           </button>
-          <h2 className="font-round text-[17px] font-normal">{title}</h2>
+          <h2 className="font-round text-[18px] font-normal">{title}</h2>
         </div>
         {children}
       </div>

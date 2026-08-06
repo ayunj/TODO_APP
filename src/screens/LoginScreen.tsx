@@ -79,10 +79,10 @@ export default function LoginScreen() {
     >
       <WelcomeArt />
 
-      <h2 className="text-center font-round text-[25px] font-normal tracking-[-0.02em]">
+      <h2 className="text-center font-round text-[26px] font-normal tracking-[-0.02em]">
         {invited ? '함께 쓰기' : mode === 'forgot' ? '비밀번호 찾기' : '오늘도 하나씩'}
       </h2>
-      <p className="mb-[26px] mt-[9px] text-center text-[13.5px] leading-[1.7] text-ink3">
+      <p className="mb-[26px] mt-[9px] text-center text-[14.5px] leading-[1.7] text-ink3">
         {invited ? (
           <>
             초대를 받으셨네요.
@@ -105,8 +105,8 @@ export default function LoginScreen() {
       </p>
 
       {sent ? (
-        <div className="rounded-card bg-card px-[18px] py-6 text-center text-[13px] leading-[1.8] text-ink3 shadow-card">
-          <b className="mb-1.5 block font-round text-[15px] font-medium text-ink2">
+        <div className="rounded-card bg-card px-[18px] py-6 text-center text-[14px] leading-[1.8] text-ink3 shadow-card">
+          <b className="mb-1.5 block font-round text-[16px] font-medium text-ink2">
             메일을 보냈습니다
           </b>
           <span className="break-all text-ink2">{email}</span>
@@ -157,7 +157,7 @@ export default function LoginScreen() {
           )}
 
           {error && (
-            <p role="alert" className="px-1 text-[12.5px] leading-[1.6] text-high">
+            <p role="alert" className="px-1 text-[13.5px] leading-[1.6] text-high">
               {error}
             </p>
           )}
@@ -165,7 +165,7 @@ export default function LoginScreen() {
           <button
             type="submit"
             disabled={busy}
-            className="mt-1.5 w-full rounded-[18px] bg-accent py-[17px] text-[15.5px] font-medium text-white shadow-fab active:scale-[.99] disabled:opacity-60"
+            className="mt-1.5 w-full rounded-[18px] bg-accent py-[17px] text-[16.5px] font-medium text-white shadow-fab active:scale-[.99] disabled:opacity-60"
           >
             {busy ? '잠시만요…' : invited ? '시작하기' : TITLE[mode]}
           </button>
@@ -176,27 +176,27 @@ export default function LoginScreen() {
         <div className="mt-3.5 flex flex-col items-center gap-1">
           {mode === 'in' && (
             <>
-              <button type="button" onClick={() => go('up')} className="py-2 text-[13px] text-ink3">
+              <button type="button" onClick={() => go('up')} className="py-2 text-[14px] text-ink3">
                 계정이 없으신가요? 새로 만들기
               </button>
               <button
                 type="button"
                 onClick={() => go('forgot')}
-                className="py-1 text-[12.5px] text-ink3"
+                className="py-1 text-[13.5px] text-ink3"
               >
                 비밀번호를 잊으셨나요?
               </button>
             </>
           )}
           {mode !== 'in' && (
-            <button type="button" onClick={() => go('in')} className="py-2 text-[13px] text-ink3">
+            <button type="button" onClick={() => go('in')} className="py-2 text-[14px] text-ink3">
               로그인으로 돌아가기
             </button>
           )}
         </div>
       )}
 
-      <p className="mb-auto mt-6 px-1 text-center text-[11.5px] leading-[1.7] text-ink3">
+      <p className="mb-auto mt-6 px-1 text-center text-[12.5px] leading-[1.7] text-ink3">
         {invited
           ? '설치도 가입도 필요 없어요. 이 링크만 있으면 됩니다.'
           : '적어둔 것은 계정에 저장돼요. 폰을 바꿔도 그대로 있습니다.'}

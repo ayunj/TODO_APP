@@ -18,7 +18,7 @@ export function Field({
 }) {
   return (
     <div className="mb-4">
-      <label htmlFor={htmlFor} className="mb-2 block text-[12.5px] font-medium text-ink2">
+      <label htmlFor={htmlFor} className="mb-2 block text-[13.5px] font-medium text-ink2">
         {label}
       </label>
       {children}
@@ -27,7 +27,7 @@ export function Field({
 }
 
 export function Hint({ children }: { children: React.ReactNode }) {
-  return <div className="-mt-1.5 mb-4 text-[11.5px] leading-[1.6] text-ink3">{children}</div>;
+  return <div className="-mt-1.5 mb-4 text-[12.5px] leading-[1.6] text-ink3">{children}</div>;
 }
 
 export function GoButton(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
@@ -35,7 +35,7 @@ export function GoButton(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
     <button
       type="button"
       {...props}
-      className="mt-1 w-full rounded-2xl bg-accent p-4 text-[15px] font-medium text-white active:scale-[.99]"
+      className="mt-1 w-full rounded-2xl bg-accent p-4 text-[16px] font-medium text-white active:scale-[.99]"
     />
   );
 }
@@ -45,7 +45,7 @@ export function DangerButton(props: React.ButtonHTMLAttributes<HTMLButtonElement
     <button
       type="button"
       {...props}
-      className="mt-[9px] w-full rounded-2xl bg-danger-soft p-[15px] text-[14px] font-medium text-high"
+      className="mt-[9px] w-full rounded-2xl bg-danger-soft p-[15px] text-[15px] font-medium text-high"
     />
   );
 }
@@ -115,7 +115,7 @@ export function CategoryPicker({
             type="button"
             aria-pressed={on}
             onClick={() => onChange(c.id)}
-            className={`inline-flex items-center gap-1.5 rounded-full px-[15px] py-2.5 text-[13px] shadow-card ${
+            className={`inline-flex items-center gap-1.5 rounded-full px-[15px] py-2.5 text-[14px] shadow-card ${
               on ? 'bg-accent text-white' : 'bg-card text-ink2'
             }`}
           >
@@ -143,7 +143,7 @@ export function PriorityStars({
           type="button"
           aria-label={PRIORITY_LABEL[p]}
           onClick={() => onChange(p)}
-          className={`p-0.5 text-[26px] leading-none ${p <= value ? 'text-star' : 'text-edge'}`}
+          className={`p-0.5 text-[27px] leading-none ${p <= value ? 'text-star' : 'text-edge'}`}
         >
           ★
         </button>
@@ -169,7 +169,7 @@ export function ColorPicker({
           aria-label={c}
           aria-pressed={c === value}
           onClick={() => onChange(c)}
-          className="relative grid h-9 w-9 place-items-center rounded-full text-[15px] font-bold text-white"
+          className="relative grid h-9 w-9 place-items-center rounded-full text-[16px] font-bold text-white"
           style={{ background: c }}
         >
           {c === value ? '✓' : ''}

@@ -70,7 +70,7 @@ export default function TaskFormFields({
                     type="button"
                     aria-pressed={value.date === date}
                     onClick={() => onChange({ date })}
-                    className={`rounded-full px-3 py-1.5 text-[12px] font-medium ${
+                    className={`rounded-full px-3 py-1.5 text-[13px] font-medium ${
                       value.date === date ? 'bg-accent text-white' : 'bg-card text-ink2 shadow-card'
                     }`}
                   >

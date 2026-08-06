@@ -31,6 +31,17 @@ export const CATEGORY_TINT: Record<string, string> = {
   '#A8C9A5': '#F2F7EE',
 };
 
+/** 팔레트 색에는 정해둔 틴트를, 직접 고른 색에는 섞어 만든 틴트를 쓴다 */
+export const tintOf = (color: string): string =>
+  CATEGORY_TINT[color.toUpperCase()] ?? `color-mix(in srgb, ${color} 14%, #fff)`;
+
+/**
+ * 달력 칸처럼 **글자를 얹을** 바탕. 필터 칩보다 진하다.
+ * 칩은 옆에 글씨가 없어 옅어도 구분되지만, 달력은 칸마다 세 줄이 붙어 있어
+ * 이만큼은 돼야 어느 카테고리인지 보인다.
+ */
+export const bandOf = (color: string): string => `color-mix(in srgb, ${color} 34%, #fff)`;
+
 /**
  * 처음에 깔아두는 것은 둘뿐이다. 나머지는 필요할 때 직접 만든다.
  * 안 쓰는 칸이 늘어서 있으면 필터 줄만 길어진다.

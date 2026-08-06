@@ -72,7 +72,7 @@ export default function TaskSheet({ id }: { id: string | null }) {
       <TaskFormFields value={value} onChange={patch} editing={!!editing} />
 
       {!editing && (
-        <label className="flex cursor-pointer items-center gap-2.5 pb-3.5 pt-1.5 text-[13.5px] text-ink2">
+        <label className="flex cursor-pointer items-center gap-2.5 pb-3.5 pt-1.5 text-[14.5px] text-ink2">
           <input
             type="checkbox"
             className="h-[18px] w-[18px] accent-[var(--accent)]"
