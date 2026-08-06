@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "app:build": "cross-env BUILD_TARGET=app next build && cap sync android",
+    "app:apk": "npm run app:build && node scripts/apk.mjs",
     "app:open": "cap open android",
     "start": "next start",
     "lint": "next lint",

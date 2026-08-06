@@ -22,6 +22,24 @@ allprojects {
         google()
         mavenCentral()
     }
+
+    /*
+     * Capacitor 8은 자바 21로 컴파일한다. 그런데 Gradle을 띄우는 JVM은 보통 그것보다
+     * 낮거나(이 PC는 17) 높다(Android Studio가 들고 온 25는 Gradle 8.14가 못 받는다).
+     *
+     * JAVA_HOME을 매번 21로 맞추는 대신, "자바 21짜리를 알아서 찾아 써라"라고만 적어둔다.
+     * Gradle이 설치된 JDK들을 뒤져서 21을 골라 컴파일에만 쓴다 —
+     * 경로가 안 박히므로 기기가 달라도 그대로 돌고, 이 파일을 커밋해도 된다.
+     *
+     * 21이 안 깔린 PC에서는 "No matching toolchains found"로 분명하게 실패한다.
+     */
+    plugins.withId('java-base') {
+        java {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(21)
+            }
+        }
+    }
 }
 
 task clean(type: Delete) {
