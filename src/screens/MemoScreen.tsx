@@ -69,7 +69,7 @@ export default function MemoScreen() {
                 setSearching(false);
                 setQuery('');
               }}
-              className="w-[52px] flex-none rounded-[14px] text-[18.5px] text-ink3 active:bg-sunk"
+              className="w-[52px] flex-none rounded-[14px] text-[18px] text-ink3 active:bg-sunk"
             >
               ×
             </button>
@@ -79,7 +79,7 @@ export default function MemoScreen() {
             <button
               type="button"
               onClick={create}
-              className="flex-1 rounded-card border-[1.5px] border-dashed border-edge p-[15px] text-[14px] font-medium text-accent active:bg-accent-soft"
+              className="flex-1 rounded-card border-[1.5px] border-dashed border-edge p-[15px] text-[13.5px] font-medium text-accent active:bg-accent-soft"
             >
               + 새 메모
             </button>

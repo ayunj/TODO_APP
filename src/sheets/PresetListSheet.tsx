@@ -33,8 +33,8 @@ export default function PresetListSheet() {
                 className="flex items-center gap-[11px] rounded-2xl bg-card px-3.5 py-[13px] shadow-card"
               >
                 <span className="min-w-0 flex-1">
-                  <span className="block break-words text-[15px]">{p.title}</span>
-                  <span className="mt-0.5 flex flex-wrap items-center gap-2 text-[12px] text-ink3">
+                  <span className="block break-words text-[14.5px]">{p.title}</span>
+                  <span className="mt-0.5 flex flex-wrap items-center gap-2 text-[11.5px] text-ink3">
                     <span
                       className="h-[7px] w-[7px] rounded-full"
                       style={{ background: c.color }}
@@ -52,7 +52,7 @@ export default function PresetListSheet() {
                 <button
                   type="button"
                   onClick={() => openSheet({ kind: 'preset', id: p.id })}
-                  className="flex-none rounded-[11px] bg-sunk px-3 py-2 text-[12.5px] text-ink2"
+                  className="flex-none rounded-[11px] bg-sunk px-3 py-2 text-[12px] text-ink2"
                 >
                   수정
                 </button>
@@ -62,7 +62,7 @@ export default function PresetListSheet() {
                     removePreset(p.id);
                     toast(`${p.title} — 목록에서 뺐습니다`);
                   }}
-                  className="flex-none rounded-[11px] bg-danger-soft px-3 py-2 text-[12.5px] text-high"
+                  className="flex-none rounded-[11px] bg-danger-soft px-3 py-2 text-[12px] text-high"
                 >
                   삭제
                 </button>

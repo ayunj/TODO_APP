@@ -11,7 +11,7 @@ export default function CategoryFilter() {
   const { filter, setFilter } = useUi();
 
   const chip =
-    'flex-none inline-flex items-center rounded-full px-[15px] py-[7px] text-[13px] font-medium transition-colors';
+    'flex-none inline-flex items-center rounded-full px-[15px] py-[7px] text-[12.5px] font-medium transition-colors';
 
   return (
     <ScrollRow className="pb-[14px]" role="group" aria-label="카테고리 필터">

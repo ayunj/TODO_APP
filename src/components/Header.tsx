@@ -46,7 +46,7 @@ export default function Header() {
             <BackIcon className="h-5 w-5" />
           </button>
           <div className="min-w-0 flex-1">
-            <div className="text-[11px] font-medium tracking-[.1em] text-ink3">
+            <div className="text-[10.5px] font-medium tracking-[.1em] text-ink3">
               {view === 'shop'
                 ? left > 0
                   ? `${left}개 담아둠`
@@ -55,7 +55,7 @@ export default function Header() {
                   ? `${memos.length}장`
                   : '흘러가지 않는 것들'}
             </div>
-            <h1 className="mt-px font-round text-[21.5px] font-normal leading-[1.2] tracking-[-.02em]">
+            <h1 className="mt-px font-round text-[21px] font-normal leading-[1.2] tracking-[-.02em]">
               {view === 'shop' ? '장보기' : '메모'}
             </h1>
           </div>
@@ -80,7 +80,7 @@ export default function Header() {
     <header className={shell}>
       {/* 윗줄 — 드나드는 곳 */}
       <div className="flex items-center gap-2 pt-[calc(12px+env(safe-area-inset-top))]">
-        <span className="min-w-0 flex-1 truncate text-[11px] font-medium tracking-[.1em] text-ink3">
+        <span className="min-w-0 flex-1 truncate text-[10.5px] font-medium tracking-[.1em] text-ink3">
           {eyebrow}
         </span>
 
@@ -92,7 +92,7 @@ export default function Header() {
         >
           <ShopIcon className="h-[19px] w-[19px]" />
           {left > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-accent px-1 font-mono text-[10.5px] font-medium text-white">
+            <span className="absolute -right-0.5 -top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-accent px-1 font-mono text-[10px] font-medium text-white">
               {left}
             </span>
           )}
@@ -122,7 +122,7 @@ export default function Header() {
 
       {/* 아랫줄 — 날짜와 이동 */}
       <div className="flex items-end gap-2 pb-3 pt-1.5">
-        <h1 className="min-w-0 flex-1 font-round text-[22.5px] font-normal leading-[1.2] tracking-[-.02em]">
+        <h1 className="min-w-0 flex-1 font-round text-[22px] font-normal leading-[1.2] tracking-[-.02em]">
           {view === 'day' ? (
             <>
               {monthOf(cursor)}월 {dayOf(cursor)}일{' '}
@@ -140,7 +140,7 @@ export default function Header() {
             type="button"
             aria-label="이전"
             onClick={() => step(-1)}
-            className="grid h-[30px] w-[30px] place-items-center rounded-[10px] text-[16.5px] text-ink3 active:bg-sunk"
+            className="grid h-[30px] w-[30px] place-items-center rounded-[10px] text-[16px] text-ink3 active:bg-sunk"
           >
             ‹
           </button>
@@ -148,7 +148,7 @@ export default function Header() {
             type="button"
             aria-label="오늘로"
             onClick={() => setCursor(todayStr())}
-            className="grid h-[30px] w-[30px] place-items-center rounded-[10px] text-[16.5px] text-ink3 active:bg-sunk"
+            className="grid h-[30px] w-[30px] place-items-center rounded-[10px] text-[16px] text-ink3 active:bg-sunk"
           >
             ·
           </button>
@@ -156,7 +156,7 @@ export default function Header() {
             type="button"
             aria-label="다음"
             onClick={() => step(1)}
-            className="grid h-[30px] w-[30px] place-items-center rounded-[10px] text-[16.5px] text-ink3 active:bg-sunk"
+            className="grid h-[30px] w-[30px] place-items-center rounded-[10px] text-[16px] text-ink3 active:bg-sunk"
           >
             ›
           </button>

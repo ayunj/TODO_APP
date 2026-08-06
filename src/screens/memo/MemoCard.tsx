@@ -43,10 +43,10 @@ export default function MemoCard({ memo, open, onOpen, onChange, onRemove }: Pro
         onClick={onOpen}
         className="w-full rounded-card bg-card px-[18px] py-4 text-left shadow-card active:bg-sunk"
       >
-        <span className={`block truncate text-[15.5px] ${head ? '' : 'text-ink3'}`}>
+        <span className={`block truncate text-[15px] ${head ? '' : 'text-ink3'}`}>
           {head || '빈 메모'}
         </span>
-        <span className="mt-1 block text-[12px] text-ink3">
+        <span className="mt-1 block text-[11.5px] text-ink3">
           {when(memo.updatedAt)}
           {more > 0 && ` · ${more}줄 더`}
         </span>
@@ -65,14 +65,14 @@ export default function MemoCard({ memo, open, onOpen, onChange, onRemove }: Pro
           onChange(e.target.value);
         }}
         placeholder={'예)\n관리비 계좌 000-00-000000 국민\n와이파이 비밀번호'}
-        className="min-h-[7.5rem] w-full resize-none bg-transparent text-[15.5px] leading-[1.75] text-ink outline-none placeholder:leading-[1.9] placeholder:text-[var(--placeholder)]"
+        className="min-h-[7.5rem] w-full resize-none bg-transparent text-[15px] leading-[1.75] text-ink outline-none placeholder:leading-[1.9] placeholder:text-[var(--placeholder)]"
       />
       <div className="mt-1 flex items-center justify-between gap-2 border-t border-line2 pt-2.5">
-        <span className="text-[12px] text-ink3">적는 대로 저장돼요</span>
+        <span className="text-[11.5px] text-ink3">적는 대로 저장돼요</span>
         <button
           type="button"
           onClick={onRemove}
-          className="rounded-[10px] px-2.5 py-1.5 text-[12.5px] text-ink3 active:bg-danger-soft active:text-high"
+          className="rounded-[10px] px-2.5 py-1.5 text-[12px] text-ink3 active:bg-danger-soft active:text-high"
         >
           삭제
         </button>

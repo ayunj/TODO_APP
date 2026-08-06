@@ -27,7 +27,7 @@ export default function AppShell() {
   if (loading || checking) {
     return (
       <div className="wrap">
-        <div className="py-20 text-center text-[13.5px] text-ink3">불러오는 중…</div>
+        <div className="py-20 text-center text-[13px] text-ink3">불러오는 중…</div>
       </div>
     );
   }

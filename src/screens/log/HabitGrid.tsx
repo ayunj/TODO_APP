@@ -36,8 +36,8 @@ export default function HabitGrid({ monthTasks }: { monthTasks: Task[] }) {
   return (
     <div className="mt-2.5 overflow-hidden rounded-card bg-card px-3 py-4 shadow-card">
       <div className="mb-3 flex items-center justify-between gap-2.5">
-        <b className="text-[13px] font-medium text-ink2">반복 기록</b>
-        <span className="flex items-center gap-[9px] text-[11px] text-ink3">
+        <b className="text-[12.5px] font-medium text-ink2">반복 기록</b>
+        <span className="flex items-center gap-[9px] text-[10.5px] text-ink3">
           <span className="inline-flex items-center gap-1">
             <i className="h-[9px] w-[9px] rounded-[3px] bg-ink3" />
             했음
@@ -55,7 +55,7 @@ export default function HabitGrid({ monthTasks }: { monthTasks: Task[] }) {
 
       {/* 눈금과 칸이 같은 폭을 쓴다 — 제목은 위로 올려서 격자에서 폭을 빼앗지 않는다 */}
       <span
-        className="mb-1 grid text-[10px] text-ink3"
+        className="mb-1 grid text-[9.5px] text-ink3"
         style={{ gridTemplateColumns: `repeat(${days},minmax(0,1fr))` }}
       >
         {Array.from({ length: days }, (_, i) => i + 1).map((n) => (
@@ -72,11 +72,11 @@ export default function HabitGrid({ monthTasks }: { monthTasks: Task[] }) {
               type="button"
               title={r.title}
               onClick={() => openSheet({ kind: 'task', id: r.sampleId })}
-              className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-left text-[13px] text-ink2"
+              className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-left text-[12.5px] text-ink2"
             >
               {r.title}
             </button>
-            <span className="flex-none font-mono text-[12px] text-ink3">{r.count}</span>
+            <span className="flex-none font-mono text-[11.5px] text-ink3">{r.count}</span>
           </div>
 
           {/*

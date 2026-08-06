@@ -54,8 +54,8 @@ export default function ShopScreen() {
           {bought.length > 0 && (
             <>
               <div className="mb-2.5 mt-[22px]">
-                <span className="text-[12.5px] font-medium text-ink3">오늘 담음 {bought.length}</span>
-                <span className="ml-2 text-[12px] text-ink3">내일이면 기록으로 내려가요</span>
+                <span className="text-[12px] font-medium text-ink3">오늘 담음 {bought.length}</span>
+                <span className="ml-2 text-[11.5px] text-ink3">내일이면 기록으로 내려가요</span>
               </div>
               <ul className="flex list-none flex-col gap-[9px] p-0">
                 {bought.map((item) => (

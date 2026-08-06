@@ -25,7 +25,7 @@ export default function Toast() {
     <div
       role="status"
       aria-live="polite"
-      className={`pointer-events-none fixed left-1/2 z-40 rounded-full bg-ink px-5 py-3 text-[13.5px] text-white shadow-[0_8px_24px_rgba(62,58,77,.25)] transition duration-200 ${
+      className={`pointer-events-none fixed left-1/2 z-40 rounded-full bg-ink px-5 py-3 text-[13px] text-white shadow-[0_8px_24px_rgba(62,58,77,.25)] transition duration-200 ${
         on ? 'translate-x-[-50%] translate-y-0 opacity-100' : 'translate-x-[-50%] translate-y-[10px] opacity-0'
       }`}
       style={{ bottom: 'calc(var(--bar) + 28px + env(safe-area-inset-bottom))' }}

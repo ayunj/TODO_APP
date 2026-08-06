@@ -26,7 +26,7 @@ export default function MonthCell({ day, date, isToday, isSunday, tasks, onSelec
       className="flex min-h-16 flex-col items-stretch gap-0.5 overflow-hidden rounded-xl bg-transparent px-[2px] py-[5px] active:bg-sunk"
     >
       <span
-        className={`mx-auto grid h-[22px] w-[22px] place-items-center rounded-full text-center font-mono text-[13px] leading-[1.3] ${
+        className={`mx-auto grid h-[22px] w-[22px] place-items-center rounded-full text-center font-mono text-[12.5px] leading-[1.3] ${
           isToday ? 'bg-accent text-white' : isSunday ? 'text-high' : 'text-ink2'
         }`}
       >
