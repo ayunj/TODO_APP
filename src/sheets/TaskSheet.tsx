@@ -79,7 +79,7 @@ export default function TaskSheet({ id }: { id: string | null }) {
             checked={alsoPreset}
             onChange={(e) => setAlsoPreset(e.target.checked)}
           />
-          자주 쓰는 일로 저장
+          즐겨찾기에 저장
         </label>
       )}
 

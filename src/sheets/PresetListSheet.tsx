@@ -15,14 +15,14 @@ export default function PresetListSheet() {
 
   return (
     <Sheet
-      title="자주 쓰는 일"
+      title="즐겨찾기"
       onClose={closeSheet}
       onBack={() => openSheet({ kind: 'settings' })}
     >
       <div className="mb-4 flex flex-col gap-[9px]">
         {presets.length === 0 ? (
           <EmptyBox title="비어 있습니다">
-            자주 반복하는 일을 넣어두면 한 번 눌러 추가할 수 있어요.
+            되풀이하는 일을 넣어두면 한 번 눌러 추가할 수 있어요.
           </EmptyBox>
         ) : (
           presets.map((p) => {

@@ -12,7 +12,7 @@ interface Props {
   children: React.ReactNode;
 }
 
-/** 아래에서 올라오는 시트. 설정·자주 쓰는 일·카테고리·함께 쓰기가 전부 이걸 탄다. */
+/** 아래에서 올라오는 시트. 설정·즐겨찾기·카테고리·함께 쓰기가 전부 이걸 탄다. */
 export default function Sheet({ title, onClose, onBack, children }: Props) {
   const [on, setOn] = useState(false);
 

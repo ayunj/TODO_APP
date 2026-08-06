@@ -1,4 +1,4 @@
-import { monthKey } from './date';
+import { addDays, monthKey } from './date';
 import type { DateStr, Preset, ShopItem, Task } from './types';
 
 /**
@@ -21,6 +21,16 @@ export const sortTasks = (list: Task[]): Task[] =>
 
 export const tasksOn = (tasks: Task[], date: DateStr, filter: Filter): Task[] =>
   tasks.filter((t) => t.date === date && matches(t, filter));
+
+/**
+ * 미루기가 보이는 날 — 오늘과 어제뿐.
+ *
+ * 앞날짜 것은 아직 밀린 게 아니라 미룰 것도 없고,
+ * 그저께보다 오래된 것은 이미 안 하기로 한 일에 가깝다.
+ * 미루기는 "오늘 여기까지"를 접는 동작이라 그 언저리에서만 뜻이 있다.
+ */
+export const canPostpone = (date: DateStr, today: DateStr): boolean =>
+  date === today || date === addDays(today, -1);
 
 /** 오늘 화면 맨 아래 접어두는 지난 미완료 */
 export const staleTasks = (tasks: Task[], today: DateStr, filter: Filter): Task[] =>
@@ -45,9 +55,9 @@ export interface HabitRow {
 }
 
 /**
- * 기록 탭 격자.
- * "자주 하는 일" = 자주 쓰는 일에 있는 제목이거나, 주기가 설정된 항목의 제목.
- * 제목이 같으면 한 행으로 묶는다.
+ * 기록 탭 격자(`반복 기록`).
+ * 행이 되는 조건 = 즐겨찾기에 있는 제목이거나, 그 달에 주기가 설정된 항목의 제목.
+ * 제목이 같으면 한 행으로 묶는다 — 그래서 제목을 고치면 그 달 격자가 두 행으로 갈라진다.
  */
 export function habitRows(
   monthTasks: Task[],

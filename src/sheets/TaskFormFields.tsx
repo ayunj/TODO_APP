@@ -22,7 +22,7 @@ export interface FormValue {
   memo: string;
 }
 
-/** 할 일 시트와 자주 쓰는 일 시트가 같은 필드를 쓴다. 자주 쓰는 일에는 날짜가 없다. */
+/** 할 일 시트와 즐겨찾기 시트가 같은 필드를 쓴다. 즐겨찾기에는 날짜가 없다. */
 export default function TaskFormFields({
   value,
   onChange,

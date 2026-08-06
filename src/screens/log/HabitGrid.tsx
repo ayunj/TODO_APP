@@ -8,8 +8,11 @@ import { useUi } from '@/lib/ui';
 import type { Task } from '@/lib/types';
 
 /**
- * 한 달 격자. 행 = 자주 하는 일 하나, 열 = 1일부터 말일까지.
+ * 한 달 격자. 행 = 되풀이하는 일 하나, 열 = 1일부터 말일까지.
  * "이번 달에 청소를 몇 번 했나"를 세는 게 아니라 흐름이 보이게 하는 것.
+ *
+ * 이름을 `반복 기록`으로 잡았다. 예전 `자주 하는 일`은 즐겨찾기(`자주 쓰는 일`)와
+ * 한 음절 차이라 같은 걸 가리키는 줄 알기 쉬웠다 — 여기는 등록해둔 목록이 아니라 지나간 기록이다.
  */
 export default function HabitGrid({ monthTasks }: { monthTasks: Task[] }) {
   const { presets, categoryOf, } = useStore();
@@ -24,7 +27,7 @@ export default function HabitGrid({ monthTasks }: { monthTasks: Task[] }) {
     return (
       <div className="mt-2.5">
         <EmptyBox title="아직 채운 칸이 없습니다">
-          주기를 정한 할 일이나 자주 쓰는 일이 이 달에 있으면, 한 날 씩 칸으로 칠해집니다.
+          주기를 정한 할 일이나 즐겨찾기에 넣어둔 일이 이 달에 있으면, 하루씩 칸으로 칠해집니다.
         </EmptyBox>
       </div>
     );
@@ -33,7 +36,7 @@ export default function HabitGrid({ monthTasks }: { monthTasks: Task[] }) {
   return (
     <div className="mt-2.5 overflow-hidden rounded-card bg-card px-3 py-4 shadow-card">
       <div className="mb-3 flex items-center justify-between gap-2.5">
-        <b className="text-[12.5px] font-medium text-ink2">자주 하는 일</b>
+        <b className="text-[12.5px] font-medium text-ink2">반복 기록</b>
         <span className="flex items-center gap-[9px] text-[10.5px] text-ink3">
           <span className="inline-flex items-center gap-1">
             <i className="h-[9px] w-[9px] rounded-[3px] bg-ink3" />

@@ -37,7 +37,7 @@ export default function PresetChips() {
         <span className="inline-flex flex-none items-center rounded-full border border-dashed border-line px-[15px] py-[9px] text-[13px] text-ink3">
           {filter
             ? `${categoryOf(filter).name}에 저장해둔 일이 없습니다`
-            : '자주 쓰는 일이 아직 없습니다'}
+            : '즐겨찾기가 아직 없습니다'}
         </span>
       )}
     </ScrollRow>

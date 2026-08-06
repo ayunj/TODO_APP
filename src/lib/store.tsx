@@ -377,7 +377,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [tasks, write],
   );
 
-  /* ───────── 자주 쓰는 일 ───────── */
+  /* ───────── 즐겨찾기 ───────── */
 
   const addPreset = useCallback(
     (input: PresetInput) => {
@@ -702,7 +702,7 @@ export function useStore(): StoreValue {
 /**
  * 카테고리가 하나도 없을 때만 기본 둘을 깔아준다. 그 외에는 손대지 않는다.
  *
- * 자주 쓰는 일은 심지 않는다 — 비워두고 직접 채우는 게 맞다.
+ * 즐겨찾기는 심지 않는다 — 비워두고 직접 채우는 게 맞다.
  * 예전에는 비어 있으면 채워 넣었는데, 그러면 전체 초기화하고 새로고침할 때마다
  * 지운 것이 도로 살아났다.
  *

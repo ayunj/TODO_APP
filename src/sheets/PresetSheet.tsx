@@ -55,7 +55,7 @@ export default function PresetSheet({ id }: { id: string | null }) {
 
   return (
     <Sheet
-      title={editing ? '자주 쓰는 일 수정' : '자주 쓰는 일 추가'}
+      title={editing ? '즐겨찾기 수정' : '즐겨찾기 추가'}
       onClose={closeSheet}
       onBack={back}
     >

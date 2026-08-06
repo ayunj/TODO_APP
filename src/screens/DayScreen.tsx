@@ -8,11 +8,11 @@ import TaskRow from './day/TaskRow';
 import StaleSection from './day/StaleSection';
 import EmptyBox from '@/components/EmptyBox';
 import { todayStr } from '@/lib/date';
-import { sortTasks, tasksOn } from '@/lib/selectors';
+import { canPostpone, sortTasks, tasksOn } from '@/lib/selectors';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 
-/** 일별 — 진행 스트립 / 자주 쓰는 일 칩 / 목록 / 지난 미완료 */
+/** 일별 — 진행 스트립 / 즐겨찾기 칩 / 목록 / 지난 미완료 */
 export default function DayScreen() {
   const { tasks, categoryOf } = useStore();
   const { cursor, filter, openSheet } = useUi();
@@ -73,7 +73,8 @@ export default function DayScreen() {
         </>
       )}
 
-      {open.length > 0 && <PostponeRow tasks={open} from={cursor} />}
+      {/* 하루를 닫는 동작이라 오늘과 어제 화면에서만 뜬다 */}
+      {open.length > 0 && canPostpone(cursor, today) && <PostponeRow tasks={open} from={cursor} />}
 
       <button
         type="button"

@@ -3,6 +3,7 @@
 import { PostponeIcon } from '@/components/Icons';
 import { addDays, diffDays, shortDate, todayStr } from '@/lib/date';
 import { cycleProgress } from '@/lib/repeat';
+import { canPostpone } from '@/lib/selectors';
 import { useStore } from '@/lib/store';
 import { toast } from '@/lib/toast';
 import { useUi } from '@/lib/ui';
@@ -113,14 +114,14 @@ export default function TaskRow({ task, showDate = false }: { task: Task; showDa
       </button>
 
       <span className="flex flex-none flex-col items-center gap-0.5">
-        {/* 오늘 지나면 안 해도 되는 일이 있으니 한 건씩도 넘길 수 있게 */}
-        {!task.done && (
+        {/* 오늘 지나면 안 해도 되는 일이 있으니 한 건씩도 넘길 수 있게 — 오늘·어제 것만 */}
+        {!task.done && canPostpone(task.date, today) && (
           <button
             type="button"
             aria-label="내일로 미루기"
             onClick={() => {
-              // 앞날짜 항목을 보고 있을 수도 있어서 '그 날의 다음 날'로 옮긴다
-              const next = addDays(task.date > today ? task.date : today, 1);
+              // 오늘·어제 것만 여기 오니 갈 곳은 늘 내일이다
+              const next = addDays(today, 1);
               postponeTasks([task.id], next);
               toast(`${task.title} — ${shortDate(next)}로 미뤘어요`);
             }}

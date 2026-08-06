@@ -35,7 +35,7 @@ export interface Repository {
   graves(): Promise<Grave[]>;
   forget(ids: string[]): Promise<void>;
 
-  /** 할 일·자주 쓰는 일·카테고리만 지운다. 설정은 남는다. */
+  /** 할 일·즐겨찾기·카테고리만 지운다. 설정은 남는다. */
   clearAll(): Promise<void>;
 
   /**

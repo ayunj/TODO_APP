@@ -7,7 +7,7 @@ import { tasksInMonth } from '@/lib/selectors';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 
-/** 기록 — 자주 하는 일을 한 달치 격자로 칠해 보여준다 (습관 트래커) */
+/** 기록 — 되풀이하는 일을 한 달치 격자로 칠해 보여준다 (반복 기록 · 습관 트래커) */
 export default function LogScreen() {
   const { tasks } = useStore();
   const { cursor, filter } = useUi();

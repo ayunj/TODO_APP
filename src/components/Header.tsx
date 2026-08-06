@@ -74,7 +74,7 @@ export default function Header() {
         : `${yearOf(cursor)}년`
       : view === 'month'
         ? `${yearOf(cursor)}년`
-        : '자주 하는 일';
+        : '반복 기록';
 
   return (
     <header className={shell}>

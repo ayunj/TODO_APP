@@ -24,7 +24,7 @@ docs/
 | [repeat](tasks/repeat/기능.md) | ★ **반복 주기.** 이 앱의 핵심 규칙 |
 | [postpone](tasks/postpone/기능.md) | 미루기 — 한꺼번에, 한 건씩, 날짜 지정 |
 | [categories](tasks/categories/기능.md) | 카테고리와 필터 |
-| [presets](tasks/presets/기능.md) | 자주 쓰는 일 |
+| [presets](tasks/presets/기능.md) | 즐겨찾기 |
 
 ## 장보기 — [shopping/](shopping/)
 
