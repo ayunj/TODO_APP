@@ -1,0 +1,897 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>장보기 · 메모 방 공유 — 그림</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+/* ── 앱의 색 토큰 그대로 (src/app/globals.css) ── */
+:root{
+  --bg:#faf6f0; --card:#fff; --sunk:#f5f0e9; --memo:#fbf6ee;
+  --ink:#615953; --ink2:#8c8078; --ink3:#a59a92;
+  --line:#efe8df; --line2:#f5efe7;
+  --accent:#d97a5e; --accent-soft:#f4d7cc; --accent-tint:#fcf2ed;
+  --ok:#73b79f; --high:#d98b7a; --done:#d9d2cb;
+  --edge:#d8d3ce; --placeholder:#c7bdb5; --danger-soft:#fdf1f1;
+
+  /*
+   * 방 색 — 카테고리와 같은 팔레트(src/lib/constants.ts)에서 고른다.
+   * 방과 카테고리를 가르는 건 색이 아니라 공유 아이콘이다.
+   */
+  --room-home:#A9B8F4;   /* 집 */
+  --room-home-t:#F0F3FE;
+  --room-work:#DDB9E9;   /* 회사 */
+  --room-work-t:#F8F0FC;
+
+  /* 카테고리 팔레트에서 (src/lib/constants.ts) */
+  --cat-home:#8ec9b5; --cat-home-t:#eef8f4;
+  --cat-body:#a8d8f0; --cat-body-t:#eef8fd;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; padding:34px 20px 80px;
+  background:#f2ece4;
+  font-family:'Noto Sans KR',system-ui,-apple-system,sans-serif;
+  color:var(--ink); line-height:1.55; letter-spacing:-.01em; font-size:14px;
+}
+h1{font-size:19px; margin:0 0 6px; font-weight:700}
+.lede{color:var(--ink2); font-size:13px; margin:0 auto 30px; max-width:900px}
+.lede code{background:#fff; padding:1px 6px; border-radius:6px; font-size:12px}
+.deck{display:flex; flex-wrap:wrap; gap:26px; justify-content:center; align-items:flex-start; max-width:1500px; margin:0 auto}
+.slot{width:344px}
+.slot h2{font-size:13.5px; font-weight:700; margin:0 0 3px}
+.slot .why{font-size:12px; color:var(--ink2); margin:0 0 11px; min-height:34px}
+
+/* ── 폰 한 칸 ── */
+.phone{background:var(--bg); border-radius:26px; padding:0 0 18px; box-shadow:0 10px 34px rgba(97,89,83,.13); overflow:hidden}
+.bar{display:flex; align-items:center; gap:9px; padding:15px 16px 11px; background:var(--bg)}
+.bar b{font-size:16.5px; font-weight:700}
+.bar .back{font-size:19px; color:var(--ink3); line-height:1}
+.bar .gear{margin-left:auto; color:var(--ink3); font-size:15px}
+.body{padding:0 16px}
+
+/* ── 칩 줄 (CategoryFilter 그대로) ── */
+.row{display:flex; gap:7px; overflow-x:auto; padding-bottom:13px; scrollbar-width:none}
+.row::-webkit-scrollbar{display:none}
+.chip{flex:none; display:inline-flex; align-items:center; gap:5px; border:0; border-radius:999px; padding:7px 15px; font:inherit; font-size:12.5px; font-weight:500; cursor:pointer}
+/* 칩 안 공유 아이콘 — 글씨보다 한 톤 옅게 */
+.chip .ic{width:13px; height:13px; flex:none; opacity:.72}
+.chip.on .ic{opacity:.9}
+.chip.on{background:var(--accent); color:#fff}
+.chip.off{background:var(--accent-tint); color:var(--accent)}
+.chip.room-home{background:var(--room-home-t); color:var(--room-home)}
+.chip.room-work{background:var(--room-work-t); color:var(--room-work)}
+.chip.room-home.on{background:var(--room-home); color:#fff}
+.chip.room-work.on{background:var(--room-work); color:#fff}
+.chip.mine{background:#f3efe9; color:var(--ink2)}
+.sep{flex:none; width:1px; align-self:stretch; margin:5px 3px; background:var(--line)}
+
+/* ── 방 칩 (항목 밑에 붙는 작은 것) ── */
+/*
+ * 항목에 붙는 작은 칩. 파스텔에 흰 글씨는 안 읽혀서, 달력 칸과 같은 방식으로
+ * 색을 34% 섞은 바탕에 먹색 글씨를 얹는다 (constants.ts의 bandOf).
+ */
+.rp{display:inline-flex; align-items:center; border-radius:999px; padding:2.5px 9px; font-size:10.5px; font-weight:500; color:var(--ink); letter-spacing:0}
+.rp.home{background:color-mix(in srgb, var(--room-home) 34%, #fff)}
+.rp.work{background:color-mix(in srgb, var(--room-work) 34%, #fff)}
+.rp.rose{background:color-mix(in srgb, #F3A8A8 34%, #fff)}
+.rp.olive{background:color-mix(in srgb, #A9C989 34%, #fff)}
+.rp.ghost{background:transparent; color:var(--ink3); border:1px dashed var(--edge); font-weight:500}
+/* 담은 것 — 카드가 회색으로 가라앉으면 칩도 같이 가라앉는다 */
+.rp.off{background:var(--track); color:var(--done)}
+/* 접힌 메모에서 넘치는 칩 — 칩이 아니라 그냥 숫자다. 테두리도 바탕도 없다 */
+.rp.etc{background:transparent; color:var(--ink3); font-size:10px; font-weight:500; padding:2.5px 1px}
+/* 펼친 메모 — 칩을 아래로 내려 감는다 */
+.roomwrap{display:flex; flex-wrap:wrap; gap:5px; margin-top:11px}
+
+/* ── 카드·줄 ── */
+.card{background:var(--card); border-radius:20px; box-shadow:0 8px 24px rgba(0,0,0,.05)}
+ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px}
+.item{display:flex; align-items:flex-start; gap:12px; padding:15px; border-radius:20px}
+.item.done{background:var(--sunk); padding:13px 15px; box-shadow:none}
+.tick{flex:none; width:25px; height:25px; margin-top:1px; border-radius:999px; border:1.8px solid var(--edge); display:grid; place-items:center; font-size:12px; font-weight:700; color:transparent}
+.tick.on{background:var(--ok); border-color:var(--ok); color:#fff}
+.t{font-size:15px}
+.t.off{color:var(--done); text-decoration:line-through}
+.note{display:block; margin-top:6px; background:var(--memo); color:var(--ink2); border-radius:12px; padding:8px 12px; font-size:12.5px}
+.meta{display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin-top:7px; font-size:11.5px; color:var(--ink3)}
+/* 방 칩은 오른쪽으로 몬다 — 왼쪽은 내가 적은 것, 오른쪽은 어디에 걸렸는지 */
+.rooms{margin-left:auto; display:flex; align-items:center; gap:5px}
+/*
+ * 제목 줄에 칩을 얹을 때.
+ * 이름은 제 칸 안에서만 감기고(min-width:0), 칩은 안 줄어든다(flex:none).
+ * align-items를 flex-start로 둬야 두 줄이 돼도 칩이 첫 줄에 남는다.
+ */
+.titlerow{display:flex; align-items:flex-start; gap:10px}
+.titlerow>.t{flex:1; min-width:0; overflow-wrap:anywhere}
+.titlerow>.rooms{margin:2px 0 0; flex:none}
+.place{background:var(--accent-tint); color:var(--accent); border-radius:999px; padding:4px 10px; font-size:11px; font-weight:500}
+
+/* ── 입력 줄 ── */
+.add{display:flex; gap:8px; margin-bottom:12px}
+.input{flex:1; background:var(--card); border:0; border-radius:14px; padding:13px 14px; font:inherit; font-size:14.5px; color:var(--placeholder); box-shadow:0 8px 24px rgba(0,0,0,.05)}
+.plus{flex:none; width:46px; height:46px; border:0; border-radius:14px; background:var(--accent); color:#fff; font-size:24px; font-weight:300; line-height:1; box-shadow:0 8px 24px rgba(0,0,0,.05)}
+.share-link{display:inline-flex; align-items:center; gap:5px; background:none; border:0; font:inherit; font-size:12px; color:var(--ink3); padding:2px 0 12px; cursor:pointer}
+
+/* ── 시트 ── */
+.sheet{background:var(--bg); border-radius:26px 26px 0 0; padding:12px 18px 20px; box-shadow:0 -6px 26px rgba(97,89,83,.09)}
+.grip{width:38px; height:4px; border-radius:2px; background:var(--line); margin:0 auto 16px}
+.sheet h3{font-size:16.5px; font-weight:700; margin:0 0 14px}
+.lbl{font-size:12px; color:var(--ink2); margin:0 0 6px}
+.fld{background:var(--card); border-radius:14px; padding:12px 14px; font-size:14px; box-shadow:0 8px 24px rgba(0,0,0,.05); margin-bottom:11px}
+.fld.ph{color:var(--placeholder)}
+.hr{height:1px; background:var(--line); margin:15px 0 13px}
+.save{width:100%; border:0; border-radius:16px; background:var(--accent); color:#fff; font:inherit; font-size:15px; font-weight:500; padding:14px; margin-top:15px; box-shadow:0 8px 24px rgba(217,122,94,.18)}
+.hint{font-size:11.5px; color:var(--ink3); margin:8px 0 0}
+
+/* ── 체크박스 줄 (방 만들기) ── */
+.checks{display:flex; flex-wrap:wrap; gap:8px}
+.cb{display:inline-flex; align-items:center; gap:7px; border-radius:14px; background:var(--card); padding:11px 14px; font-size:13.5px; box-shadow:0 8px 24px rgba(0,0,0,.05)}
+.cb .box{width:17px; height:17px; border-radius:6px; border:1.8px solid var(--edge); display:grid; place-items:center; font-size:11px; color:transparent}
+.cb.on .box{background:var(--accent); border-color:var(--accent); color:#fff}
+.nest{margin:9px 0 0 12px; padding:11px 13px 13px; border-left:2px solid var(--accent-soft); background:#fff8f4; border-radius:0 14px 14px 0}
+.nest p{margin:0 0 8px; font-size:11.5px; color:var(--ink2)}
+.catchips{display:flex; flex-wrap:wrap; gap:6px}
+.cat{border-radius:999px; padding:6px 13px; font-size:12px; font-weight:500}
+.cat.home-off{background:var(--cat-home-t); color:#5f9e88}
+.cat.home-on{background:var(--cat-home); color:#fff}
+.cat.body-off{background:var(--cat-body-t); color:#5b9dbd}
+.cat.body-on{background:var(--cat-body); color:#fff}
+.cat.all-off{background:var(--accent-tint); color:var(--accent)}
+
+/* ── 메모 카드 ── */
+.memo-card{background:var(--card); border-radius:20px; padding:16px 18px; box-shadow:0 8px 24px rgba(0,0,0,.05)}
+/* 접힌 메모 — 두 줄까지 보이고 넘치면 … 로 잘린다. "3줄 더" 같은 말이 필요 없다 */
+.memo-card .head{font-size:15px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.memo-card .sub{margin-top:4px; font-size:11.5px; color:var(--ink3)}
+.memo-open{outline:2px solid var(--accent); outline-offset:-2px}
+.ta{font-size:15px; line-height:1.75; white-space:pre-wrap; min-height:96px}
+.foot{display:flex; align-items:center; gap:8px; border-top:1px solid var(--line2); margin-top:6px; padding-top:10px; font-size:11.5px; color:var(--ink3)}
+.foot .btn{margin-left:auto; border:0; background:none; font:inherit; font-size:12px; color:var(--ink3); padding:5px 9px; border-radius:10px}
+.foot .btn.act{background:var(--accent-tint); color:var(--accent); font-weight:500}
+.note-line{display:flex; align-items:center; gap:6px; margin-top:9px}
+
+/* 색 견본 */
+.sw{display:flex; flex-wrap:wrap; gap:7px}
+.sw i{width:30px; height:30px; border-radius:999px; display:block}
+.pair{display:flex; flex-wrap:wrap; gap:8px 16px}
+.pair>div{display:flex; align-items:center; gap:5px; font-size:11.5px; color:var(--ink2)}
+.pair i{width:19px; height:19px; border-radius:999px; display:block}
+.pair i:first-child{opacity:.85}
+.pair b{font-weight:500; margin-left:2px}
+.pair code{font-family:monospace; font-size:10.5px; color:var(--ink3)}
+
+.tag{display:inline-block; background:#fff; border:1px solid var(--line); border-radius:999px; padding:2px 9px; font-size:11px; color:var(--ink2); margin-right:5px}
+.foot-note{max-width:900px; margin:44px auto 0; font-size:12.5px; color:var(--ink2)}
+.foot-note h3{font-size:13.5px; color:var(--ink); margin:22px 0 7px}
+.foot-note li{margin-bottom:5px}
+</style>
+</head>
+<body>
+
+<svg style="display:none" aria-hidden="true">
+  <!-- 가 · 사람 둘 -->
+  <symbol id="ic-people" viewBox="0 0 24 24" fill="currentColor">
+    <circle cx="8.6" cy="8" r="3.5"/>
+    <path d="M1.8 19.6c0-3.6 3-5.9 6.8-5.9s6.8 2.3 6.8 5.9z"/>
+    <circle cx="17.2" cy="9" r="2.6" opacity=".55"/>
+    <path d="M17.2 13.2c2.8 0 5 1.9 5 4.6h-3.6c0-1.8-.5-3.3-1.4-4.6z" opacity=".55"/>
+  </symbol>
+  <!-- 나 · 고리 -->
+  <symbol id="ic-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round">
+    <path d="M10.4 13.6a3.9 3.9 0 0 0 5.6 0l2.4-2.4a3.9 3.9 0 1 0-5.6-5.6l-1.2 1.2"/>
+    <path d="M13.6 10.4a3.9 3.9 0 0 0-5.6 0l-2.4 2.4a3.9 3.9 0 1 0 5.6 5.6l1.2-1.2"/>
+  </symbol>
+  <!-- 다 · 점 세 개 -->
+  <symbol id="ic-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <circle cx="17.5" cy="5.5" r="2.6"/><circle cx="6.5" cy="12" r="2.6"/><circle cx="17.5" cy="18.5" r="2.6"/>
+    <path d="M8.9 10.7l6.2-3.6M8.9 13.3l6.2 3.6"/>
+  </symbol>
+</svg>
+
+<h1>장보기 · 메모 — 방 공유 그림</h1>
+<p class="lede">
+  앱의 색 토큰(<code>globals.css</code>)과 줄 생김새(<code>ShopRow</code> <code>MemoCard</code> <code>CategoryFilter</code>)를 그대로 옮겼다.
+  방 색은 <b>카테고리와 같은 팔레트</b>를 쓴다 — 방과 카테고리를 가르는 건 색이 아니라 <b>공유 아이콘</b>이다.
+</p>
+
+<div class="deck">
+
+  <!-- ① 장보기 목록 -->
+  <div class="slot">
+    <h2>① 장보기 — 목록</h2>
+    <p class="why">맨 위는 방 칩 줄. 기본은 <b>전체</b>라 마트에서는 그냥 훑는다. 항목 밑 방 칩은 <b>공유된 것에만</b> 붙는다.</p>
+    <div class="phone">
+      <div class="bar"><span class="back">‹</span><b>장보기</b><span class="gear">⚙</span></div>
+      <div class="body">
+        <div class="row">
+          <button class="chip on">전체</button>
+          <button class="chip mine">나만</button>
+          <button class="chip room-home">집 <svg class="ic"><use href="#ic-people"/></svg></button>
+          <button class="chip room-work">회사 <svg class="ic"><use href="#ic-people"/></svg></button>
+        </div>
+
+        <div class="add">
+          <div class="input">살 것 적기</div>
+          <div class="plus">+</div>
+        </div>
+
+        <ul class="list">
+          <li class="item card">
+            <div class="tick"></div>
+            <div style="min-width:0;flex:1">
+              <div class="titlerow">
+                <span class="t">우유</span>
+                <span class="rooms"><span class="rp home">집</span></span>
+              </div>
+              <span class="note">저지방으로</span>
+              <div class="meta"><span class="place">이마트</span></div>
+            </div>
+          </li>
+          <li class="item card">
+            <div class="tick"></div>
+            <div style="min-width:0;flex:1">
+              <div class="titlerow">
+                <span class="t">종이컵</span>
+                <span class="rooms"><span class="rp work">회사</span></span>
+              </div>
+              <div class="meta"><span class="place">쿠팡</span></div>
+            </div>
+          </li>
+          <li class="item card">
+            <div class="tick"></div>
+            <div style="min-width:0;flex:1">
+              <div class="titlerow">
+                <span class="t">세제</span>
+                <span class="rooms"><span class="rp home">집</span></span>
+              </div>
+            </div>
+          </li>
+          <li class="item card">
+            <div class="tick"></div>
+            <div style="min-width:0;flex:1">
+              <span class="t">내 영양제</span>
+              <div class="meta"><span style="color:var(--ink3)">칩이 없으면 나만 보는 것</span></div>
+            </div>
+          </li>
+          <li class="item done">
+            <div class="tick on">✓</div>
+            <div style="min-width:0;flex:1">
+              <div class="titlerow">
+                <span class="t off">계란</span>
+                <span class="rooms"><span class="rp off">집</span></span>
+              </div>
+              <div class="meta"><span style="font-family:monospace">8/7 담음</span></div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 장보기 시트 — 접힘 -->
+  <div class="slot">
+    <h2>② 담기 — 공유는 접혀 있다</h2>
+    <p class="why">기본은 <b>나만</b>. 담는 대부분이 개인 것이라 아무것도 안 묻는다. 나눌 때만 <b>공유</b>를 누른다.</p>
+    <div class="phone" style="padding-bottom:0">
+      <div style="height:74px"></div>
+      <div class="sheet">
+        <div class="grip"></div>
+        <h3>담기</h3>
+        <p class="lbl">품목</p>
+        <div class="fld">우유</div>
+        <p class="lbl">메모</p>
+        <div class="fld ph">저지방으로</div>
+        <p class="lbl">어디서</p>
+        <div class="fld ph">이마트</div>
+
+        <div class="hr"></div>
+        <button class="share-link" style="padding-bottom:0">
+          <span class="rp ghost">＋ 공유</span>
+          <span>나만 보고 있어요</span>
+        </button>
+        <button class="save">담기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ 장보기 시트 — 펼침 -->
+  <div class="slot">
+    <h2>③ 공유를 누르면 — 방 하나</h2>
+    <p class="why">장보기는 <b>한 곳만</b> 고른다. 회사방에서 장보기를 껐으면 여기 아예 안 뜬다 — 잘못 누를 길이 없다.</p>
+    <div class="phone" style="padding-bottom:0">
+      <div style="height:74px"></div>
+      <div class="sheet">
+        <div class="grip"></div>
+        <h3>담기</h3>
+        <p class="lbl">품목</p>
+        <div class="fld">종이컵</div>
+        <p class="lbl">메모</p>
+        <div class="fld ph">저지방으로</div>
+        <p class="lbl">어디서</p>
+        <div class="fld">쿠팡</div>
+
+        <div class="hr"></div>
+        <p class="lbl">어디에 <span style="color:var(--ink3)">· 한 곳만 고를 수 있어요</span></p>
+        <div class="row" style="padding-bottom:2px">
+          <button class="chip mine">나만</button>
+          <button class="chip room-home on">집 ✓</button>
+          <button class="chip room-work">회사</button>
+        </div>
+        <p class="hint">집 사람들에게 바로 보여요.<br>
+          집에도 회사에도 필요하면, 담고 나서 <b>다른 방에도 담기</b>로 하나 더 만듭니다.</p>
+        <button class="save">담기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④ 메모 목록 -->
+  <div class="slot">
+    <h2>④ 메모 — 목록</h2>
+    <p class="why">접힌 카드는 <b>두 줄까지 보이고 넘치면 … 로 잘린다.</b> <b>3줄 더</b> 같은 말은 없앴다.
+      칩은 두 개까지, 나머지는 작게 <b>+2</b>.</p>
+    <div class="phone">
+      <div class="bar"><span class="back">‹</span><b>메모</b><span class="gear">⚙</span></div>
+      <div class="body">
+        <div class="row">
+          <button class="chip on">전체</button>
+          <button class="chip mine">나만</button>
+          <button class="chip room-home">집 <svg class="ic"><use href="#ic-people"/></svg></button>
+          <button class="chip room-work">회사 <svg class="ic"><use href="#ic-people"/></svg></button>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div class="memo-card">
+            <div class="head">관리비 계좌 000-00-000000 국민 전기 자동이체 25일 정수기 렌탈 1588-0000 도시가스 검침 매월 15일</div>
+            <div class="note-line">
+              <span class="sub" style="margin:0">오늘</span>
+              <span class="rooms">
+                <span class="rp home">집</span>
+                <span class="rp work">회사</span>
+                <span class="rp etc">+2</span>
+              </span>
+            </div>
+          </div>
+          <div class="memo-card">
+            <div class="head">와이파이 비밀번호</div>
+            <div class="note-line">
+              <span class="sub" style="margin:0">8월 3일</span>
+              <span class="rooms"><span class="rp home">집</span></span>
+            </div>
+          </div>
+          <div class="memo-card">
+            <div class="head">병원 예약 메모 목요일 오후 3시 진료의뢰서 챙기기</div>
+            <div class="sub">7월 29일</div>
+          </div>
+          <div class="memo-card">
+            <div class="head">차 보험 만기</div>
+            <div class="sub">26년 3월 2일</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤ 메모 펼침 -->
+  <div class="slot">
+    <h2>⑤ 메모 — 펼쳤을 때</h2>
+    <p class="why">펼치면 <b>칩이 글 밑으로 내려와 다 보인다.</b> 몇 줄이 되든 감긴다.
+      아래 줄에 <b>같이 보기</b> — 다 적고 나서 누르는 것이라 흐름을 안 끊는다.</p>
+    <div class="phone">
+      <div class="bar"><span class="back">‹</span><b>메모</b><span class="gear">⚙</span></div>
+      <div class="body">
+        <div class="row">
+          <button class="chip on">전체</button>
+          <button class="chip mine">나만</button>
+          <button class="chip room-home">집 <svg class="ic"><use href="#ic-people"/></svg></button>
+          <button class="chip room-work">회사 <svg class="ic"><use href="#ic-people"/></svg></button>
+        </div>
+        <div class="memo-card memo-open">
+          <div class="ta">관리비 계좌 000-00-000000 국민
+전기 자동이체 25일
+정수기 렌탈 1588-0000</div>
+          <div class="roomwrap">
+            <span class="rp home">집</span>
+            <span class="rp work">회사</span>
+            <span class="rp rose">친구들</span>
+            <span class="rp olive">부모님</span>
+          </div>
+          <div class="foot">
+            <span>적는 대로 저장돼요</span>
+            <button class="btn act">같이 보기</button>
+            <button class="btn">삭제</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑥ 메모 공유 고르기 -->
+  <div class="slot">
+    <h2>⑥ 같이 보기를 누르면</h2>
+    <p class="why">여기도 여러 방. 이미 올린 방은 채워져 있고, 다시 누르면 내린다. <b>내리면 그 방에서 사라진다</b>고 말해준다.</p>
+    <div class="phone" style="padding-bottom:0">
+      <div style="height:74px"></div>
+      <div class="sheet">
+        <div class="grip"></div>
+        <h3>같이 보기</h3>
+        <p class="lbl">이 메모를 어느 방에 둘까요</p>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div class="cb on"><span class="box">✓</span> 집 <span class="rp home" style="margin-left:auto">집</span></div>
+          <div class="cb on"><span class="box">✓</span> 회사 <span class="rp work" style="margin-left:auto">회사</span></div>
+        </div>
+        <p class="hint">한 장을 여러 방에 둬도 <b>내용은 하나</b>예요. 한 곳에서 고치면 모두 바뀝니다.</p>
+        <p class="hint" style="color:var(--high)">내리면 그 방 사람들에게서는 사라져요.</p>
+        <button class="save">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑨ 공유 아이콘 -->
+  <div class="slot">
+    <h2>⑦ 공유 아이콘 — 세 화면 다</h2>
+    <p class="why">공유된 칩에는 이름 뒤에 아이콘이 붙는다. 할 일은 <b>카테고리 칩</b>에, 장보기·메모는 <b>방 칩</b>에.</p>
+    <div class="phone">
+      <div class="body" style="padding-top:16px">
+
+        <p class="lbl" style="font-weight:700;color:var(--ink)">할 일 — 카테고리 줄</p>
+        <div class="row">
+          <button class="chip on">전체</button>
+          <button class="chip" style="background:var(--cat-body-t);color:#5b9dbd">건강</button>
+          <span class="sep"></span>
+          <button class="chip" style="background:var(--cat-home-t);color:#5f9e88">집안일 <svg class="ic"><use href="#ic-people"/></svg></button>
+          <button class="chip" style="background:#fff6ec;color:#c08c4a">장보기 <svg class="ic"><use href="#ic-people"/></svg></button>
+          <span class="sep"></span>
+          <button class="chip" style="background:#f4f0fa;color:#8570a8">기획서 <svg class="ic"><use href="#ic-people"/></svg></button>
+        </div>
+        <p class="hint" style="margin:-6px 0 16px">구분선 왼쪽이 내 것, 오른쪽부터 집방·회사방.</p>
+
+        <p class="lbl" style="font-weight:700;color:var(--ink)">장보기 · 메모 — 방 줄</p>
+        <div class="row">
+          <button class="chip on">전체</button>
+          <button class="chip mine">나만</button>
+          <button class="chip room-home">집 <svg class="ic"><use href="#ic-people"/></svg></button>
+          <button class="chip room-work">회사 <svg class="ic"><use href="#ic-people"/></svg></button>
+        </div>
+
+        <div class="hr"></div>
+        <p class="lbl" style="font-weight:700;color:var(--ink)">아이콘 고르기 <span style="font-weight:400;color:var(--ink3)">· 실제 크기</span></p>
+
+        <p class="lbl" style="color:var(--accent);font-weight:700">가 — 사람 둘 · 이걸로 정했다</p>
+        <div class="row" style="padding-bottom:9px">
+          <button class="chip room-home">집 <svg class="ic"><use href="#ic-people"/></svg></button>
+          <button class="chip room-home on">집 <svg class="ic"><use href="#ic-people"/></svg></button>
+          <button class="chip" style="background:var(--cat-home-t);color:#5f9e88">집안일 <svg class="ic"><use href="#ic-people"/></svg></button>
+        </div>
+
+        <p class="lbl">나 — 고리</p>
+        <div class="row" style="padding-bottom:9px">
+          <button class="chip room-home">집 <svg class="ic"><use href="#ic-link"/></svg></button>
+          <button class="chip room-home on">집 <svg class="ic"><use href="#ic-link"/></svg></button>
+          <button class="chip" style="background:var(--cat-home-t);color:#5f9e88">집안일 <svg class="ic"><use href="#ic-link"/></svg></button>
+        </div>
+
+        <p class="lbl">다 — 점 세 개</p>
+        <div class="row" style="padding-bottom:2px">
+          <button class="chip room-home">집 <svg class="ic"><use href="#ic-share"/></svg></button>
+          <button class="chip room-home on">집 <svg class="ic"><use href="#ic-share"/></svg></button>
+          <button class="chip" style="background:var(--cat-home-t);color:#5f9e88">집안일 <svg class="ic"><use href="#ic-share"/></svg></button>
+        </div>
+
+        <p class="hint"><b>가로 정했다.</b> 이 앱에서 공유는 "같이 쓰는 사람이 있다"는 뜻이지
+          링크를 걸거나 밖으로 내보내는 게 아니다. <b>나·다</b>는 안드로이드에서
+          "밖으로 보내기"로 배운 모양이라 누르면 카톡 공유창이 뜰 것처럼 읽힌다.
+          나·다는 안 쓰기로 했지만 왜 아닌지가 남아야 해서 지우지 않고 뒀다.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑧ 구입처가 없을 때 -->
+  <div class="slot">
+    <h2>⑧ 방 칩은 제목 줄에</h2>
+    <p class="why">무엇을 적었든 <b>칩 자리가 늘 같다.</b> 이름이 길면 이름만 감기고 칩은 첫 줄 오른쪽에 남는다.</p>
+    <div class="phone">
+      <div class="body" style="padding-top:15px">
+        <p class="lbl" style="font-weight:700;color:var(--accent)">정한 것 — 제목 줄 오른쪽</p>
+        <ul class="list" style="margin-bottom:18px">
+          <li class="item card">
+            <div class="tick"></div>
+            <div style="min-width:0;flex:1">
+              <div class="titlerow">
+                <span class="t">우유</span>
+                <span class="rooms"><span class="rp home">집</span></span>
+              </div>
+              <span class="note">저지방으로</span>
+              <div class="meta"><span class="place">이마트</span></div>
+            </div>
+          </li>
+          <li class="item card">
+            <div class="tick"></div>
+            <div style="min-width:0;flex:1">
+              <div class="titlerow">
+                <span class="t">세제</span>
+                <span class="rooms"><span class="rp home">집</span></span>
+              </div>
+            </div>
+          </li>
+          <li class="item card">
+            <div class="tick"></div>
+            <div style="min-width:0;flex:1">
+              <div class="titlerow">
+                <span class="t">유기농 저지방 우유 1L 두 개랑 무염 버터</span>
+                <span class="rooms"><span class="rp work">회사</span></span>
+              </div>
+              <div class="meta"><span class="place">쿠팡</span></div>
+            </div>
+          </li>
+          <li class="item card">
+            <div class="tick"></div>
+            <div style="min-width:0;flex:1">
+              <div class="titlerow">
+                <span class="t">아주아주긴이름을띄어쓰기없이적었을때도칸을넘지않는다</span>
+                <span class="rooms"><span class="rp home">집</span></span>
+              </div>
+            </div>
+          </li>
+        </ul>
+        <p class="hint" style="margin:-8px 0 20px">두 줄이 돼도 <b>칩은 첫 줄에 남는다.</b>
+          이름 칸과 칩 칸이 따로라 겹칠 자리가 없다.</p>
+
+        <p class="lbl" style="font-weight:700;color:var(--ink3)">안 쓴 것 — 밑줄에 두기</p>
+        <ul class="list">
+          <li class="item card">
+            <div class="tick"></div>
+            <div style="min-width:0;flex:1">
+              <span class="t">세제</span>
+              <div class="meta">
+                <span class="rooms"><span class="rp home">집</span></span>
+              </div>
+            </div>
+          </li>
+        </ul>
+        <p class="hint">이름만 적은 항목은 밑에 칩 하나만 덩그러니 남는다.
+          카드도 한 줄 길어진다. 장보기는 대부분 이름만 적고 던져넣는 것이라 이게 기본 모습이 된다.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑦ 방 만들기 -->
+  <div class="slot">
+    <h2>⑨ 방 만들 때 — 무엇을 나눌까</h2>
+    <p class="why"><b>할 일을 켜면 그 밑에 카테고리 목록이 펼쳐진다.</b> 회사방은 장보기·메모를 꺼두면 그쪽으로 갈 길이 아예 없다.</p>
+    <div class="phone" style="padding-bottom:0">
+      <div style="height:44px"></div>
+      <div class="sheet">
+        <div class="grip"></div>
+        <h3>방 만들기</h3>
+        <p class="lbl">방 이름</p>
+        <div class="fld">우리집</div>
+        <p class="lbl">내 이름</p>
+        <div class="fld">윤정</div>
+
+        <div class="hr"></div>
+        <p class="lbl">무엇을 나눌까요</p>
+
+        <div class="cb on" style="width:100%"><span class="box">✓</span> 할 일</div>
+        <div class="nest">
+          <p>어느 카테고리를 나눌까요</p>
+          <div class="catchips">
+            <span class="cat all-off">전체</span>
+            <span class="cat home-on">집안일 ✓</span>
+            <span class="cat body-off">건강</span>
+          </div>
+        </div>
+
+        <div class="checks" style="margin-top:9px">
+          <div class="cb on" style="flex:1"><span class="box">✓</span> 장보기</div>
+          <div class="cb" style="flex:1"><span class="box">✓</span> 메모</div>
+        </div>
+
+        <p class="hint">지금 있는 것은 그대로 있어요. 나중에 하나씩 올릴 수 있습니다.</p>
+        <button class="save">만들기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑪ 남이 고쳤을 때 -->
+  <div class="slot">
+    <h2>⑪ 남이 고쳤을 때 — 셋 중에</h2>
+    <p class="why">공유된 메모를 상대가 고쳤다. 어떻게 알려줄까. <b>다</b>를 권한다.</p>
+    <div class="phone">
+      <div class="body" style="padding-top:16px">
+
+        <p class="lbl" style="font-weight:700;color:var(--ink3)">가 — 날짜 뒤에 (수정)</p>
+        <div class="memo-card" style="margin-bottom:7px">
+          <div class="head">관리비 계좌 000-00-000000 국민</div>
+          <div class="note-line">
+            <span class="sub" style="margin:0">7월 8일 (수정)</span>
+            <span class="rooms"><span class="rp home">집</span></span>
+          </div>
+        </div>
+        <p class="hint" style="margin:0 0 18px">누가 고쳤는지 모른다. 그리고 한 번 붙으면 안 없어져서
+          <b>일주일이면 전부 (수정)</b>이 된다. 붙어 있는 게 당연해지면 아무 말도 안 하는 것과 같다.</p>
+
+        <p class="lbl" style="font-weight:700;color:var(--ink3)">나 — 누가 고쳤는지</p>
+        <div class="memo-card" style="margin-bottom:7px">
+          <div class="head">관리비 계좌 000-00-000000 국민</div>
+          <div class="note-line">
+            <span class="sub" style="margin:0">민수가 고침 · 어제</span>
+            <span class="rooms"><span class="rp home">집</span></span>
+          </div>
+        </div>
+        <p class="hint" style="margin:0 0 18px">쓸모는 있는데 <b>내가 고친 것도 "윤정이 고침"</b>으로 뜬다.
+          혼자 쓰는 메모까지 이름이 붙어 시끄럽다.</p>
+
+        <p class="lbl" style="font-weight:700;color:var(--accent)">다 — 안 본 것만 점 · 열면 누가 (권함)</p>
+        <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:7px">
+          <div class="memo-card" style="position:relative">
+            <span style="position:absolute;top:15px;right:16px;width:7px;height:7px;border-radius:999px;background:var(--accent)"></span>
+            <div class="head" style="padding-right:16px">관리비 계좌 000-00-000000 국민</div>
+            <div class="note-line">
+              <span class="sub" style="margin:0">어제</span>
+              <span class="rooms"><span class="rp home">집</span></span>
+            </div>
+          </div>
+          <div class="memo-card memo-open">
+            <div class="ta" style="min-height:0">관리비 계좌 000-00-000000 국민</div>
+            <div class="foot">
+              <span><b style="color:var(--accent)">민수가 고침</b> · 어제</span>
+              <button class="btn act">같이 보기</button>
+            </div>
+          </div>
+        </div>
+        <p class="hint" style="margin:0">내가 마지막으로 본 뒤에 <b>남이</b> 고친 것에만 점이 뜬다.
+          열어보면 사라진다. 누가 고쳤는지는 열었을 때 아래 줄에서 말해준다.</p>
+        <p class="hint"><b>이 앱이 이미 쓰는 방식이다</b> — 메모 탭에 안 본 표시가 뜨는 것과 같은 규칙
+          (<code>memoSeenAt</code>). 새로 배울 게 없다. 장보기·할 일에도 같은 점을 쓰면 된다.</p>
+
+        <div class="hr"></div>
+        <p class="lbl" style="font-weight:700;color:var(--ink)">열었다 그냥 닫으면 안 뜬다</p>
+        <p class="hint" style="margin:0 0 10px">메모는 <b>적는 대로 저장</b>이라 열기만 해도 저장이 불릴 수 있다.
+          그러면 상대 폰에 점이 뜬다 — <b>아무것도 안 고쳤는데.</b>
+          저장하기 전에 <b>글자를 견줘서 같으면 아무 일도 안 한다.</b>
+          <code>updatedAt</code>도 그대로 두는 게 핵심이다. 그게 움직이면 동기화가 "바뀐 것"으로 실어 나른다.</p>
+        <div class="memo-card" style="margin-bottom:7px">
+          <div class="head">관리비 계좌 000-00-000000 국민</div>
+          <div class="sub">어제 <span style="color:var(--ink3)">· 열었다 닫아도 어제 그대로</span></div>
+        </div>
+
+        <div class="hr"></div>
+        <p class="lbl" style="font-weight:700;color:var(--ink)">옛날에 고친 것은 해까지</p>
+        <p class="hint" style="margin:0 0 10px">지금 메모 카드는 <b>오늘 아니면 <code>7월 8일</code></b>뿐이라
+          작년 7월 8일도 똑같이 보인다. 해가 바뀌면 헷갈린다. 네 칸으로 나눈다.</p>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div class="memo-card"><div class="head">오늘 고친 것</div><div class="sub">민수가 고침 · 오늘</div></div>
+          <div class="memo-card"><div class="head">어제 고친 것</div><div class="sub">민수가 고침 · 어제</div></div>
+          <div class="memo-card"><div class="head">올해 고친 것</div><div class="sub">민수가 고침 · 7월 8일</div></div>
+          <div class="memo-card"><div class="head">지난해 이전</div><div class="sub">민수가 고침 · 26년 7월 8일</div></div>
+        </div>
+        <p class="hint">해는 <b>넘어갔을 때만</b> 붙인다. 늘 붙이면 오늘 것까지 <code>27년 8월 7일</code>이 돼서 시끄럽다.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑩ 여러 방에 건 장보기 -->
+  <div class="slot">
+    <h2>⑩ 집에도 회사에도 필요할 때</h2>
+    <p class="why">담을 때는 <b>한 곳만</b> 고른다. 두 곳에 필요하면 <b>다른 방에도 담기</b>를 눌러 하나 더 만든다.</p>
+    <div class="phone">
+      <div class="body" style="padding-top:16px">
+
+        <p class="lbl" style="font-weight:700;color:var(--accent)">정한 것 — 방마다 제 줄</p>
+        <p class="hint" style="margin:0 0 9px"><b>다른 방에도 담기</b>를 눌렀을 때만 줄이 둘이 된다.
+          누른 사람이 알고 만든 것이라 갑자기 늘어나 보이지 않는다.</p>
+        <ul class="list" style="margin-bottom:7px">
+          <li class="item done">
+            <div class="tick on">✓</div>
+            <div style="min-width:0;flex:1">
+              <div class="titlerow">
+                <span class="t off">종이컵</span>
+                <span class="rooms"><span class="rp off">집</span></span>
+              </div>
+              <div class="meta"><span style="font-family:monospace">8/7 담음</span></div>
+            </div>
+          </li>
+          <li class="item card">
+            <div class="tick"></div>
+            <div style="min-width:0;flex:1">
+              <div class="titlerow">
+                <span class="t">종이컵</span>
+                <span class="rooms"><span class="rp work">회사</span></span>
+              </div>
+              <div class="meta"><span class="place">쿠팡</span></div>
+            </div>
+          </li>
+        </ul>
+        <p class="hint" style="margin:0 0 18px">집 것만 없어지고 <b>회사 것은 그대로 남는다.</b>
+          집에 쓸 것과 회사에 쓸 것은 어차피 따로 사야 하니까.</p>
+
+        <p class="lbl" style="font-weight:700;color:var(--ink3)">안 쓴 것 — 한 몸</p>
+        <p class="hint" style="margin:0 0 9px">줄은 하나, 칩만 둘.</p>
+        <ul class="list" style="margin-bottom:7px">
+          <li class="item done">
+            <div class="tick on">✓</div>
+            <div style="min-width:0;flex:1">
+              <div class="titlerow">
+                <span class="t off">종이컵</span>
+                <span class="rooms">
+                  <span class="rp home">집</span>
+                  <span class="rp work">회사</span>
+                </span>
+              </div>
+              <div class="meta"><span style="font-family:monospace">윤정이 담음</span></div>
+            </div>
+          </li>
+        </ul>
+        <p class="hint" style="margin:0">내가 집에서 담으면 <b>회사 목록에서도 같이 사라진다.</b>
+          집에 쓸 것과 회사에 쓸 것은 따로 사야 하는데, 하나만 사고 다 산 줄 알게 된다.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑫ 방 색 -->
+  <div class="slot" style="width:712px">
+    <h2>⑫ 방 색 — 세 가지 안</h2>
+    <p class="why"><b>카테고리 팔레트를 그대로 쓰기로 했다(나).</b> 가·다는 왜 안 썼는지가 남아야 해서 지우지 않고 뒀다.</p>
+
+    <div class="phone" style="padding:16px 18px 20px">
+      <p class="lbl" style="font-weight:700;color:var(--ink)">지금 카테고리 팔레트 (파스텔 10)</p>
+      <div class="sw">
+        <i style="background:#8EC9B5"></i><i style="background:#A9B8F4"></i><i style="background:#F0C58A"></i>
+        <i style="background:#DDB9E9"></i><i style="background:#A8D8F0"></i><i style="background:#F3A8A8"></i>
+        <i style="background:#A9C989"></i><i style="background:#F4C7B5"></i><i style="background:#E9C6A2"></i>
+        <i style="background:#A8C9A5"></i>
+      </div>
+      <p class="hint" style="margin:2px 0 0">칩은 <b>아주 옅은 바탕에 그 색 글씨</b>로 쓴다. 채우지 않는다.</p>
+
+      <div class="hr"></div>
+
+      <!-- 가 -->
+      <p class="lbl" style="font-weight:700;color:var(--ink3)">가 — 안 쓴 것 · 같은 색의 깊은 판</p>
+      <p class="hint" style="margin:0 0 8px">파스텔과 같은 계열인데 두 톤 깊다. 흰 글씨가 또렷하다.
+        대신 <b>색을 열 개 더 만들어 관리해야 하고</b>, 화면에 도는 색이 스무 가지가 된다.</p>
+      <div class="pair">
+        <div><i style="background:#8EC9B5"></i><i style="background:#4A8676"></i><b>이끼</b><code>#4A8676</code></div>
+        <div><i style="background:#A8D8F0"></i><i style="background:#43738F"></i><b>물빛</b><code>#43738F</code></div>
+        <div><i style="background:#A9B8F4"></i><i style="background:#6E5F94"></i><b>라벤더</b><code>#6E5F94</code></div>
+        <div><i style="background:#F3A8A8"></i><i style="background:#96566A"></i><b>자두</b><code>#96566A</code></div>
+        <div><i style="background:#E9C6A2"></i><i style="background:#86672A"></i><b>밤색</b><code>#86672A</code></div>
+        <div><i style="background:#A9C989"></i><i style="background:#62793F"></i><b>올리브</b><code>#62793F</code></div>
+      </div>
+      <div class="row" style="padding:12px 0 4px">
+        <button class="chip on">전체</button>
+        <button class="chip" style="background:var(--cat-body-t);color:#5b9dbd">건강</button>
+        <span class="sep"></span>
+        <button class="chip" style="background:var(--cat-home-t);color:#5f9e88">집안일 <svg class="ic"><use href="#ic-people"/></svg></button>
+        <button class="chip" style="background:#4A8676;color:#fff">집 <svg class="ic"><use href="#ic-people"/></svg></button>
+        <button class="chip" style="background:#6E5F94;color:#fff">회사 <svg class="ic"><use href="#ic-people"/></svg></button>
+      </div>
+      <p class="hint" style="margin:0">한 식구로 보이면서 <b>채웠느냐 아니냐</b>로 갈린다. 흰 글씨가 또렷해서 10.5px 칩에서도 읽힌다.</p>
+
+      <div class="hr"></div>
+
+      <!-- 나 -->
+      <p class="lbl" style="font-weight:700;color:var(--accent)">나 — 카테고리 팔레트 그대로 · 정했다</p>
+      <p class="hint" style="margin:0 0 8px">색은 새로 안 만든다. <b>방과 카테고리를 가르는 건 색이 아니라 공유 아이콘</b>이다.</p>
+      <div class="sw" style="margin-bottom:10px">
+        <i style="background:#8EC9B5"></i><i style="background:#A9B8F4"></i><i style="background:#F0C58A"></i>
+        <i style="background:#DDB9E9"></i><i style="background:#A8D8F0"></i><i style="background:#F3A8A8"></i>
+        <i style="background:#A9C989"></i><i style="background:#F4C7B5"></i><i style="background:#E9C6A2"></i>
+        <i style="background:#A8C9A5"></i>
+      </div>
+      <div class="row" style="padding:2px 0 4px">
+        <button class="chip on">전체</button>
+        <button class="chip" style="background:var(--cat-body-t);color:#A8D8F0">건강</button>
+        <span class="sep"></span>
+        <button class="chip" style="background:var(--cat-home-t);color:#8EC9B5">집안일 <svg class="ic"><use href="#ic-people"/></svg></button>
+        <button class="chip room-home">집 <svg class="ic"><use href="#ic-people"/></svg></button>
+        <button class="chip room-work on">회사 <svg class="ic"><use href="#ic-people"/></svg></button>
+      </div>
+      <p class="hint" style="margin:6px 0 0">칩 줄은 <b>카테고리 칩과 똑같이</b> 그린다 —
+        옅은 바탕에 그 색 글씨, 누르면 색을 채우고 흰 글씨. 새 규칙이 없다.</p>
+      <div class="rooms" style="margin:10px 0 0;justify-content:flex-start">
+        <span class="rp home">집</span>
+        <span class="rp work">회사</span>
+        <span class="rp off">집</span>
+      </div>
+      <p class="hint" style="margin:8px 0 0">항목에 붙는 작은 칩만 다르게 간다.
+        <b>파스텔을 채우고 흰 글씨를 얹으면 10.5px에서 안 읽힌다.</b>
+        달력 칸과 같은 방식으로 <b>색을 34% 섞은 바탕에 먹색 글씨</b>를 얹는다
+        (<code>bandOf</code>). 담은 것은 회색으로 눕힌다.</p>
+
+      <div class="hr"></div>
+
+      <!-- 다 -->
+      <p class="lbl" style="font-weight:700;color:var(--ink3)">다 — 안 쓴 것 · 무채색으로 물러나기</p>
+      <p class="hint" style="margin:0 0 8px">방은 색을 안 갖는다. <b>카테고리 색이 주인공</b>으로 남는다.</p>
+      <div class="sw">
+        <i style="background:#6B625B"></i><i style="background:#8A7E72"></i>
+        <i style="background:#5C6B6E"></i><i style="background:#7A6A66"></i>
+      </div>
+      <div class="row" style="padding:10px 0 4px">
+        <button class="chip on">전체</button>
+        <button class="chip" style="background:var(--cat-body-t);color:#5b9dbd">건강</button>
+        <span class="sep"></span>
+        <button class="chip" style="background:var(--cat-home-t);color:#5f9e88">집안일 <svg class="ic"><use href="#ic-people"/></svg></button>
+        <button class="chip" style="background:#6B625B;color:#fff">집 <svg class="ic"><use href="#ic-people"/></svg></button>
+        <button class="chip" style="background:#8A7E72;color:#fff">회사 <svg class="ic"><use href="#ic-people"/></svg></button>
+      </div>
+      <p class="hint" style="margin:0">제일 조용하다. 대신 <b>방끼리 구별이 안 된다</b> — 먹색과 모래색은
+        10.5px 칩에서 거의 같은 회색으로 보인다. 방이 셋을 넘으면 못 쓴다.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="foot-note">
+  <h3>그리면서 정한 것</h3>
+  <ul>
+    <li><b>방 색은 카테고리 팔레트를 그대로 쓴다.</b> 칩 줄에서는 카테고리 칩과 똑같이 그리고,
+      가르는 건 <b>공유 아이콘</b>이 한다. 항목에 붙는 작은 칩만 달력 칸처럼
+      <b>34% 바탕에 먹색 글씨</b>로 간다 — 파스텔에 흰 글씨는 10.5px에서 안 읽힌다.</li>
+    <li><b>공유 아이콘은 칩 줄에만 붙인다.</b> 할 일은 카테고리 칩, 장보기·메모는 방 칩.
+      항목 밑에 붙는 작은 칩(10.5px)에는 안 넣는다 — 그 크기에서는 아이콘이 뭉개져서
+      점 하나로만 보이고, 거기 있는 칩은 이미 방 색으로 채워져 있어 공유라는 게 드러난다.</li>
+    <li><b>방 칩은 오른쪽으로 민다.</b> 왼쪽은 내가 적은 것(구입처·날짜), 오른쪽은 어디에 걸렸는지.
+      섞어두면 <span class="tag">이마트</span><span class="tag">집</span>이 같은 종류로 읽힌다.
+      오른쪽 끝에 세로로 줄이 맞아서 훑을 때도 눈이 한 줄만 따라간다.</li>
+    <li><b>개인 것에는 칩을 안 그린다.</b> 목록 대부분이 개인 것이라 <span class="tag">나</span>를 다 그리면 도배된다.
+      담을 때 고르는 자리에서는 <span class="tag">나만</span>도 보여주니 헷갈릴 일이 없다.</li>
+    <li><b>방이 하나도 없으면 칩 줄도 항목 칩도 안 그린다.</b> 혼자 쓰는 사람 화면은 지금 그대로다.</li>
+    <li><b>공유는 접어둔다.</b> 장보기는 <span class="tag">＋ 공유</span>를 누를 때, 메모는 <span class="tag">같이 보기</span>를 누를 때만 방이 나온다.
+      담는 대부분은 개인 것이라 매번 물으면 빨리 던져넣는 맛이 죽는다.</li>
+    <li><b>방 만들기에서 할 일을 켜면 카테고리가 펼쳐진다.</b> 왼쪽에 세로선을 그어 "할 일에 딸린 것"으로 보이게 했다.
+      장보기·메모는 딸린 게 없어 체크만 있다.</li>
+  </ul>
+
+  <h3>방 칩은 제목 줄에 (⑧)</h3>
+  <p><b>구입처를 적었든 안 적었든 칩 자리가 같다.</b> 밑줄에 두면 이름만 적은 항목
+    — 장보기에서 제일 흔한 모습이다 — 이 제목 밑에 칩 하나만 덩그러니 달고 카드가 한 줄 길어진다.</p>
+  <p>이름이 길어도 겹치지 않는다. <b>이름 칸과 칩 칸을 따로 두면</b> 되는 일이다.</p>
+  <ul>
+    <li>이름 칸은 <code>flex:1; min-width:0</code> — 제 칸 안에서만 감긴다</li>
+    <li>칩 칸은 <code>flex:none</code> — 줄어들지 않는다</li>
+    <li>줄을 <code>align-items:flex-start</code>로 둔다 — 두 줄이 돼도 <b>칩은 첫 줄에 남는다</b></li>
+    <li>띄어쓰기 없는 긴 이름은 <code>overflow-wrap:anywhere</code>로 잘라 넘긴다</li>
+  </ul>
+
+  <h3>장보기는 방 하나만 (③⑩)</h3>
+  <p>담을 때 여러 방을 한 번에 고르게 하면 <code>전체</code>로 볼 때 같은 이름이 우르르 두 줄씩 뜬다.
+    그런데 <b>같은 물건을 두 방에 넣는 일 자체가 드물다.</b> 드문 일 때문에 늘 어수선해질 이유가 없다.</p>
+  <ul>
+    <li>담을 때는 <b>한 곳만</b> — 나만 / 집 / 회사 중 하나</li>
+    <li>정말 두 곳에 필요하면 항목에서 <b>다른 방에도 담기</b> → 줄이 하나 더 생긴다</li>
+    <li>줄이 둘이 되는 건 <b>누른 사람이 알고 만들었을 때뿐</b>이다. 갑자기 늘어나 보이지 않는다</li>
+  </ul>
+  <p>"방 하나만 되게 하고 두 개를 따로 적는 것"과 결과가 같은데, 적는 수고만 덜어주는 자리가
+    <b>드문 자리</b>에 가 있다는 게 다르다.</p>
+
+  <h3>그래서 체크하면 (⑩)</h3>
+  <p><b>메모와 장보기는 다르게 다뤄야 한다. 수명이 다르기 때문이다.</b></p>
+  <ul>
+    <li><b>메모는 읽는 것이고 오래 산다.</b> 계좌번호를 집·회사에 걸어두면
+      한 곳에서 고쳤을 때 다른 곳도 같이 바뀌어야 한다. 두 벌로 갈라지면 그때부터 못 믿는다 → <b>한 몸(공유 표)</b></li>
+    <li><b>장보기는 해치우는 것이고 며칠 살다 죽는다.</b> 집에 쓸 종이컵과 회사에 쓸 종이컵은
+      <b>애초에 두 번 사야 하는 물건</b>이다. 한 몸으로 묶으면 하나만 사고 다 산 줄 안다 → <b>방마다 제 줄(복사본)</b></li>
+  </ul>
+  <p>여러 방에 넣는다는 건 장보기에서는 <b>"한 번 적어서 두 목록에 넣어줘"</b>지
+    <b>"한 물건을 같이 본다"</b>가 아니다. 적는 수고만 덜면 되고, 그다음부터는 각자 살아도 된다.</p>
+  <p><b>덤으로 표가 하나 줄어든다.</b> <code>shop_shares</code>가 필요 없어지고 장보기는 지금 구조
+    (<code>room_id</code> 하나) 그대로 간다. 읽기 정책도 동기화도 안 건드린다.
+    규칙에서 빠지는 건 <b>메모 하나뿐</b>이 된다.</p>
+  <p>대신 <code>전체</code>로 보면 같은 이름이 두 줄로 보인다. 그게 흠처럼 보이지만
+    실제로 두 개를 사야 하니 <b>맞는 그림</b>이다.</p>
+
+  <h3>아직 안 그린 것</h3>
+  <ul>
+    <li>방이 서넛을 넘을 때 — 칩이 줄을 넘긴다. 그때는 눌러서 펼치는 목록으로 바꾼다</li>
+    <li>담은 것(회색 줄)에도 방 칩을 그릴지. 지금은 뺐다 — 이미 끝난 것이라 조용한 게 낫다</li>
+    <li>공유된 항목을 상대가 고쳤을 때 표시</li>
+  </ul>
+</div>
+
+</body>
+</html>
