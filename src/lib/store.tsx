@@ -86,6 +86,7 @@ const StoreContext = createContext<StoreValue | null>(null);
 
 const FALLBACK_CATEGORY: Category = {
   id: 'home',
+  roomId: null,
   name: '집안일',
   color: '#8EC9B5',
   order: 0,
@@ -126,7 +127,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   /** 스냅샷 하나를 화면 상태로 펼친다 */
   const spread = useCallback((snap: Snapshot) => {
-    setCategories(snap.categories);
+    // 방 칸이 없던 시절 카테고리에는 roomId를 채워준다 (전부 개인 것이었다)
+    setCategories(snap.categories.map((c) => ({ ...c, roomId: c.roomId ?? null })));
     setTasks(snap.tasks);
     setPresets(snap.presets);
     // 나중에 생긴 칸들이 없는 옛 항목에는 기본값을 채워준다
@@ -558,6 +560,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     (name: string, color: string) => {
       const cat: Category = {
         id: uid(),
+        roomId: null,
         name: name.trim(),
         color,
         order: categories.length,

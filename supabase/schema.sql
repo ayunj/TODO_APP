@@ -18,12 +18,16 @@
 create table if not exists rooms (
   id         uuid primary key default gen_random_uuid(),
   name       text not null,
+  -- 방 칩·배지 색. 팔레트에서 고른 HEX. 카테고리와 같은 팔레트를 쓴다.
+  color      text not null default '#A9B8F4',
   -- 초대 링크에 실리는 값. 이름이 곧 열쇠라 짐작하기 어렵게 랜덤으로 만든다.
   -- uuid에서 하이픈만 뺀다 — pgcrypto 같은 확장을 안 써도 되고 주소에서도 안 깨진다.
   join_code  text not null unique default replace(gen_random_uuid()::text, '-', ''),
   created_by uuid not null references auth.users,
   created_at timestamptz not null default now()
 );
+-- 이미 만들어져 있던 방에도 색 칸을 더한다 (두 번 돌려도 되게)
+alter table rooms add column if not exists color text not null default '#A9B8F4';
 
 create table if not exists room_members (
   room_id      uuid not null references rooms on delete cascade,
@@ -201,7 +205,7 @@ end $$;
 -- RLS만으로는 그게 안 된다 (아직 멤버가 아니니 방이 보이지 않는다).
 -- 그래서 이 두 개만 security definer로 열어둔다.
 
-create or replace function create_room(room_name text, me text)
+create or replace function create_room(room_name text, me text, room_color text default '#A9B8F4')
 returns rooms
 language plpgsql
 security definer
@@ -214,13 +218,46 @@ begin
     raise exception '로그인이 필요합니다';
   end if;
 
-  insert into rooms (name, created_by) values (room_name, auth.uid())
+  insert into rooms (name, color, created_by) values (room_name, room_color, auth.uid())
   returning * into made;
 
   insert into room_members (room_id, user_id, display_name, role)
   values (made.id, auth.uid(), me, 'owner');
 
   return made;
+end $$;
+
+/**
+ * 코드를 넣었을 때 들어가기 전에 먼저 보여줄 미리보기.
+ * 아직 멤버가 아니라 RLS로는 이 방이 안 보이므로 security definer로 한 겹 연다.
+ * 이름·색·사람만 돌려주고 방 안의 할 일·메모 같은 내용은 주지 않는다.
+ */
+create or replace function peek_room(code text)
+returns json
+language plpgsql
+security definer
+set search_path = public
+stable
+as $$
+declare target rooms; result json;
+begin
+  select * into target from rooms where join_code = code;
+  if target.id is null then
+    return null;
+  end if;
+
+  select json_build_object(
+    'id', target.id,
+    'name', target.name,
+    'color', target.color,
+    'owner', (select display_name from room_members
+              where room_id = target.id and user_id = target.created_by),
+    'members', (select coalesce(json_agg(display_name order by joined_at), '[]'::json)
+                from room_members where room_id = target.id),
+    'count', (select count(*) from room_members where room_id = target.id)
+  ) into result;
+
+  return result;
 end $$;
 
 create or replace function join_room(code text, me text)

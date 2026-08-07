@@ -48,8 +48,8 @@ export const bandOf = (color: string): string => `color-mix(in srgb, ${color} 34
  * id는 쓸 때 새로 매긴다 — 기기마다 달라야 서버에서 안 부딪힌다.
  */
 export const DEFAULT_CATEGORIES: Omit<Category, 'updatedAt'>[] = [
-  { id: 'home', name: '집안일', color: '#8EC9B5', order: 0 },
-  { id: 'body', name: '건강', color: '#A8D8F0', order: 1 },
+  { id: 'home', roomId: null, name: '집안일', color: '#8EC9B5', order: 0 },
+  { id: 'body', roomId: null, name: '건강', color: '#A8D8F0', order: 1 },
 ];
 
 /**

@@ -13,7 +13,13 @@ export type Sheet =
   | { kind: 'categoryList' }
   | { kind: 'category'; id: string | null }
   | { kind: 'shopItem'; id: string }
-  | { kind: 'account' };
+  | { kind: 'account' }
+  /* ── 같이 쓰기 ── */
+  | { kind: 'share' }
+  /** id가 null이면 새 방 만들기, 있으면 그 방 설정 */
+  | { kind: 'room'; id: string | null }
+  | { kind: 'invite'; id: string }
+  | { kind: 'join' };
 
 interface UiValue {
   view: ViewKind;

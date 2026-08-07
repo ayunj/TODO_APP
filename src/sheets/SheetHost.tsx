@@ -8,6 +8,10 @@ import AccountSheet from './AccountSheet';
 import SettingsSheet from './SettingsSheet';
 import ShopItemSheet from './ShopItemSheet';
 import TaskSheet from './TaskSheet';
+import ShareSheet from './ShareSheet';
+import RoomSheet from './RoomSheet';
+import InviteSheet from './InviteSheet';
+import JoinSheet from './JoinSheet';
 import { useUi } from '@/lib/ui';
 
 /** 시트는 한 번에 하나만. 하위 시트에는 상위로 돌아가는 버튼을 둔다. */
@@ -32,5 +36,13 @@ export default function SheetHost() {
       return <ShopItemSheet key={sheet.id} id={sheet.id} />;
     case 'account':
       return <AccountSheet />;
+    case 'share':
+      return <ShareSheet />;
+    case 'room':
+      return <RoomSheet key={sheet.id ?? 'new'} id={sheet.id} />;
+    case 'invite':
+      return <InviteSheet key={sheet.id} id={sheet.id} />;
+    case 'join':
+      return <JoinSheet />;
   }
 }

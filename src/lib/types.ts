@@ -6,11 +6,53 @@ export type DateStr = string;
 
 export interface Category {
   id: string;
+  /** null이면 개인, 값이 있으면 그 방에서 나누는 카테고리 */
+  roomId: string | null;
   name: string;
   /** 팔레트에서 고른 HEX */
   color: string;
   order: number;
   updatedAt: string;
+}
+
+/**
+ * 같이 쓰는 방. 서버에만 있고 이 기기에는 담지 않는다 —
+ * 방은 로그인해야 쓰는 것이라, 계정이 없으면 방도 없다.
+ */
+export interface Room {
+  id: string;
+  name: string;
+  /** 방 색 — 팔레트에서 고른 HEX. 방 칩·배지에 쓴다. */
+  color: string;
+  /** 초대 링크에 실리는 값 */
+  code: string;
+  /** 방을 연 사람의 계정 id */
+  createdBy: string;
+  /** 내가 연 방인지 — 주인에게만 초대·코드·끝내기가 열린다 */
+  mine: boolean;
+}
+
+/** 방에 든 사람. 이름은 방마다 다르게 부를 수 있다. */
+export interface RoomMember {
+  roomId: string;
+  userId: string;
+  /** 이 방에서 불리는 이름 */
+  displayName: string;
+  /** 'owner' | 'member' */
+  role: string;
+  joinedAt: string;
+}
+
+/** 코드를 넣었을 때 들어가기 전에 먼저 보여주는 방 미리보기 */
+export interface RoomPeek {
+  id: string;
+  name: string;
+  color: string;
+  /** 방 주인 이름 */
+  owner: string | null;
+  /** 든 사람들의 이름 */
+  members: string[];
+  count: number;
 }
 
 export interface Task {
