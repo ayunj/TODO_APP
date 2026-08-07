@@ -43,6 +43,12 @@
     margin: 0;
     padding: 0;
     overscroll-behavior-y: none;
+    /*
+     * 날짜를 넘길 때 화면이 옆에서 들어온다. 그 잠깐 동안 내용이 오른쪽으로 삐져나가는데
+     * 여기서 막지 않으면 가로 스크롤바가 생겼다 사라진다.
+     * `.wrap`에 걸면 안 된다 — 헤더가 sticky라 붙어 있질 못한다.
+     */
+    overflow-x: hidden;
   }
   body {
     background: var(--bg);
@@ -139,8 +145,29 @@
   }
 }
 
+/* 날짜를 넘기면 그쪽에서 들어온다. 시트와 같은 곡선을 쓴다 */
+@keyframes slide-next {
+  from {
+    opacity: 0;
+    transform: translateX(11%);
+  }
+}
+@keyframes slide-prev {
+  from {
+    opacity: 0;
+    transform: translateX(-11%);
+  }
+}
+.slide-next {
+  animation: slide-next 0.26s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.slide-prev {
+  animation: slide-prev 0.26s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
+    animation: none !important;
   }
 }

@@ -3,6 +3,7 @@
 import Fab from './Fab';
 import Header from './Header';
 import TabBar from './TabBar';
+import SlidePage from './SlidePage';
 import Toast from './Toast';
 import WelcomeScreen from './WelcomeScreen';
 import SheetHost from '@/sheets/SheetHost';
@@ -14,7 +15,7 @@ import NewPasswordScreen from '@/screens/NewPasswordScreen';
 import MonthScreen from '@/screens/MonthScreen';
 import ShopScreen from '@/screens/ShopScreen';
 import { useAuth } from '@/lib/auth';
-import { addDays, addMonths } from '@/lib/date';
+import { addDays, addMonths, monthKey } from '@/lib/date';
 import { useStore } from '@/lib/store';
 import { useSwipe } from '@/lib/swipe';
 import { useUi } from '@/lib/ui';
@@ -84,9 +85,16 @@ export default function AppShell() {
         <Header />
         <main>
           {view === 'day' ? (
-            <DayScreen />
+            // key를 갈라둔다. 같은 자리에 있어서 안 그러면 탭을 옮길 때
+            // 일별이 쓰던 방향이 그대로 남아 월별이 까닭 없이 한 번 미끄러진다
+            <SlidePage key="day" cursor={cursor}>
+              <DayScreen />
+            </SlidePage>
           ) : view === 'month' ? (
-            <MonthScreen />
+            // 달을 넘기니까 날짜가 아니라 달을 열쇠로 준다 — 같은 달 안에서는 안 움직인다
+            <SlidePage key="month" cursor={monthKey(cursor)}>
+              <MonthScreen />
+            </SlidePage>
           ) : view === 'shop' ? (
             <ShopScreen />
           ) : view === 'memo' ? (
