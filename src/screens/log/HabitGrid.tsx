@@ -16,7 +16,7 @@ import type { Task } from '@/lib/types';
  */
 export default function HabitGrid({ monthTasks }: { monthTasks: Task[] }) {
   const { presets, categoryOf, } = useStore();
-  const { cursor, openSheet } = useUi();
+  const { cursor } = useUi();
 
   const days = daysInMonth(cursor);
   const rows = habitRows(monthTasks, presets, (id) => categoryOf(id).color);
@@ -68,14 +68,17 @@ export default function HabitGrid({ monthTasks }: { monthTasks: Task[] }) {
       {rows.map((r) => (
         <div key={r.title} className="py-2 [&+&]:border-t [&+&]:border-line2">
           <div className="mb-[7px] flex items-baseline gap-2">
-            <button
-              type="button"
+            {/*
+              누르면 아무 일도 없다. 여기는 지나간 한 달을 훑어보는 자리다.
+              제목을 누르면 그달 어느 회차 하나가 열렸는데, 어느 날 것인지 알 수 없어
+              고치고 나면 격자의 어느 칸이 바뀐 건지 모른다. 고치려면 그 날로 들어가면 된다.
+            */}
+            <span
               title={r.title}
-              onClick={() => openSheet({ kind: 'task', id: r.sampleId })}
               className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-left text-[12.5px] text-ink2"
             >
               {r.title}
-            </button>
+            </span>
             <span className="flex-none font-mono text-[11.5px] text-ink3">{r.count}</span>
           </div>
 

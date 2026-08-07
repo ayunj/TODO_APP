@@ -14,15 +14,26 @@ import NewPasswordScreen from '@/screens/NewPasswordScreen';
 import MonthScreen from '@/screens/MonthScreen';
 import ShopScreen from '@/screens/ShopScreen';
 import { useAuth } from '@/lib/auth';
+import { addDays, addMonths } from '@/lib/date';
 import { useStore } from '@/lib/store';
+import { useSwipe } from '@/lib/swipe';
 import { useUi } from '@/lib/ui';
 
 export default function AppShell() {
   const { loading, onboarded } = useStore();
   const { enabled, loading: checking, account, recovering } = useAuth();
-  const { view } = useUi();
+  const { view, cursor, setCursor } = useUi();
+
+  // 아래 이른 반환들보다 위에 있어야 한다 — 훅은 렌더마다 같은 수로 불려야 한다
+  const step = (n: number) => setCursor(view === 'day' ? addDays(cursor, n) : addMonths(cursor, n));
+  const swipe = useSwipe(
+    () => step(-1),
+    () => step(1),
+  );
 
   const pushed = view === 'shop' || view === 'memo';
+  // 기록 탭은 뺀다. 달을 넘기는 화면이지만 격자를 옆으로 훑어보는 손짓과 겹친다.
+  const swipeable = view === 'day' || view === 'month';
 
   if (loading || checking) {
     return (
@@ -64,7 +75,12 @@ export default function AppShell() {
 
   return (
     <>
-      <div className="wrap">
+      {/*
+        쓸어 넘기기는 `main`이 아니라 `wrap`에 걸고, 화면 높이만큼 늘려둔다.
+        손가락은 대개 아래쪽에 닿는데 비어 있는 날은 내용이 화면 중간에서 끝나서
+        그 아래를 쓸면 아무 일도 안 일어났다. 빈 곳도 넘기는 자리여야 한다.
+      */}
+      <div className={swipeable ? 'wrap min-h-[100dvh]' : 'wrap'} {...(swipeable ? swipe : {})}>
         <Header />
         <main>
           {view === 'day' ? (

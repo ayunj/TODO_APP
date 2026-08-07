@@ -50,8 +50,6 @@ export interface HabitRow {
   /** 날짜(1~31) → 상태 */
   mark: Record<number, 'done' | 'todo'>;
   count: number;
-  /** 제목을 눌렀을 때 열 항목 */
-  sampleId: string;
 }
 
 /**
@@ -82,7 +80,6 @@ export function habitRows(
         color: colorOf(items[0].categoryId),
         mark,
         count: items.filter((t) => t.done).length,
-        sampleId: items[0].id,
       };
     })
     .sort((a, b) => b.count - a.count);

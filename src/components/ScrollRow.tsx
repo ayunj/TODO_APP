@@ -35,7 +35,12 @@ export default function ScrollRow({
 
   return (
     <div className={`relative -mx-4 ${className}`} {...rest}>
-      <div ref={ref} className="no-scrollbar flex gap-[7px] overflow-x-auto px-4">
+      {/*
+        `data-noswipe` — 여기서 시작한 손짓은 날짜를 넘기지 않는다 ([lib/swipe.ts]).
+        칩이 몇 개냐에 따라 넘칠 때도 있고 아닐 때도 있는데, 그때마다 동작이 달라지면
+        같은 자리를 쓸었는데 어떤 날은 날짜가 넘어간다. 넘치든 말든 이 줄은 칩 몫이다.
+      */}
+      <div ref={ref} data-noswipe className="no-scrollbar flex gap-[7px] overflow-x-auto px-4">
         {children}
       </div>
 
