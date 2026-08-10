@@ -11,11 +11,11 @@ import { useUi } from '@/lib/ui';
 /** 월별 — 상단 요약 세 숫자 + 달력. 막대 그래프로 대체하지 않는다. */
 export default function MonthScreen() {
   const { tasks, weekStart } = useStore();
-  const { cursor, who, setCursor, setTab } = useUi();
+  const { cursor, setCursor, setTab } = useUi();
   const { cats } = useTaskFilter();
   const today = todayStr();
 
-  const monthTasks = useMemo(() => tasksInMonth(tasks, cursor, cats, who), [tasks, cursor, cats, who]);
+  const monthTasks = useMemo(() => tasksInMonth(tasks, cursor, cats), [tasks, cursor, cats]);
   const doneCount = monthTasks.filter((t) => t.done).length;
   const rate = monthTasks.length ? Math.round((doneCount / monthTasks.length) * 100) : 0;
 
@@ -71,7 +71,7 @@ export default function MonthScreen() {
         {Array.from({ length: last }, (_, i) => {
           const day = i + 1;
           const date = `${prefix}-${String(day).padStart(2, '0')}`;
-          const all = tasksOn(tasks, date, cats, who);
+          const all = tasksOn(tasks, date, cats);
           return (
             <MonthCell
               key={date}

@@ -91,16 +91,14 @@ interface UiValue {
    */
   scope: Scope;
   setScope: (s: Scope) => void;
-  /** 묶음 안에서 카테고리 하나를 더 고른 것. null이면 그 묶음 전체 */
+  /**
+   * 묶음 안에서 카테고리 하나를 더 고른 것. null이면 그 묶음 전체.
+   *
+   * 거르는 값은 이 둘(`scope`·`filter`)뿐이다. 차례로 거르는 값은 두지 않는다 —
+   * 누가 할 일인지는 할 일 줄이 이미 말하고 있다.
+   */
   filter: string | null;
   setFilter: (f: string | null) => void;
-  /**
-   * 누구 차례만 볼지 — null이면 안 가림, 값이 있으면 내 계정 id다.
-   * `내 차례` 토글이 넣는다. 사람마다 거르는 줄은 없앴다 —
-   * 남의 차례만 골라 보는 건 감시에 가깝고, 실제로 쓰는 건 내 차례 하나뿐이었다.
-   */
-  who: string | null;
-  setWho: (id: string | null) => void;
   /** 기록 탭이 한 주치를 보는지 한 달치를 보는지 */
   logSpan: LogSpan;
   setLogSpan: (s: LogSpan) => void;
@@ -117,7 +115,6 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
   const [cursor, setCursor] = useState<DateStr>(() => todayStr());
   const [scope, setScopeState] = useState<Scope>('all');
   const [filter, setFilterState] = useState<string | null>(null);
-  const [who, setWho] = useState<string | null>(null);
   const [logSpan, setLogSpan] = useState<LogSpan>('month');
   const [sheet, setSheet] = useState<Sheet | null>(null);
 
@@ -139,23 +136,20 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
       cursor,
       setCursor,
       scope,
-      // 묶음을 옮기면 그 안에서 고른 것이 없는 것이 된다 — 방마다 카테고리도 사람도 다르다
+      // 묶음을 옮기면 그 안에서 고른 것이 없는 것이 된다 — 방마다 카테고리가 다르다
       setScope: (s) => {
         setFilterState(null);
-        setWho(null);
         setScopeState(s);
       },
       filter,
       setFilter: setFilterState,
-      who,
-      setWho,
       logSpan,
       setLogSpan,
       sheet,
       openSheet: setSheet,
       closeSheet: () => setSheet(null),
     }),
-    [tab, stack, route, cursor, scope, filter, who, logSpan, sheet],
+    [tab, stack, route, cursor, scope, filter, logSpan, sheet],
   );
 
   return <UiContext.Provider value={value}>{children}</UiContext.Provider>;

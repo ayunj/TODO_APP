@@ -4,7 +4,6 @@ import { useMemo } from 'react';
 import ScrollRow from './ScrollRow';
 import { BackIcon, PeopleIcon } from './Icons';
 import { tintOf } from '@/lib/constants';
-import { useAuth } from '@/lib/auth';
 import { useRooms } from '@/lib/rooms';
 import { useStore } from '@/lib/store';
 import { useUi, type Scope } from '@/lib/ui';
@@ -17,8 +16,6 @@ interface Bunch {
   /** 방 색. 내 것에는 색이 없다 */
   color: string | null;
   list: Category[];
-  /** 나 말고 사람이 있는 방인가 — `내 차례`가 뜰 자리 */
-  shared: boolean;
 }
 
 /**
@@ -32,49 +29,41 @@ interface Bunch {
  * 두 줄로 늘리는 대신 한 줄이 안팎으로 오가게 했다 —
  * **좁히자고 화면이 두꺼워지는 건 거꾸로다.**
  *
- * 사람마다 거르는 줄은 없앴다. 실제로 쓰는 건 `내 차례` 하나뿐이었고,
- * 남의 차례만 골라 보는 건 감시에 가깝다.
+ * **차례로 거르는 자리는 없다.** 사람마다 칩을 두는 줄도, `내 차례` 토글도 안 둔다 —
+ * 누가 할 일인지는 할 일 줄의 차례 칩이 이미 말하고 있고,
+ * 이 앱은 두 사람이 나눠 쓰는 자리라 걸러낼 만큼 목록이 길지 않다.
  */
 export default function CategoryFilter() {
   const { categories } = useStore();
-  const { account } = useAuth();
-  const { rooms, membersOf } = useRooms();
-  const { scope, setScope, filter, setFilter, who, setWho } = useUi();
+  const { rooms } = useRooms();
+  const { scope, setScope, filter, setFilter } = useUi();
 
   const bunches = useMemo<Bunch[]>(() => {
     const out: Bunch[] = [];
     const mine = categories.filter((c) => !c.roomId);
-    if (mine.length) out.push({ key: 'mine', name: '나만', color: null, list: mine, shared: false });
+    if (mine.length) out.push({ key: 'mine', name: '나만', color: null, list: mine });
 
     for (const r of rooms) {
       const list = categories.filter((c) => c.roomId === r.id);
       // 할 일을 안 나누는 방은 여기 아예 안 뜬다 — 고를 것이 없다
       if (!list.length) continue;
-      out.push({
-        key: r.id,
-        name: r.name,
-        color: r.color,
-        list,
-        shared: membersOf(r.id).length > 1,
-      });
+      out.push({ key: r.id, name: r.name, color: r.color, list });
     }
 
     // 아직 못 받아온 방에 걸린 것도 흘리지 않는다 — 마지막에 한 덩이로 붙인다
     const known = new Set(rooms.map((r) => r.id));
     const stray = categories.filter((c) => c.roomId && !known.has(c.roomId));
-    if (stray.length)
-      out.push({ key: 'stray', name: '공유', color: null, list: stray, shared: false });
+    if (stray.length) out.push({ key: 'stray', name: '공유', color: null, list: stray });
 
     return out;
-  }, [categories, rooms, membersOf]);
+  }, [categories, rooms]);
 
   const here = bunches.find((b) => b.key === scope) ?? null;
   /*
-    들어가 봤자 고를 게 없는 묶음에는 안 들어간다 — 칩만 켜지고 줄은 그대로다.
-    카테고리가 하나뿐이고 혼자 쓰는 방이 그렇다. `전체 / 건강` 둘을 나란히 두면
-    같은 것을 두 번 묻는 꼴이 된다.
+    카테고리가 하나뿐인 묶음에는 안 들어간다 — 칩만 켜지고 줄은 그대로다.
+    `전체 / 건강` 둘을 나란히 두면 같은 것을 두 번 묻는 꼴이 된다.
   */
-  const open = here && (here.list.length > 1 || here.shared) ? here : null;
+  const open = here && here.list.length > 1 ? here : null;
   // 묶음이 내 것 하나뿐이면 접을 것이 없다 — 혼자 쓰는 사람에게는 예전 그대로 한 줄이다
   const flat = bunches.length === 1 && bunches[0].key === 'mine';
   // 내 것과 방 사이에만 줄을 세운다. 내 것이 없으면 가를 것도 없다.
@@ -113,47 +102,24 @@ export default function CategoryFilter() {
             </span>
             <span className="mx-[3px] my-[5px] w-px flex-none self-stretch bg-line" />
 
-            {/* 카테고리는 둘 이상일 때만 고를 값이 있다 */}
-            {open.list.length > 1 && (
-              <>
-                <button
-                  type="button"
-                  aria-pressed={!filter}
-                  onClick={() => setFilter(null)}
-                  className={chip}
-                  style={accentChip(!filter)}
-                >
-                  전체
-                </button>
-                {open.list.map((c) => (
-                  <Chip
-                    key={c.id}
-                    category={c}
-                    on={filter === c.id}
-                    className={chip}
-                    onClick={() => setFilter(c.id)}
-                  />
-                ))}
-              </>
-            )}
-
-            {/* 나 말고 사람이 있는 방에서만. 혼자 하는 일에는 차례가 없다. */}
-            {open.shared && account && (
-              <>
-                {open.list.length > 1 && (
-                  <span className="mx-[3px] my-[5px] w-px flex-none self-stretch bg-line" />
-                )}
-                <button
-                  type="button"
-                  aria-pressed={Boolean(who)}
-                  onClick={() => setWho(who ? null : account.id)}
-                  className={chip}
-                  style={accentChip(Boolean(who))}
-                >
-                  내 차례
-                </button>
-              </>
-            )}
+            <button
+              type="button"
+              aria-pressed={!filter}
+              onClick={() => setFilter(null)}
+              className={chip}
+              style={accentChip(!filter)}
+            >
+              전체
+            </button>
+            {open.list.map((c) => (
+              <Chip
+                key={c.id}
+                category={c}
+                on={filter === c.id}
+                className={chip}
+                onClick={() => setFilter(c.id)}
+              />
+            ))}
           </>
         ) : (
           <>

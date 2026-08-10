@@ -16,18 +16,18 @@ import { useUi } from '@/lib/ui';
 /** 일별 — 진행 스트립 / 즐겨찾기 칩 / 목록 / 지난 미완료 */
 export default function DayScreen() {
   const { tasks } = useStore();
-  const { cursor, who, openSheet } = useUi();
+  const { cursor, openSheet } = useUi();
   const { cats, name } = useTaskFilter();
   const today = todayStr();
 
   const { open, shut, total } = useMemo(() => {
-    const all = tasksOn(tasks, cursor, cats, who);
+    const all = tasksOn(tasks, cursor, cats);
     return {
       open: sortTasks(all.filter((t) => !t.done)),
       shut: all.filter((t) => t.done),
       total: all.length,
     };
-  }, [tasks, cursor, cats, who]);
+  }, [tasks, cursor, cats]);
 
   return (
     <>

@@ -94,15 +94,11 @@ export const onShopList = (item: ShopItem, today: DateStr): boolean =>
 export type Filter = string[] | null;
 
 /**
- * 카테고리로 한 번, 담당자로 한 번 거른다.
- * `who`는 `내 차례`를 켰을 때 내 계정 id다 — 묶음을 옮기면 저절로 풀린다.
+ * 거르는 자는 카테고리 하나뿐이다.
+ * 차례로 거르는 자를 한때 뒀다가 걷어냈다 — 누가 할 일인지는 할 일 줄이 이미 말한다.
  */
-export const matches = (
-  task: { categoryId: string; assigneeId?: string | null },
-  filter: Filter,
-  who: string | null = null,
-): boolean =>
-  (!filter || filter.includes(task.categoryId)) && (!who || task.assigneeId === who);
+export const matches = (task: { categoryId: string }, filter: Filter): boolean =>
+  !filter || filter.includes(task.categoryId);
 
 /** 우선순위 높은 순, 같으면 만든 순 */
 export const sortTasks = (list: Task[]): Task[] =>
@@ -123,12 +119,8 @@ export const sortForCell = (list: Task[]): Task[] =>
       a.createdAt.localeCompare(b.createdAt),
   );
 
-export const tasksOn = (
-  tasks: Task[],
-  date: DateStr,
-  filter: Filter,
-  who: string | null = null,
-): Task[] => tasks.filter((t) => t.date === date && matches(t, filter, who));
+export const tasksOn = (tasks: Task[], date: DateStr, filter: Filter): Task[] =>
+  tasks.filter((t) => t.date === date && matches(t, filter));
 
 /**
  * 미루기가 보이는 날 — 오늘과 어제뿐.
@@ -141,21 +133,12 @@ export const canPostpone = (date: DateStr, today: DateStr): boolean =>
   date === today || date === addDays(today, -1);
 
 /** 오늘 화면 맨 아래 접어두는 지난 미완료 */
-export const staleTasks = (
-  tasks: Task[],
-  today: DateStr,
-  filter: Filter,
-  who: string | null = null,
-): Task[] => sortTasks(tasks.filter((t) => !t.done && t.date < today && matches(t, filter, who)));
+export const staleTasks = (tasks: Task[], today: DateStr, filter: Filter): Task[] =>
+  sortTasks(tasks.filter((t) => !t.done && t.date < today && matches(t, filter)));
 
-export const tasksInMonth = (
-  tasks: Task[],
-  cursor: DateStr,
-  filter: Filter,
-  who: string | null = null,
-): Task[] => {
+export const tasksInMonth = (tasks: Task[], cursor: DateStr, filter: Filter): Task[] => {
   const prefix = monthKey(cursor);
-  return tasks.filter((t) => t.date.startsWith(prefix) && matches(t, filter, who));
+  return tasks.filter((t) => t.date.startsWith(prefix) && matches(t, filter));
 };
 
 /** from부터 to까지 (양끝 포함) — 기록 탭 주간이 쓴다 */
@@ -164,8 +147,7 @@ export const tasksInRange = (
   from: DateStr,
   to: DateStr,
   filter: Filter,
-  who: string | null = null,
-): Task[] => tasks.filter((t) => t.date >= from && t.date <= to && matches(t, filter, who));
+): Task[] => tasks.filter((t) => t.date >= from && t.date <= to && matches(t, filter));
 
 export const presetsFor = (presets: Preset[], filter: Filter): Preset[] =>
   presets.filter((p) => matches(p, filter));
