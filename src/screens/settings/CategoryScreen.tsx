@@ -179,8 +179,12 @@ function CategoryForm({ category }: { category: Category }) {
         <ColorPicker value={category.color} onChange={saveColor} />
       </Field>
 
-      {/* 비어 있으면 줄도 없다 — 들어가봤자 빈 화면인 줄을 만들지 않는다 */}
-      {buried.length > 0 && (
+      {/*
+        비어 있어도 줄은 둔다. 없어진 걸 찾는 사람은 이미 급한 참이라
+        그때 처음 보이는 줄로는 늦다 — **평소에 한 번 봐둬야 어디 있는지 안다.**
+        공유 카테고리에만 이 줄이 없다. 그 지운 것은 방 설정에 모인다.
+      */}
+      {!category.roomId && (
         <Group>
           <Row
             value={`${buried.length}개`}

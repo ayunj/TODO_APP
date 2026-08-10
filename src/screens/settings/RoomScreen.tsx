@@ -295,45 +295,41 @@ function RoomSettings({ id }: { id: string }) {
         `지운 것`만 빼고 — **그건 손님도 본다.** 되돌리기는 누구나 할 수 있어야 한다.
         막는 대신 되돌린다. 가족끼리 권한을 나누기 시작하면 그때부터 앱이 회사가 된다.
       */}
-      {(room.mine || buried.length > 0) && (
-        <div className="mt-[18px]">
-          <Group label="방">
-            {room.mine && (
-              <>
-                <Row
-                  value={room.name}
-                  onClick={() => openSheet({ kind: 'roomField', id: room.id, field: 'name' })}
-                >
-                  방 이름
-                </Row>
-                <Row
-                  value={
-                    <span
-                      className="inline-block h-[15px] w-[15px] rounded-full align-[-2px]"
-                      style={{ background: room.color }}
-                    />
-                  }
-                  onClick={() => openSheet({ kind: 'roomField', id: room.id, field: 'color' })}
-                >
-                  방 색
-                </Row>
-                <Row value={formatCode(room.code)} onClick={onResetCode}>
-                  코드 새로 만들기
-                </Row>
-              </>
-            )}
-            {/* 비어 있으면 줄도 없다 — 들어가봤자 빈 화면인 줄을 만들지 않는다 */}
-            {buried.length > 0 && (
+      <div className="mt-[18px]">
+        <Group label="방">
+          {room.mine && (
+            <>
               <Row
-                value={`${buried.length}개`}
-                onClick={() => pushView({ kind: 'trash', scope: 'room', id: room.id })}
+                value={room.name}
+                onClick={() => openSheet({ kind: 'roomField', id: room.id, field: 'name' })}
               >
-                지운 것
+                방 이름
               </Row>
-            )}
-          </Group>
-        </div>
-      )}
+              <Row
+                value={
+                  <span
+                    className="inline-block h-[15px] w-[15px] rounded-full align-[-2px]"
+                    style={{ background: room.color }}
+                  />
+                }
+                onClick={() => openSheet({ kind: 'roomField', id: room.id, field: 'color' })}
+              >
+                방 색
+              </Row>
+              <Row value={formatCode(room.code)} onClick={onResetCode}>
+                코드 새로 만들기
+              </Row>
+            </>
+          )}
+          {/* 비어 있어도 둔다 — 없어진 걸 찾을 때 처음 보이는 줄로는 늦다 */}
+          <Row
+            value={`${buried.length}개`}
+            onClick={() => pushView({ kind: 'trash', scope: 'room', id: room.id })}
+          >
+            지운 것
+          </Row>
+        </Group>
+      </div>
 
       <div className="mt-[18px]">
         <Group label="끝내기">
