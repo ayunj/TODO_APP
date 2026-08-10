@@ -9,6 +9,12 @@ import type { DateStr, ViewKind } from './types';
 export type Tab = 'day' | 'month' | 'log';
 
 /**
+ * 기록 탭이 보는 폭.
+ * 한 달치는 칸이 작아 하루하루가 안 보이고, 한 주치는 칸이 커서 요일이 들어간다.
+ */
+export type LogSpan = 'week' | 'month';
+
+/**
  * 밀고 들어가는 화면. 층층이 쌓이고 뒤로가기 하나로 한 겹씩 벗는다.
  * 설정 갈래(설정·앱 설정·같이 쓰기·방)가 여기 다 들어와 있다 — 시트를 쌓지 않기로 했다.
  */
@@ -63,6 +69,9 @@ interface UiValue {
   /** 새로고침하면 전체로 돌아간다 — 그래서 저장하지 않는다 */
   filter: Filter;
   setFilter: (f: Filter) => void;
+  /** 기록 탭이 한 주치를 보는지 한 달치를 보는지 */
+  logSpan: LogSpan;
+  setLogSpan: (s: LogSpan) => void;
   sheet: Sheet | null;
   openSheet: (s: Sheet) => void;
   closeSheet: () => void;
@@ -75,6 +84,7 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
   const [stack, setStack] = useState<Route[]>([]);
   const [cursor, setCursor] = useState<DateStr>(() => todayStr());
   const [filter, setFilter] = useState<Filter>(null);
+  const [logSpan, setLogSpan] = useState<LogSpan>('month');
   const [sheet, setSheet] = useState<Sheet | null>(null);
 
   const route = stack.length ? stack[stack.length - 1] : null;
@@ -95,11 +105,13 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
       setCursor,
       filter,
       setFilter,
+      logSpan,
+      setLogSpan,
       sheet,
       openSheet: setSheet,
       closeSheet: () => setSheet(null),
     }),
-    [tab, stack, route, cursor, filter, sheet],
+    [tab, stack, route, cursor, filter, logSpan, sheet],
   );
 
   return <UiContext.Provider value={value}>{children}</UiContext.Provider>;

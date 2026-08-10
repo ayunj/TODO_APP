@@ -41,14 +41,22 @@ export const tasksInMonth = (tasks: Task[], cursor: DateStr, filter: Filter): Ta
   return tasks.filter((t) => t.date.startsWith(prefix) && matches(t, filter));
 };
 
+/** from부터 to까지 (양끝 포함) — 기록 탭 주간이 쓴다 */
+export const tasksInRange = (
+  tasks: Task[],
+  from: DateStr,
+  to: DateStr,
+  filter: Filter,
+): Task[] => tasks.filter((t) => t.date >= from && t.date <= to && matches(t, filter));
+
 export const presetsFor = (presets: Preset[], filter: Filter): Preset[] =>
   presets.filter((p) => matches(p, filter));
 
 export interface HabitRow {
   title: string;
   color: string;
-  /** 날짜(1~31) → 상태 */
-  mark: Record<number, 'done' | 'todo'>;
+  /** 날짜('YYYY-MM-DD') → 상태. 주간과 월간이 같은 표를 쓴다. */
+  mark: Record<DateStr, 'done' | 'todo'>;
   count: number;
 }
 
@@ -58,22 +66,22 @@ export interface HabitRow {
  * 제목이 같으면 한 행으로 묶는다 — 그래서 제목을 고치면 그 달 격자가 두 행으로 갈라진다.
  */
 export function habitRows(
-  monthTasks: Task[],
+  spanTasks: Task[],
   presets: Preset[],
   colorOf: (categoryId: string) => string,
 ): HabitRow[] {
   const isFrequent = (title: string) =>
     presets.some((p) => p.title === title) ||
-    monthTasks.some((t) => t.title === title && t.repeatDays > 0);
+    spanTasks.some((t) => t.title === title && t.repeatDays > 0);
 
-  const titles = [...new Set(monthTasks.map((t) => t.title))].filter(isFrequent);
+  const titles = [...new Set(spanTasks.map((t) => t.title))].filter(isFrequent);
 
   return titles
     .map((title) => {
-      const items = monthTasks.filter((t) => t.title === title);
-      const mark: Record<number, 'done' | 'todo'> = {};
+      const items = spanTasks.filter((t) => t.title === title);
+      const mark: Record<DateStr, 'done' | 'todo'> = {};
       items.forEach((t) => {
-        mark[Number(t.date.slice(8))] = t.done ? 'done' : 'todo';
+        mark[t.date] = t.done ? 'done' : 'todo';
       });
       return {
         title,

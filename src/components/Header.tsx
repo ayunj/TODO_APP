@@ -3,7 +3,17 @@
 import { useEffect, useState } from 'react';
 import CategoryFilter from './CategoryFilter';
 import { BackIcon, GearIcon, MemoIcon, ShopIcon } from './Icons';
-import { DOW, addDays, addMonths, dowOf, monthOf, todayStr, yearOf, dayOf } from '@/lib/date';
+import {
+  DOW,
+  addDays,
+  addMonths,
+  dowOf,
+  monthOf,
+  todayStr,
+  weekStartOf,
+  yearOf,
+  dayOf,
+} from '@/lib/date';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 
@@ -15,8 +25,8 @@ const round =
  * 윗줄에 드나드는 곳(장보기·메모·설정), 아랫줄에 날짜와 이동 — 한 줄에 몰면 좁은 폰에서 빡빡하다.
  */
 export default function Header() {
-  const { view, cursor, setCursor, pushView, popView } = useUi();
-  const { shopping, memos, memoSeenAt } = useStore();
+  const { view, cursor, setCursor, pushView, popView, logSpan } = useUi();
+  const { shopping, memos, memoSeenAt, weekStart } = useStore();
   // 마지막으로 본 뒤에 고쳐진 메모가 있으면 점을 띄운다
   const unseenMemo = memos.some((m) => m.text.trim() && m.updatedAt > memoSeenAt);
   const [stuck, setStuck] = useState(false);
@@ -64,7 +74,9 @@ export default function Header() {
     );
   }
 
-  const step = (n: number) => setCursor(view === 'day' ? addDays(cursor, n) : addMonths(cursor, n));
+  const weekly = view === 'log' && logSpan === 'week';
+  const step = (n: number) =>
+    setCursor(view === 'day' ? addDays(cursor, n) : weekly ? addDays(cursor, n * 7) : addMonths(cursor, n));
   const isToday = cursor === todayStr();
   const left = shopping.filter((i) => !i.done).length;
   const eyebrow =
@@ -75,6 +87,8 @@ export default function Header() {
       : view === 'month'
         ? `${yearOf(cursor)}년`
         : '반복 기록';
+  // 주간은 그 주의 첫날로 제목을 단다 — `8월 3일 주`
+  const weekFrom = weekly ? weekStartOf(cursor, weekStart) : cursor;
 
   return (
     <header className={shell}>
@@ -130,6 +144,8 @@ export default function Header() {
             </>
           ) : view === 'month' ? (
             `${monthOf(cursor)}월`
+          ) : weekly ? (
+            `${monthOf(weekFrom)}월 ${dayOf(weekFrom)}일 주`
           ) : (
             `${monthOf(cursor)}월 기록`
           )}

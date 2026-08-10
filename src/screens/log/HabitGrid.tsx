@@ -1,37 +1,40 @@
 'use client';
 
 import EmptyBox from '@/components/EmptyBox';
-import { dayOf, daysInMonth, monthKey, todayStr } from '@/lib/date';
+import { DOW, dowOf, todayStr } from '@/lib/date';
 import { habitRows } from '@/lib/selectors';
 import { useStore } from '@/lib/store';
-import { useUi } from '@/lib/ui';
-import type { Task } from '@/lib/types';
+import type { DateStr, Task } from '@/lib/types';
 
 /**
- * 한 달 격자. 행 = 되풀이하는 일 하나, 열 = 1일부터 말일까지.
- * "이번 달에 청소를 몇 번 했나"를 세는 게 아니라 흐름이 보이게 하는 것.
+ * 반복 기록 격자. 행 = 되풀이하는 일 하나, 열 = 그 폭의 하루하루.
+ * "이번 달에 청소를 몇 번 했나"를 세는 게 아니라 **흐름**이 보이게 하는 것.
  *
- * 이름을 `반복 기록`으로 잡았다. 예전 `자주 하는 일`은 즐겨찾기(`자주 쓰는 일`)와
- * 한 음절 차이라 같은 걸 가리키는 줄 알기 쉬웠다 — 여기는 등록해둔 목록이 아니라 지나간 기록이다.
+ * 그래서 **1~30 눈금을 안 그린다.** 숫자를 세려고 보는 화면이 아니다.
+ * 오늘 칸만 테두리로 짚어주고, 날짜를 정확히 짚어야 하면 그날로 들어가면 된다.
+ *
+ * 주간은 칸이 커서 요일이 들어간다 — 그때만 머리에 요일을 단다.
  */
-export default function HabitGrid({ monthTasks }: { monthTasks: Task[] }) {
-  const { presets, categoryOf, } = useStore();
-  const { cursor } = useUi();
+export default function HabitGrid({ spanTasks, days }: { spanTasks: Task[]; days: DateStr[] }) {
+  const { presets, categoryOf } = useStore();
 
-  const days = daysInMonth(cursor);
-  const rows = habitRows(monthTasks, presets, (id) => categoryOf(id).color);
+  const rows = habitRows(spanTasks, presets, (id) => categoryOf(id).color);
   const today = todayStr();
-  const todayDay = monthKey(today) === monthKey(cursor) ? dayOf(today) : 0;
+  // 칸이 일곱이면 요일이 들어갈 만큼 넓다
+  const weekly = days.length === 7;
 
   if (rows.length === 0) {
     return (
       <div className="mt-2.5">
         <EmptyBox title="아직 채운 칸이 없습니다">
-          주기를 정한 할 일이나 즐겨찾기에 넣어둔 일이 이 달에 있으면, 하루씩 칸으로 칠해집니다.
+          주기를 정한 할 일이나 즐겨찾기에 넣어둔 일이 이 {weekly ? '주' : '달'}에 있으면, 하루씩
+          칸으로 칠해집니다.
         </EmptyBox>
       </div>
     );
   }
+
+  const cols = { gridTemplateColumns: `repeat(${days.length},minmax(0,1fr))` };
 
   return (
     <div className="mt-2.5 overflow-hidden rounded-card bg-card px-3 py-4 shadow-card">
@@ -53,24 +56,26 @@ export default function HabitGrid({ monthTasks }: { monthTasks: Task[] }) {
         </span>
       </div>
 
-      {/* 눈금과 칸이 같은 폭을 쓴다 — 제목은 위로 올려서 격자에서 폭을 빼앗지 않는다 */}
-      <span
-        className="mb-1 grid text-[9.5px] text-ink3"
-        style={{ gridTemplateColumns: `repeat(${days},minmax(0,1fr))` }}
-      >
-        {Array.from({ length: days }, (_, i) => i + 1).map((n) => (
-          <span key={n} className="row-start-1 text-center" style={{ gridColumn: n }}>
-            {n % 5 === 0 || n === 1 ? n : ''}
-          </span>
-        ))}
-      </span>
+      {/* 주간에만 요일을 단다. 월간은 칸이 좁아 글자가 안 들어간다. */}
+      {weekly && (
+        <span className="mb-1.5 grid text-[10.5px]" style={cols}>
+          {days.map((d) => {
+            const w = dowOf(d);
+            return (
+              <span key={d} className={`text-center ${w === 0 ? 'text-high' : 'text-ink3'}`}>
+                {DOW[w]}
+              </span>
+            );
+          })}
+        </span>
+      )}
 
       {rows.map((r) => (
         <div key={r.title} className="py-2 [&+&]:border-t [&+&]:border-line2">
           <div className="mb-[7px] flex items-baseline gap-2">
             {/*
-              누르면 아무 일도 없다. 여기는 지나간 한 달을 훑어보는 자리다.
-              제목을 누르면 그달 어느 회차 하나가 열렸는데, 어느 날 것인지 알 수 없어
+              누르면 아무 일도 없다. 여기는 지나간 날들을 훑어보는 자리다.
+              제목을 누르면 어느 회차 하나가 열렸는데, 어느 날 것인지 알 수 없어
               고치고 나면 격자의 어느 칸이 바뀐 건지 모른다. 고치려면 그 날로 들어가면 된다.
             */}
             <span
@@ -86,18 +91,14 @@ export default function HabitGrid({ monthTasks }: { monthTasks: Task[] }) {
             칸에 최소 높이를 주면 aspect-square를 타고 최소 너비로 번져서
             좁은 화면에서 격자가 화면 밖으로 밀려난다. minmax(0,1fr)로 줄어들게 둔다.
           */}
-          <span
-            className="grid gap-0.5"
-            style={{ gridTemplateColumns: `repeat(${days},minmax(0,1fr))` }}
-          >
-            {Array.from({ length: days }, (_, i) => {
-              const d = i + 1;
+          <span className={`grid ${weekly ? 'gap-1' : 'gap-0.5'}`} style={cols}>
+            {days.map((d) => {
               const st = r.mark[d];
               return (
                 <i
                   key={d}
-                  className={`aspect-square rounded-[2px] bg-sunk ${
-                    d === todayDay ? 'shadow-[0_0_0_1.5px_var(--ink2)]' : ''
+                  className={`aspect-square bg-sunk ${weekly ? 'rounded-[5px]' : 'rounded-[2px]'} ${
+                    d === today ? 'shadow-[0_0_0_1.5px_var(--ink2)]' : ''
                   }`}
                   style={
                     st === 'done'

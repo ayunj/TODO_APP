@@ -53,3 +53,16 @@ export const longDate = (s: DateStr): string =>
   `${s.slice(0, 4)}. ${s.slice(5, 7)}. ${s.slice(8, 10)}.`;
 
 export const DOW = ['일', '월', '화', '수', '목', '금', '토'] as const;
+
+/**
+ * 그 날이 든 주의 첫날.
+ * 주가 월요일에 시작할지 일요일에 시작할지는 설정에서 고른다 (0=일, 1=월).
+ */
+export const weekStartOf = (s: DateStr, weekStart: 0 | 1): DateStr => {
+  const back = (dowOf(s) - weekStart + 7) % 7;
+  return addDays(s, -back);
+};
+
+/** from부터 n일치 날짜 문자열 */
+export const daysFrom = (from: DateStr, n: number): DateStr[] =>
+  Array.from({ length: n }, (_, i) => addDays(from, i));

@@ -35,10 +35,18 @@ import { useUi } from '@/lib/ui';
 export default function AppShell() {
   const { loading, onboarded } = useStore();
   const { enabled, loading: checking, account, recovering } = useAuth();
-  const { view, route, depth, cursor, setCursor } = useUi();
+  const { view, route, depth, cursor, setCursor, logSpan } = useUi();
 
   // 아래 이른 반환들보다 위에 있어야 한다 — 훅은 렌더마다 같은 수로 불려야 한다
-  const step = (n: number) => setCursor(view === 'day' ? addDays(cursor, n) : addMonths(cursor, n));
+  const step = (n: number) =>
+    setCursor(
+      view === 'day'
+        ? addDays(cursor, n)
+        : // 기록 탭 주간은 한 주씩 넘긴다 — 달을 넘기면 보고 있던 주가 사라진다
+          view === 'log' && logSpan === 'week'
+          ? addDays(cursor, n * 7)
+          : addMonths(cursor, n),
+    );
   const swipe = useSwipe(
     () => step(-1),
     () => step(1),
