@@ -136,8 +136,9 @@ function RoomSettings({ id }: { id: string }) {
     recolorRoom,
     resetCode,
     leaveRoom,
+    closeRoom,
   } = useRooms();
-  const { categories } = useStore();
+  const { categories, resync } = useStore();
   const { pushView, popView } = useUi();
 
   const room = rooms.find((r) => r.id === id) ?? null;
@@ -197,17 +198,36 @@ function RoomSettings({ id }: { id: string }) {
     }
   };
 
+  /** 손님만 나간다. 이 폰에서만 사라지고 다시 코드로 들어오면 돌아온다. */
   const onLeave = async () => {
-    const msg = room.mine
-      ? '이 방에서 나갑니다. 방과 그 안의 것은 다른 사람에게 남아요.'
-      : '이 방에서 나갑니다. 다시 코드로 들어올 수 있어요.';
-    if (!confirm(msg)) return;
+    if (!confirm('이 방에서 나갑니다. 다시 코드로 들어올 수 있어요.')) return;
     try {
       await leaveRoom(room.id);
       toast(`${room.name} — 나왔어요`);
       popView();
     } catch {
       toast('나가지 못했습니다.');
+    }
+  };
+
+  /**
+   * 주인은 나가는 게 아니라 **닫는다.** 내가 연 창문을 내가 닫는 것이라
+   * 내 화면에서는 아무것도 안 움직인다 — 나눈 것이 도로 내 것이 될 뿐이다.
+   */
+  const onClose = async () => {
+    const shared = categories.filter((c) => c.roomId === room.id).length;
+    const msg = shared
+      ? `${room.name} 나누기를 그만둡니다. 카테고리 ${shared}개가 도로 내 것이 되고, 다른 사람 화면에서는 사라져요.`
+      : `${room.name} 나누기를 그만둡니다. 방이 끝나요.`;
+    if (!confirm(msg)) return;
+    try {
+      await closeRoom(room.id);
+      // 거둬온 것들이 화면에 돌아와야 한다
+      await resync();
+      toast(`${room.name} — 그만 나눠요`);
+      popView();
+    } catch {
+      toast('끝내지 못했습니다.');
     }
   };
 
@@ -335,14 +355,21 @@ function RoomSettings({ id }: { id: string }) {
 
       <div className="mt-[18px]">
         <Group label="끝내기">
-          <Row danger arrow={false} onClick={onLeave}>
-            나가기
-          </Row>
+          {/* 주인에게는 나가기가 없다 — 내가 연 창문을 내가 닫는 것이라 나가는 게 아니다 */}
+          {room.mine ? (
+            <Row danger arrow={false} onClick={onClose}>
+              그만 나누기
+            </Row>
+          ) : (
+            <Row danger arrow={false} onClick={onLeave}>
+              나가기
+            </Row>
+          )}
         </Group>
       </div>
       <Note>
         {room.mine
-          ? '방과 그 안의 것은 남은 사람에게 그대로 있어요.'
+          ? '나눈 것은 도로 내 것이 돼요. 내 목록에서는 아무것도 사라지지 않습니다.'
           : '이 폰에서만 사라져요. 다시 코드로 들어오면 돌아옵니다.'}
       </Note>
     </>

@@ -14,6 +14,10 @@
 --   5. join_room   — 코드를 다듬어 찾는다
 --   6. reset_join_code — 코드 새로 만들기 (주인만)
 --   7. share_category · unshare_category — 카테고리 나누기
+--   8. 방 끝내기 — close_room · reclaim_room · reclaim_my_rooms
+--
+-- 8번은 고침이기도 하다. 주인이 `나가기`를 누를 수 있던 때에 방에 갇힌
+-- 카테고리가 있으면 reclaim_my_rooms()가 주워온다 (앱이 열 때 한 번 부른다).
 -- ═══════════════════════════════════════════════════════════════════
 
 -- ─── 1. 방에 색 칸, 그리고 무엇을 나누는가 ──────────────────────
@@ -249,4 +253,86 @@ begin
   update presets
      set room_id = null, owner_id = cat.owner_id, updated_at = now()
    where category_id = target;
+end $$;
+
+
+-- ─── 8. 방 끝내기, 그리고 갇힌 것 되찾기 ────────────────────────
+-- 주인이 `나가기`를 누르면 room_members에서 내 줄만 빠진다. 그런데 카테고리는
+-- 여전히 room_id를 달고 있어서, RLS가 "방 것은 방 사람만"이라 **내가 나눈
+-- 내 카테고리를 내가 못 보게** 된다. 화면에서 되돌릴 길도 없다.
+-- 이제 주인에게는 `나가기`가 없고 `그만 나누기`가 있다.
+
+/**
+ * 방 안의 것을 전부 개인 것으로 돌려놓는다.
+ * 방을 지우기 전에 반드시 먼저 부른다 — room_id에 on delete cascade가 걸려 있어서
+ * 그냥 지우면 방 안의 할 일·카테고리가 같이 사라진다.
+ */
+create or replace function reclaim_room(room uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare keeper uuid;
+begin
+  select created_by into keeper from rooms where id = room;
+  if keeper is null then
+    return;
+  end if;
+
+  update categories set room_id = null, owner_id = keeper, updated_at = now() where room_id = room;
+  update tasks      set room_id = null, owner_id = keeper, updated_at = now() where room_id = room;
+  update presets    set room_id = null, owner_id = keeper, updated_at = now() where room_id = room;
+  update shop_items set room_id = null, owner_id = keeper, updated_at = now() where room_id = room;
+  update memos      set room_id = null, owner_id = keeper, updated_at = now() where room_id = room;
+end $$;
+
+/** 그만 나누기 — 내가 연 창문을 내가 닫는다. 안에 있던 것은 도로 내 것이 된다. */
+create or replace function close_room(room uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다';
+  end if;
+  if not exists (select 1 from rooms where id = room and created_by = auth.uid()) then
+    raise exception '방을 연 사람만 그만 나눌 수 있습니다';
+  end if;
+
+  perform reclaim_room(room);
+  delete from rooms where id = room;
+end $$;
+
+/**
+ * 내가 열어놓고 밖에 나와 있는 방을 거둬들인다.
+ * 앱이 열 때 한 번 부른다. 이미 갇혀버린 카테고리는 여기서 돌아온다.
+ */
+create or replace function reclaim_my_rooms()
+returns int
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare n int := 0; r uuid;
+begin
+  if auth.uid() is null then
+    return 0;
+  end if;
+
+  for r in
+    select id from rooms
+     where created_by = auth.uid()
+       and not exists (
+         select 1 from room_members m where m.room_id = rooms.id and m.user_id = auth.uid()
+       )
+  loop
+    perform reclaim_room(r);
+    delete from rooms where id = r;
+    n := n + 1;
+  end loop;
+
+  return n;
 end $$;

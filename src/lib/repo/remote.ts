@@ -303,6 +303,27 @@ export async function peekRoom(code: string): Promise<RoomPeek | null> {
   };
 }
 
+/**
+ * 그만 나누기 — 내가 연 방을 닫는다.
+ * 안에 있던 것은 도로 내 것이 된다 (서버가 room_id를 먼저 풀고 방을 지운다).
+ */
+export async function closeRoom(roomId: string): Promise<void> {
+  const client = await supabase();
+  const { error } = await client.rpc('close_room', { room: roomId });
+  if (error) throw error;
+}
+
+/**
+ * 내가 열어놓고 밖에 나와 있는 방을 거둬들인다.
+ * 주인이 `나가기`를 누를 수 있던 때에 갇힌 것들을 주워온다. 거둔 방 수를 돌려준다.
+ */
+export async function reclaimMyRooms(): Promise<number> {
+  const client = await supabase();
+  const { data, error } = await client.rpc('reclaim_my_rooms');
+  if (error) throw error;
+  return Number(data ?? 0);
+}
+
 /** 방에서 내 자리만 뺀다. 방과 그 안의 것은 남는다 (남이 연 방일 때). */
 export async function leaveRoom(roomId: string, me: string): Promise<void> {
   const client = await supabase();

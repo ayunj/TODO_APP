@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuth } from './auth';
 import {
+  closeRoom as closeRoomRemote,
   createRoom as createRoomRemote,
   joinRoom as joinRoomRemote,
   leaveRoom as leaveRoomRemote,
@@ -43,7 +44,13 @@ interface RoomsValue {
   createRoom: (name: string, myName: string, color: string) => Promise<Room>;
   joinRoom: (code: string, myName: string) => Promise<Room>;
   peekRoom: (code: string) => Promise<RoomPeek | null>;
+  /** 남이 연 방에서 내 자리만 뺀다 */
   leaveRoom: (roomId: string) => Promise<void>;
+  /**
+   * 그만 나누기 — 내가 연 방을 닫는다. **나가는 게 아니다.**
+   * 안에 있던 것은 도로 내 것이 된다.
+   */
+  closeRoom: (roomId: string) => Promise<void>;
   renameRoom: (roomId: string, name: string) => Promise<void>;
   recolorRoom: (roomId: string, color: string) => Promise<void>;
   /** 코드를 새로 만들어 그전 것을 막는다 */
@@ -139,6 +146,14 @@ export function RoomsProvider({ children }: { children: React.ReactNode }) {
     [myId, refresh],
   );
 
+  const closeRoom = useCallback(
+    async (roomId: string) => {
+      await closeRoomRemote(roomId);
+      await refresh();
+    },
+    [refresh],
+  );
+
   const renameRoom = useCallback(
     async (roomId: string, name: string) => {
       await updateRoomRemote(roomId, { name: name.trim() });
@@ -212,6 +227,7 @@ export function RoomsProvider({ children }: { children: React.ReactNode }) {
       joinRoom,
       peekRoom,
       leaveRoom,
+      closeRoom,
       renameRoom,
       recolorRoom,
       resetCode,
@@ -232,6 +248,7 @@ export function RoomsProvider({ children }: { children: React.ReactNode }) {
       joinRoom,
       peekRoom,
       leaveRoom,
+      closeRoom,
       renameRoom,
       recolorRoom,
       resetCode,

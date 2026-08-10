@@ -7,6 +7,7 @@ import { addDays, shortDate, todayStr } from './date';
 import { stamp, uid } from './id';
 import { baseOf, spawnNext } from './repeat';
 import { getRepository } from './repo';
+import { reclaimMyRooms } from './repo/remote';
 import type { Repository, Snapshot } from './repository';
 import { onShopList } from './selectors';
 import { toast } from './toast';
@@ -183,6 +184,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         spread(current); // 서버를 기다리는 동안에도 화면은 이미 있다
         setLoading(false);
         try {
+          // 받아오기 **전에** 갇힌 것을 풀어놓는다.
+          // 내가 열어놓고 밖에 나와 있는 방이 있으면 그 안의 내 카테고리가
+          // RLS에 막혀 안 내려온다. 먼저 거둬야 이번 sync에 같이 실려온다.
+          await reclaimMyRooms().catch(() => 0);
           current = await r.sync();
         } catch {
           toast('아직 맞추지 못했습니다. 연결되면 다시 시도해요.');
