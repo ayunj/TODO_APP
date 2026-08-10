@@ -1,8 +1,10 @@
 'use client';
 
+import PersonChip from '@/components/PersonChip';
 import { CategoryPicker, DateField, Field, Hint, PriorityStars } from '@/components/form';
 import { PRIORITY_LABEL } from '@/lib/constants';
 import { addDays, todayStr } from '@/lib/date';
+import { useAuth } from '@/lib/auth';
 import { useRooms } from '@/lib/rooms';
 import { useStore } from '@/lib/store';
 import type { DateStr, Priority, Rotate } from '@/lib/types';
@@ -48,6 +50,7 @@ export default function TaskFormFields({
   editing?: boolean;
 }) {
   const { categoryOf } = useStore();
+  const { account } = useAuth();
   const { membersOf } = useRooms();
   // 이 카테고리가 방을 물고 있으면 그 방 사람들. 개인 카테고리면 빈 배열이라 줄이 안 뜬다.
   const roomId = categoryOf(value.categoryId).roomId;
@@ -84,13 +87,13 @@ export default function TaskFormFields({
               안 정함
             </Pick>
             {people.map((m) => (
-              <Pick
+              <PersonChip
                 key={m.userId}
+                name={m.displayName}
+                me={m.userId === account?.id}
                 on={value.assigneeId === m.userId}
                 onClick={() => onChange({ assigneeId: m.userId })}
-              >
-                {m.displayName}
-              </Pick>
+              />
             ))}
           </div>
         </Field>
