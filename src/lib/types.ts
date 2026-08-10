@@ -169,11 +169,20 @@ export interface ShopItem {
  */
 export interface Memo {
   id: string;
-  roomId: string | null;
+  /**
+   * **메모만 여러 방에 동시에 걸린다.** 비어 있으면 나만 보는 것.
+   *
+   * 할 일은 카테고리가 방 하나를 물고 있고 장보기는 한 곳만 간다.
+   * 메모는 다르다 — 와이파이 비밀번호는 집에서도 회사에서도 같은 종이 한 장이다.
+   * 한 장을 여러 방에 둬도 **내용은 하나**라, 어디서 고쳐도 같이 바뀐다.
+   */
+  roomIds: string[];
   /** 제목 칸을 따로 두지 않는다 — 접었을 때 첫 줄이 제목 노릇을 한다 */
   text: string;
   createdAt: string;
   updatedAt: string;
+  /** 마지막으로 고친 사람의 계정 id. 남이 고쳤을 때만 점이 뜬다. */
+  updatedBy: string | null;
   /** 지운 때. null이면 살아 있는 것 */
   deletedAt: string | null;
   /** 지운 사람의 계정 id */
@@ -194,7 +203,8 @@ export interface Trashed {
   title: string;
   /** 장보기·메모에는 카테고리가 없다 */
   categoryId: string | null;
-  roomId: string | null;
+  /** 어느 방 것인가. 비어 있으면 나만 보던 것 — 메모만 여럿일 수 있다. */
+  rooms: string[];
   /** 지운 때 (ISO) */
   at: string;
   /** 지운 사람의 계정 id */

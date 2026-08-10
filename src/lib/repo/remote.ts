@@ -114,11 +114,14 @@ const out = {
   }),
   memos: (m: Memo, owner: string): Row => ({
     id: m.id,
-    room_id: m.roomId,
+    // 메모만 여러 방에 동시에 걸린다. room_id는 방 하나만 걸리던 시절 칸이라 비워둔다.
+    room_id: null,
+    room_ids: m.roomIds,
     owner_id: owner,
     text: m.text,
     created_at: m.createdAt,
     updated_at: m.updatedAt,
+    updated_by: m.updatedBy,
     deleted_at: m.deletedAt,
     deleted_by: m.deletedBy,
   }),
@@ -186,10 +189,16 @@ const back = {
   }),
   memos: (r: Row): Memo => ({
     id: String(r.id),
-    roomId: (r.room_id as string) ?? null,
+    // 옛 줄은 room_id 하나만 들고 있다 — 그 방 하나가 든 목록으로 읽는다
+    roomIds: Array.isArray(r.room_ids)
+      ? (r.room_ids as string[])
+      : r.room_id
+        ? [String(r.room_id)]
+        : [],
     text: String(r.text ?? ''),
     createdAt: String(r.created_at ?? ''),
     updatedAt: String(r.updated_at ?? ''),
+    updatedBy: (r.updated_by as string) ?? null,
     deletedAt: (r.deleted_at as string) ?? null,
     deletedBy: (r.deleted_by as string) ?? null,
   }),
@@ -210,7 +219,10 @@ export async function pull(owner: string): Promise<Snapshot> {
   // 살아 있는 것에 더해 **사람이 지운 것 30일치**를 같이 받는다 —
   // 그래야 남편이 지운 것이 내 `지운 것`에도 뜬다. 두 or는 서로 and로 걸린다.
   const read = async (kind: Kind, trashed = false) => {
-    let q = client.from(TABLES[kind]).select('*').or(`owner_id.eq.${owner},room_id.not.is.null`);
+    let q = client.from(TABLES[kind]).select('*');
+    // 메모는 방을 여럿 걸 수 있어 room_id로 가릴 수가 없다.
+    // 어차피 RLS가 `내 것이거나 내가 든 방 것`으로만 주므로 여기서 더 조일 게 없다.
+    if (kind !== 'memos') q = q.or(`owner_id.eq.${owner},room_id.not.is.null`);
     q = trashed
       ? q.or(`deleted_at.is.null,and(deleted_at.gte.${since},deleted_by.not.is.null)`)
       : q.is('deleted_at', null);

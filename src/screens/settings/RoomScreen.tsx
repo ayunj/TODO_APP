@@ -154,7 +154,7 @@ function RoomSettings({ id }: { id: string }) {
     방 것은 한자리에 모은다 — 공유 카테고리의 할 일도, 방 장보기도, 방 메모도.
     카테고리마다 흩어놓으면 남이 지운 걸 찾으러 세 군데를 돌아야 한다.
   */
-  const buried = trash.filter((t) => t.roomId === room.id);
+  const buried = trash.filter((t) => t.rooms.includes(room.id));
 
   // 손님 화면은 셋만 보이고 나머지는 숫자로 접는다
   const shown = room.mine ? people : people.slice(0, 3);

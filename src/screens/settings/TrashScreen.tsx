@@ -31,9 +31,9 @@ export default function TrashScreen({ scope, id }: { scope: TrashScope; id: stri
 
   const rows = trash.filter((t) =>
     scope === 'room'
-      ? t.roomId === id
+      ? t.rooms.includes(id)
       : // 개인 것만이다. 공유 카테고리에서 지운 것은 방 설정에 모인다.
-        !t.roomId &&
+        t.rooms.length === 0 &&
         (scope === 'category'
           ? t.kind === 'task' && t.categoryId === id
           : t.kind === (scope === 'shop' ? 'shop' : 'memo')),

@@ -28,7 +28,7 @@ export function trashOf(
         id: t.id,
         title: t.title,
         categoryId: t.categoryId,
-        roomId: t.roomId,
+        rooms: t.roomId ? [t.roomId] : [],
         at: t.deletedAt,
         by: t.deletedBy,
       });
@@ -39,10 +39,11 @@ export function trashOf(
         id: i.id,
         title: i.title,
         categoryId: null,
-        roomId: i.roomId,
+        rooms: i.roomId ? [i.roomId] : [],
         at: i.deletedAt,
         by: i.deletedBy,
       });
+  // 여러 방에 걸린 메모는 그 방들 지운 것에 다 뜬다 — 어디서 찾아도 되돌릴 수 있게
   for (const m of memos)
     if (fresh(m.deletedAt))
       rows.push({
@@ -50,7 +51,7 @@ export function trashOf(
         id: m.id,
         title: memoTitle(m.text),
         categoryId: null,
-        roomId: m.roomId,
+        rooms: m.roomIds,
         at: m.deletedAt,
         by: m.deletedBy,
       });

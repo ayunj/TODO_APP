@@ -107,9 +107,11 @@ interface StoreValue {
 
   /* ── 메모 ── */
   memos: Memo[];
-  /** 빈 메모를 만들고 돌려준다 (바로 펼쳐서 적게) */
-  addMemo: () => Memo;
+  /** 빈 메모를 만들고 돌려준다 (바로 펼쳐서 적게). 보던 방이 있으면 거기 걸고 시작한다. */
+  addMemo: (roomIds?: string[]) => Memo;
   updateMemo: (id: string, text: string) => void;
+  /** 이 메모를 어느 방에 둘까 — 메모만 여러 방에 동시에 걸린다 */
+  setMemoRooms: (id: string, roomIds: string[]) => void;
   removeMemo: (id: string) => void;
   /** 이 시각 뒤에 고쳐진 메모가 있으면 아직 안 본 것이다 */
   memoSeenAt: string;
@@ -204,7 +206,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       })),
     );
     // 한 장짜리로 쓰던 시절의 메모에는 createdAt이 없다 — 첫 번째 메모로 그대로 넘긴다
-    setMemos(snap.memos.map((m) => ({ ...buried(m), createdAt: m.createdAt ?? m.updatedAt })));
+    setMemos(
+      snap.memos.map((m) => ({
+        ...buried(m),
+        createdAt: m.createdAt ?? m.updatedAt,
+        // 방 하나만 걸 수 있던 시절 메모는 그 방 하나가 든 목록으로 읽는다
+        roomIds: m.roomIds ?? (legacyRoom(m) ? [legacyRoom(m)!] : []),
+        updatedBy: m.updatedBy ?? null,
+      })),
+    );
   }, []);
 
   useEffect(() => {
@@ -657,27 +667,36 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   /* ───────── 메모 ───────── */
 
-  const addMemo = useCallback((): Memo => {
-    const now = stamp();
-    const memo: Memo = {
-      id: uid(),
-      roomId: null,
-      text: '',
-      createdAt: now,
-      updatedAt: now,
-      deletedAt: null,
-      deletedBy: null,
-    };
-    setMemos((prev) => [...prev, memo]);
-    write((r) => r.saveMemo(memo));
-    return memo;
-  }, [write]);
+  const addMemo = useCallback(
+    (roomIds: string[] = []): Memo => {
+      const now = stamp();
+      const memo: Memo = {
+        id: uid(),
+        roomIds,
+        text: '',
+        createdAt: now,
+        updatedAt: now,
+        updatedBy: owner,
+        deletedAt: null,
+        deletedBy: null,
+      };
+      setMemos((prev) => [...prev, memo]);
+      write((r) => r.saveMemo(memo));
+      return memo;
+    },
+    [owner, write],
+  );
 
+  /**
+   * 글자만 바뀐다.
+   * **같은 글이면 아무것도 안 한다** — 열었다 그냥 닫은 것으로 updatedAt이 밀리면
+   * 남들 화면에 "고쳤다"는 점이 뜬다.
+   */
   const updateMemo = useCallback(
     (id: string, text: string) => {
       const found = memos.find((m) => m.id === id);
       if (!found || found.text === text) return;
-      const updated: Memo = { ...found, text, updatedAt: stamp() };
+      const updated: Memo = { ...found, text, updatedAt: stamp(), updatedBy: owner };
       setMemos(memos.map((m) => (m.id === id ? updated : m)));
 
       const timers = memoTimers.current;
@@ -687,7 +706,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         setTimeout(() => write((r) => r.saveMemo(updated)), 600),
       );
     },
-    [memos, write],
+    [memos, owner, write],
+  );
+
+  /**
+   * 이 메모를 어느 방에 둘까 — 여러 곳을 한 번에 정한다.
+   * 내용은 한 벌이라 어디서 고쳐도 같이 바뀐다. 내리면 그 방 사람들에게서는 사라진다.
+   */
+  const setMemoRooms = useCallback(
+    (id: string, roomIds: string[]) => {
+      const found = memos.find((m) => m.id === id);
+      if (!found) return;
+      const updated: Memo = { ...found, roomIds, updatedAt: stamp(), updatedBy: owner };
+      setMemos(memos.map((m) => (m.id === id ? updated : m)));
+      write((r) => r.saveMemo(updated));
+    },
+    [memos, owner, write],
   );
 
   /** 메모 화면에 들어올 때와 나갈 때 찍는다 — 내가 쓴 글이 나한테 점으로 뜨지 않게 */
@@ -900,6 +934,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       memos: liveMemos,
       addMemo,
       updateMemo,
+      setMemoRooms,
       removeMemo,
       memoSeenAt,
       markMemosSeen,
@@ -945,6 +980,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       liveMemos,
       addMemo,
       updateMemo,
+      setMemoRooms,
       removeMemo,
       memoSeenAt,
       markMemosSeen,
@@ -972,6 +1008,10 @@ export function useStore(): StoreValue {
 }
 
 /* ───────── 지운 것 셈 ───────── */
+
+/** 방 하나만 걸리던 시절 메모가 들고 있던 칸 */
+const legacyRoom = (m: Memo): string | null =>
+  (m as Memo & { roomId?: string | null }).roomId ?? null;
 
 /** 지운 칸이 없던 시절 항목은 살아 있는 것으로 읽는다 */
 const buried = <T,>(row: T): T & { deletedAt: string | null; deletedBy: string | null } => ({

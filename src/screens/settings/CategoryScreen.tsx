@@ -146,7 +146,9 @@ function CategoryForm({ category }: { category: Category }) {
   */
   const buried = category.roomId
     ? []
-    : trash.filter((t) => t.kind === 'task' && !t.roomId && t.categoryId === category.id);
+    : trash.filter(
+        (t) => t.kind === 'task' && t.rooms.length === 0 && t.categoryId === category.id,
+      );
 
   return (
     <>

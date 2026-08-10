@@ -1,34 +1,38 @@
 'use client';
 
-import { PeopleIcon } from '@/components/Icons';
+import { PeopleIcon } from './Icons';
 import { bandOf } from '@/lib/constants';
 import type { Room } from '@/lib/types';
 
 /**
  * 어디 것을 보고 있나 — `all`(전체) · `mine`(나만) · 방 id.
- * 담을 때도 이 값을 그대로 쓴다. 골라둔 자리에 담기는 게 놀랍지 않다.
+ * 담거나 적을 때도 이 값을 그대로 쓴다. 골라둔 자리에 들어가는 게 놀랍지 않다.
  */
-export type ShopScope = 'all' | 'mine' | (string & {});
+export type Scope = 'all' | 'mine' | (string & {});
 
-/** 고른 자리에 담긴다 — 전체는 나만 보는 자리로 간다 (방을 고르지 않은 것이니) */
-export const roomOfScope = (scope: ShopScope): string | null =>
+/** 고른 자리 — 전체·나만은 방이 아니다 */
+export const roomOfScope = (scope: Scope): string | null =>
   scope === 'all' || scope === 'mine' ? null : scope;
 
+/** 지금 고른 칸이 아직 있는지. 방에서 나왔거나 나누기를 끈 참이면 전체로 돌려놓는다. */
+export const settleScope = (scope: Scope, rooms: Room[]): Scope =>
+  scope === 'all' || scope === 'mine' || rooms.some((r) => r.id === scope) ? scope : 'all';
+
 /**
- * 맨 위 방 칩 줄.
+ * 맨 위 방 칩 줄. 장보기와 메모가 같이 쓴다.
  *
- * **기본은 전체다** — 마트에서는 그냥 훑는다. 집 것과 회사 것을 갈라 보는 건
- * 담을 때나 계산할 때고, 장 보는 동안에는 한 목록이어야 한다.
+ * **기본은 전체다** — 마트에서는 그냥 훑는다. 집 것 회사 것을 갈라 보는 건
+ * 담을 때나 찾을 때고, 보는 동안에는 한 목록이어야 한다.
  * 나눌 방이 없으면 이 줄은 아예 없다.
  */
-export default function ShopScopeRow({
+export default function ScopeChips({
   rooms,
   value,
   onChange,
 }: {
   rooms: Room[];
-  value: ShopScope;
-  onChange: (s: ShopScope) => void;
+  value: Scope;
+  onChange: (s: Scope) => void;
 }) {
   if (rooms.length === 0) return null;
 
@@ -72,7 +76,9 @@ function Chip({
       className={`inline-flex flex-none items-center gap-1.5 rounded-full px-3.5 py-[7px] text-[12.5px] font-medium active:scale-95 ${
         color ? '' : plain
       }`}
-      style={color ? (on ? { background: color, color: '#fff' } : { background: bandOf(color) }) : undefined}
+      style={
+        color ? (on ? { background: color, color: '#fff' } : { background: bandOf(color) }) : undefined
+      }
     >
       {children}
     </button>

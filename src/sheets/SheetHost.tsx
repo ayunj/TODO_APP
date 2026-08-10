@@ -1,6 +1,7 @@
 'use client';
 
 import DoneBySheet from './DoneBySheet';
+import MemoRoomsSheet from './MemoRoomsSheet';
 import PresetSheet from './PresetSheet';
 import RoomFieldSheet from './RoomFieldSheet';
 import ShopItemSheet from './ShopItemSheet';
@@ -24,6 +25,8 @@ export default function SheetHost() {
       return <DoneBySheet key={sheet.id} id={sheet.id} />;
     case 'shopItem':
       return <ShopItemSheet key={sheet.id} id={sheet.id} />;
+    case 'memoRooms':
+      return <MemoRoomsSheet key={sheet.id} id={sheet.id} />;
     case 'roomField':
       return <RoomFieldSheet key={`${sheet.id}-${sheet.field}`} id={sheet.id} field={sheet.field} />;
   }

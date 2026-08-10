@@ -204,14 +204,34 @@ create table if not exists shop_items (
 -- 메모 — 흘러가지 않는 종이. 제목 칸은 없다 (첫 줄이 제목 노릇을 한다).
 create table if not exists memos (
   id         uuid primary key default gen_random_uuid(),
+  -- 방 하나만 걸리던 시절 칸. 지금은 아래 room_ids를 쓴다 (옛 줄 때문에 남겨둔다).
   room_id    uuid references rooms on delete cascade,
+  /*
+   * **메모만 여러 방에 동시에 걸린다.** 비어 있으면 나만 보는 것.
+   *
+   * 할 일은 카테고리가 방 하나를 물고 있고, 장보기는 한 곳만 간다 —
+   * 어차피 따로 사야 하니까. 와이파이 비밀번호는 집에서도 회사에서도
+   * 같은 종이 한 장이라 여기만 여럿이다. 한 장을 여러 방에 둬도 내용은 하나다.
+   *
+   * 이음표를 따로 만들지 않는다. 한 메모가 걸리는 방은 많아야 몇 개고,
+   * 표를 하나 더 만들면 맞추기(sync)에서 줄이 아니라 관계를 견줘야 한다.
+   */
+  room_ids   uuid[] not null default '{}',
   owner_id   uuid references auth.users,
   text       text not null default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
+  -- 내가 본 뒤에 **남이** 고친 것에만 점이 뜬다
+  updated_by uuid references auth.users,
   deleted_at timestamptz,
   deleted_by uuid references auth.users
 );
+alter table memos add column if not exists room_ids uuid[] not null default '{}';
+alter table memos add column if not exists updated_by uuid references auth.users;
+-- 방 하나만 걸리던 시절 메모를 옮겨 담는다
+update memos set room_ids = array[room_id] where room_id is not null and room_ids = '{}';
+-- 여러 방을 걸러 찾는 자리라 GIN이 맞다
+create index if not exists memos_room_ids on memos using gin (room_ids);
 
 -- ───────────────────────── RLS ─────────────────────────
 -- 방 것이면 그 방 사람만, 개인 것이면 본인만.
@@ -273,6 +293,31 @@ begin
     $f$, t);
   end loop;
 end $$;
+
+/*
+ * 메모만 따로 건다 — 위 정책은 room_id 하나로 따지는데 메모는 목록으로 따져야 한다.
+ * 걸린 방 중 **하나라도 내가 든 방이면** 보이고 고칠 수 있다.
+ * (이 블록은 위 반복문 뒤에 와야 한다. 거기서 memos에도 한 번 걸고 지나간다.)
+ */
+drop policy if exists "읽기"   on memos;
+drop policy if exists "쓰기"   on memos;
+drop policy if exists "고치기" on memos;
+
+create policy "읽기" on memos for select
+  using (
+    owner_id = auth.uid()
+    or exists (select 1 from unnest(room_ids) as r(id) where is_member(r.id))
+  );
+create policy "쓰기" on memos for insert
+  with check (
+    owner_id = auth.uid()
+    or exists (select 1 from unnest(room_ids) as r(id) where is_member(r.id))
+  );
+create policy "고치기" on memos for update
+  using (
+    owner_id = auth.uid()
+    or exists (select 1 from unnest(room_ids) as r(id) where is_member(r.id))
+  );
 
 -- delete 정책은 일부러 없다. 지우기는 deleted_at을 다는 update로만 한다.
 
@@ -435,7 +480,18 @@ begin
   update tasks      set room_id = null, owner_id = keeper, updated_at = now() where room_id = room;
   update presets    set room_id = null, owner_id = keeper, updated_at = now() where room_id = room;
   update shop_items set room_id = null, owner_id = keeper, updated_at = now() where room_id = room;
-  update memos      set room_id = null, owner_id = keeper, updated_at = now() where room_id = room;
+
+  -- 메모는 그 방만 목록에서 뺀다. 회사방을 닫는다고 집에도 걸린 메모가
+  -- 집에서 사라지면 안 된다. 갈 곳이 없어진 것만 임자를 연 사람에게 돌려놓는다.
+  update memos
+     set room_ids = array_remove(room_ids, room),
+         owner_id = case
+                      when array_length(array_remove(room_ids, room), 1) is null then keeper
+                      else owner_id
+                    end,
+         updated_at = now()
+   where room = any(room_ids);
+  update memos set room_id = null, owner_id = keeper, updated_at = now() where room_id = room;
 end $$;
 
 /**
@@ -548,7 +604,11 @@ begin
   update tasks      set owner_id = heir, updated_at = now() where room_id = room;
   update presets    set owner_id = heir, updated_at = now() where room_id = room;
   update shop_items set owner_id = heir, updated_at = now() where room_id = room;
-  update memos      set owner_id = heir, updated_at = now() where room_id = room;
+  /*
+   * 메모는 임자를 안 옮긴다 — **여러 방에 걸려 있어서** 옮기면 다른 방에 걸린
+   * 남의 종이까지 딸려간다. 안 옮겨도 되는 까닭은 RLS에 있다:
+   * 메모는 임자가 아니라 걸린 방에 내가 들었는지로 보이고 고쳐진다.
+   */
 
   update rooms set created_by = heir where id = room;
   update room_members set role = 'owner'  where room_id = room and user_id = heir;

@@ -41,10 +41,11 @@ const shopItem = (over: Partial<ShopItem> & { id: string }): ShopItem => ({
 });
 
 const memo = (over: Partial<Memo> & { id: string }): Memo => ({
-  roomId: null,
+  roomIds: [],
   text: '',
   createdAt: '2026-08-01T00:00:00.000Z',
   updatedAt: '2026-08-01T00:00:00.000Z',
+  updatedBy: null,
   deletedAt: null,
   deletedBy: null,
   ...over,
@@ -99,7 +100,17 @@ describe('trashOf', () => {
       [],
       SINCE,
     );
-    expect(rows[0]).toMatchObject({ roomId: 'r1', by: 'u2', categoryId: 'home' });
+    expect(rows[0]).toMatchObject({ rooms: ['r1'], by: 'u2', categoryId: 'home' });
+  });
+
+  it('메모는 걸린 방이 여럿이면 그 방들 지운 것에 다 뜬다', () => {
+    const rows = trashOf(
+      [],
+      [],
+      [memo({ id: 'm', text: '와이파이', roomIds: ['r1', 'r2'], deletedAt: '2026-08-09T00:00:00.000Z' })],
+      SINCE,
+    );
+    expect(rows[0].rooms).toEqual(['r1', 'r2']);
   });
 
   it('장보기·메모에는 카테고리가 없다', () => {

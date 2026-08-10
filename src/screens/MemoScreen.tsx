@@ -3,20 +3,36 @@
 import { useEffect, useMemo, useState } from 'react';
 import MemoCard from './memo/MemoCard';
 import EmptyBox from '@/components/EmptyBox';
+import ScopeChips, { roomOfScope, settleScope, type Scope } from '@/components/ScopeChips';
 import TrashLine from '@/components/TrashLine';
 import { SearchIcon } from '@/components/Icons';
+import { useAuth } from '@/lib/auth';
+import { useRooms } from '@/lib/rooms';
 import { useStore } from '@/lib/store';
+import { useUi } from '@/lib/ui';
 
 /**
  * 메모 여러 장. 대화창이 아니라 종이 뭉치다 —
  * 계좌번호·관리비처럼 한 번 적어두고 계속 보는 것들을 놓는 자리.
  * 한 번에 한 장만 펼쳐진다. 새 메모를 누르면 쓰던 건 접히고 빈 칸이 올라온다.
+ *
+ * 메모만 **여러 방에 동시에** 걸린다. 위 칩 줄은 어디 것을 볼지 고르는 자리고,
+ * 한 장이 어느 방들에 걸렸는지는 카드가 이름표로 말한다.
  */
 export default function MemoScreen() {
-  const { memos, addMemo, updateMemo, removeMemo, markMemosSeen } = useStore();
+  const { memos, addMemo, updateMemo, removeMemo, memoSeenAt, markMemosSeen } = useStore();
+  const { rooms, membersOf } = useRooms();
+  const { account } = useAuth();
+  const { openSheet } = useUi();
   const [openId, setOpenId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [searching, setSearching] = useState(false);
+  const [scope, setScope] = useState<Scope>('all');
+
+  // 메모를 나누는 방만 나온다. 껐으면 고를 길이 아예 없다.
+  const sharing = useMemo(() => rooms.filter((r) => r.shareMemo), [rooms]);
+  const picked = settleScope(scope, sharing);
+  const here = roomOfScope(picked);
 
   // 들어올 때와 나갈 때 '봤다'고 찍는다. 나갈 때도 찍어야 방금 내가 쓴 글에 점이 안 뜬다.
   useEffect(() => {
@@ -24,11 +40,17 @@ export default function MemoScreen() {
     return () => markMemosSeen();
   }, [markMemosSeen]);
 
+  // 처음 그릴 때의 값을 붙잡아둔다 — 위에서 방금 찍은 시각으로 덮이면 점이 뜰 새가 없다
+  const [seenAt] = useState(memoSeenAt);
+
   const list = useMemo(() => {
-    const sorted = [...memos].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    const mine = memos.filter((m) =>
+      picked === 'all' ? true : picked === 'mine' ? m.roomIds.length === 0 : m.roomIds.includes(picked),
+    );
+    const sorted = [...mine].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     const q = query.trim().toLowerCase();
     return q ? sorted.filter((m) => m.text.toLowerCase().includes(q)) : sorted;
-  }, [memos, query]);
+  }, [memos, picked, query]);
 
   /** 빈 채로 접힌 메모는 버린다 — 빈 카드가 쌓이지 않게 */
   const dropIfEmpty = (id: string | null) => {
@@ -46,11 +68,24 @@ export default function MemoScreen() {
   const create = () => {
     dropIfEmpty(openId);
     setQuery('');
-    setOpenId(addMemo().id);
+    // 방을 보고 있었으면 그 방에 걸고 시작한다 — 적고 나서 또 고르게 하지 않는다
+    setOpenId(addMemo(here ? [here] : []).id);
+  };
+
+  /** 남이 고쳤을 때만 이름이 뜬다. 내가 고친 것은 말할 것이 없다. */
+  const editor = (updatedBy: string | null, roomIds: string[]): string | null => {
+    if (!updatedBy || updatedBy === account?.id) return null;
+    for (const id of roomIds) {
+      const found = membersOf(id).find((m) => m.userId === updatedBy);
+      if (found) return found.displayName;
+    }
+    return '누군가';
   };
 
   return (
     <>
+      <ScopeChips rooms={sharing} value={picked} onChange={setScope} />
+
       {/* 찾기는 평소엔 돋보기로 접어둔다 — 늘 열어두면 자리만 먹는다 */}
       <div className="mb-3 mt-0.5 flex items-stretch gap-2">
         {searching ? (
@@ -112,19 +147,29 @@ export default function MemoScreen() {
         </EmptyBox>
       ) : (
         <div className="flex flex-col gap-[9px]">
-          {list.map((memo) => (
-            <MemoCard
-              key={memo.id}
-              memo={memo}
-              open={memo.id === openId}
-              onOpen={() => open(memo.id)}
-              onChange={(text) => updateMemo(memo.id, text)}
-              onRemove={() => {
-                removeMemo(memo.id);
-                setOpenId(null);
-              }}
-            />
-          ))}
+          {list.map((memo) => {
+            const by = editor(memo.updatedBy, memo.roomIds);
+            return (
+              <MemoCard
+                key={memo.id}
+                memo={memo}
+                open={memo.id === openId}
+                // 걸린 순서대로 — 방 목록 순서가 아니라 그 메모가 든 순서다
+                rooms={memo.roomIds
+                  .map((id) => rooms.find((r) => r.id === id))
+                  .filter((r): r is NonNullable<typeof r> => Boolean(r))}
+                unread={Boolean(by) && memo.updatedAt > seenAt}
+                by={by}
+                onOpen={() => open(memo.id)}
+                onChange={(text) => updateMemo(memo.id, text)}
+                onShare={() => openSheet({ kind: 'memoRooms', id: memo.id })}
+                onRemove={() => {
+                  removeMemo(memo.id);
+                  setOpenId(null);
+                }}
+              />
+            );
+          })}
         </div>
       )}
 

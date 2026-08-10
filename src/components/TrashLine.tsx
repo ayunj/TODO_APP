@@ -16,7 +16,7 @@ export default function TrashLine({ scope }: { scope: Extract<TrashScope, 'shop'
   const { pushView } = useUi();
 
   // 방 것은 방 설정에 모인다. 여기 오르는 것은 개인 것뿐이다.
-  const count = trash.filter((t) => !t.roomId && t.kind === scope).length;
+  const count = trash.filter((t) => t.rooms.length === 0 && t.kind === scope).length;
 
   return (
     <button

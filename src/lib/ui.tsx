@@ -51,6 +51,8 @@ export type Sheet =
   | { kind: 'task'; id: string | null }
   | { kind: 'preset'; id: string | null }
   | { kind: 'shopItem'; id: string }
+  /** 같이 보기 — 이 메모를 어느 방들에 둘까 (메모만 여럿이다) */
+  | { kind: 'memoRooms'; id: string }
   /** 누가 했나 — 이름만 갈아 끼운다 */
   | { kind: 'doneBy'; id: string }
   /** 방 이름·방 색·이 방에서 불릴 내 이름 — 값 하나를 손보는 자리 */
