@@ -158,6 +158,7 @@ export type ViewKind =
   | 'prefs'
   | 'presetList'
   | 'categoryList'
+  | 'category'
   | 'account'
   | 'share'
   | 'room'

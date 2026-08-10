@@ -17,6 +17,7 @@ import MonthScreen from '@/screens/MonthScreen';
 import ShopScreen from '@/screens/ShopScreen';
 import AccountScreen from '@/screens/settings/AccountScreen';
 import CategoryListScreen from '@/screens/settings/CategoryListScreen';
+import CategoryScreen from '@/screens/settings/CategoryScreen';
 import HandoverScreen from '@/screens/settings/HandoverScreen';
 import InviteScreen from '@/screens/settings/InviteScreen';
 import JoinScreen from '@/screens/settings/JoinScreen';
@@ -111,6 +112,9 @@ export default function AppShell() {
           return <PresetListScreen />;
         case 'categoryList':
           return <CategoryListScreen />;
+        case 'category':
+          // 새 카테고리와 고치는 화면이 같은 자리라 적던 이름이 남지 않게 열쇠를 갈라둔다
+          return <CategoryScreen key={route.id ?? 'new'} id={route.id} />;
         case 'account':
           return <AccountScreen />;
         case 'share':

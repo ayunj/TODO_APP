@@ -25,6 +25,8 @@ export type Route =
   | { kind: 'prefs' }
   | { kind: 'presetList' }
   | { kind: 'categoryList' }
+  /** id가 null이면 새 카테고리, 있으면 그 카테고리 설정 */
+  | { kind: 'category'; id: string | null }
   | { kind: 'account' }
   | { kind: 'share' }
   /** id가 null이면 새 방 만들기, 있으면 그 방 설정 */
@@ -43,7 +45,6 @@ export type Route =
 export type Sheet =
   | { kind: 'task'; id: string | null }
   | { kind: 'preset'; id: string | null }
-  | { kind: 'category'; id: string | null }
   | { kind: 'shopItem'; id: string }
   /** 방 이름·방 색·이 방에서 불릴 내 이름 — 값 하나를 손보는 자리 */
   | { kind: 'roomField'; id: string; field: 'name' | 'color' | 'myName' };
