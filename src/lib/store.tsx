@@ -91,8 +91,15 @@ interface StoreValue {
 
   /* ── 장보기 ── */
   shopping: ShopItem[];
-  addShopItem: (title: string, extra?: { note?: string; place?: string }) => void;
-  updateShopItem: (id: string, input: { title: string; note: string; place: string }) => void;
+  /** roomId를 주면 그 방 목록으로 간다. 장보기는 한 곳만 — 두 곳에 필요하면 두 번 적는다. */
+  addShopItem: (
+    title: string,
+    extra?: { note?: string; place?: string; roomId?: string | null },
+  ) => void;
+  updateShopItem: (
+    id: string,
+    input: { title: string; note: string; place: string; roomId?: string | null },
+  ) => void;
   toggleShopItem: (id: string) => void;
   removeShopItem: (id: string) => void;
   /** 기록에 있는 것을 다시 목록에 올린다 (새 항목으로 — 지난 구매 기록은 그대로 둔다) */
@@ -554,13 +561,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   /* ───────── 장보기 ───────── */
 
   const addShopItem = useCallback(
-    (title: string, extra?: { note?: string; place?: string }) => {
+    (title: string, extra?: { note?: string; place?: string; roomId?: string | null }) => {
       const trimmed = title.trim();
       if (!trimmed) return;
       const now = stamp();
       const item: ShopItem = {
         id: uid(),
-        roomId: null,
+        // 장보기는 **한 곳만** 간다. 두 곳에 필요하면 두 번 적는다 — 어차피 따로 사야 한다.
+        roomId: extra?.roomId ?? null,
         title: trimmed,
         note: extra?.note ?? '',
         place: extra?.place ?? '',
@@ -590,10 +598,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
 
   const updateShopItem = useCallback(
-    (id: string, input: { title: string; note: string; place: string }) => {
+    (id: string, input: { title: string; note: string; place: string; roomId?: string | null }) => {
       const title = input.title.trim();
       if (!title) return;
-      patchShopItem(id, { title, note: input.note.trim(), place: input.place.trim() });
+      patchShopItem(id, {
+        title,
+        note: input.note.trim(),
+        place: input.place.trim(),
+        // 옮기는 것도 여기서 한다 — 나만 보던 것을 방으로, 방 것을 도로 나만으로
+        ...(input.roomId === undefined ? {} : { roomId: input.roomId }),
+      });
     },
     [patchShopItem],
   );
@@ -629,8 +643,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         toast(`${source.title} — 이미 목록에 있어요`);
         return;
       }
-      // 메모·구입처도 같이 딸려온다 — 늘 쿠팡에서 저지방 우유를 산다면 매번 다시 적을 일이 없다
-      addShopItem(source.title, { note: source.note, place: source.place });
+      // 메모·구입처·어디에 담았는지도 같이 딸려온다 —
+      // 늘 쿠팡에서 저지방 우유를 산다면 매번 다시 적을 일이 없다
+      addShopItem(source.title, {
+        note: source.note,
+        place: source.place,
+        roomId: source.roomId,
+      });
       toast(`${source.title} 담음`);
     },
     [shopping, addShopItem],

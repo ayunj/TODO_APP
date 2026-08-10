@@ -1,14 +1,25 @@
 'use client';
 
+import { bandOf } from '@/lib/constants';
 import { shortDate } from '@/lib/date';
+import { useRooms } from '@/lib/rooms';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 import type { ShopItem } from '@/lib/types';
 
-/** 한 줄. 이름을 누르면 이름·메모·구입처를 고치는 시트가 열린다. */
+/**
+ * 한 줄. 이름을 누르면 이름·메모·구입처·어디에를 고치는 시트가 열린다.
+ *
+ * 방 칩은 **제목 줄 오른쪽**에 따로 칸을 잡는다. 이름 칸과 칩 칸이 갈려 있어
+ * 이름이 두 줄이 돼도 칩은 첫 줄에 남고 겹칠 자리가 없다.
+ * 칩이 없으면 나만 보는 것이다 — `나만`이라고 적지 않는다. 대부분이 그것이라서.
+ */
 export default function ShopRow({ item }: { item: ShopItem }) {
   const { toggleShopItem } = useStore();
+  const { rooms } = useRooms();
   const { openSheet } = useUi();
+
+  const room = item.roomId ? (rooms.find((r) => r.id === item.roomId) ?? null) : null;
 
   return (
     <li
@@ -34,12 +45,24 @@ export default function ShopRow({ item }: { item: ShopItem }) {
         onClick={() => openSheet({ kind: 'shopItem', id: item.id })}
         className="min-w-0 flex-1 bg-transparent text-left"
       >
-        <span
-          className={`block break-words text-[15px] ${
-            item.done ? 'text-done line-through decoration-1' : ''
-          }`}
-        >
-          {item.title}
+        <span className="flex items-start gap-2.5">
+          <span
+            className={`min-w-0 flex-1 [overflow-wrap:anywhere] text-[15px] ${
+              item.done ? 'text-done line-through decoration-1' : ''
+            }`}
+          >
+            {item.title}
+          </span>
+          {room && (
+            <span
+              className={`mt-0.5 inline-flex flex-none items-center rounded-full px-[9px] py-[2.5px] text-[10.5px] font-medium ${
+                item.done ? 'bg-track text-done' : 'text-ink'
+              }`}
+              style={item.done ? undefined : { background: bandOf(room.color) }}
+            >
+              {room.name}
+            </span>
+          )}
         </span>
 
         {item.note && (
