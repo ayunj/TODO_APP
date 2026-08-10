@@ -14,7 +14,7 @@
 --   5. join_room   — 코드를 다듬어 찾는다
 --   6. reset_join_code — 코드 새로 만들기 (주인만)
 --   7. share_category · unshare_category — 카테고리 나누기
---   8. 방 끝내기 — close_room · reclaim_room · reclaim_my_rooms
+--   8. 방 끝내기 — close_room · reclaim_room · reclaim_my_rooms · hand_over_room
 --
 -- 8번은 고침이기도 하다. 주인이 `나가기`를 누를 수 있던 때에 방에 갇힌
 -- 카테고리가 있으면 reclaim_my_rooms()가 주워온다 (앱이 열 때 한 번 부른다).
@@ -335,4 +335,47 @@ begin
   end loop;
 
   return n;
+end $$;
+
+
+/**
+ * 맡기고 나가기 — **주인만 바뀐다.** 내 폰에서만 사라진다.
+ *
+ * `그만 나누기`만 있으면 회사방에서 사고가 난다. 내가 방을 열어 팀이 반년을
+ * 같이 썼는데 내가 나간다고 그 기록이 통째로 사라지면 안 된다.
+ * 그건 내 집안일과 달리 **내 것이 아니라 팀 것**이다.
+ *
+ * 방 이름도 초대 코드도 그대로다. 남은 사람들 화면은 아무것도 안 변한다 —
+ * 쓰던 게 그대로 있고, 새 주인만 초대·끝내기를 할 수 있게 될 뿐이다.
+ */
+create or replace function hand_over_room(room uuid, heir uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다';
+  end if;
+  if not exists (select 1 from rooms where id = room and created_by = auth.uid()) then
+    raise exception '방을 연 사람만 맡길 수 있습니다';
+  end if;
+  if heir = auth.uid() then
+    raise exception '나에게는 맡길 수 없습니다';
+  end if;
+  if not exists (select 1 from room_members where room_id = room and user_id = heir) then
+    raise exception '이 방에 없는 사람입니다';
+  end if;
+
+  -- 방 안의 것이 새 주인에게 옮겨간다. 안 옮기면 내가 빠지는 순간 임자 없는 줄이 된다.
+  update categories set owner_id = heir, updated_at = now() where room_id = room;
+  update tasks      set owner_id = heir, updated_at = now() where room_id = room;
+  update presets    set owner_id = heir, updated_at = now() where room_id = room;
+  update shop_items set owner_id = heir, updated_at = now() where room_id = room;
+  update memos      set owner_id = heir, updated_at = now() where room_id = room;
+
+  update rooms set created_by = heir where id = room;
+  update room_members set role = 'owner'  where room_id = room and user_id = heir;
+  delete from room_members where room_id = room and user_id = auth.uid();
 end $$;

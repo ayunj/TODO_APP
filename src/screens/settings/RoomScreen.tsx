@@ -6,6 +6,7 @@ import ShareBox, { type Shares } from '@/components/ShareBox';
 import { Group, Note, Row } from '@/components/rows';
 import { ColorPicker, Field, GoButton, Hint } from '@/components/form';
 import { PALETTE, tintOf } from '@/lib/constants';
+import { ask } from '@/lib/ask';
 import { useAuth } from '@/lib/auth';
 import { formatCode, useRooms } from '@/lib/rooms';
 import { useStore } from '@/lib/store';
@@ -127,23 +128,11 @@ function CreateRoom() {
  */
 function RoomSettings({ id }: { id: string }) {
   const { account } = useAuth();
-  const {
-    rooms,
-    membersOf,
-    myNameIn,
-    renameMe,
-    renameRoom,
-    recolorRoom,
-    resetCode,
-    leaveRoom,
-    closeRoom,
-  } = useRooms();
-  const { categories, resync } = useStore();
-  const { pushView, popView } = useUi();
+  const { rooms, membersOf, resetCode, leaveRoom, closeRoom } = useRooms();
+  const { categories, tasks, resync } = useStore();
+  const { pushView, popView, openSheet } = useUi();
 
   const room = rooms.find((r) => r.id === id) ?? null;
-  const [name, setName] = useState(room?.name ?? '');
-  const [myName, setMyName] = useState(() => (id ? myNameIn(id) : ''));
 
   // 방을 나갔거나 아직 못 받아온 참이면 빈 화면 대신 한 줄을 보여준다
   if (!room) {
@@ -157,39 +146,23 @@ function RoomSettings({ id }: { id: string }) {
 
   const people = membersOf(room.id);
   const owner = people.find((m) => m.role === 'owner');
+  const ownerName = owner?.displayName ?? '방 주인';
+  const shared = categories.filter((c) => c.roomId === room.id);
+  // 이 방에 걸린 것 몇 개가 내 폰에서 없어지는지 — 묻는 말에 쓴다
+  const countHere = tasks.filter((t) => t.roomId === room.id).length;
 
-  const save = async () => {
-    const trimmed = name.trim();
-    if (!trimmed || trimmed === room.name) return;
-    try {
-      await renameRoom(room.id, trimmed);
-      toast('방 이름을 바꿨어요');
-    } catch {
-      toast('바꾸지 못했습니다.');
-    }
-  };
-
-  const saveMyName = async () => {
-    const trimmed = myName.trim();
-    if (!room || !trimmed || trimmed === myNameIn(room.id)) return;
-    try {
-      await renameMe(room.id, trimmed);
-      toast('이름을 바꿨어요');
-    } catch {
-      toast('바꾸지 못했습니다.');
-    }
-  };
-
-  const onColor = async (c: string) => {
-    try {
-      await recolorRoom(room.id, c);
-    } catch {
-      toast('바꾸지 못했습니다.');
-    }
-  };
+  // 손님 화면은 셋만 보이고 나머지는 숫자로 접는다
+  const shown = room.mine ? people : people.slice(0, 3);
+  const rest = people.length - shown.length;
 
   const onResetCode = async () => {
-    if (!confirm('코드를 새로 만들면 그전 코드로는 못 들어와요. 계속할까요?')) return;
+    const yes = await ask({
+      title: '코드를 새로 만들까요?',
+      loses: '그전 코드로는 아무도 못 들어와요.',
+      keeps: '이미 들어와 있는 사람은 그대로 있어요.',
+      go: '새로 만들기',
+    });
+    if (!yes) return;
     try {
       await resetCode(room.id);
       toast('코드를 새로 만들었어요');
@@ -200,9 +173,17 @@ function RoomSettings({ id }: { id: string }) {
 
   /** 손님만 나간다. 이 폰에서만 사라지고 다시 코드로 들어오면 돌아온다. */
   const onLeave = async () => {
-    if (!confirm('이 방에서 나갑니다. 다시 코드로 들어올 수 있어요.')) return;
+    const yes = await ask({
+      title: `${room.name}에서 나갈까요?`,
+      loses: countHere ? `${countHere}개가 이 폰에서 없어져요.` : '이 방 것이 이 폰에서 없어져요.',
+      keeps: '코드가 있으면 언제든 다시 들어올 수 있어요.',
+      go: '나가기',
+      danger: true,
+    });
+    if (!yes) return;
     try {
       await leaveRoom(room.id);
+      await resync();
       toast(`${room.name} — 나왔어요`);
       popView();
     } catch {
@@ -215,15 +196,19 @@ function RoomSettings({ id }: { id: string }) {
    * 내 화면에서는 아무것도 안 움직인다 — 나눈 것이 도로 내 것이 될 뿐이다.
    */
   const onClose = async () => {
-    const shared = categories.filter((c) => c.roomId === room.id).length;
-    const msg = shared
-      ? `${room.name} 나누기를 그만둡니다. 카테고리 ${shared}개가 도로 내 것이 되고, 다른 사람 화면에서는 사라져요.`
-      : `${room.name} 나누기를 그만둡니다. 방이 끝나요.`;
-    if (!confirm(msg)) return;
+    const yes = await ask({
+      title: `${room.name} 나누기를 그만둘까요?`,
+      loses: '다른 사람 화면에서 사라져요.',
+      keeps: shared.length
+        ? `카테고리 ${shared.length}개는 도로 내 것이 돼요. 내 목록에서는 아무것도 안 없어집니다.`
+        : '내 목록에서는 아무것도 안 없어집니다.',
+      go: '그만 나누기',
+      danger: true,
+    });
+    if (!yes) return;
     try {
       await closeRoom(room.id);
-      // 거둬온 것들이 화면에 돌아와야 한다
-      await resync();
+      await resync(); // 거둬온 것들이 화면에 돌아와야 한다
       toast(`${room.name} — 그만 나눠요`);
       popView();
     } catch {
@@ -240,25 +225,39 @@ function RoomSettings({ id }: { id: string }) {
             className="inline-flex flex-none items-center rounded-full px-2.5 py-[3px] text-[11px] font-medium"
             style={{ background: tintOf(room.color), color: room.color }}
           >
-            {room.mine ? '내가 연 방' : `${owner?.displayName ?? '누군가'}가 연 방`}
+            {room.mine ? '내가 연 방' : `${ownerName}가 연 방`}
           </span>
         }
       />
 
       <Group label={`같이 쓰는 사람 ${people.length}`}>
-        {people.map((m) => (
-          <Row
-            key={m.userId}
-            value={[
-              m.userId === account?.id ? '나' : null,
-              m.role === 'owner' ? '방 주인' : null,
-            ]
-              .filter(Boolean)
-              .join(' · ')}
-          >
-            {m.displayName}
-          </Row>
-        ))}
+        {shown.map((m) => {
+          const isMe = m.userId === account?.id;
+          return (
+            <Row
+              key={m.userId}
+              // 이 방에서 불릴 내 이름은 내 줄에서 고친다. 줄을 하나 더 만들 일이 아니다.
+              onClick={
+                isMe
+                  ? () => openSheet({ kind: 'roomField', id: room.id, field: 'myName' })
+                  : undefined
+              }
+              value={
+                isMe
+                  ? m.role === 'owner'
+                    ? '나 · 방 주인'
+                    : '나'
+                  : m.role === 'owner'
+                    ? '방 주인'
+                    : `${joinedOn(m.joinedAt)} 들어옴`
+              }
+            >
+              {m.displayName}
+            </Row>
+          );
+        })}
+        {rest > 0 && <Row>{`그 밖에 ${rest}명`}</Row>}
+
         {/* 초대는 주인만 한다 */}
         {room.mine && (
           <button
@@ -271,31 +270,6 @@ function RoomSettings({ id }: { id: string }) {
         )}
       </Group>
 
-      {/* 방마다 따로 걸린다 — 집방에서는 `엄마`, 회사방에서는 `윤정`일 수 있다 */}
-      <div className="mt-[18px]">
-        <Field label="내 이름 · 이 방에서 이렇게 불려요" htmlFor="room-myname">
-          <div className="flex gap-2">
-            <input
-              id="room-myname"
-              type="text"
-              className="field-input flex-1"
-              autoComplete="off"
-              value={myName}
-              onChange={(e) => setMyName(e.target.value)}
-            />
-            {myName.trim() && myName.trim() !== myNameIn(room.id) && (
-              <button
-                type="button"
-                onClick={saveMyName}
-                className="flex-none rounded-[14px] bg-accent px-4 text-[13.5px] font-medium text-white"
-              >
-                저장
-              </button>
-            )}
-          </div>
-        </Field>
-      </div>
-
       <div className="mt-[18px]">
         <p className="mb-2 ml-1 text-[12px] text-ink2">나누는 것</p>
         {/*
@@ -303,49 +277,35 @@ function RoomSettings({ id }: { id: string }) {
           방을 여는 일이라서, 연 사람만 한다.
         */}
         <SharedThings
-          cats={room.shareTasks ? categories.filter((c) => c.roomId === room.id) : []}
+          cats={room.shareTasks ? shared : []}
           shop={room.shareShop}
           memo={room.shareMemo}
           onClick={room.mine ? () => pushView({ kind: 'shares', id: room.id }) : undefined}
         />
-        {!room.mine && (
-          <Note>
-            {(membersOf(room.id).find((m) => m.role === 'owner')?.displayName ?? '방 주인')}이
-            정합니다.
-          </Note>
-        )}
+        {!room.mine && <Note>{ownerName}가 정합니다.</Note>}
       </div>
 
+      {/* 손님에게는 방 자체를 다루는 줄이 아예 없다 */}
       {room.mine && (
         <div className="mt-[18px]">
-          <p className="mb-2 ml-1 text-[12px] text-ink2">방</p>
-          <Field label="방 이름" htmlFor="room-rename">
-            <div className="flex gap-2">
-              <input
-                id="room-rename"
-                type="text"
-                className="field-input flex-1"
-                autoComplete="off"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              {name.trim() && name.trim() !== room.name && (
-                <button
-                  type="button"
-                  onClick={save}
-                  className="flex-none rounded-[14px] bg-accent px-4 text-[13.5px] font-medium text-white"
-                >
-                  저장
-                </button>
-              )}
-            </div>
-          </Field>
-
-          <Field label="방 색">
-            <ColorPicker value={room.color} onChange={onColor} />
-          </Field>
-
-          <Group>
+          <Group label="방">
+            <Row
+              value={room.name}
+              onClick={() => openSheet({ kind: 'roomField', id: room.id, field: 'name' })}
+            >
+              방 이름
+            </Row>
+            <Row
+              value={
+                <span
+                  className="inline-block h-[15px] w-[15px] rounded-full align-[-2px]"
+                  style={{ background: room.color }}
+                />
+              }
+              onClick={() => openSheet({ kind: 'roomField', id: room.id, field: 'color' })}
+            >
+              방 색
+            </Row>
             <Row value={formatCode(room.code)} onClick={onResetCode}>
               코드 새로 만들기
             </Row>
@@ -355,11 +315,19 @@ function RoomSettings({ id }: { id: string }) {
 
       <div className="mt-[18px]">
         <Group label="끝내기">
-          {/* 주인에게는 나가기가 없다 — 내가 연 창문을 내가 닫는 것이라 나가는 게 아니다 */}
+          {/*
+            주인에게는 나가기가 없다 — 내가 연 창문을 내가 닫는 것이라 나가는 게 아니다.
+            혼자 쓰는 방에는 맡길 사람이 없으니 `그만 나누기`만 뜬다.
+          */}
           {room.mine ? (
-            <Row danger arrow={false} onClick={onClose}>
-              그만 나누기
-            </Row>
+            <>
+              {people.length > 1 && (
+                <Row onClick={() => pushView({ kind: 'handover', id: room.id })}>맡기고 나가기</Row>
+              )}
+              <Row danger arrow={false} onClick={onClose}>
+                그만 나누기
+              </Row>
+            </>
           ) : (
             <Row danger arrow={false} onClick={onLeave}>
               나가기
@@ -369,11 +337,18 @@ function RoomSettings({ id }: { id: string }) {
       </div>
       <Note>
         {room.mine
-          ? '나눈 것은 도로 내 것이 돼요. 내 목록에서는 아무것도 사라지지 않습니다.'
+          ? '그만 나누면 방이 끝나요. 나눈 것은 도로 내 것이 되고, 내 목록에서는 아무것도 사라지지 않습니다.'
           : '이 폰에서만 사라져요. 다시 코드로 들어오면 돌아옵니다.'}
       </Note>
     </>
   );
+}
+
+/** '2026-08-02T…' → '8월 2일' */
+function joinedOn(at: string): string {
+  const m = /^\d{4}-(\d{2})-(\d{2})/.exec(at);
+  if (!m) return '언젠가';
+  return `${Number(m[1])}월 ${Number(m[2])}일`;
 }
 
 /**
@@ -402,7 +377,11 @@ function SharedThings({
         ) : (
           <>
             {cats.map((c) => (
-              <span key={c.id} className={chip} style={{ background: tintOf(c.color), color: c.color }}>
+              <span
+                key={c.id}
+                className={chip}
+                style={{ background: tintOf(c.color), color: c.color }}
+              >
                 {c.name}
               </span>
             ))}

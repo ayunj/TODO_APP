@@ -313,6 +313,13 @@ export async function closeRoom(roomId: string): Promise<void> {
   if (error) throw error;
 }
 
+/** 맡기고 나가기 — 주인만 바뀌고 방은 그대로 산다 */
+export async function handOverRoom(roomId: string, heir: string): Promise<void> {
+  const client = await supabase();
+  const { error } = await client.rpc('hand_over_room', { room: roomId, heir });
+  if (error) throw error;
+}
+
 /**
  * 내가 열어놓고 밖에 나와 있는 방을 거둬들인다.
  * 주인이 `나가기`를 누를 수 있던 때에 갇힌 것들을 주워온다. 거둔 방 수를 돌려준다.

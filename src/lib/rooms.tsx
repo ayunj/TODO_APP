@@ -5,6 +5,7 @@ import { useAuth } from './auth';
 import {
   closeRoom as closeRoomRemote,
   createRoom as createRoomRemote,
+  handOverRoom as handOverRoomRemote,
   joinRoom as joinRoomRemote,
   leaveRoom as leaveRoomRemote,
   peekRoom as peekRoomRemote,
@@ -51,6 +52,8 @@ interface RoomsValue {
    * 안에 있던 것은 도로 내 것이 된다.
    */
   closeRoom: (roomId: string) => Promise<void>;
+  /** 맡기고 나가기 — 주인만 바뀐다. 방은 그대로 살고 내 폰에서만 사라진다. */
+  handOverRoom: (roomId: string, heir: string) => Promise<void>;
   renameRoom: (roomId: string, name: string) => Promise<void>;
   recolorRoom: (roomId: string, color: string) => Promise<void>;
   /** 코드를 새로 만들어 그전 것을 막는다 */
@@ -154,6 +157,14 @@ export function RoomsProvider({ children }: { children: React.ReactNode }) {
     [refresh],
   );
 
+  const handOverRoom = useCallback(
+    async (roomId: string, heir: string) => {
+      await handOverRoomRemote(roomId, heir);
+      await refresh();
+    },
+    [refresh],
+  );
+
   const renameRoom = useCallback(
     async (roomId: string, name: string) => {
       await updateRoomRemote(roomId, { name: name.trim() });
@@ -228,6 +239,7 @@ export function RoomsProvider({ children }: { children: React.ReactNode }) {
       peekRoom,
       leaveRoom,
       closeRoom,
+      handOverRoom,
       renameRoom,
       recolorRoom,
       resetCode,
@@ -249,6 +261,7 @@ export function RoomsProvider({ children }: { children: React.ReactNode }) {
       peekRoom,
       leaveRoom,
       closeRoom,
+      handOverRoom,
       renameRoom,
       recolorRoom,
       resetCode,

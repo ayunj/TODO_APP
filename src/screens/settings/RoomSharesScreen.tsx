@@ -4,6 +4,7 @@ import { useState } from 'react';
 import PageBar from '@/components/PageBar';
 import ShareBox, { type Shares } from '@/components/ShareBox';
 import { Note } from '@/components/rows';
+import { ask } from '@/lib/ask';
 import { useRooms } from '@/lib/rooms';
 import { useStore } from '@/lib/store';
 import { toast } from '@/lib/toast';
@@ -48,10 +49,14 @@ export default function RoomSharesScreen({ id }: { id: string }) {
     if (removed.length) {
       const names = removed.map((cid) => categoryOf(cid).name).join(' · ');
       const n = tasks.filter((t) => removed.includes(t.categoryId)).length;
-      const ask = n
-        ? `${names} 나누기를 그만둡니다. ${n}개가 상대 화면에서 사라지고 도로 내 것이 돼요.`
-        : `${names} 나누기를 그만둡니다.`;
-      if (!confirm(ask)) return;
+      const yes = await ask({
+        title: `${names} 나누기를 그만둘까요?`,
+        loses: n ? `${n}개가 다른 사람 화면에서 사라져요.` : '다른 사람 화면에서 사라져요.',
+        keeps: '도로 내 것이 돼요. 내 목록에서는 아무것도 안 없어집니다.',
+        go: '그만 나누기',
+        danger: true,
+      });
+      if (!yes) return;
     }
 
     setBusy(true);

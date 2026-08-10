@@ -2,6 +2,7 @@
 
 import CategorySheet from './CategorySheet';
 import PresetSheet from './PresetSheet';
+import RoomFieldSheet from './RoomFieldSheet';
 import ShopItemSheet from './ShopItemSheet';
 import TaskSheet from './TaskSheet';
 import { useUi } from '@/lib/ui';
@@ -23,5 +24,7 @@ export default function SheetHost() {
       return <CategorySheet key={sheet.id ?? 'new'} id={sheet.id} />;
     case 'shopItem':
       return <ShopItemSheet key={sheet.id} id={sheet.id} />;
+    case 'roomField':
+      return <RoomFieldSheet key={`${sheet.id}-${sheet.field}`} id={sheet.id} field={sheet.field} />;
   }
 }

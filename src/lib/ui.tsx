@@ -26,6 +26,8 @@ export type Route =
   | { kind: 'invite'; id: string }
   /** 그 방이 무엇을 나눌지 고르기 (주인만) */
   | { kind: 'shares'; id: string }
+  /** 누구에게 맡길까요 — 주인이 빠지되 방은 살려둘 때 */
+  | { kind: 'handover'; id: string }
   | { kind: 'join' };
 
 /**
@@ -36,7 +38,9 @@ export type Sheet =
   | { kind: 'task'; id: string | null }
   | { kind: 'preset'; id: string | null }
   | { kind: 'category'; id: string | null }
-  | { kind: 'shopItem'; id: string };
+  | { kind: 'shopItem'; id: string }
+  /** 방 이름·방 색·이 방에서 불릴 내 이름 — 값 하나를 손보는 자리 */
+  | { kind: 'roomField'; id: string; field: 'name' | 'color' | 'myName' };
 
 interface UiValue {
   /** 지금 그리는 화면 — 쌓인 게 있으면 맨 위, 없으면 보던 탭 */

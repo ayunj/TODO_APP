@@ -454,6 +454,48 @@ begin
   return n;
 end $$;
 
+/**
+ * 맡기고 나가기 — **주인만 바뀐다.** 내 폰에서만 사라진다.
+ *
+ * `그만 나누기`만 있으면 회사방에서 사고가 난다. 내가 방을 열어 팀이 반년을
+ * 같이 썼는데 내가 나간다고 그 기록이 통째로 사라지면 안 된다.
+ * 그건 내 집안일과 달리 **내 것이 아니라 팀 것**이다.
+ *
+ * 방 이름도 초대 코드도 그대로다. 남은 사람들 화면은 아무것도 안 변한다 —
+ * 쓰던 게 그대로 있고, 새 주인만 초대·끝내기를 할 수 있게 될 뿐이다.
+ */
+create or replace function hand_over_room(room uuid, heir uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다';
+  end if;
+  if not exists (select 1 from rooms where id = room and created_by = auth.uid()) then
+    raise exception '방을 연 사람만 맡길 수 있습니다';
+  end if;
+  if heir = auth.uid() then
+    raise exception '나에게는 맡길 수 없습니다';
+  end if;
+  if not exists (select 1 from room_members where room_id = room and user_id = heir) then
+    raise exception '이 방에 없는 사람입니다';
+  end if;
+
+  -- 방 안의 것이 새 주인에게 옮겨간다. 안 옮기면 내가 빠지는 순간 임자 없는 줄이 된다.
+  update categories set owner_id = heir, updated_at = now() where room_id = room;
+  update tasks      set owner_id = heir, updated_at = now() where room_id = room;
+  update presets    set owner_id = heir, updated_at = now() where room_id = room;
+  update shop_items set owner_id = heir, updated_at = now() where room_id = room;
+  update memos      set owner_id = heir, updated_at = now() where room_id = room;
+
+  update rooms set created_by = heir where id = room;
+  update room_members set role = 'owner'  where room_id = room and user_id = heir;
+  delete from room_members where room_id = room and user_id = auth.uid();
+end $$;
+
 -- ─────────────────────── 카테고리 나누기 ───────────────────────
 -- 카테고리만 옮기면 상대에게는 이름만 보이고 할 일은 안 보인다.
 -- 할 일만 옮기면 category_id가 상대가 못 읽는 줄을 가리켜 색도 이름도 안 뜬다.

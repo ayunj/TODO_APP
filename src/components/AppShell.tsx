@@ -5,6 +5,7 @@ import Header from './Header';
 import TabBar from './TabBar';
 import SlidePage from './SlidePage';
 import Toast from './Toast';
+import AskHost from './AskHost';
 import WelcomeScreen from './WelcomeScreen';
 import SheetHost from '@/sheets/SheetHost';
 import DayScreen from '@/screens/DayScreen';
@@ -16,6 +17,7 @@ import MonthScreen from '@/screens/MonthScreen';
 import ShopScreen from '@/screens/ShopScreen';
 import AccountScreen from '@/screens/settings/AccountScreen';
 import CategoryListScreen from '@/screens/settings/CategoryListScreen';
+import HandoverScreen from '@/screens/settings/HandoverScreen';
 import InviteScreen from '@/screens/settings/InviteScreen';
 import JoinScreen from '@/screens/settings/JoinScreen';
 import PrefsScreen from '@/screens/settings/PrefsScreen';
@@ -112,6 +114,8 @@ export default function AppShell() {
           return <InviteScreen id={route.id} />;
         case 'shares':
           return <RoomSharesScreen id={route.id} />;
+        case 'handover':
+          return <HandoverScreen id={route.id} />;
         case 'join':
           return <JoinScreen />;
       }
@@ -153,6 +157,7 @@ export default function AppShell() {
         </>
       )}
       <SheetHost />
+      <AskHost />
       <Toast />
     </>
   );
