@@ -147,6 +147,24 @@
     /* 눌렀을 때 브라우저가 스크롤해 올리는데, 헤더 밑으로 들어가지 않게 */
     scroll-margin-top: 120px;
   }
+
+  /*
+   * 시각 칸. 브라우저가 끝에 달아주는 시계 그림은 지운다 —
+   * 줄 전체가 이미 누르는 자리라 같은 일을 하는 그림이 하나 더 붙을 이유가 없다.
+   */
+  .time-input {
+    font-family: inherit;
+    color: var(--ink2);
+    background: transparent;
+    border: 0;
+    padding: 0;
+  }
+  .time-input::-webkit-calendar-picker-indicator {
+    display: none;
+  }
+  .time-input:focus {
+    outline: none;
+  }
 }
 
 /* 날짜를 넘기면 그쪽에서 들어온다. 시트와 같은 곡선을 쓴다 */

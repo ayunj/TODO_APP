@@ -25,6 +25,15 @@ export default function SettingsScreen() {
       <PageBar title="설정" />
 
       <Group>
+        {/* 누구로 들어와 있는지가 맨 먼저다 — 나머지 줄이 다 이 계정에 딸린 것이다 */}
+        {enabled && account && (
+          <Row
+            value={account.email ?? '초대로 들어옴'}
+            onClick={() => pushView({ kind: 'account' })}
+          >
+            계정
+          </Row>
+        )}
         <Row value={`${presets.length}개`} onClick={() => pushView({ kind: 'presetList' })}>
           즐겨찾기
         </Row>
@@ -34,14 +43,6 @@ export default function SettingsScreen() {
         <Row value="주 시작 · 알림" onClick={() => pushView({ kind: 'prefs' })}>
           앱 설정
         </Row>
-        {enabled && account && (
-          <Row
-            value={account.email ?? '초대로 들어옴'}
-            onClick={() => pushView({ kind: 'account' })}
-          >
-            계정
-          </Row>
-        )}
         {/* 방은 남과 나누는 것이라 계정이 있어야 뜬다 */}
         {roomsEnabled && (
           <Row

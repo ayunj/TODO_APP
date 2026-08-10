@@ -60,14 +60,6 @@ export default function PrefsScreen() {
           )}
         </Group>
       </div>
-
-      {notify ? (
-        <Note>아직 울리지는 않아요. 시각만 적어둡니다 — 보내는 쪽은 뒤에 붙습니다.</Note>
-      ) : (
-        <Note>
-          `아침에`·`저녁에`라고 적지 않아요. 무엇을 알리는지만 적고 시각은 각자 정합니다.
-        </Note>
-      )}
     </>
   );
 }
@@ -93,7 +85,7 @@ function TimeRow({
         value={value}
         // 비우고 나가면 그전 값을 지킨다 — 빈 시각은 알림을 조용히 죽인다
         onChange={(e) => e.target.value && onChange(e.target.value)}
-        className="ml-auto w-[92px] bg-transparent text-right font-mono text-[13.5px] text-ink2 outline-none"
+        className="time-input ml-auto text-right text-[13.5px]"
       />
     </label>
   );
