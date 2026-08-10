@@ -87,6 +87,17 @@ export default function MemoRoomsSheet({ id }: { id: string }) {
             })}
           </div>
 
+          {/*
+            걸었을 때도 한 번 말해준다 — `나만` 칸에서 빠지는 걸 두고
+            내 메모가 남에게 넘어간 것으로 읽는 일이 있었다.
+          */}
+          {memo.roomIds.length === 0 && picked.length > 0 && (
+            <p className="mb-4 text-[11.5px] leading-[1.6] text-ink3">
+              걸어도 내 메모는 그대로예요. 위 칩 줄의 <b className="font-medium text-ink2">나만</b>{' '}
+              에서만 빠집니다.
+            </p>
+          )}
+
           {/* 내리는 것은 지우는 것과 다르다. 다른 사람 화면에서만 사라진다는 걸 미리 말한다. */}
           {dropped > 0 && (
             <p className="mb-4 text-[11.5px] leading-[1.6] text-high">

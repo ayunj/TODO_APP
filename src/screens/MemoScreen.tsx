@@ -45,12 +45,16 @@ export default function MemoScreen() {
 
   const list = useMemo(() => {
     const mine = memos.filter((m) =>
-      picked === 'all' ? true : picked === 'mine' ? m.roomIds.length === 0 : m.roomIds.includes(picked),
+      // 펼쳐 든 장은 어느 칸을 보고 있든 남는다.
+      // `나만`을 보다가 방에 걸면 그 칸의 조건에서 벗어나는데, 손에 든 종이가
+      // 그 자리에서 사라지면 지운 것처럼 보인다 — 접으면 그때 제 칸으로 간다.
+      m.id === openId ||
+      (picked === 'all' ? true : picked === 'mine' ? m.roomIds.length === 0 : m.roomIds.includes(picked)),
     );
     const sorted = [...mine].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     const q = query.trim().toLowerCase();
     return q ? sorted.filter((m) => m.text.toLowerCase().includes(q)) : sorted;
-  }, [memos, picked, query]);
+  }, [memos, picked, query, openId]);
 
   /** 빈 채로 접힌 메모는 버린다 — 빈 카드가 쌓이지 않게 */
   const dropIfEmpty = (id: string | null) => {

@@ -56,14 +56,16 @@ export default function Header() {
             <BackIcon className="h-5 w-5" />
           </button>
           <div className="min-w-0 flex-1">
+            {/*
+              장보기는 개수가 할 말이 있다 — 몇 개 남았는지가 마트에서 쓰인다.
+              메모는 아니다. 바로 아래에 목록이 있어 세어 적을 것이 없다.
+            */}
             <div className="text-[10.5px] font-medium tracking-[.1em] text-ink3">
               {view === 'shop'
                 ? left > 0
                   ? `${left}개 담아둠`
                   : '살 것 적어두기'
-                : memos.length > 0
-                  ? `${memos.length}장`
-                  : '흘러가지 않는 것들'}
+                : '흘러가지 않는 것들'}
             </div>
             <h1 className="mt-px font-round text-[21px] font-normal leading-[1.2] tracking-[-.02em]">
               {view === 'shop' ? '장보기' : '메모'}
