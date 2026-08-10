@@ -20,7 +20,7 @@ import InviteScreen from '@/screens/settings/InviteScreen';
 import JoinScreen from '@/screens/settings/JoinScreen';
 import PrefsScreen from '@/screens/settings/PrefsScreen';
 import PresetListScreen from '@/screens/settings/PresetListScreen';
-import RoomCategoriesScreen from '@/screens/settings/RoomCategoriesScreen';
+import RoomSharesScreen from '@/screens/settings/RoomSharesScreen';
 import RoomScreen from '@/screens/settings/RoomScreen';
 import SettingsScreen from '@/screens/settings/SettingsScreen';
 import ShareScreen from '@/screens/settings/ShareScreen';
@@ -110,8 +110,8 @@ export default function AppShell() {
           return <RoomScreen key={route.id ?? 'new'} id={route.id} />;
         case 'invite':
           return <InviteScreen id={route.id} />;
-        case 'roomCats':
-          return <RoomCategoriesScreen id={route.id} />;
+        case 'shares':
+          return <RoomSharesScreen id={route.id} />;
         case 'join':
           return <JoinScreen />;
       }

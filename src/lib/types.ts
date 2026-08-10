@@ -30,6 +30,14 @@ export interface Room {
   createdBy: string;
   /** 내가 연 방인지 — 주인에게만 초대·코드·끝내기가 열린다 */
   mine: boolean;
+  /**
+   * 이 방이 무엇을 나누는가.
+   * 끈 것은 담을 때 고르는 목록에 아예 안 나온다 — 고를 수 없으니 잘못 누를 수 없다.
+   * 할 일에 딸린 `어느 카테고리를 나눌까`는 카테고리의 roomId가 들고 있다.
+   */
+  shareTasks: boolean;
+  shareShop: boolean;
+  shareMemo: boolean;
 }
 
 /** 방에 든 사람. 이름은 방마다 다르게 부를 수 있다. */
@@ -154,7 +162,7 @@ export type ViewKind =
   | 'share'
   | 'room'
   | 'invite'
-  | 'roomCats'
+  | 'shares'
   | 'join';
 
 /** 할 일이 아니라 이 기기의 상태. 초기화해도 지워지지 않는다. */

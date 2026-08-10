@@ -29,6 +29,11 @@ interface RoomsValue {
   myNameIn: (roomId: string) => string;
   /** 그 방에서 불릴 내 이름을 고친다 — 방마다 따로 걸린다 */
   renameMe: (roomId: string, name: string) => Promise<void>;
+  /** 이 방이 무엇을 나누는지 — 할 일·장보기·메모 */
+  setShares: (
+    roomId: string,
+    shares: { tasks: boolean; shop: boolean; memo: boolean },
+  ) => Promise<void>;
   /** 내 카테고리를 이 방에 연다 (주인만). 그 안의 할 일·즐겨찾기가 같이 간다 */
   shareCategory: (categoryId: string, roomId: string) => Promise<void>;
   /** 도로 개인 것으로 거둔다 */
@@ -167,6 +172,18 @@ export function RoomsProvider({ children }: { children: React.ReactNode }) {
     [myId, refresh],
   );
 
+  const setShares = useCallback(
+    async (roomId: string, shares: { tasks: boolean; shop: boolean; memo: boolean }) => {
+      await updateRoomRemote(roomId, {
+        share_tasks: shares.tasks,
+        share_shop: shares.shop,
+        share_memo: shares.memo,
+      });
+      await refresh();
+    },
+    [refresh],
+  );
+
   const shareCategory = useCallback(
     async (categoryId: string, roomId: string) => {
       await shareCategoryRemote(categoryId, roomId);
@@ -187,6 +204,7 @@ export function RoomsProvider({ children }: { children: React.ReactNode }) {
       membersOf,
       myNameIn,
       renameMe,
+      setShares,
       shareCategory,
       unshareCategory,
       refresh,
@@ -206,6 +224,7 @@ export function RoomsProvider({ children }: { children: React.ReactNode }) {
       membersOf,
       myNameIn,
       renameMe,
+      setShares,
       shareCategory,
       unshareCategory,
       refresh,

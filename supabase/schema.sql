@@ -28,6 +28,20 @@ create table if not exists rooms (
 -- 이미 만들어져 있던 방에도 색 칸을 더한다 (두 번 돌려도 되게)
 alter table rooms add column if not exists color text not null default '#A9B8F4';
 
+/*
+ * 이 방이 무엇을 나누는가 — 할 일 · 장보기 · 메모.
+ *
+ * 방을 만들 때 고르는 게 제일 좋은 안전장치다. 나중에 실수를 막는 게 아니라
+ * **길을 아예 안 내는 방식**이라서 그렇다. 회사방에서 장보기를 끄면
+ * 담을 때 뜨는 목록에 회사방이 아예 안 나온다 — 고를 수 없으니 잘못 누를 수 없다.
+ *
+ * 기본은 할 일만 켜둔다. 잘못 눌러 새는 걸 막자는 게 목적이니 기본값도 그쪽이다.
+ * (할 일에 딸린 `어느 카테고리를 나눌까`는 categories.room_id가 들고 있다)
+ */
+alter table rooms add column if not exists share_tasks boolean not null default true;
+alter table rooms add column if not exists share_shop  boolean not null default false;
+alter table rooms add column if not exists share_memo  boolean not null default false;
+
 /**
  * 초대 코드를 만든다 — 여덟 자를 넷씩 끊어 `8F3K-2QMD`로 읽는다.
  *

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import PageBar from '@/components/PageBar';
+import ShareBox, { type Shares } from '@/components/ShareBox';
 import { Group, Note, Row } from '@/components/rows';
 import { ColorPicker, Field, GoButton, Hint } from '@/components/form';
 import { PALETTE, tintOf } from '@/lib/constants';
@@ -21,14 +22,24 @@ export default function RoomScreen({ id }: { id: string | null }) {
 
 function CreateRoom() {
   const { account } = useAuth();
-  const { rooms, createRoom } = useRooms();
+  const { rooms, createRoom, setShares, shareCategory } = useRooms();
+  const { categories, resync } = useStore();
   const { replaceView } = useUi();
 
   const [name, setName] = useState('');
   // 이메일 앞부분을 이름 자리에 먼저 채워둔다 — 대개 그대로 쓴다
   const [myName, setMyName] = useState(account?.email?.split('@')[0] ?? '');
   const [color, setColor] = useState<string>(PALETTE[rooms.length % PALETTE.length]);
+  // 기본은 할 일만 켜둔다. 잘못 눌러 새는 걸 막자는 게 이 장치의 목적이라 기본값도 그쪽이다.
+  const [shares, setSharesValue] = useState<Shares>({
+    tasks: true,
+    shop: false,
+    memo: false,
+    categoryIds: [],
+  });
   const [busy, setBusy] = useState(false);
+
+  const mine = categories.filter((c) => c.roomId === null);
 
   const submit = async () => {
     if (!name.trim()) {
@@ -44,6 +55,12 @@ function CreateRoom() {
     setBusy(true);
     try {
       const room = await createRoom(name, myName, color);
+      // 방을 연 다음에 무엇을 나눌지 얹는다. 여기서 걸려도 방은 이미 만들어져 있다.
+      await setShares(room.id, { tasks: shares.tasks, shop: shares.shop, memo: shares.memo });
+      if (shares.tasks) {
+        for (const cid of shares.categoryIds) await shareCategory(cid, room.id);
+        if (shares.categoryIds.length) await resync();
+      }
       toast(`${room.name} — 방을 만들었어요`);
       // 갈아끼운다 — 뒤로가기가 방금 지나온 `방 만들기`로 돌아가면 안 된다
       replaceView({ kind: 'room', id: room.id });
@@ -85,7 +102,15 @@ function CreateRoom() {
         <ColorPicker value={color} onChange={setColor} />
       </Field>
 
-      <Hint>지금 있는 것은 그대로 있어요. 만든 뒤에 초대 코드로 사람을 부를 수 있습니다.</Hint>
+      {/*
+        방 만들 때 고르는 게 제일 좋은 안전장치다 —
+        나중에 실수를 막는 게 아니라 길을 아예 안 내는 방식이라서 그렇다.
+      */}
+      <div className="mb-4 mt-5 border-t border-line2 pt-5">
+        <ShareBox value={shares} onChange={setSharesValue} categories={mine} />
+      </div>
+
+      <Hint>지금 있는 것은 그대로 있어요. 나중에 하나씩 올릴 수 있습니다.</Hint>
 
       <GoButton onClick={submit} disabled={busy}>
         {busy ? '만드는 중…' : '만들기'}
@@ -257,9 +282,11 @@ function RoomSettings({ id }: { id: string }) {
           손님에게는 칩만 보인다. 나눌 것을 고르는 건 방 안에서 하는 일이 아니라
           방을 여는 일이라서, 연 사람만 한다.
         */}
-        <SharedCategories
-          names={categories.filter((c) => c.roomId === room.id)}
-          onClick={room.mine ? () => pushView({ kind: 'roomCats', id: room.id }) : undefined}
+        <SharedThings
+          cats={room.shareTasks ? categories.filter((c) => c.roomId === room.id) : []}
+          shop={room.shareShop}
+          memo={room.shareMemo}
+          onClick={room.mine ? () => pushView({ kind: 'shares', id: room.id }) : undefined}
         />
         {!room.mine && (
           <Note>
@@ -322,29 +349,39 @@ function RoomSettings({ id }: { id: string }) {
   );
 }
 
-/** 나누는 카테고리 칩 한 줄. 누를 수 있을 때만 화살표가 붙는다. */
-function SharedCategories({
-  names,
+/**
+ * 나누는 것 한 줄 — 카테고리 칩에 장보기·메모가 같은 줄에 붙는다.
+ * 손님에게는 화살표가 없다.
+ */
+function SharedThings({
+  cats,
+  shop,
+  memo,
   onClick,
 }: {
-  names: { id: string; name: string; color: string }[];
+  cats: { id: string; name: string; color: string }[];
+  shop: boolean;
+  memo: boolean;
   onClick?: () => void;
 }) {
+  const chip = 'inline-flex items-center rounded-full px-2.5 py-[3px] text-[11.5px] font-medium';
+  const empty = cats.length === 0 && !shop && !memo;
+
   const body = (
     <>
       <span className="flex min-w-0 flex-1 flex-wrap gap-[5px]">
-        {names.length === 0 ? (
+        {empty ? (
           <span className="text-[13px] text-ink3">아직 나누는 것이 없어요</span>
         ) : (
-          names.map((c) => (
-            <span
-              key={c.id}
-              className="inline-flex items-center rounded-full px-2.5 py-[3px] text-[11.5px] font-medium"
-              style={{ background: tintOf(c.color), color: c.color }}
-            >
-              {c.name}
-            </span>
-          ))
+          <>
+            {cats.map((c) => (
+              <span key={c.id} className={chip} style={{ background: tintOf(c.color), color: c.color }}>
+                {c.name}
+              </span>
+            ))}
+            {shop && <span className={`${chip} bg-sunk text-ink2`}>장보기</span>}
+            {memo && <span className={`${chip} bg-sunk text-ink2`}>메모</span>}
+          </>
         )}
       </span>
       {onClick && <span className="flex-none text-[15px] text-ink3">›</span>}

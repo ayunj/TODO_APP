@@ -229,6 +229,10 @@ const roomBack = (r: Row, me: string): Room => ({
   code: String(r.join_code ?? ''),
   createdBy: String(r.created_by ?? ''),
   mine: String(r.created_by ?? '') === me,
+  // 칸이 없던 시절 방은 할 일만 켜둔 것으로 읽는다 — 기본이 그쪽이다
+  shareTasks: r.share_tasks !== false,
+  shareShop: r.share_shop === true,
+  shareMemo: r.share_memo === true,
 });
 
 const memberBack = (r: Row): RoomMember => ({
@@ -310,10 +314,16 @@ export async function leaveRoom(roomId: string, me: string): Promise<void> {
   if (error) throw error;
 }
 
-/** 방 이름·색을 고친다. 방 사람이면 누구나 되지만 화면에서는 주인에게만 연다. */
+/** 방 이름·색·나누는 것을 고친다. 방 사람이면 누구나 되지만 화면에서는 주인에게만 연다. */
 export async function updateRoom(
   roomId: string,
-  patch: { name?: string; color?: string },
+  patch: {
+    name?: string;
+    color?: string;
+    share_tasks?: boolean;
+    share_shop?: boolean;
+    share_memo?: boolean;
+  },
 ): Promise<void> {
   const client = await supabase();
   const { error } = await client.from('rooms').update(patch).eq('id', roomId);

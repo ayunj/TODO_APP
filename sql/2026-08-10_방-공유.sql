@@ -7,7 +7,7 @@
 -- 아직 아무것도 안 올린 DB라면 이게 아니라 ../supabase/schema.sql을 통째로 돌린다.
 --
 -- 담긴 것
---   1. rooms.color
+--   1. rooms.color · 무엇을 나누는가(할 일·장보기·메모)
 --   2. 여덟 자 초대 코드 (make_join_code · tidy_code · 옛 코드 일괄 교체)
 --   3. create_room — 색 인자
 --   4. peek_room   — 들어가기 전에 먼저 보여주는 것
@@ -16,8 +16,16 @@
 --   7. share_category · unshare_category — 카테고리 나누기
 -- ═══════════════════════════════════════════════════════════════════
 
--- ─── 1. 방에 색 칸 ───────────────────────────────────────────────
+-- ─── 1. 방에 색 칸, 그리고 무엇을 나누는가 ──────────────────────
 alter table rooms add column if not exists color text not null default '#A9B8F4';
+
+-- 방을 만들 때 고르는 게 제일 좋은 안전장치다. 나중에 실수를 막는 게 아니라
+-- 길을 아예 안 내는 방식이라서 그렇다 — 회사방에서 장보기를 끄면 담을 때
+-- 뜨는 목록에 회사방이 아예 안 나온다.
+-- 기본은 할 일만 켜둔다. 잘못 눌러 새는 걸 막자는 게 목적이니 기본값도 그쪽이다.
+alter table rooms add column if not exists share_tasks boolean not null default true;
+alter table rooms add column if not exists share_shop  boolean not null default false;
+alter table rooms add column if not exists share_memo  boolean not null default false;
 
 
 -- ─── 2. 초대 코드를 여덟 자로 ───────────────────────────────────
