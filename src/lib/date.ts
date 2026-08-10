@@ -52,6 +52,19 @@ export const shortDate = (s: DateStr): string => s.slice(5).replace('-', '.');
 export const longDate = (s: DateStr): string =>
   `${s.slice(0, 4)}. ${s.slice(5, 7)}. ${s.slice(8, 10)}.`;
 
+/**
+ * '언제였나'만 알면 되는 자리 — 지운 것처럼.
+ * 가까운 날은 오늘·어제로, 그 뒤로는 `8월 3일`. 해가 바뀌면 `26년 7월 8일`로 해까지 적는다.
+ */
+export const whenDay = (iso: string): string => {
+  const day = iso.slice(0, 10);
+  const today = todayStr();
+  if (day === today) return '오늘';
+  if (day === addDays(today, -1)) return '어제';
+  const md = `${monthOf(day)}월 ${dayOf(day)}일`;
+  return yearOf(day) === yearOf(today) ? md : `${String(yearOf(day)).slice(2)}년 ${md}`;
+};
+
 export const DOW = ['일', '월', '화', '수', '목', '금', '토'] as const;
 
 /**

@@ -8,6 +8,11 @@ import type { Category, Memo, Preset, Priority, Room, RoomMember, RoomPeek, Shop
  *
  * 지우기는 진짜로 지우지 않고 deleted_at을 단다.
  * 진짜로 지워버리면 상대 기기에는 그 줄이 남아 있다가 다음에 되살아난다.
+ *
+ * 그런데 지운 것에는 두 가지가 있다 — **deleted_by가 가른다.**
+ *   - 있음: 사람이 지운 것. 30일 동안 `지운 것`에 남고 되돌릴 수 있다
+ *   - 없음: 그냥 없앤 것 (다음 회차 정리·전체 초기화 같은 뒷정리).
+ *     이건 받아오지도 않는다 — 되돌릴 것이 아니라 치운 것이다
  */
 
 type Row = Record<string, unknown>;
@@ -58,7 +63,8 @@ const out = {
     done_by: t.doneBy,
     created_at: t.createdAt,
     updated_at: t.updatedAt,
-    deleted_at: null,
+    deleted_at: t.deletedAt,
+    deleted_by: t.deletedBy,
   }),
   presets: (p: Preset, owner: string): Row => ({
     id: p.id,
@@ -85,7 +91,8 @@ const out = {
     done_by: i.doneBy,
     created_at: i.createdAt,
     updated_at: i.updatedAt,
-    deleted_at: null,
+    deleted_at: i.deletedAt,
+    deleted_by: i.deletedBy,
   }),
   memos: (m: Memo, owner: string): Row => ({
     id: m.id,
@@ -94,7 +101,8 @@ const out = {
     text: m.text,
     created_at: m.createdAt,
     updated_at: m.updatedAt,
-    deleted_at: null,
+    deleted_at: m.deletedAt,
+    deleted_by: m.deletedBy,
   }),
 };
 
@@ -126,6 +134,8 @@ const back = {
     doneBy: (r.done_by as string) ?? null,
     createdAt: String(r.created_at ?? ''),
     updatedAt: String(r.updated_at ?? ''),
+    deletedAt: (r.deleted_at as string) ?? null,
+    deletedBy: (r.deleted_by as string) ?? null,
   }),
   presets: (r: Row): Preset => ({
     id: String(r.id),
@@ -149,6 +159,8 @@ const back = {
     doneBy: (r.done_by as string) ?? null,
     createdAt: String(r.created_at ?? ''),
     updatedAt: String(r.updated_at ?? ''),
+    deletedAt: (r.deleted_at as string) ?? null,
+    deletedBy: (r.deleted_by as string) ?? null,
   }),
   memos: (r: Row): Memo => ({
     id: String(r.id),
@@ -156,32 +168,42 @@ const back = {
     text: String(r.text ?? ''),
     createdAt: String(r.created_at ?? ''),
     updatedAt: String(r.updated_at ?? ''),
+    deletedAt: (r.deleted_at as string) ?? null,
+    deletedBy: (r.deleted_by as string) ?? null,
   }),
 };
 
 /* ───────── 주고받기 ───────── */
 
+/** 지운 것이 남아 있는 날수. 이보다 오래된 것은 받아오지도 않는다. */
+export const TRASH_DAYS = 30;
+
 export async function pull(owner: string): Promise<Snapshot> {
   const client = await supabase();
+  const since = new Date(Date.now() - TRASH_DAYS * 86400_000).toISOString();
 
   // 내 개인 것(owner_id = 나)과 방 것(room_id 있음)을 함께 받는다.
   // 방 것은 RLS가 '내가 든 방'으로만 걸러주므로, 여기서 방 id를 일일이 대지 않아도 된다.
-  const read = async (kind: Kind) => {
-    const { data, error } = await client
-      .from(TABLES[kind])
-      .select('*')
-      .or(`owner_id.eq.${owner},room_id.not.is.null`)
-      .is('deleted_at', null);
+  //
+  // 살아 있는 것에 더해 **사람이 지운 것 30일치**를 같이 받는다 —
+  // 그래야 남편이 지운 것이 내 `지운 것`에도 뜬다. 두 or는 서로 and로 걸린다.
+  const read = async (kind: Kind, trashed = false) => {
+    let q = client.from(TABLES[kind]).select('*').or(`owner_id.eq.${owner},room_id.not.is.null`);
+    q = trashed
+      ? q.or(`deleted_at.is.null,and(deleted_at.gte.${since},deleted_by.not.is.null)`)
+      : q.is('deleted_at', null);
+    const { data, error } = await q;
     if (error) throw error;
     return (data ?? []) as Row[];
   };
 
+  // 되돌릴 수 있는 것은 셋뿐이다. 카테고리·즐겨찾기는 지우면 그걸로 끝이라 안 받아온다.
   const [categories, tasks, presets, shopping, memos] = await Promise.all([
     read('categories'),
-    read('tasks'),
+    read('tasks', true),
     read('presets'),
-    read('shopping'),
-    read('memos'),
+    read('shopping', true),
+    read('memos', true),
   ]);
 
   return {
@@ -204,13 +226,19 @@ export async function push(kind: Kind, rows: unknown[], owner: string): Promise<
   if (error) throw error;
 }
 
-/** 지우기 = deleted_at 달기 */
+/**
+ * 그냥 없애기 = deleted_at을 달고 **deleted_by를 비운다.**
+ *
+ * 뒷정리하는 쪽이다 — 다음 회차 정리·전체 초기화·30일 지난 것.
+ * deleted_by를 비워야 `지운 것`에 안 뜬다. 되돌릴 것이 아니라 치운 것이다.
+ * 사람이 지운 것은 이 길로 오지 않는다. 그건 deleted_at을 단 채로 저장(push)한다.
+ */
 export async function drop(kind: Kind, ids: string[]): Promise<void> {
   if (ids.length === 0) return;
   const client = await supabase();
   const { error } = await client
     .from(TABLES[kind])
-    .update({ deleted_at: new Date().toISOString() })
+    .update({ deleted_at: new Date().toISOString(), deleted_by: null })
     .in('id', ids);
   if (error) throw error;
 }

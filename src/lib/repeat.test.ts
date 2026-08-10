@@ -21,6 +21,8 @@ function task(over: Partial<Task> & { date: DateStr }): Task {
     doneBy: null,
     createdAt: now,
     updatedAt: now,
+    deletedAt: null,
+    deletedBy: null,
     ...over,
   };
 }

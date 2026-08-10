@@ -49,6 +49,8 @@ export function spawnNext(task: Task): Task | null {
     doneBy: null,
     createdAt: now,
     updatedAt: now,
+    deletedAt: null,
+    deletedBy: null,
   };
 }
 

@@ -1,5 +1,62 @@
 import { addDays, monthKey } from './date';
-import type { DateStr, Preset, ShopItem, Task } from './types';
+import type { DateStr, Memo, Preset, ShopItem, Task, Trashed } from './types';
+
+/** 살아 있는 것 — 지운 것은 화면 어디에도 안 나온다 */
+export const alive = <T extends { deletedAt: string | null }>(rows: T[]): T[] =>
+  rows.filter((r) => !r.deletedAt);
+
+/** 메모는 제목 칸이 없다 — 첫 줄이 제목 노릇을 한다 */
+const memoTitle = (text: string) => text.split('\n').find((l) => l.trim())?.trim() ?? '빈 메모';
+
+/**
+ * 지운 것 — 할 일·장보기·메모를 한 줄 모양으로 모아 늦게 지운 것부터.
+ * 30일이 지난 것은 여기서 빠진다. 진짜로 치우는 일은 앱을 열 때 따로 한다.
+ */
+export function trashOf(
+  tasks: Task[],
+  shopping: ShopItem[],
+  memos: Memo[],
+  since: string,
+): Trashed[] {
+  const rows: Trashed[] = [];
+  const fresh = (at: string | null): at is string => Boolean(at) && at! >= since;
+
+  for (const t of tasks)
+    if (fresh(t.deletedAt))
+      rows.push({
+        kind: 'task',
+        id: t.id,
+        title: t.title,
+        categoryId: t.categoryId,
+        roomId: t.roomId,
+        at: t.deletedAt,
+        by: t.deletedBy,
+      });
+  for (const i of shopping)
+    if (fresh(i.deletedAt))
+      rows.push({
+        kind: 'shop',
+        id: i.id,
+        title: i.title,
+        categoryId: null,
+        roomId: i.roomId,
+        at: i.deletedAt,
+        by: i.deletedBy,
+      });
+  for (const m of memos)
+    if (fresh(m.deletedAt))
+      rows.push({
+        kind: 'memo',
+        id: m.id,
+        title: memoTitle(m.text),
+        categoryId: null,
+        roomId: m.roomId,
+        at: m.deletedAt,
+        by: m.deletedBy,
+      });
+
+  return rows.sort((a, b) => b.at.localeCompare(a.at));
+}
 
 /**
  * 장보기에서 목록과 기록을 가르는 단 하나의 규칙.

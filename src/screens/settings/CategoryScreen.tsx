@@ -89,9 +89,9 @@ function CategorySettings({ id }: { id: string }) {
  * 값 두 개짜리 화면에서 버튼을 한 번 더 누르게 할 까닭이 없다.
  */
 function CategoryForm({ category }: { category: Category }) {
-  const { categories, tasks, presets, updateCategory, removeCategory } = useStore();
+  const { categories, tasks, presets, trash, updateCategory, removeCategory } = useStore();
   const { rooms } = useRooms();
-  const { filter, setFilter, popView } = useUi();
+  const { filter, setFilter, popView, pushView } = useUi();
 
   const [name, setName] = useState(category.name);
 
@@ -135,6 +135,14 @@ function CategoryForm({ category }: { category: Category }) {
   };
 
   const inPresets = presets.filter((p) => p.categoryId === category.id).length;
+  /*
+    공유 카테고리에는 이 줄이 없다 — 그 지운 것은 방 설정에 모인다.
+    방 하나가 여러 카테고리에 걸쳐 있어서, 카테고리마다 흩어놓으면
+    남이 지운 걸 찾으러 세 군데를 돌아야 한다.
+  */
+  const buried = category.roomId
+    ? []
+    : trash.filter((t) => t.kind === 'task' && !t.roomId && t.categoryId === category.id);
 
   return (
     <>
@@ -170,6 +178,18 @@ function CategoryForm({ category }: { category: Category }) {
       <Field label="색">
         <ColorPicker value={category.color} onChange={saveColor} />
       </Field>
+
+      {/* 비어 있으면 줄도 없다 — 들어가봤자 빈 화면인 줄을 만들지 않는다 */}
+      {buried.length > 0 && (
+        <Group>
+          <Row
+            value={`${buried.length}개`}
+            onClick={() => pushView({ kind: 'trash', scope: 'category', id: category.id })}
+          >
+            지운 것
+          </Row>
+        </Group>
+      )}
 
       {/*
         지우는 줄은 한 칸 떼어 둔다 — 위의 값들과 같은 무게로 읽히면 안 되는 것이다.

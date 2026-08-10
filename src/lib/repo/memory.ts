@@ -1,4 +1,4 @@
-import type { Repository, Snapshot } from '../repository';
+import type { Bucket, Repository, Snapshot } from '../repository';
 import type { Category, Grave, Memo, Preset, Settings, ShopItem, Task } from '../types';
 
 /** SSR·테스트용. IndexedDB가 없는 곳에서 앱이 죽지 않게 한다. */
@@ -67,6 +67,11 @@ export class MemoryRepository implements Repository {
   }
   async deleteMemo(id: string) {
     this.memos.delete(id);
+  }
+  async purge(bucket: Bucket, ids: string[]) {
+    const box =
+      bucket === 'tasks' ? this.tasks : bucket === 'shopping' ? this.shopping : this.memos;
+    ids.forEach((id) => box.delete(id));
   }
   async remember(kind: string, ids: string[]) {
     const at = new Date().toISOString();

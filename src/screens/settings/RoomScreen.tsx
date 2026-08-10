@@ -129,7 +129,7 @@ function CreateRoom() {
 function RoomSettings({ id }: { id: string }) {
   const { account } = useAuth();
   const { rooms, membersOf, resetCode, leaveRoom, closeRoom } = useRooms();
-  const { categories, tasks, resync } = useStore();
+  const { categories, tasks, trash, resync } = useStore();
   const { pushView, popView, openSheet } = useUi();
 
   const room = rooms.find((r) => r.id === id) ?? null;
@@ -150,6 +150,11 @@ function RoomSettings({ id }: { id: string }) {
   const shared = categories.filter((c) => c.roomId === room.id);
   // 이 방에 걸린 것 몇 개가 내 폰에서 없어지는지 — 묻는 말에 쓴다
   const countHere = tasks.filter((t) => t.roomId === room.id).length;
+  /*
+    방 것은 한자리에 모은다 — 공유 카테고리의 할 일도, 방 장보기도, 방 메모도.
+    카테고리마다 흩어놓으면 남이 지운 걸 찾으러 세 군데를 돌아야 한다.
+  */
+  const buried = trash.filter((t) => t.roomId === room.id);
 
   // 손님 화면은 셋만 보이고 나머지는 숫자로 접는다
   const shown = room.mine ? people : people.slice(0, 3);
@@ -285,30 +290,47 @@ function RoomSettings({ id }: { id: string }) {
         {!room.mine && <Note>{ownerName}가 정합니다.</Note>}
       </div>
 
-      {/* 손님에게는 방 자체를 다루는 줄이 아예 없다 */}
-      {room.mine && (
+      {/*
+        손님에게는 방 자체를 다루는 줄이 아예 없다.
+        `지운 것`만 빼고 — **그건 손님도 본다.** 되돌리기는 누구나 할 수 있어야 한다.
+        막는 대신 되돌린다. 가족끼리 권한을 나누기 시작하면 그때부터 앱이 회사가 된다.
+      */}
+      {(room.mine || buried.length > 0) && (
         <div className="mt-[18px]">
           <Group label="방">
-            <Row
-              value={room.name}
-              onClick={() => openSheet({ kind: 'roomField', id: room.id, field: 'name' })}
-            >
-              방 이름
-            </Row>
-            <Row
-              value={
-                <span
-                  className="inline-block h-[15px] w-[15px] rounded-full align-[-2px]"
-                  style={{ background: room.color }}
-                />
-              }
-              onClick={() => openSheet({ kind: 'roomField', id: room.id, field: 'color' })}
-            >
-              방 색
-            </Row>
-            <Row value={formatCode(room.code)} onClick={onResetCode}>
-              코드 새로 만들기
-            </Row>
+            {room.mine && (
+              <>
+                <Row
+                  value={room.name}
+                  onClick={() => openSheet({ kind: 'roomField', id: room.id, field: 'name' })}
+                >
+                  방 이름
+                </Row>
+                <Row
+                  value={
+                    <span
+                      className="inline-block h-[15px] w-[15px] rounded-full align-[-2px]"
+                      style={{ background: room.color }}
+                    />
+                  }
+                  onClick={() => openSheet({ kind: 'roomField', id: room.id, field: 'color' })}
+                >
+                  방 색
+                </Row>
+                <Row value={formatCode(room.code)} onClick={onResetCode}>
+                  코드 새로 만들기
+                </Row>
+              </>
+            )}
+            {/* 비어 있으면 줄도 없다 — 들어가봤자 빈 화면인 줄을 만들지 않는다 */}
+            {buried.length > 0 && (
+              <Row
+                value={`${buried.length}개`}
+                onClick={() => pushView({ kind: 'trash', scope: 'room', id: room.id })}
+              >
+                지운 것
+              </Row>
+            )}
           </Group>
         </div>
       )}

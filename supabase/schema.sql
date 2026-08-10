@@ -7,6 +7,11 @@
 --    두 기기가 같이 쓰면 "지웠다"도 전해져야 한다. 진짜로 지워버리면
 --    상대 기기에는 그 줄이 그냥 남아 있다가 다음 동기화 때 되살아난다.
 --
+--    지운 것에는 두 가지가 있고 deleted_by가 가른다.
+--      있음 — 사람이 지운 것. 30일 동안 `지운 것`에 남고 누구나 되돌릴 수 있다
+--      없음 — 그냥 없앤 것 (다음 회차 정리·전체 초기화·30일 지난 것).
+--             앱이 받아오지도 않는다. 되돌릴 것이 아니라 치운 것이다
+--
 -- 2) 충돌은 항목 단위로 updated_at이 늦은 쪽이 이긴다.
 --    목록을 통째로 덮어쓰지 않는다 — 상대가 방금 체크한 게 사라지면 안 된다.
 
@@ -113,7 +118,9 @@ create table if not exists categories (
   color      text not null,
   sort_order int  not null default 0,
   updated_at timestamptz not null default now(),
-  deleted_at timestamptz
+  deleted_at timestamptz,
+  -- 사람이 지웠으면 그 사람. 뒷정리로 없앤 것은 비어 있다.
+  deleted_by uuid references auth.users
 );
 
 create table if not exists tasks (
@@ -134,7 +141,9 @@ create table if not exists tasks (
   done_by      text,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now(),
-  deleted_at   timestamptz
+  deleted_at   timestamptz,
+  -- 방 `지운 것`에서 "남편이 지움"이라고 적는 자리
+  deleted_by   uuid references auth.users
 );
 create index if not exists tasks_room_date  on tasks (room_id, date);
 create index if not exists tasks_owner_date on tasks (owner_id, date);
@@ -152,7 +161,8 @@ create table if not exists presets (
   repeat_days  int  not null default 0,
   repeat_until date,
   updated_at   timestamptz not null default now(),
-  deleted_at   timestamptz
+  deleted_at   timestamptz,
+  deleted_by   uuid references auth.users
 );
 
 -- 장보기 — 날짜도 주기도 없다. bought_on 하나로 목록과 기록이 갈린다.
@@ -168,7 +178,8 @@ create table if not exists shop_items (
   done_by    text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  deleted_at timestamptz
+  deleted_at timestamptz,
+  deleted_by uuid references auth.users
 );
 
 -- 메모 — 흘러가지 않는 종이. 제목 칸은 없다 (첫 줄이 제목 노릇을 한다).
@@ -179,7 +190,8 @@ create table if not exists memos (
   text       text not null default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  deleted_at timestamptz
+  deleted_at timestamptz,
+  deleted_by uuid references auth.users
 );
 
 -- ───────────────────────── RLS ─────────────────────────

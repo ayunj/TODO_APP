@@ -3,7 +3,7 @@
 import { createContext, useContext, useMemo, useState } from 'react';
 import { todayStr } from './date';
 import type { Filter } from './selectors';
-import type { DateStr, ViewKind } from './types';
+import type { DateStr, TrashScope, ViewKind } from './types';
 
 /** 탭 셋. 밀고 들어간 화면을 다 빠져나오면 여기로 돌아온다. */
 export type Tab = 'day' | 'month' | 'log';
@@ -27,6 +27,11 @@ export type Route =
   | { kind: 'categoryList' }
   /** id가 null이면 새 카테고리, 있으면 그 카테고리 설정 */
   | { kind: 'category'; id: string | null }
+  /**
+   * 지운 것 — 어디 것을 보는지가 딸려온다.
+   * 한데 모아 보는 화면은 없다. 찾는 사람은 어디 것인지를 이미 알고 찾는다.
+   */
+  | { kind: 'trash'; scope: TrashScope; id: string }
   | { kind: 'account' }
   | { kind: 'share' }
   /** id가 null이면 새 방 만들기, 있으면 그 방 설정 */

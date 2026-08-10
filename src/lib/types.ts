@@ -88,6 +88,10 @@ export interface Task {
   doneBy: string | null;
   createdAt: string;
   updatedAt: string;
+  /** 지운 때. null이면 살아 있는 것 — 지운 것은 30일 뒤에 진짜로 사라진다. */
+  deletedAt: string | null;
+  /** 지운 사람의 계정 id. 방 것에만 쓴다 — 개인 것은 지운 사람이 늘 나다. */
+  deletedBy: string | null;
 }
 
 export interface Preset {
@@ -126,6 +130,10 @@ export interface ShopItem {
   doneBy: string | null;
   createdAt: string;
   updatedAt: string;
+  /** 지운 때. null이면 살아 있는 것 */
+  deletedAt: string | null;
+  /** 지운 사람의 계정 id */
+  deletedBy: string | null;
 }
 
 /**
@@ -139,6 +147,31 @@ export interface Memo {
   text: string;
   createdAt: string;
   updatedAt: string;
+  /** 지운 때. null이면 살아 있는 것 */
+  deletedAt: string | null;
+  /** 지운 사람의 계정 id */
+  deletedBy: string | null;
+}
+
+/** 지운 것을 어디에서 보고 있나 — 내 카테고리 · 방 · 장보기 · 메모 */
+export type TrashScope = 'category' | 'room' | 'shop' | 'memo';
+
+/**
+ * 지운 것 한 줄. 할 일·장보기·메모를 한 모양으로 본다 —
+ * 방 것은 세 가지가 한자리에 섞여 있어서 종류를 따로 물으면 화면이 셋이 된다.
+ */
+export interface Trashed {
+  kind: 'task' | 'shop' | 'memo';
+  id: string;
+  /** 메모는 첫 줄이 제목 노릇을 한다 */
+  title: string;
+  /** 장보기·메모에는 카테고리가 없다 */
+  categoryId: string | null;
+  roomId: string | null;
+  /** 지운 때 (ISO) */
+  at: string;
+  /** 지운 사람의 계정 id */
+  by: string | null;
 }
 
 /**
@@ -159,6 +192,7 @@ export type ViewKind =
   | 'presetList'
   | 'categoryList'
   | 'category'
+  | 'trash'
   | 'account'
   | 'share'
   | 'room'

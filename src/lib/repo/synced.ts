@@ -40,6 +40,10 @@ export class SyncedRepository implements Repository {
   saveSettings(patch: Parameters<Repository['saveSettings']>[0]) {
     return this.local.saveSettings(patch);
   }
+  /** 30일 지난 것 치우기는 **로컬만** 한다. 서버에 알리면 지운 때가 오늘로 되밀린다. */
+  purge(bucket: Parameters<Repository['purge']>[0], ids: string[]) {
+    return this.local.purge(bucket, ids);
+  }
   remember(kind: string, ids: string[]) {
     return this.local.remember(kind, ids);
   }

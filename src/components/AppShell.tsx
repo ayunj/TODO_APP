@@ -26,6 +26,7 @@ import PresetListScreen from '@/screens/settings/PresetListScreen';
 import RoomSharesScreen from '@/screens/settings/RoomSharesScreen';
 import RoomScreen from '@/screens/settings/RoomScreen';
 import SettingsScreen from '@/screens/settings/SettingsScreen';
+import TrashScreen from '@/screens/settings/TrashScreen';
 import ShareScreen from '@/screens/settings/ShareScreen';
 import { useAuth } from '@/lib/auth';
 import { addDays, addMonths, monthKey } from '@/lib/date';
@@ -128,6 +129,8 @@ export default function AppShell() {
           return <RoomSharesScreen id={route.id} />;
         case 'handover':
           return <HandoverScreen id={route.id} />;
+        case 'trash':
+          return <TrashScreen key={`${route.scope}-${route.id}`} scope={route.scope} id={route.id} />;
         case 'join':
           return <JoinScreen />;
       }

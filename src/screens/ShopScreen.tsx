@@ -6,6 +6,7 @@ import ShopAddRow from './shop/ShopAddRow';
 import ShopHistory from './shop/ShopHistory';
 import ShopRow from './shop/ShopRow';
 import EmptyBox from '@/components/EmptyBox';
+import TrashLine from '@/components/TrashLine';
 import { todayStr } from '@/lib/date';
 import { onShopList } from '@/lib/selectors';
 import { useStore } from '@/lib/store';
@@ -68,6 +69,8 @@ export default function ShopScreen() {
       )}
 
       <ShopHistory items={history} />
+      {/* 장보기·메모에는 카테고리가 없다 — 각자 제 화면 맨 아래에서 같은 화면으로 들어간다 */}
+      <TrashLine scope="shop" />
     </>
   );
 }

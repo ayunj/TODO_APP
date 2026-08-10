@@ -7,11 +7,11 @@ import { addDays, shortDate, todayStr } from './date';
 import { stamp, uid } from './id';
 import { baseOf, spawnNext } from './repeat';
 import { getRepository } from './repo';
-import { reclaimMyRooms } from './repo/remote';
+import { reclaimMyRooms, TRASH_DAYS } from './repo/remote';
 import type { Repository, Snapshot } from './repository';
-import { onShopList } from './selectors';
+import { alive, onShopList, trashOf } from './selectors';
 import { toast } from './toast';
-import type { Category, DateStr, Memo, Preset, Priority, ShopItem, Task } from './types';
+import type { Category, DateStr, Memo, Preset, Priority, ShopItem, Task, Trashed } from './types';
 
 export interface TaskInput {
   title: string;
@@ -45,8 +45,17 @@ interface StoreValue {
   /** 서버에서 여러 줄이 한꺼번에 바뀐 뒤에 부른다 (카테고리를 방에 열 때 같은 것) */
   resync: () => Promise<void>;
 
+  /**
+   * 지운 것 — 할 일·장보기·메모가 한자리에 섞여 늦게 지운 것부터.
+   * 화면마다 제 몫만 걸러 쓴다 (그 카테고리 것, 그 방 것).
+   */
+  trash: Trashed[];
+  /** 되돌리기 — 지운 표시만 뗀다. 있던 자리로 그대로 돌아간다. */
+  restore: (kind: Trashed['kind'], id: string) => void;
+
   addTask: (input: TaskInput) => Task;
   updateTask: (id: string, input: TaskInput) => void;
+  /** 30일 동안 `지운 것`에 남는다 — 진짜로 없어지는 게 아니다 */
   removeTask: (id: string) => void;
   toggleTask: (id: string) => void;
   /** 못 끝낸 일을 다른 날로 옮긴다. 주기 계산은 건드리지 않는다. */
@@ -143,23 +152,28 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [repo],
   );
 
-  /** 스냅샷 하나를 화면 상태로 펼친다 */
+  /**
+   * 스냅샷 하나를 화면 상태로 펼친다.
+   *
+   * 지운 것도 함께 담아둔다 — 화면에 나가는 목록은 아래에서 한 번 걸러서 내보낸다.
+   * 여기서 버리면 되돌릴 것이 없어진다.
+   */
   const spread = useCallback((snap: Snapshot) => {
     // 방 칸이 없던 시절 카테고리에는 roomId를 채워준다 (전부 개인 것이었다)
     setCategories(snap.categories.map((c) => ({ ...c, roomId: c.roomId ?? null })));
-    setTasks(snap.tasks);
-    setPresets(snap.presets);
     // 나중에 생긴 칸들이 없는 옛 항목에는 기본값을 채워준다
+    setTasks(snap.tasks.map(buried));
+    setPresets(snap.presets);
     setShopping(
       snap.shopping.map((i) => ({
-        ...i,
+        ...buried(i),
         note: i.note ?? '',
         place: i.place ?? '',
         boughtOn: i.boughtOn ?? null,
       })),
     );
     // 한 장짜리로 쓰던 시절의 메모에는 createdAt이 없다 — 첫 번째 메모로 그대로 넘긴다
-    setMemos(snap.memos.map((m) => ({ ...m, createdAt: m.createdAt ?? m.updatedAt })));
+    setMemos(snap.memos.map((m) => ({ ...buried(m), createdAt: m.createdAt ?? m.updatedAt })));
   }, []);
 
   useEffect(() => {
@@ -196,6 +210,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       }
 
       current = await furnish(r, current);
+      // 30일이 지난 지운 것은 앱을 열 때 한 번 치운다.
+      // 서버가 6시에 도는 일 같은 건 없다 — 열 때 계산하면 그만이다.
+      current = await sweep(r, current);
       if (!alive) return;
       spread(current);
       setLoading(false);
@@ -252,6 +269,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         doneBy: null,
         createdAt: now,
         updatedAt: now,
+        deletedAt: null,
+        deletedBy: null,
       };
       setTasks((prev) => [...prev, task]);
       write((r) => r.saveTask(task));
@@ -279,7 +298,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       };
 
       // 완료해서 이미 생겨난 다음 회차가 있으면 결을 맞춰준다
-      const pending = tasks.find((t) => t.parentId === id && !t.done) ?? null;
+      const pending = tasks.find((t) => t.parentId === id && !t.done && !t.deletedAt) ?? null;
       let nextPending: Task | null = null;
       let dropPending = false;
 
@@ -329,24 +348,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
    * 지우는 건 이 한 건뿐이다.
    * 완료해서 이미 잡혀 있는 다음 회차는 그대로 둔다 — 기록을 지운 것이지 반복을 그만둔 게 아니다.
    * 반복을 그만두려면 앞으로 잡힌 그 회차를 지우면 된다.
+   *
+   * 목록에서는 사라지지만 30일 동안 `지운 것`에 남는다.
+   * 그래서 지운 표시를 달아 **저장한다** — 진짜로 지우는 게 아니다.
    */
   const removeTask = useCallback(
     (id: string) => {
+      const current = tasks.find((t) => t.id === id);
+      if (!current) return;
+      const gone: Task = { ...current, ...tombstone(owner) };
+
       // 지워진 항목을 부모로 가리키고 있으면 끊어준다 (없는 줄을 가리키지 않게)
       const freed = tasks
-        .filter((t) => t.parentId === id)
+        .filter((t) => t.parentId === id && !t.deletedAt)
         .map((t) => ({ ...t, parentId: null, updatedAt: stamp() }));
 
-      setTasks(
-        tasks.filter((t) => t.id !== id).map((t) => freed.find((f) => f.id === t.id) ?? t),
-      );
+      setTasks(tasks.map((t) => (t.id === id ? gone : (freed.find((f) => f.id === t.id) ?? t))));
 
       write(async (r) => {
-        await r.deleteTask(id);
+        await r.saveTask(gone);
         if (freed.length) await r.saveTasks(freed);
       });
     },
-    [tasks, write],
+    [tasks, owner, write],
   );
 
   /**
@@ -383,7 +407,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           doneBy: null,
           updatedAt: stamp(),
         };
-        const orphans = tasks.filter((t) => t.parentId === id && !t.done).map((t) => t.id);
+        const orphans = tasks
+          .filter((t) => t.parentId === id && !t.done && !t.deletedAt)
+          .map((t) => t.id);
         setTasks(tasks.filter((t) => !orphans.includes(t.id)).map((t) => (t.id === id ? undone : t)));
         write(async (r) => {
           await r.saveTask(undone);
@@ -402,7 +428,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       };
 
       // 이미 이 항목을 부모로 하는 미완료 회차가 있으면 만들지 않는다 (중복 방지)
-      const hasPending = tasks.some((t) => t.parentId === id && !t.done);
+      const hasPending = tasks.some((t) => t.parentId === id && !t.done && !t.deletedAt);
       let next: Task | null = null;
       if (current.repeatDays > 0 && !hasPending) {
         next = spawnNext(done);
@@ -489,6 +515,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         doneBy: null,
         createdAt: now,
         updatedAt: now,
+        deletedAt: null,
+        deletedBy: null,
       };
       setShopping((prev) => [...prev, item]);
       write((r) => r.saveShopItem(item));
@@ -528,10 +556,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const removeShopItem = useCallback(
     (id: string) => {
-      setShopping((prev) => prev.filter((i) => i.id !== id));
-      write((r) => r.deleteShopItems([id]));
+      const current = shopping.find((i) => i.id === id);
+      if (!current) return;
+      const gone: ShopItem = { ...current, ...tombstone(owner) };
+      setShopping(shopping.map((i) => (i.id === id ? gone : i)));
+      write((r) => r.saveShopItem(gone));
     },
-    [write],
+    [shopping, owner, write],
   );
 
   /** 기록은 그대로 두고 같은 이름으로 새로 담는다 — 살 때마다 한 줄씩 쌓여야 한다 */
@@ -540,7 +571,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const source = shopping.find((i) => i.id === id);
       if (!source) return;
       const today = todayStr();
-      if (shopping.some((i) => onShopList(i, today) && i.title === source.title)) {
+      if (shopping.some((i) => !i.deletedAt && onShopList(i, today) && i.title === source.title)) {
         toast(`${source.title} — 이미 목록에 있어요`);
         return;
       }
@@ -555,7 +586,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const addMemo = useCallback((): Memo => {
     const now = stamp();
-    const memo: Memo = { id: uid(), roomId: null, text: '', createdAt: now, updatedAt: now };
+    const memo: Memo = {
+      id: uid(),
+      roomId: null,
+      text: '',
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+      deletedBy: null,
+    };
     setMemos((prev) => [...prev, memo]);
     write((r) => r.saveMemo(memo));
     return memo;
@@ -614,12 +653,66 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const removeMemo = useCallback(
     (id: string) => {
+      const current = memos.find((m) => m.id === id);
+      if (!current) return;
       clearTimeout(memoTimers.current.get(id)); // 지운 뒤에 저장이 되살아나지 않게
       memoTimers.current.delete(id);
-      setMemos((prev) => prev.filter((m) => m.id !== id));
-      write((r) => r.deleteMemo(id));
+
+      // 빈 메모는 `지운 것`에 안 남긴다 — 되돌려도 빈 종이 한 장이다.
+      // (펼쳤다 아무것도 안 적고 접으면 이 길로 온다)
+      if (!current.text.trim()) {
+        setMemos(memos.filter((m) => m.id !== id));
+        write((r) => r.deleteMemo(id));
+        return;
+      }
+
+      const gone: Memo = { ...current, ...tombstone(owner) };
+      setMemos(memos.map((m) => (m.id === id ? gone : m)));
+      write((r) => r.saveMemo(gone));
     },
-    [write],
+    [memos, owner, write],
+  );
+
+  /* ───────── 지운 것 ───────── */
+
+  /** 30일 안에 지운 것들. 화면마다 제 몫(그 카테고리·그 방)만 걸러 쓴다. */
+  const trash = useMemo(
+    () => trashOf(tasks, shopping, memos, trashSince()),
+    [tasks, shopping, memos],
+  );
+
+  /**
+   * 되돌리기 — 지운 표시만 뗀다.
+   * 날짜도 카테고리도 그대로라 **있던 자리로 돌아간다.** 새로 만드는 게 아니다.
+   */
+  const restore = useCallback(
+    (kind: Trashed['kind'], id: string) => {
+      const now = stamp();
+      const back = { deletedAt: null, deletedBy: null, updatedAt: now };
+
+      if (kind === 'task') {
+        const found = tasks.find((t) => t.id === id);
+        if (!found) return;
+        const row: Task = { ...found, ...back };
+        setTasks(tasks.map((t) => (t.id === id ? row : t)));
+        write((r) => r.saveTask(row));
+        return;
+      }
+      if (kind === 'shop') {
+        const found = shopping.find((i) => i.id === id);
+        if (!found) return;
+        const row: ShopItem = { ...found, ...back };
+        setShopping(shopping.map((i) => (i.id === id ? row : i)));
+        write((r) => r.saveShopItem(row));
+        return;
+      }
+      const found = memos.find((m) => m.id === id);
+      if (!found) return;
+      const row: Memo = { ...found, ...back };
+      setMemos(memos.map((m) => (m.id === id ? row : m)));
+      write((r) => r.saveMemo(row));
+    },
+    [tasks, shopping, memos, write],
   );
 
   /* ───────── 카테고리 ───────── */
@@ -656,6 +749,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const fallback = categories.find((c) => c.id !== id);
       if (!fallback) return 0;
 
+      // 지운 것도 같이 옮긴다 — 안 그러면 되돌렸을 때 없는 카테고리를 가리킨다.
+      // 다만 몇 개가 옮겨졌다고 말할 때는 살아 있는 것만 센다. 안 보이는 것을 셀 수는 없다.
       const moved = tasks.filter((t) => t.categoryId === id);
       const movedTasks = moved.map((t) => ({ ...t, categoryId: fallback.id, updatedAt: stamp() }));
       const movedPresets = presets
@@ -674,7 +769,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         await r.deleteCategory(id);
       });
 
-      return moved.length;
+      return moved.filter((t) => !t.deletedAt).length;
     },
     [categories, tasks, presets, write],
   );
@@ -692,13 +787,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
   }, [write]);
 
+  /*
+    화면에 나가는 것은 **살아 있는 것만**이다.
+    지운 것은 상태 안에는 그대로 있지만 여기서 한 번 걸러 나간다 —
+    화면마다 `t.deletedAt`을 따지게 하면 언젠가 한 군데를 빠뜨린다.
+  */
+  const liveTasks = useMemo(() => alive(tasks), [tasks]);
+  const liveShopping = useMemo(() => alive(shopping), [shopping]);
+  const liveMemos = useMemo(() => alive(memos), [memos]);
+
   const value = useMemo<StoreValue>(
     () => ({
       loading,
       onboarded,
       finishWelcome,
       categories,
-      tasks,
+      tasks: liveTasks,
       presets,
       categoryOf,
       resync,
@@ -711,13 +815,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       updatePreset,
       removePreset,
       applyPreset,
-      shopping,
+      trash,
+      restore,
+      shopping: liveShopping,
       addShopItem,
       updateShopItem,
       toggleShopItem,
       removeShopItem,
       rebuyShopItem,
-      memos,
+      memos: liveMemos,
       addMemo,
       updateMemo,
       removeMemo,
@@ -740,7 +846,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       onboarded,
       finishWelcome,
       categories,
-      tasks,
+      liveTasks,
       presets,
       categoryOf,
       resync,
@@ -753,13 +859,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       updatePreset,
       removePreset,
       applyPreset,
-      shopping,
+      trash,
+      restore,
+      liveShopping,
       addShopItem,
       updateShopItem,
       toggleShopItem,
       removeShopItem,
       rebuyShopItem,
-      memos,
+      liveMemos,
       addMemo,
       updateMemo,
       removeMemo,
@@ -786,6 +894,56 @@ export function useStore(): StoreValue {
   const ctx = useContext(StoreContext);
   if (!ctx) throw new Error('StoreProvider 안에서만 쓸 수 있습니다');
   return ctx;
+}
+
+/* ───────── 지운 것 셈 ───────── */
+
+/** 지운 칸이 없던 시절 항목은 살아 있는 것으로 읽는다 */
+const buried = <T,>(row: T): T & { deletedAt: string | null; deletedBy: string | null } => ({
+  deletedAt: null,
+  deletedBy: null,
+  ...row,
+});
+
+/** 지운 표시. updatedAt도 같이 밀어야 다른 기기에도 '지웠다'가 전해진다. */
+const tombstone = (owner: string | null) => ({
+  deletedAt: stamp(),
+  deletedBy: owner,
+  updatedAt: stamp(),
+});
+
+/** 이 시각보다 앞서 지운 것은 없는 것으로 친다 */
+const trashSince = (): string => new Date(Date.now() - TRASH_DAYS * 86400_000).toISOString();
+
+/**
+ * 30일이 지난 지운 것을 이 기기에서 치운다.
+ *
+ * 서버에는 알리지 않는다 — 알리면 지운 때가 오늘로 되밀려서 그 줄이 영영 안 늙는다.
+ * 서버도 제 나이를 보고 안 내려주니 이걸로 양쪽이 맞는다.
+ */
+async function sweep(r: Repository, snap: Snapshot): Promise<Snapshot> {
+  const since = trashSince();
+  const rotten = <T extends { id: string; deletedAt?: string | null }>(rows: T[]) =>
+    rows.filter((x) => x.deletedAt && x.deletedAt < since).map((x) => x.id);
+
+  const tasks = rotten(snap.tasks);
+  const shopping = rotten(snap.shopping);
+  const memos = rotten(snap.memos);
+  if (!tasks.length && !shopping.length && !memos.length) return snap;
+
+  if (tasks.length) await r.purge('tasks', tasks);
+  if (shopping.length) await r.purge('shopping', shopping);
+  if (memos.length) await r.purge('memos', memos);
+
+  const left = <T extends { id: string }>(rows: T[], gone: string[]) =>
+    gone.length ? rows.filter((x) => !gone.includes(x.id)) : rows;
+
+  return {
+    ...snap,
+    tasks: left(snap.tasks, tasks),
+    shopping: left(snap.shopping, shopping),
+    memos: left(snap.memos, memos),
+  };
 }
 
 /**

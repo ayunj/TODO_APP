@@ -1,4 +1,4 @@
-import type { Repository, Snapshot } from '../repository';
+import type { Bucket, Repository, Snapshot } from '../repository';
 import type { Category, Grave, Memo, Preset, Settings, ShopItem, Task } from '../types';
 
 const DB_NAME = 'todolist';
@@ -147,6 +147,11 @@ export class IndexedDbRepository implements Repository {
   async saveSettings(patch: Partial<Settings>): Promise<void> {
     const current = await this.loadSettings();
     return this.put('settings', [{ ...current, ...patch, id: SETTINGS_ID }]);
+  }
+
+  /** 서버에는 알리지 않는다 — 이 기기 디스크만 치우는 일이다 */
+  purge(bucket: Bucket, ids: string[]) {
+    return this.del(bucket === 'memos' ? 'memo' : bucket, ids);
   }
 
   remember(kind: string, ids: string[]) {

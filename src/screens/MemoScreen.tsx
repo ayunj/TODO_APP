@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import MemoCard from './memo/MemoCard';
 import EmptyBox from '@/components/EmptyBox';
+import TrashLine from '@/components/TrashLine';
 import { SearchIcon } from '@/components/Icons';
 import { useStore } from '@/lib/store';
 
@@ -126,6 +127,9 @@ export default function MemoScreen() {
           ))}
         </div>
       )}
+
+      {/* 메모에는 카테고리가 없다 — 여기가 그 지운 것으로 들어가는 자리다 */}
+      <TrashLine scope="memo" />
     </>
   );
 }
