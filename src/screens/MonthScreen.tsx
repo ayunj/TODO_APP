@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import MonthCell from './month/MonthCell';
 import { DOW, daysInMonth, dowOf, firstDow, monthKey, todayStr } from '@/lib/date';
-import { sortTasks, tasksInMonth, tasksOn } from '@/lib/selectors';
+import { sortForCell, tasksInMonth, tasksOn } from '@/lib/selectors';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 
@@ -78,7 +78,8 @@ export default function MonthScreen() {
               isToday={date === today}
               // 첫 칸이 아니라 진짜 일요일에 붉게 — 주가 월요일에 시작해도 자리를 안 옮긴다
               isSunday={dowOf(date) === 0}
-              tasks={sortTasks(all)}
+              // 안 한 것이 먼저 — 세 줄까지만 보여서 완료한 게 위에 있으면 남은 일이 숨는다
+              tasks={sortForCell(all)}
               onSelect={goto}
             />
           );

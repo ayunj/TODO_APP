@@ -7,7 +7,9 @@ import { useStore } from '@/lib/store';
 import type { DateStr, Task } from '@/lib/types';
 
 /**
- * 반복 기록 격자. 행 = 되풀이하는 일 하나, 열 = 그 폭의 하루하루.
+ * 기록 격자. 열 = 그 폭의 하루하루.
+ * 행은 **월간이 되풀이하는 일만**, **주간은 그 주에 있던 일 전부**다 —
+ * 열이 일곱뿐이라 자리가 넉넉하고, 한 주는 그만큼 훑는 자리다.
  * "이번 달에 청소를 몇 번 했나"를 세는 게 아니라 **흐름**이 보이게 하는 것.
  *
  * 그래서 **1~30 눈금을 안 그린다.** 숫자를 세려고 보는 화면이 아니다.
@@ -18,17 +20,19 @@ import type { DateStr, Task } from '@/lib/types';
 export default function HabitGrid({ spanTasks, days }: { spanTasks: Task[]; days: DateStr[] }) {
   const { presets, categoryOf } = useStore();
 
-  const rows = habitRows(spanTasks, presets, (id) => categoryOf(id).color);
   const today = todayStr();
   // 칸이 일곱이면 요일이 들어갈 만큼 넓다
   const weekly = days.length === 7;
+  // 주간은 한 번짜리 할 일도 행이 된다 — 한 주를 통째로 훑는 자리라서
+  const rows = habitRows(spanTasks, presets, (id) => categoryOf(id).color, weekly);
 
   if (rows.length === 0) {
     return (
       <div className="mt-2.5">
-        <EmptyBox title="아직 채운 칸이 없습니다">
-          주기를 정한 할 일이나 즐겨찾기에 넣어둔 일이 이 {weekly ? '주' : '달'}에 있으면, 하루씩
-          칸으로 칠해집니다.
+        <EmptyBox title={weekly ? '이 주는 비어 있습니다' : '아직 채운 칸이 없습니다'}>
+          {weekly
+            ? '할 일을 적어두면 한 일이 하루씩 칸으로 칠해집니다.'
+            : '주기를 정한 할 일이나 즐겨찾기에 넣어둔 일이 이 달에 있으면, 하루씩 칸으로 칠해집니다.'}
         </EmptyBox>
       </div>
     );
@@ -48,7 +52,7 @@ export default function HabitGrid({ spanTasks, days }: { spanTasks: Task[]; days
   return (
     <div className="mt-2.5 overflow-hidden rounded-card bg-card px-3 py-4 shadow-card">
       <div className="mb-3 flex items-center justify-between gap-2.5">
-        <b className="text-[12.5px] font-medium text-ink2">반복 기록</b>
+        <b className="text-[12.5px] font-medium text-ink2">{weekly ? '한 주 기록' : '반복 기록'}</b>
         <span className="flex items-center gap-[9px] text-[10.5px] text-ink3">
           <span className="inline-flex items-center gap-1">
             <i className="h-[9px] w-[9px] rounded-[3px] bg-ink3" />

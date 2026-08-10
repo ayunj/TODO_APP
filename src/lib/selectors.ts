@@ -102,6 +102,21 @@ export const matches = (
 export const sortTasks = (list: Task[]): Task[] =>
   [...list].sort((a, b) => b.priority - a.priority || a.createdAt.localeCompare(b.createdAt));
 
+/**
+ * 월별 달력 칸에 쓰는 순서 — **안 한 것이 먼저**다.
+ *
+ * 칸 하나에 세 줄까지만 보이는데, 완료한 것이 그 자리를 먼저 먹으면
+ * 정작 남은 일이 `+2` 뒤로 숨는다. 일별 화면과 같은 규칙이다 —
+ * 숨기지 않고 아래로 내린다.
+ */
+export const sortForCell = (list: Task[]): Task[] =>
+  [...list].sort(
+    (a, b) =>
+      Number(a.done) - Number(b.done) ||
+      b.priority - a.priority ||
+      a.createdAt.localeCompare(b.createdAt),
+  );
+
 export const tasksOn = (
   tasks: Task[],
   date: DateStr,
@@ -158,20 +173,27 @@ export interface HabitRow {
 }
 
 /**
- * 기록 탭 격자(`반복 기록`).
- * 행이 되는 조건 = 즐겨찾기에 있는 제목이거나, 그 달에 주기가 설정된 항목의 제목.
+ * 기록 탭 격자.
+ * 행이 되는 조건 = 즐겨찾기에 있는 제목이거나, 그 폭에 주기가 설정된 항목의 제목.
  * 제목이 같으면 한 행으로 묶는다 — 그래서 제목을 고치면 그 달 격자가 두 행으로 갈라진다.
+ *
+ * **주간만 이 조건을 안 건다**(`everyTitle`). 열이 일곱뿐이라 자리가 넉넉하고,
+ * 한 주에 한 번짜리 할 일 하나를 끝냈는데 화면이 비어 있으면
+ * 아무것도 안 한 것처럼 읽힌다 — 한 달치는 그러기엔 행이 너무 불어난다.
  */
 export function habitRows(
   spanTasks: Task[],
   presets: Preset[],
   colorOf: (categoryId: string) => string,
+  everyTitle = false,
 ): HabitRow[] {
   const isFrequent = (title: string) =>
     presets.some((p) => p.title === title) ||
     spanTasks.some((t) => t.title === title && t.repeatDays > 0);
 
-  const titles = [...new Set(spanTasks.map((t) => t.title))].filter(isFrequent);
+  const titles = [...new Set(spanTasks.map((t) => t.title))].filter(
+    (title) => everyTitle || isFrequent(title),
+  );
 
   return titles
     .map((title) => {
