@@ -34,7 +34,16 @@ export default function HabitGrid({ spanTasks, days }: { spanTasks: Task[]; days
     );
   }
 
-  const cols = { gridTemplateColumns: `repeat(${days.length},minmax(0,1fr))` };
+  /*
+    월간은 칸을 폭에 나눠 담지만, 주간은 일곱 칸뿐이라 그대로 나누면
+    한 칸이 60px 가까이 된다. 칸 크기를 묶어두고 남는 폭은 그냥 비워둔다 —
+    격자는 크게 그린다고 더 읽히는 그림이 아니다.
+  */
+  const cols = {
+    gridTemplateColumns: weekly
+      ? 'repeat(7,minmax(0,34px))'
+      : `repeat(${days.length},minmax(0,1fr))`,
+  };
 
   return (
     <div className="mt-2.5 overflow-hidden rounded-card bg-card px-3 py-4 shadow-card">
@@ -58,7 +67,7 @@ export default function HabitGrid({ spanTasks, days }: { spanTasks: Task[]; days
 
       {/* 주간에만 요일을 단다. 월간은 칸이 좁아 글자가 안 들어간다. */}
       {weekly && (
-        <span className="mb-1.5 grid text-[10.5px]" style={cols}>
+        <span className="mb-1.5 grid gap-[5px] text-[10px]" style={cols}>
           {days.map((d) => {
             const w = dowOf(d);
             return (
@@ -91,13 +100,13 @@ export default function HabitGrid({ spanTasks, days }: { spanTasks: Task[]; days
             칸에 최소 높이를 주면 aspect-square를 타고 최소 너비로 번져서
             좁은 화면에서 격자가 화면 밖으로 밀려난다. minmax(0,1fr)로 줄어들게 둔다.
           */}
-          <span className={`grid ${weekly ? 'gap-1' : 'gap-0.5'}`} style={cols}>
+          <span className={`grid ${weekly ? 'gap-[5px]' : 'gap-0.5'}`} style={cols}>
             {days.map((d) => {
               const st = r.mark[d];
               return (
                 <i
                   key={d}
-                  className={`aspect-square bg-sunk ${weekly ? 'rounded-[5px]' : 'rounded-[2px]'} ${
+                  className={`aspect-square bg-sunk ${weekly ? 'rounded-[7px]' : 'rounded-[2px]'} ${
                     d === today ? 'shadow-[0_0_0_1.5px_var(--ink2)]' : ''
                   }`}
                   style={
