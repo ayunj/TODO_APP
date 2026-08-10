@@ -215,7 +215,7 @@ function CategoryForm({ category }: { category: Category }) {
           </Group>
           <Note>
             {used || inPresets
-              ? `${fallback.name}(으)로 옮겨져요. 없어지는 할 일은 없습니다.`
+              ? `${fallback.name}(으)로 옮겨져요.`
               : '여기에 든 것이 없어요.'}
           </Note>
         </div>

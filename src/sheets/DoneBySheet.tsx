@@ -50,11 +50,7 @@ export default function DoneBySheet({ id }: { id: string }) {
             ))}
           </div>
 
-          <p className="ml-1 mt-3 text-[11.5px] leading-[1.6] text-ink3">
-            체크한 사람이 먼저 찍혀 있어요. 다르면 눌러서 바꿉니다.
-          </p>
-
-          <div className="mt-4">
+          <div className="mt-5">
             <GoButton onClick={save}>저장</GoButton>
           </div>
         </>

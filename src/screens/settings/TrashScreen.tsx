@@ -98,7 +98,7 @@ export default function TrashScreen({ scope, id }: { scope: TrashScope; id: stri
 
       {rows.length > 0 && (
         <p className="ml-1 mt-3 text-[11.5px] leading-[1.6] text-ink3">
-          되돌리면 있던 자리로 그대로 돌아가요. 30일이 지나면 사라집니다.
+          30일이 지나면 사라져요.
         </p>
       )}
     </>

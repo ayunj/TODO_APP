@@ -96,7 +96,7 @@ export default function HandoverScreen({ id }: { id: string }) {
           <br />
           <span className="text-ink3">
             {countHere ? `${room.name} 것 ${countHere}개가 ` : `${room.name}이 `}내 폰에서
-            없어지고, 남은 사람들은 쓰던 대로 씁니다.
+            없어집니다.
           </span>
         </p>
       )}

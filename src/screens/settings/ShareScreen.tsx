@@ -55,7 +55,7 @@ export default function ShareScreen() {
       </div>
 
       {rooms.length === 0 && (
-        <Note>방을 만들어 같이 쓰거나, 받은 코드로 남의 방에 들어갈 수 있어요.</Note>
+        <Note>방을 만들거나, 받은 코드로 들어갈 수 있어요.</Note>
       )}
     </>
   );

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Sheet from '@/components/Sheet';
-import { GoButton, Hint } from '@/components/form';
+import { GoButton } from '@/components/form';
 import { bandOf } from '@/lib/constants';
 import { useRooms } from '@/lib/rooms';
 import { useStore } from '@/lib/store';
@@ -87,11 +87,10 @@ export default function MemoRoomsSheet({ id }: { id: string }) {
             })}
           </div>
 
-          <Hint>한 장을 여러 방에 둬도 내용은 하나예요.</Hint>
           {/* 내리는 것은 지우는 것과 다르다. 다른 사람 화면에서만 사라진다는 걸 미리 말한다. */}
           {dropped > 0 && (
-            <p className="-mt-2.5 mb-4 text-[11.5px] leading-[1.6] text-high">
-              내리면 그 방 사람들에게서는 사라져요. 내 메모는 그대로 있습니다.
+            <p className="mb-4 text-[11.5px] leading-[1.6] text-high">
+              내리면 그 방 사람들에게서만 사라져요.
             </p>
           )}
 

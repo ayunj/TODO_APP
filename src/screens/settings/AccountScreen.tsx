@@ -23,10 +23,7 @@ export default function AccountScreen() {
         </span>
       </div>
 
-      <Hint>
-        적어둔 것은 계정에 저장됩니다. 폰을 바꾸거나 브라우저를 비워도 그대로 있고, 다른 기기에서
-        같은 계정으로 들어오면 이어집니다.
-      </Hint>
+      <Hint>적어둔 것은 계정에 저장돼요. 다른 기기에서 들어와도 이어집니다.</Hint>
 
       <DangerButton
         onClick={() => {

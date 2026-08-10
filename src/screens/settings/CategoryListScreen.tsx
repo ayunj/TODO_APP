@@ -71,7 +71,7 @@ export default function CategoryListScreen() {
       </div>
 
       {shared > 0 && (
-        <Note>나눈 카테고리는 그 방 사람들과 함께 봅니다. 지운 것도 방 설정에 모여요.</Note>
+        <Note>나눈 카테고리는 그 방 사람들과 함께 봐요.</Note>
       )}
 
       <div className="mt-4">

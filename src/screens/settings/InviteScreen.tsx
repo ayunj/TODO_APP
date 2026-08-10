@@ -81,8 +81,7 @@ export default function InviteScreen({ id }: { id: string }) {
       </div>
 
       <p className="mt-3 ml-1 text-[11.5px] leading-[1.6] text-ink3">
-        기한은 없어요. 코드를 아는 사람은 누구나 들어옵니다. 찜찜하면 방 설정에서{' '}
-        <b>코드 새로 만들기</b>로 그전 것을 막습니다.
+        코드를 아는 사람은 누구나 들어와요. 방 설정에서 <b>코드 새로 만들기</b>로 막습니다.
       </p>
     </>
   );

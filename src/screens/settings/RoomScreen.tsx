@@ -111,7 +111,7 @@ function CreateRoom() {
         <ShareBox value={shares} onChange={setSharesValue} categories={mine} />
       </div>
 
-      <Hint>지금 있는 것은 그대로 있어요. 나중에 하나씩 올릴 수 있습니다.</Hint>
+      <Hint>나중에 하나씩 더 올릴 수 있어요.</Hint>
 
       <GoButton onClick={submit} disabled={busy}>
         {busy ? '만드는 중…' : '만들기'}
@@ -355,8 +355,8 @@ function RoomSettings({ id }: { id: string }) {
       </div>
       <Note>
         {room.mine
-          ? '그만 나누면 방이 끝나요. 나눈 것은 도로 내 것이 되고, 내 목록에서는 아무것도 사라지지 않습니다.'
-          : '이 폰에서만 사라져요. 다시 코드로 들어오면 돌아옵니다.'}
+          ? '그만 나누면 방이 끝나요. 나눈 것은 도로 내 것이 됩니다.'
+          : '이 폰에서만 사라져요. 코드로 다시 들어올 수 있습니다.'}
       </Note>
     </>
   );

@@ -81,9 +81,7 @@ export default function RoomSharesScreen({ id }: { id: string }) {
 
       <ShareBox value={value} onChange={apply} categories={pickable} busy={busy} />
 
-      <Note>
-        끈 것은 담을 때 뜨는 목록에 아예 안 나와요. 고를 수 없으니 잘못 누를 일도 없습니다.
-      </Note>
+      <Note>끈 것은 담을 때 목록에 안 나와요.</Note>
     </>
   );
 }
