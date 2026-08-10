@@ -1,6 +1,7 @@
 'use client';
 
 import ScrollRow from '@/components/ScrollRow';
+import { useTaskFilter } from '@/lib/filter';
 import { presetsFor } from '@/lib/selectors';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
@@ -8,8 +9,9 @@ import { useUi } from '@/lib/ui';
 /** 누르면 그날 목록에 바로 추가. 필터가 켜져 있으면 그 카테고리 것만 보인다. */
 export default function PresetChips() {
   const { presets, categoryOf, applyPreset } = useStore();
-  const { cursor, filter, openSheet } = useUi();
-  const list = presetsFor(presets, filter);
+  const { cursor, openSheet } = useUi();
+  const { cats } = useTaskFilter();
+  const list = presetsFor(presets, cats);
 
   return (
     <ScrollRow className="mb-[14px]">

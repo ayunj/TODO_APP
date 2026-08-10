@@ -2,6 +2,7 @@
 
 import TaskRow from './TaskRow';
 import { todayStr } from '@/lib/date';
+import { useTaskFilter } from '@/lib/filter';
 import { staleTasks } from '@/lib/selectors';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
@@ -9,8 +10,9 @@ import { useUi } from '@/lib/ui';
 /** 오늘 화면 맨 아래 접힌 상태로. 빨갛게 강조하지 않는다. */
 export default function StaleSection() {
   const { tasks } = useStore();
-  const { filter, who } = useUi();
-  const stale = staleTasks(tasks, todayStr(), filter, who);
+  const { who } = useUi();
+  const { cats } = useTaskFilter();
+  const stale = staleTasks(tasks, todayStr(), cats, who);
 
   if (stale.length === 0) return null;
 

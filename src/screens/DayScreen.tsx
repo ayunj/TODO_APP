@@ -8,24 +8,26 @@ import TaskRow from './day/TaskRow';
 import StaleSection from './day/StaleSection';
 import EmptyBox from '@/components/EmptyBox';
 import { todayStr } from '@/lib/date';
+import { useTaskFilter } from '@/lib/filter';
 import { canPostpone, sortTasks, tasksOn } from '@/lib/selectors';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 
 /** 일별 — 진행 스트립 / 즐겨찾기 칩 / 목록 / 지난 미완료 */
 export default function DayScreen() {
-  const { tasks, categoryOf } = useStore();
-  const { cursor, filter, who, openSheet } = useUi();
+  const { tasks } = useStore();
+  const { cursor, who, openSheet } = useUi();
+  const { cats, name } = useTaskFilter();
   const today = todayStr();
 
   const { open, shut, total } = useMemo(() => {
-    const all = tasksOn(tasks, cursor, filter, who);
+    const all = tasksOn(tasks, cursor, cats, who);
     return {
       open: sortTasks(all.filter((t) => !t.done)),
       shut: all.filter((t) => t.done),
       total: all.length,
     };
-  }, [tasks, cursor, filter]);
+  }, [tasks, cursor, cats, who]);
 
   return (
     <>
@@ -36,8 +38,8 @@ export default function DayScreen() {
       {total === 0 ? (
         <EmptyBox
           title={
-            filter
-              ? `${categoryOf(filter).name} 할 일이 없습니다`
+            name
+              ? `${name} 할 일이 없습니다`
               : cursor === today
                 ? '오늘은 아직 비어 있습니다'
                 : '이 날은 비어 있습니다'

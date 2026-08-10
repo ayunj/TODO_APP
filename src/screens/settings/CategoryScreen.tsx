@@ -91,7 +91,7 @@ function CategorySettings({ id }: { id: string }) {
 function CategoryForm({ category }: { category: Category }) {
   const { categories, tasks, presets, trash, updateCategory, removeCategory } = useStore();
   const { rooms } = useRooms();
-  const { filter, setFilter, popView, pushView } = useUi();
+  const { filter, setScope, popView, pushView } = useUi();
 
   const [name, setName] = useState(category.name);
 
@@ -129,7 +129,8 @@ function CategoryForm({ category }: { category: Category }) {
     if (!yes) return;
 
     const moved = removeCategory(category.id);
-    if (filter === category.id) setFilter(null);
+    // 지운 것을 보고 있었으면 안 가린 자리로 되돌린다 — 마지막 하나였으면 묶음까지 사라진다
+    if (filter === category.id) setScope('all');
     toast(moved ? `${category.name} 삭제 — ${moved}개 옮김` : `${category.name} 삭제`);
     popView();
   };

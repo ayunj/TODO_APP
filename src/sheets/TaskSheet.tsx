@@ -5,6 +5,7 @@ import Sheet from '@/components/Sheet';
 import { DangerButton, GoButton } from '@/components/form';
 import TaskFormFields, { type FormValue } from './TaskFormFields';
 import { shortDate } from '@/lib/date';
+import { useTaskFilter } from '@/lib/filter';
 import { toast } from '@/lib/toast';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
@@ -12,7 +13,9 @@ import { useUi } from '@/lib/ui';
 export default function TaskSheet({ id }: { id: string | null }) {
   const { tasks, presets, categories, categoryOf, addTask, updateTask, removeTask, addPreset } =
     useStore();
-  const { cursor, filter, closeSheet, setCursor } = useUi();
+  const { cursor, closeSheet, setCursor } = useUi();
+  // 보고 있던 자리에서 적는다 — 우리집을 보다가 적으면 우리집 카테고리로 시작한다
+  const { cats } = useTaskFilter();
 
   const editing = id ? (tasks.find((t) => t.id === id) ?? null) : null;
   // 방 것일 때만 콕 자리가 생긴다 — 찌를 상대가 있어야 뜻이 있다
@@ -21,7 +24,7 @@ export default function TaskSheet({ id }: { id: string | null }) {
   const [value, setValue] = useState<FormValue>(() => ({
     title: editing?.title ?? '',
     // 카테고리 id는 기기마다 새로 매겨진다 — 고정된 이름을 기본값으로 두면 안 된다
-    categoryId: editing?.categoryId ?? filter ?? categories[0]?.id ?? '',
+    categoryId: editing?.categoryId ?? cats?.[0] ?? categories[0]?.id ?? '',
     priority: editing?.priority ?? 2,
     date: editing?.date ?? cursor,
     repeatDays: editing?.repeatDays ?? 0,

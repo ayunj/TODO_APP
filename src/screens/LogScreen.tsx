@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import CategoryBars from './log/CategoryBars';
 import HabitGrid from './log/HabitGrid';
 import { addDays, daysFrom, daysInMonth, monthStart, weekStartOf } from '@/lib/date';
+import { useTaskFilter } from '@/lib/filter';
 import { tasksInMonth, tasksInRange } from '@/lib/selectors';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
@@ -15,7 +16,8 @@ import { useUi } from '@/lib/ui';
  */
 export default function LogScreen() {
   const { tasks, weekStart } = useStore();
-  const { cursor, filter, who, logSpan, setLogSpan } = useUi();
+  const { cursor, who, logSpan, setLogSpan } = useUi();
+  const { cats } = useTaskFilter();
 
   const weekly = logSpan === 'week';
   const from = weekly ? weekStartOf(cursor, weekStart) : monthStart(cursor);
@@ -27,9 +29,9 @@ export default function LogScreen() {
   const spanTasks = useMemo(
     () =>
       weekly
-        ? tasksInRange(tasks, from, addDays(from, 6), filter, who)
-        : tasksInMonth(tasks, cursor, filter, who),
-    [weekly, tasks, from, cursor, filter, who],
+        ? tasksInRange(tasks, from, addDays(from, 6), cats, who)
+        : tasksInMonth(tasks, cursor, cats, who),
+    [weekly, tasks, from, cursor, cats, who],
   );
 
   const done = spanTasks.filter((t) => t.done).length;

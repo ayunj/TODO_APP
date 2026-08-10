@@ -70,6 +70,11 @@ h1{font-size:19px; margin:0 0 6px; font-weight:700}
 .chip.room-work{background:var(--room-work-t); color:var(--room-work)}
 .chip.room-work.on{background:var(--room-work); color:#fff}
 .sep{flex:none; width:1px; align-self:stretch; margin:5px 3px; background:var(--line)}
+/* 묶음 안으로 들어갔을 때 — 나가는 화살표와 지금 자리 이름 */
+.backchip{flex:none; width:30px; margin-left:-4px; display:grid; place-items:center; font-size:17px; color:var(--ink2)}
+.where{flex:none; display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:500}
+.where .ic{width:13px; height:13px; opacity:1}
+.chip.turn-on{background:var(--accent-tint); color:var(--accent)}
 .chipbox{overflow-x:auto; scrollbar-width:none; padding-bottom:13px}
 .chipbox::-webkit-scrollbar{display:none}
 .chipbox .row{overflow:visible; padding-bottom:0}
@@ -290,19 +295,18 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
 <div class="deck">
 
   <div class="slot">
-    <h3><span class="dn">만듦</span>오늘 — 내 것과 방 것이 섞인다</h3>
-    <p class="why">방으로 화면을 가르지 않는다. <b>오늘 할 일은 집 것도 회사 것도 오늘 한다.</b></p>
+    <h3><span class="dn">만듦</span><span class="st">★</span>오늘 — 내 것과 방 것이 섞인다</h3>
+    <p class="why">방으로 화면을 가르지 않는다. <b>오늘 할 일은 집 것도 회사 것도 오늘 한다.</b>
+      맨 윗줄은 <b>묶음</b>만 — 방 칩은 가르는 벽이 아니라 좁히는 손잡이다.</p>
     <div class="phone">
       <div class="bar"><b>오늘</b><span class="day">8. 7. (금)</span><span class="gear" style="margin-left:9px">⚙</span></div>
       <div class="body">
         <div class="row">
           <button class="chip on">전체</button>
-          <button class="chip" style="background:var(--c-body-t);color:var(--c-body)">건강</button>
+          <button class="chip mine">나만</button>
           <span class="sep"></span>
-          <button class="chip" style="background:var(--c-home-t);color:var(--c-home)">집안일 <svg class="ic"><use href="#ic-people"/></svg></button>
-          <button class="chip" style="background:var(--c-shop-t);color:var(--c-shop)">장보기 <svg class="ic"><use href="#ic-people"/></svg></button>
-          <span class="sep"></span>
-          <button class="chip" style="background:var(--c-plan-t);color:var(--c-plan)">기획서 <svg class="ic"><use href="#ic-people"/></svg></button>
+          <button class="chip room-home">우리집 <svg class="ic"><use href="#ic-people"/></svg></button>
+          <button class="chip room-work">회사 <svg class="ic"><use href="#ic-people"/></svg></button>
         </div>
         <div class="strip">
           <div class="top"><span class="say">다섯 가지 중에 두 가지 했어요</span><span class="num"><b>2</b> / 5</span></div>
@@ -372,25 +376,21 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3><span class="dn">만듦</span>사람 줄은 고른 칩 밑에서 열린다</h3>
-    <p class="why">사람 칩을 늘 띄우면 혼자 쓰는 날에도 자리를 먹는다. <b>고른 카테고리 가운데 밑</b>에서 열린다.</p>
+    <h3><span class="dn">만듦</span><span class="st">★</span>방을 누르면 그 줄이 안으로 갈린다</h3>
+    <p class="why"><b>줄이 쌓이는 게 아니라 바뀐다.</b> 카테고리를 다 늘어놓고 방 이름표를 세우면
+      방이 둘일 때 정작 누를 칩이 화면 밖으로 밀린다. <code>‹</code>로 나온다.</p>
     <div class="phone">
       <div class="bar"><b>오늘</b><span class="day">8. 7. (금)</span><span class="gear" style="margin-left:9px">⚙</span></div>
       <div class="body">
-        <div class="chipbox">
-          <div class="row">
-            <button class="chip">전체</button>
-            <button class="chip" style="background:var(--c-body-t);color:var(--c-body)">건강</button>
-            <span class="sep"></span>
-            <button class="chip on" style="background:var(--c-home);color:#fff">집안일 <svg class="ic"><use href="#ic-people"/></svg></button>
-            <button class="chip" style="background:var(--c-plan-t);color:var(--c-plan)">기획서 <svg class="ic"><use href="#ic-people"/></svg></button>
-          </div>
-          <div class="row2" style="margin-left:101px">
-            <button class="chip">전체</button>
-            <span class="sep"></span>
-            <button class="chip on">나</button>
-            <button class="chip">남편</button>
-          </div>
+        <div class="row">
+          <span class="backchip">‹</span>
+          <span class="where" style="color:var(--room-home)"><svg class="ic"><use href="#ic-people"/></svg>우리집</span>
+          <span class="sep"></span>
+          <button class="chip on">전체</button>
+          <button class="chip" style="background:var(--c-home-t);color:var(--c-home)">집안일</button>
+          <button class="chip" style="background:var(--c-shop-t);color:var(--c-shop)">장보기</button>
+          <span class="sep"></span>
+          <button class="chip turn-on">내 차례</button>
         </div>
         <ul class="list">
           <li class="task">
@@ -585,8 +585,9 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
       <div class="body">
         <div class="row">
           <button class="chip on">전체</button>
+          <button class="chip mine">나만</button>
           <span class="sep"></span>
-          <button class="chip" style="background:var(--c-home-t);color:var(--c-home)">집안일 <svg class="ic"><use href="#ic-people"/></svg></button>
+          <button class="chip room-home">우리집 <svg class="ic"><use href="#ic-people"/></svg></button>
         </div>
         <div class="banner">
           <span class="cchip" style="background:var(--c-home-t);color:#5f9e88">집안일</span>
@@ -711,10 +712,10 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
       <div class="body">
         <div class="row">
           <button class="chip on">전체</button>
-          <button class="chip" style="background:var(--c-body-t);color:var(--c-body)">건강</button>
+          <button class="chip mine">나만</button>
           <span class="sep"></span>
-          <button class="chip" style="background:var(--c-home-t);color:var(--c-home)">집안일 <svg class="ic"><use href="#ic-people"/></svg></button>
-          <button class="chip" style="background:var(--c-plan-t);color:var(--c-plan)">기획서 <svg class="ic"><use href="#ic-people"/></svg></button>
+          <button class="chip room-home">우리집 <svg class="ic"><use href="#ic-people"/></svg></button>
+          <button class="chip room-work">회사 <svg class="ic"><use href="#ic-people"/></svg></button>
         </div>
         <div class="cal" style="margin-bottom:2px">
           <span class="dow sun">일</span><span class="dow">월</span><span class="dow">화</span>
@@ -1572,7 +1573,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
     <li><b>지운 것 — 30일.</b> 방 설정과 카테고리 설정, 장보기·메모 화면 맨 아래</li>
     <li><b>배정이 붙었다.</b> 담당자는 계정으로 담고 이름은 그릴 때 찾는다.
       반복에 붙으면 <b>교대</b>가 된다(이번만·같은 사람·번갈아).
-      고른 카테고리 칩 밑에서 <b>사람 줄</b>이 열려 차례로 거를 수 있다.
+      거르는 자리는 방 안에 들어갔을 때 붙는 <code>내 차례</code> 토글 하나다.
       <b>콕 찌르기는 자리만</b> 잡아뒀다 — 누르면 아직 준비 중이라고만 한다</li>
     <li><b>앱 설정은 반만이다.</b> 주 시작은 달력과 주간 격자를 실제로 움직이는데,
       <b>알림은 시각만 담아두고 아직 안 울린다</b></li>
@@ -1583,6 +1584,17 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
 
   <h3><span class="st">★</span> 이번에 바뀐 것</h3>
   <ul>
+    <li><b>필터 줄이 한 줄로 안팎을 오간다.</b> 평소엔 묶음(<code>전체 · 나만 │ 방들</code>)만 보이고,
+      방을 누르면 그 줄이 그 방 카테고리로 갈린다. <code>‹</code>로 나온다.
+      전에는 카테고리를 한 줄에 다 늘어놓고 묶음마다 방 이름표를 세웠는데
+      <b>방이 둘이면 정작 누를 칩이 화면 밖으로 밀렸다.</b>
+      방을 윗줄로 올리는 두 줄 안도 그려봤지만 <b>좁히자고 헤더가 두꺼워지는 건 거꾸로다</b>.
+      윗줄 모양이 장보기·메모 칩 줄과 같아진 것은 덤이다</li>
+    <li><b>사람마다 거르는 줄을 <code>내 차례</code> 토글 하나로 줄였다.</b>
+      실제로 쓰는 건 내 차례만 보기 하나였고, 남의 차례만 골라 보는 건 감시에 가깝다.
+      <b>나 말고 사람이 있는 방</b>에서만 뜬다. 배정 자체는 그대로다</li>
+    <li><b>들어가 봤자 고를 게 없으면 안 들어간다.</b> 카테고리가 하나뿐이고 혼자 쓰는 방은
+      칩만 켜진다. 묶음이 내 것 하나뿐인 사람(방을 안 쓰는 사람)에게는 예전 그대로 한 줄이다</li>
     <li><b>콕 찌르기를 시트 제목 줄 오른쪽에 작게 얹었다.</b> 제목 줄은 이미 있는 줄이고
       오른쪽이 늘 비어 있어서 <b>시트가 한 줄도 안 길어진다</b>.
       차례 칩 누르기는 지름길로 남긴다</li>

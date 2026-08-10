@@ -2,11 +2,18 @@
 
 import { createContext, useContext, useMemo, useState } from 'react';
 import { todayStr } from './date';
-import type { Filter } from './selectors';
 import type { DateStr, TrashScope, ViewKind } from './types';
 
 /** 탭 셋. 밀고 들어간 화면을 다 빠져나오면 여기로 돌아온다. */
 export type Tab = 'day' | 'month' | 'log';
+
+/**
+ * 카테고리 줄이 보고 있는 **묶음**.
+ * `all` 안 가림 · `mine` 아무 방에도 안 건 것 · `stray` 아직 못 받아온 방 것 · 그 밖엔 방 id.
+ *
+ * 장보기·메모 칩 줄(`ScopeChips`)과 같은 말이다 — 세 화면에서 같은 줄을 세 가지로 배우지 않게.
+ */
+export type Scope = 'all' | 'mine' | 'stray' | (string & {});
 
 /**
  * 기록 탭이 보는 폭.
@@ -78,12 +85,19 @@ interface UiValue {
   /** 지금 보고 있는 날 (월·기록 탭에서는 그 달의 아무 날) */
   cursor: DateStr;
   setCursor: (d: DateStr) => void;
-  /** 새로고침하면 전체로 돌아간다 — 그래서 저장하지 않는다 */
-  filter: Filter;
-  setFilter: (f: Filter) => void;
   /**
-   * 누구 차례만 볼지 — null이면 전체.
-   * 공유 카테고리를 골랐을 때만 뜻이 있다. 카테고리를 바꾸면 저절로 풀린다.
+   * 지금 들어와 있는 묶음. 새로고침하면 전체로 돌아간다 — 그래서 저장하지 않는다.
+   * 묶음을 옮기면 그 안에서 고른 것과 `내 차례`가 같이 풀린다.
+   */
+  scope: Scope;
+  setScope: (s: Scope) => void;
+  /** 묶음 안에서 카테고리 하나를 더 고른 것. null이면 그 묶음 전체 */
+  filter: string | null;
+  setFilter: (f: string | null) => void;
+  /**
+   * 누구 차례만 볼지 — null이면 안 가림, 값이 있으면 내 계정 id다.
+   * `내 차례` 토글이 넣는다. 사람마다 거르는 줄은 없앴다 —
+   * 남의 차례만 골라 보는 건 감시에 가깝고, 실제로 쓰는 건 내 차례 하나뿐이었다.
    */
   who: string | null;
   setWho: (id: string | null) => void;
@@ -101,7 +115,8 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
   const [tab, setTabState] = useState<Tab>('day');
   const [stack, setStack] = useState<Route[]>([]);
   const [cursor, setCursor] = useState<DateStr>(() => todayStr());
-  const [filter, setFilterState] = useState<Filter>(null);
+  const [scope, setScopeState] = useState<Scope>('all');
+  const [filter, setFilterState] = useState<string | null>(null);
   const [who, setWho] = useState<string | null>(null);
   const [logSpan, setLogSpan] = useState<LogSpan>('month');
   const [sheet, setSheet] = useState<Sheet | null>(null);
@@ -123,12 +138,15 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
       replaceView: (r) => setStack((s) => [...s.slice(0, -1), r]),
       cursor,
       setCursor,
-      filter,
-      // 카테고리를 옮기면 사람 줄이 닫힌다 — 방마다 사람이 달라 그대로 둘 수 없다
-      setFilter: (f) => {
+      scope,
+      // 묶음을 옮기면 그 안에서 고른 것이 없는 것이 된다 — 방마다 카테고리도 사람도 다르다
+      setScope: (s) => {
+        setFilterState(null);
         setWho(null);
-        setFilterState(f);
+        setScopeState(s);
       },
+      filter,
+      setFilter: setFilterState,
       who,
       setWho,
       logSpan,
@@ -137,7 +155,7 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
       openSheet: setSheet,
       closeSheet: () => setSheet(null),
     }),
-    [tab, stack, route, cursor, filter, who, logSpan, sheet],
+    [tab, stack, route, cursor, scope, filter, who, logSpan, sheet],
   );
 
   return <UiContext.Provider value={value}>{children}</UiContext.Provider>;

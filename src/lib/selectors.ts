@@ -84,19 +84,25 @@ export function trashOf(
 export const onShopList = (item: ShopItem, today: DateStr): boolean =>
   !item.done || item.boughtOn === today;
 
-/** 필터가 null이면 전체 */
-export type Filter = string | null;
+/**
+ * 걸린 카테고리들. `null`이면 안 가린다.
+ *
+ * 하나가 아니라 여럿인 까닭은 **묶음으로도 거르기 때문**이다 —
+ * `우리집`을 고르면 그 방 카테고리가 다 걸리고, 그 안에서 하나를 더 고르면 그것만 걸린다.
+ * 무엇이 담기는지는 `useTaskFilter()`가 정한다.
+ */
+export type Filter = string[] | null;
 
 /**
  * 카테고리로 한 번, 담당자로 한 번 거른다.
- * `who`는 공유 카테고리를 골랐을 때만 값이 있다 — 카테고리를 옮기면 저절로 풀린다.
+ * `who`는 `내 차례`를 켰을 때 내 계정 id다 — 묶음을 옮기면 저절로 풀린다.
  */
 export const matches = (
   task: { categoryId: string; assigneeId?: string | null },
   filter: Filter,
   who: string | null = null,
 ): boolean =>
-  (!filter || task.categoryId === filter) && (!who || task.assigneeId === who);
+  (!filter || filter.includes(task.categoryId)) && (!who || task.assigneeId === who);
 
 /** 우선순위 높은 순, 같으면 만든 순 */
 export const sortTasks = (list: Task[]): Task[] =>
