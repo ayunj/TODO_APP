@@ -136,12 +136,16 @@ function CategoryForm({ category }: { category: Category }) {
 
   const inPresets = presets.filter((p) => p.categoryId === category.id).length;
   /*
-    공유 카테고리에는 이 줄이 없다 — 그 지운 것은 방 설정에 모인다.
-    방 하나가 여러 카테고리에 걸쳐 있어서, 카테고리마다 흩어놓으면
-    남이 지운 걸 찾으러 세 군데를 돌아야 한다.
+    지운 것이 **모이는 자리**는 카테고리냐 방이냐로 갈린다.
+    방 하나가 여러 카테고리에 걸쳐 있어서, 방 것을 카테고리마다 흩어놓으면
+    남이 지운 걸 찾으러 세 군데를 돌아야 한다. 그래서 방 것은 방 설정에 모은다.
+
+    그렇다고 이 화면에서 줄을 빼버리면 **없어진 걸 찾는 사람이 여기서 막힌다.**
+    모이는 자리는 그대로 두고, 여기서는 그 자리로 보내준다.
   */
-  const buried = category.roomId
-    ? []
+  const shared = Boolean(category.roomId);
+  const buried = shared
+    ? trash.filter((t) => t.roomId === category.roomId)
     : trash.filter((t) => t.kind === 'task' && !t.roomId && t.categoryId === category.id);
 
   return (
@@ -181,19 +185,24 @@ function CategoryForm({ category }: { category: Category }) {
 
       {/*
         비어 있어도 줄은 둔다. 없어진 걸 찾는 사람은 이미 급한 참이라
-        그때 처음 보이는 줄로는 늦다 — **평소에 한 번 봐둬야 어디 있는지 안다.**
-        공유 카테고리에만 이 줄이 없다. 그 지운 것은 방 설정에 모인다.
+        그때 처음 보이는 줄로는 늦다 — 평소에 한 번 봐둬야 어디 있는지 안다.
       */}
-      {!category.roomId && (
-        <Group>
-          <Row
-            value={`${buried.length}개`}
-            onClick={() => pushView({ kind: 'trash', scope: 'category', id: category.id })}
-          >
-            지운 것
-          </Row>
-        </Group>
-      )}
+      <Group>
+        <Row
+          value={`${buried.length}개`}
+          onClick={() =>
+            pushView(
+              shared
+                ? { kind: 'trash', scope: 'room', id: category.roomId! }
+                : { kind: 'trash', scope: 'category', id: category.id },
+            )
+          }
+        >
+          지운 것
+        </Row>
+      </Group>
+      {/* 나눈 카테고리에서 누르면 방 것이 다 보인다 — 그게 한자리에 모아둔 곳이다 */}
+      {shared && room && <Note>{room.name} 방에서 지운 것이 다 모여 있어요.</Note>}
 
       {/*
         지우는 줄은 한 칸 떼어 둔다 — 위의 값들과 같은 무게로 읽히면 안 되는 것이다.
