@@ -1,6 +1,23 @@
 import { addDays, monthKey } from './date';
 import type { DateStr, Memo, Preset, ShopItem, Task, Trashed } from './types';
 
+/**
+ * 내가 손볼 수 있는 카테고리 — 개인 것과 **내가 연 방**에 내가 나눈 것.
+ *
+ * 남이 연 방에서 나눠준 것은 그 방을 연 사람 것이다. 이름이나 색을 손대면
+ * 방 사람들 화면이 다 같이 바뀐다. 쓰는 데는 그대로고(필터에도 뜨고 할 일도 담긴다)
+ * **고치는 자리에만** 없다.
+ *
+ * 어느 방인지 모르겠으면 뺀다 — 못 받아온 방일 수도 나간 방일 수도 있는데
+ * 둘 다 내가 고칠 것은 아니다.
+ *
+ * 설정 첫 화면의 개수와 목록이 같은 것을 세야 해서 여기 한 벌만 둔다.
+ */
+export const myCategories = <C extends { roomId: string | null }>(
+  categories: C[],
+  rooms: { id: string; mine: boolean }[],
+): C[] => categories.filter((c) => !c.roomId || rooms.some((r) => r.id === c.roomId && r.mine));
+
 /** 살아 있는 것 — 지운 것은 화면 어디에도 안 나온다 */
 export const alive = <T extends { deletedAt: string | null }>(rows: T[]): T[] =>
   rows.filter((r) => !r.deletedAt);

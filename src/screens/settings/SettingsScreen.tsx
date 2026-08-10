@@ -4,6 +4,7 @@ import PageBar from '@/components/PageBar';
 import { Group, Row } from '@/components/rows';
 import { useAuth } from '@/lib/auth';
 import { useRooms } from '@/lib/rooms';
+import { myCategories } from '@/lib/selectors';
 import { useStore } from '@/lib/store';
 import { toast } from '@/lib/toast';
 import { useUi } from '@/lib/ui';
@@ -37,7 +38,11 @@ export default function SettingsScreen() {
         <Row value={`${presets.length}개`} onClick={() => pushView({ kind: 'presetList' })}>
           즐겨찾기
         </Row>
-        <Row value={`${categories.length}개`} onClick={() => pushView({ kind: 'categoryList' })}>
+        {/* 들어가면 보일 것과 같은 수를 적는다 — 남이 연 방 것은 그 자리에도 없다 */}
+        <Row
+          value={`${myCategories(categories, rooms).length}개`}
+          onClick={() => pushView({ kind: 'categoryList' })}
+        >
           카테고리
         </Row>
         <Row value="주 시작 · 알림" onClick={() => pushView({ kind: 'prefs' })}>

@@ -6,6 +6,7 @@ import { GoButton } from '@/components/form';
 import { Group, Note, Row } from '@/components/rows';
 import { tintOf } from '@/lib/constants';
 import { useRooms } from '@/lib/rooms';
+import { myCategories } from '@/lib/selectors';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 
@@ -28,18 +29,8 @@ export default function CategoryListScreen() {
   const { rooms } = useRooms();
   const { pushView } = useUi();
 
-  /*
-    여기 오르는 것은 **내가 손볼 수 있는 것**뿐이다 —
-    개인 카테고리와, 내가 연 방에 내가 나눈 것.
-
-    어느 방인지 모르겠으면 안 그린다. 못 받아온 방일 수도 나간 방일 수도 있는데
-    둘 다 내가 고칠 것은 아니다. 모르면서 고치게 두는 쪽이 더 나쁘다.
-  */
-  const mine = (c: { roomId: string | null }) =>
-    !c.roomId || rooms.find((r) => r.id === c.roomId)?.mine === true;
-
-  const list = categories.filter(mine);
-  const hidden = categories.length - list.length;
+  // 여기 오르는 것은 **내가 손볼 수 있는 것**뿐이다. 세는 규칙은 설정 첫 화면과 한 벌이다.
+  const list = myCategories(categories, rooms);
   const shared = list.filter((c) => c.roomId).length;
 
   return (
@@ -81,13 +72,6 @@ export default function CategoryListScreen() {
 
       {shared > 0 && (
         <Note>나눈 카테고리는 그 방 사람들과 함께 봅니다. 지운 것도 방 설정에 모여요.</Note>
-      )}
-      {/* 필터 줄에는 보이는데 여기엔 없으니, 어디 갔는지 한 줄로 말해준다 */}
-      {hidden > 0 && (
-        <Note>
-          남이 연 방에서 나눠준 카테고리 {hidden}개는 여기 없어요. 그 방을 연 사람이 손봅니다 —
-          쓰는 데는 그대로예요.
-        </Note>
       )}
 
       <div className="mt-4">
