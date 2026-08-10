@@ -20,14 +20,45 @@ create table if not exists rooms (
   name       text not null,
   -- 방 칩·배지 색. 팔레트에서 고른 HEX. 카테고리와 같은 팔레트를 쓴다.
   color      text not null default '#A9B8F4',
-  -- 초대 링크에 실리는 값. 이름이 곧 열쇠라 짐작하기 어렵게 랜덤으로 만든다.
-  -- uuid에서 하이픈만 뺀다 — pgcrypto 같은 확장을 안 써도 되고 주소에서도 안 깨진다.
+  -- 초대장에 실리는 값. 아래 make_join_code()가 넣는다 (표를 만든 뒤에 기본값을 건다).
   join_code  text not null unique default replace(gen_random_uuid()::text, '-', ''),
   created_by uuid not null references auth.users,
   created_at timestamptz not null default now()
 );
 -- 이미 만들어져 있던 방에도 색 칸을 더한다 (두 번 돌려도 되게)
 alter table rooms add column if not exists color text not null default '#A9B8F4';
+
+/**
+ * 초대 코드를 만든다 — 여덟 자를 넷씩 끊어 `8F3K-2QMD`로 읽는다.
+ *
+ * uuid 32글자는 **손으로 옮겨 적을 수 있는 길이가 아니다.**
+ * 헷갈리는 글자(0 O 1 I L)는 빼서 받아 적다 틀릴 자리를 없앤다.
+ * 하이픈은 보여줄 때만 끼우고 담을 때는 여덟 자만 담는다.
+ */
+create or replace function make_join_code()
+returns text
+language plpgsql
+volatile
+set search_path = public
+as $$
+declare
+  alphabet constant text := '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+  made text;
+  i int;
+begin
+  loop
+    made := '';
+    for i in 1..8 loop
+      made := made || substr(alphabet, 1 + floor(random() * length(alphabet))::int, 1);
+    end loop;
+    exit when not exists (select 1 from rooms where join_code = made);
+  end loop;
+  return made;
+end $$;
+
+alter table rooms alter column join_code set default make_join_code();
+-- 옛 32자리로 남아 있는 코드는 새 여덟 자로 갈아준다
+update rooms set join_code = make_join_code() where length(join_code) <> 8;
 
 create table if not exists room_members (
   room_id      uuid not null references rooms on delete cascade,
@@ -201,6 +232,16 @@ end $$;
 -- delete 정책은 일부러 없다. 지우기는 deleted_at을 다는 update로만 한다.
 
 -- ─────────────────────── 방 만들기·들어가기 ───────────────────────
+
+/** 받아 적은 코드를 다듬는다 — 대소문자·하이픈·공백은 안 따진다 */
+create or replace function tidy_code(code text)
+returns text
+language sql
+immutable
+as $$
+  select upper(regexp_replace(coalesce(code, ''), '[^a-zA-Z0-9]', '', 'g'));
+$$;
+
 -- 초대 코드를 아는 사람은 그 방 사람이 아니어도 들어갈 수 있어야 하는데,
 -- RLS만으로는 그게 안 된다 (아직 멤버가 아니니 방이 보이지 않는다).
 -- 그래서 이 두 개만 security definer로 열어둔다.
@@ -241,7 +282,7 @@ stable
 as $$
 declare target rooms; result json;
 begin
-  select * into target from rooms where join_code = code;
+  select * into target from rooms where join_code = tidy_code(code);
   if target.id is null then
     return null;
   end if;
@@ -273,9 +314,9 @@ begin
     raise exception '로그인이 필요합니다';
   end if;
 
-  select * into target from rooms where join_code = code;
+  select * into target from rooms where join_code = tidy_code(code);
   if target.id is null then
-    raise exception '초대 링크가 맞지 않습니다';
+    raise exception '초대 코드가 맞지 않습니다';
   end if;
 
   insert into room_members (room_id, user_id, display_name)
@@ -283,6 +324,113 @@ begin
   on conflict (room_id, user_id) do update set display_name = excluded.display_name;
 
   return target;
+end $$;
+
+/**
+ * 코드를 새로 만든다 — 옛 초대장이 돌아다니는 게 마음에 걸릴 때 한 번 누르면 그전 것은 다 막힌다.
+ * 기한은 두지 않는다. 코드는 방이 사는 동안만 산다.
+ * 초대와 코드 만들기는 **주인만** 한다.
+ */
+create or replace function reset_join_code(room uuid)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare made text;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다';
+  end if;
+  if not exists (select 1 from rooms where id = room and created_by = auth.uid()) then
+    raise exception '방을 연 사람만 코드를 새로 만들 수 있습니다';
+  end if;
+
+  made := make_join_code();
+  update rooms set join_code = made where id = room;
+  return made;
+end $$;
+
+-- ─────────────────────── 카테고리 나누기 ───────────────────────
+-- 카테고리만 옮기면 상대에게는 이름만 보이고 할 일은 안 보인다.
+-- 할 일만 옮기면 category_id가 상대가 못 읽는 줄을 가리켜 색도 이름도 안 뜬다.
+-- RLS가 정확히 그렇게 막는다. 그래서 화면에서 여러 번 고치지 말고 한 번에 옮긴다.
+
+/**
+ * 내 카테고리 하나를 방에 연다. 그 안의 할 일·즐겨찾기가 같이 간다.
+ *
+ * **방을 여는 일은 연 사람만 한다.** 손님은 자기 카테고리를 남의 방에 얹지 못한다 —
+ * 그건 방 안에서 하는 일이 아니라 방을 여는 일이라서 그렇다.
+ * 같이 보고 싶으면 그 사람이 제 방을 만들어 나를 부른다.
+ */
+create or replace function share_category(target uuid, room uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare cat categories;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다';
+  end if;
+  if not exists (select 1 from rooms where id = room and created_by = auth.uid()) then
+    raise exception '방을 연 사람만 나눌 수 있습니다';
+  end if;
+
+  select * into cat from categories where id = target and deleted_at is null;
+  if cat.id is null then
+    raise exception '카테고리를 찾을 수 없습니다';
+  end if;
+  if cat.owner_id is distinct from auth.uid() then
+    raise exception '내 카테고리만 나눌 수 있습니다';
+  end if;
+  -- 카테고리 하나는 방 하나에 속한다. 두 방에 걸치면 할 일이 어느 쪽으로 갈지가 없다.
+  if cat.room_id is not null and cat.room_id <> room then
+    raise exception '이미 다른 방에서 나누고 있습니다';
+  end if;
+
+  -- updated_at을 같이 밀어야 다음 동기화가 이 줄들을 주워간다
+  update categories set room_id = room, updated_at = now() where id = target;
+  update tasks       set room_id = room, updated_at = now() where category_id = target;
+  update presets     set room_id = room, updated_at = now() where category_id = target;
+end $$;
+
+/**
+ * 도로 개인 것으로 거둔다. **끄는 건 공유를 푸는 것과 같은 일이다.**
+ *
+ * 안에 든 것은 누가 적었든 다 따라온다 — 방은 내가 연 창문이고,
+ * 들어온 사람이 거기에 만들고 고친 것도 **내 카테고리에 한 일**이기 때문이다.
+ * 그래서 주인 자리(owner_id)도 카테고리 임자에게 돌려놓는다. 안 그러면
+ * 방은 닫혔는데 남의 개인 목록에 이 카테고리를 가리키는 줄만 남는다.
+ */
+create or replace function unshare_category(target uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare cat categories;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다';
+  end if;
+
+  select * into cat from categories where id = target;
+  if cat.id is null then
+    raise exception '카테고리를 찾을 수 없습니다';
+  end if;
+  if cat.owner_id is distinct from auth.uid() then
+    raise exception '내 카테고리만 거둘 수 있습니다';
+  end if;
+
+  update categories set room_id = null, updated_at = now() where id = target;
+  update tasks
+     set room_id = null, owner_id = cat.owner_id, updated_at = now()
+   where category_id = target;
+  update presets
+     set room_id = null, owner_id = cat.owner_id, updated_at = now()
+   where category_id = target;
 end $$;
 
 -- ─────────────────────── 실시간 ───────────────────────

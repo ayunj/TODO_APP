@@ -70,7 +70,7 @@ export default function JoinScreen() {
           id="join-code"
           type="text"
           className="field-input font-mono tracking-wide"
-          placeholder="예: 8F3K2QMD…"
+          placeholder="예: 8F3K-2QMD"
           autoComplete="off"
           autoCapitalize="off"
           value={code}

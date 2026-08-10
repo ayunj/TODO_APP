@@ -310,12 +310,44 @@ export async function leaveRoom(roomId: string, me: string): Promise<void> {
   if (error) throw error;
 }
 
-/** 방 이름·색·코드를 고친다. 방 사람이면 누구나 되지만 화면에서는 주인에게만 연다. */
+/** 방 이름·색을 고친다. 방 사람이면 누구나 되지만 화면에서는 주인에게만 연다. */
 export async function updateRoom(
   roomId: string,
-  patch: { name?: string; color?: string; join_code?: string },
+  patch: { name?: string; color?: string },
 ): Promise<void> {
   const client = await supabase();
   const { error } = await client.from('rooms').update(patch).eq('id', roomId);
+  if (error) throw error;
+}
+
+/** 코드를 새로 만든다. 겹치지 않게 고르는 일은 서버가 한다. */
+export async function resetJoinCode(roomId: string): Promise<void> {
+  const client = await supabase();
+  const { error } = await client.rpc('reset_join_code', { room: roomId });
+  if (error) throw error;
+}
+
+/** 이 방에서 불릴 내 이름을 고친다. 방마다 따로 걸린다. */
+export async function renameMe(roomId: string, me: string, myId: string): Promise<void> {
+  const client = await supabase();
+  const { error } = await client
+    .from('room_members')
+    .update({ display_name: me })
+    .eq('room_id', roomId)
+    .eq('user_id', myId);
+  if (error) throw error;
+}
+
+/** 카테고리를 방에 연다 — 그 안의 할 일·즐겨찾기가 같이 간다 */
+export async function shareCategory(categoryId: string, roomId: string): Promise<void> {
+  const client = await supabase();
+  const { error } = await client.rpc('share_category', { target: categoryId, room: roomId });
+  if (error) throw error;
+}
+
+/** 도로 개인 것으로 거둔다 */
+export async function unshareCategory(categoryId: string): Promise<void> {
+  const client = await supabase();
+  const { error } = await client.rpc('unshare_category', { target: categoryId });
   if (error) throw error;
 }

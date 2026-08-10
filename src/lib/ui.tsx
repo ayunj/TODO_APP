@@ -24,6 +24,8 @@ export type Route =
   /** id가 null이면 새 방 만들기, 있으면 그 방 설정 */
   | { kind: 'room'; id: string | null }
   | { kind: 'invite'; id: string }
+  /** 그 방에서 나눌 카테고리 고르기 (주인만) */
+  | { kind: 'roomCats'; id: string }
   | { kind: 'join' };
 
 /**

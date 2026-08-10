@@ -41,6 +41,8 @@ interface StoreValue {
   tasks: Task[];
   presets: Preset[];
   categoryOf: (id: string) => Category;
+  /** 서버에서 여러 줄이 한꺼번에 바뀐 뒤에 부른다 (카테고리를 방에 열 때 같은 것) */
+  resync: () => Promise<void>;
 
   addTask: (input: TaskInput) => Task;
   updateTask: (id: string, input: TaskInput) => void;
@@ -196,6 +198,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return () => {
       alive = false;
     };
+  }, [repo, spread]);
+
+  /**
+   * 서버와 다시 맞춘다.
+   * 카테고리를 방에 여는 것처럼 **서버에서 여러 줄이 한꺼번에 바뀌는 일** 뒤에 부른다.
+   * 그런 건 이 기기가 고친 게 아니라서 화면을 먼저 바꿔둘 수가 없다.
+   */
+  const resync = useCallback(async () => {
+    const r = repo();
+    if (!r.sync) return;
+    try {
+      spread(await r.sync());
+    } catch {
+      toast('아직 맞추지 못했습니다. 연결되면 다시 시도해요.');
+    }
   }, [repo, spread]);
 
   const categoryOf = useCallback(
@@ -679,6 +696,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       tasks,
       presets,
       categoryOf,
+      resync,
       addTask,
       updateTask,
       removeTask,
@@ -720,6 +738,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       tasks,
       presets,
       categoryOf,
+      resync,
       addTask,
       updateTask,
       removeTask,

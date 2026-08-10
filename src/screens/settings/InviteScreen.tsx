@@ -1,7 +1,7 @@
 'use client';
 
 import PageBar from '@/components/PageBar';
-import { useRooms } from '@/lib/rooms';
+import { formatCode, useRooms } from '@/lib/rooms';
 import { toast } from '@/lib/toast';
 
 /**
@@ -21,7 +21,8 @@ export default function InviteScreen({ id }: { id: string }) {
     );
   }
 
-  const code = room.code.toUpperCase();
+  // 넷씩 끊어 보낸다 — 받는 쪽이 손으로 옮겨 적는 것이라 눈이 끊어주는 자리가 있어야 한다
+  const code = formatCode(room.code);
   const text = `'${room.name}' 방에 초대합니다.\n앱을 열고 아래 코드를 넣어주세요.\n\n${code}`;
 
   const copy = async () => {

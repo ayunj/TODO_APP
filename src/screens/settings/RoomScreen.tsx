@@ -6,7 +6,8 @@ import { Group, Note, Row } from '@/components/rows';
 import { ColorPicker, Field, GoButton, Hint } from '@/components/form';
 import { PALETTE, tintOf } from '@/lib/constants';
 import { useAuth } from '@/lib/auth';
-import { useRooms } from '@/lib/rooms';
+import { formatCode, useRooms } from '@/lib/rooms';
+import { useStore } from '@/lib/store';
 import { toast } from '@/lib/toast';
 import { useUi } from '@/lib/ui';
 
@@ -101,11 +102,22 @@ function CreateRoom() {
  */
 function RoomSettings({ id }: { id: string }) {
   const { account } = useAuth();
-  const { rooms, membersOf, renameRoom, recolorRoom, resetCode, leaveRoom } = useRooms();
+  const {
+    rooms,
+    membersOf,
+    myNameIn,
+    renameMe,
+    renameRoom,
+    recolorRoom,
+    resetCode,
+    leaveRoom,
+  } = useRooms();
+  const { categories } = useStore();
   const { pushView, popView } = useUi();
 
   const room = rooms.find((r) => r.id === id) ?? null;
   const [name, setName] = useState(room?.name ?? '');
+  const [myName, setMyName] = useState(() => (id ? myNameIn(id) : ''));
 
   // 방을 나갔거나 아직 못 받아온 참이면 빈 화면 대신 한 줄을 보여준다
   if (!room) {
@@ -126,6 +138,17 @@ function RoomSettings({ id }: { id: string }) {
     try {
       await renameRoom(room.id, trimmed);
       toast('방 이름을 바꿨어요');
+    } catch {
+      toast('바꾸지 못했습니다.');
+    }
+  };
+
+  const saveMyName = async () => {
+    const trimmed = myName.trim();
+    if (!room || !trimmed || trimmed === myNameIn(room.id)) return;
+    try {
+      await renameMe(room.id, trimmed);
+      toast('이름을 바꿨어요');
     } catch {
       toast('바꾸지 못했습니다.');
     }
@@ -203,6 +226,49 @@ function RoomSettings({ id }: { id: string }) {
         )}
       </Group>
 
+      {/* 방마다 따로 걸린다 — 집방에서는 `엄마`, 회사방에서는 `윤정`일 수 있다 */}
+      <div className="mt-[18px]">
+        <Field label="내 이름 · 이 방에서 이렇게 불려요" htmlFor="room-myname">
+          <div className="flex gap-2">
+            <input
+              id="room-myname"
+              type="text"
+              className="field-input flex-1"
+              autoComplete="off"
+              value={myName}
+              onChange={(e) => setMyName(e.target.value)}
+            />
+            {myName.trim() && myName.trim() !== myNameIn(room.id) && (
+              <button
+                type="button"
+                onClick={saveMyName}
+                className="flex-none rounded-[14px] bg-accent px-4 text-[13.5px] font-medium text-white"
+              >
+                저장
+              </button>
+            )}
+          </div>
+        </Field>
+      </div>
+
+      <div className="mt-[18px]">
+        <p className="mb-2 ml-1 text-[12px] text-ink2">나누는 것</p>
+        {/*
+          손님에게는 칩만 보인다. 나눌 것을 고르는 건 방 안에서 하는 일이 아니라
+          방을 여는 일이라서, 연 사람만 한다.
+        */}
+        <SharedCategories
+          names={categories.filter((c) => c.roomId === room.id)}
+          onClick={room.mine ? () => pushView({ kind: 'roomCats', id: room.id }) : undefined}
+        />
+        {!room.mine && (
+          <Note>
+            {(membersOf(room.id).find((m) => m.role === 'owner')?.displayName ?? '방 주인')}이
+            정합니다.
+          </Note>
+        )}
+      </div>
+
       {room.mine && (
         <div className="mt-[18px]">
           <p className="mb-2 ml-1 text-[12px] text-ink2">방</p>
@@ -233,7 +299,7 @@ function RoomSettings({ id }: { id: string }) {
           </Field>
 
           <Group>
-            <Row value={shortCode(room.code)} onClick={onResetCode}>
+            <Row value={formatCode(room.code)} onClick={onResetCode}>
               코드 새로 만들기
             </Row>
           </Group>
@@ -256,8 +322,40 @@ function RoomSettings({ id }: { id: string }) {
   );
 }
 
-/** 32자리 코드는 다 보여주지 않는다 — 앞 4·뒤 4만 */
-function shortCode(code: string): string {
-  if (code.length <= 9) return code.toUpperCase();
-  return `${code.slice(0, 4)}…${code.slice(-4)}`.toUpperCase();
+/** 나누는 카테고리 칩 한 줄. 누를 수 있을 때만 화살표가 붙는다. */
+function SharedCategories({
+  names,
+  onClick,
+}: {
+  names: { id: string; name: string; color: string }[];
+  onClick?: () => void;
+}) {
+  const body = (
+    <>
+      <span className="flex min-w-0 flex-1 flex-wrap gap-[5px]">
+        {names.length === 0 ? (
+          <span className="text-[13px] text-ink3">아직 나누는 것이 없어요</span>
+        ) : (
+          names.map((c) => (
+            <span
+              key={c.id}
+              className="inline-flex items-center rounded-full px-2.5 py-[3px] text-[11.5px] font-medium"
+              style={{ background: tintOf(c.color), color: c.color }}
+            >
+              {c.name}
+            </span>
+          ))
+        )}
+      </span>
+      {onClick && <span className="flex-none text-[15px] text-ink3">›</span>}
+    </>
+  );
+
+  const shell = 'flex w-full items-center gap-2.5 rounded-2xl bg-card px-[15px] py-4 shadow-card';
+  if (!onClick) return <div className={shell}>{body}</div>;
+  return (
+    <button type="button" onClick={onClick} className={`${shell} text-left active:bg-sunk`}>
+      {body}
+    </button>
+  );
 }

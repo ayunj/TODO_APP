@@ -154,6 +154,7 @@ export type ViewKind =
   | 'share'
   | 'room'
   | 'invite'
+  | 'roomCats'
   | 'join';
 
 /** 할 일이 아니라 이 기기의 상태. 초기화해도 지워지지 않는다. */

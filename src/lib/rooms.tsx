@@ -2,13 +2,16 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuth } from './auth';
-import { uid } from './id';
 import {
   createRoom as createRoomRemote,
   joinRoom as joinRoomRemote,
   leaveRoom as leaveRoomRemote,
   peekRoom as peekRoomRemote,
   pullRooms,
+  renameMe as renameMeRemote,
+  resetJoinCode as resetJoinCodeRemote,
+  shareCategory as shareCategoryRemote,
+  unshareCategory as unshareCategoryRemote,
   updateRoom as updateRoomRemote,
 } from './repo/remote';
 import { hasSupabase } from './supabase';
@@ -24,6 +27,12 @@ interface RoomsValue {
   membersOf: (roomId: string) => RoomMember[];
   /** 그 방에서 불리는 내 이름 */
   myNameIn: (roomId: string) => string;
+  /** 그 방에서 불릴 내 이름을 고친다 — 방마다 따로 걸린다 */
+  renameMe: (roomId: string, name: string) => Promise<void>;
+  /** 내 카테고리를 이 방에 연다 (주인만). 그 안의 할 일·즐겨찾기가 같이 간다 */
+  shareCategory: (categoryId: string, roomId: string) => Promise<void>;
+  /** 도로 개인 것으로 거둔다 */
+  unshareCategory: (categoryId: string) => Promise<void>;
   /** 서버에서 방과 사람 목록을 다시 받아온다 */
   refresh: () => Promise<void>;
   createRoom: (name: string, myName: string, color: string) => Promise<Room>;
@@ -143,11 +152,31 @@ export function RoomsProvider({ children }: { children: React.ReactNode }) {
 
   const resetCode = useCallback(
     async (roomId: string) => {
-      await updateRoomRemote(roomId, { join_code: uid().replace(/-/g, '') });
+      await resetJoinCodeRemote(roomId);
       await refresh();
     },
     [refresh],
   );
+
+  const renameMe = useCallback(
+    async (roomId: string, name: string) => {
+      if (!myId) return;
+      await renameMeRemote(roomId, name.trim(), myId);
+      await refresh();
+    },
+    [myId, refresh],
+  );
+
+  const shareCategory = useCallback(
+    async (categoryId: string, roomId: string) => {
+      await shareCategoryRemote(categoryId, roomId);
+    },
+    [],
+  );
+
+  const unshareCategory = useCallback(async (categoryId: string) => {
+    await unshareCategoryRemote(categoryId);
+  }, []);
 
   const value = useMemo<RoomsValue>(
     () => ({
@@ -157,6 +186,9 @@ export function RoomsProvider({ children }: { children: React.ReactNode }) {
       members,
       membersOf,
       myNameIn,
+      renameMe,
+      shareCategory,
+      unshareCategory,
       refresh,
       createRoom,
       joinRoom,
@@ -173,6 +205,9 @@ export function RoomsProvider({ children }: { children: React.ReactNode }) {
       members,
       membersOf,
       myNameIn,
+      renameMe,
+      shareCategory,
+      unshareCategory,
       refresh,
       createRoom,
       joinRoom,
@@ -195,5 +230,11 @@ export function useRooms(): RoomsValue {
 
 /** 대소문자·하이픈·공백은 안 따진다 — 손으로 옮겨 적어도 들어가지게 */
 function normalizeCode(code: string): string {
-  return code.trim().toLowerCase().replace(/[\s-]/g, '');
+  return code.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+}
+
+/** 보여줄 때만 넷씩 끊는다 — `8F3K2QMD` → `8F3K-2QMD` */
+export function formatCode(code: string): string {
+  const tidy = normalizeCode(code);
+  return tidy.length === 8 ? `${tidy.slice(0, 4)}-${tidy.slice(4)}` : tidy;
 }
