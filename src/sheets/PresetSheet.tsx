@@ -24,6 +24,8 @@ export default function PresetSheet({ id }: { id: string | null }) {
     repeatDays: editing?.repeatDays ?? 0,
     repeatUntil: editing?.repeatUntil ?? '',
     memo: editing?.memo ?? '',
+    assigneeId: editing?.assigneeId ?? null,
+    rotate: editing?.rotate ?? 'once',
   }));
 
   // 내리면 목록 화면이 그대로 뒤에 있다 — 상위로 가는 화살표를 따로 두지 않는다
@@ -41,6 +43,8 @@ export default function PresetSheet({ id }: { id: string | null }) {
       priority: value.priority,
       repeatDays: value.repeatDays,
       repeatUntil: value.repeatUntil || null,
+      assigneeId: value.assigneeId,
+      rotate: value.rotate,
     };
     if (editing) {
       updatePreset(editing.id, input);

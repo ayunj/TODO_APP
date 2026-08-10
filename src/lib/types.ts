@@ -63,6 +63,13 @@ export interface RoomPeek {
   count: number;
 }
 
+/**
+ * 다음 회차의 차례를 어떻게 할까.
+ * **`once`가 기본이다** — 이번만 그 사람이고 다음부터는 비운다.
+ * 한 번 정한 사람이 계속 따라붙는 건 놀라운 일이라 고를 때만 그렇게 된다.
+ */
+export type Rotate = 'once' | 'same' | 'rotate';
+
 export interface Task {
   id: string;
   /** null이면 개인 (2단계에서 방 id가 들어온다) */
@@ -82,9 +89,17 @@ export interface Task {
   cycleSince: DateStr | null;
   /** 이 항목을 낳은 이전 회차 */
   parentId: string | null;
+  /**
+   * 누가 할까 — null이면 `안 정함`. 먼저 보는 사람이 하면 된다.
+   * 이름이 아니라 사람(계정 id)으로 담는다. 이름으로 담으면 상대가 별명을 바꾼 순간
+   * 옛 할 일들이 옛 이름으로 남는다.
+   */
+  assigneeId: string | null;
+  /** 다음 회차의 차례. 주기가 있고 담당자를 골랐을 때만 뜻이 있다. */
+  rotate: Rotate;
   done: boolean;
   doneOn: DateStr | null;
-  /** 완료한 사람 표시 이름 (2단계) */
+  /** 누가 했나 — 표시 이름. `누가 할까`(assigneeId)와 한 자리를 나눠 쓴다 */
   doneBy: string | null;
   createdAt: string;
   updatedAt: string;
@@ -103,6 +118,8 @@ export interface Preset {
   priority: Priority;
   repeatDays: number;
   repeatUntil: DateStr | null;
+  assigneeId: string | null;
+  rotate: Rotate;
   updatedAt: string;
 }
 

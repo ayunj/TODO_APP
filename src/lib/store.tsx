@@ -7,11 +7,22 @@ import { addDays, shortDate, todayStr } from './date';
 import { stamp, uid } from './id';
 import { baseOf, spawnNext } from './repeat';
 import { getRepository } from './repo';
+import { useRooms } from './rooms';
 import { reclaimMyRooms, TRASH_DAYS } from './repo/remote';
 import type { Repository, Snapshot } from './repository';
 import { alive, onShopList, trashOf } from './selectors';
 import { toast } from './toast';
-import type { Category, DateStr, Memo, Preset, Priority, ShopItem, Task, Trashed } from './types';
+import type {
+  Category,
+  DateStr,
+  Memo,
+  Preset,
+  Priority,
+  Rotate,
+  ShopItem,
+  Task,
+  Trashed,
+} from './types';
 
 export interface TaskInput {
   title: string;
@@ -21,6 +32,9 @@ export interface TaskInput {
   date: DateStr;
   repeatDays: number;
   repeatUntil: DateStr | null;
+  /** null이면 `안 정함` — 먼저 보는 사람이 한다 */
+  assigneeId: string | null;
+  rotate: Rotate;
 }
 
 export interface PresetInput {
@@ -30,6 +44,8 @@ export interface PresetInput {
   priority: Priority;
   repeatDays: number;
   repeatUntil: DateStr | null;
+  assigneeId: string | null;
+  rotate: Rotate;
 }
 
 interface StoreValue {
@@ -58,8 +74,14 @@ interface StoreValue {
   /** 30일 동안 `지운 것`에 남는다 — 진짜로 없어지는 게 아니다 */
   removeTask: (id: string) => void;
   toggleTask: (id: string) => void;
+  /**
+   * 누가 했는지만 갈아 끼운다.
+   * 지우고 다시 체크하게 두면 완료한 시각이 바뀌고 반복이면 회차가 하나 더 생긴다.
+   */
+  setDoneBy: (id: string, who: string) => void;
   /** 못 끝낸 일을 다른 날로 옮긴다. 주기 계산은 건드리지 않는다. */
   postponeTasks: (ids: string[], date: DateStr) => void;
+
 
   addPreset: (input: PresetInput) => void;
   updatePreset: (id: string, input: PresetInput) => void;
@@ -135,6 +157,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   /** 로그인하면 같은 저장소를 감싼 '서버와 맞추는 것'으로 바뀐다 */
   const { account } = useAuth();
+  // 차례를 넘길 사람들과 `누가 했나`에 적을 내 이름. RoomsProvider가 이 위에 있다.
+  const { membersOf, myNameIn } = useRooms();
   const owner = account?.id ?? null;
 
   /** 쓰기는 화면을 먼저 바꾸고 뒤에서 조용히 저장한다 (낙관적 업데이트) */
@@ -254,7 +278,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const now = stamp();
       const task: Task = {
         id: uid(),
-        roomId: null,
+        // 담을 때 방을 안 묻는다 — 카테고리 하나가 방 하나에 속하니 카테고리가 곧 방이다
+        roomId: categoryOf(input.categoryId).roomId,
         title: input.title.trim(),
         memo: input.memo,
         categoryId: input.categoryId,
@@ -264,6 +289,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         repeatUntil: input.repeatUntil,
         cycleSince: input.repeatDays > 0 ? addDays(input.date, -input.repeatDays) : null,
         parentId: null,
+        assigneeId: input.assigneeId,
+        rotate: input.rotate,
         done: false,
         doneOn: null,
         doneBy: null,
@@ -276,7 +303,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       write((r) => r.saveTask(task));
       return task;
     },
-    [write],
+    [write, categoryOf],
   );
 
   const updateTask = useCallback(
@@ -287,6 +314,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
       const updated: Task = {
         ...current,
+        // 카테고리를 옮기면 방도 따라 옮겨간다
+        roomId: categoryOf(input.categoryId).roomId,
         title: input.title.trim(),
         memo: input.memo,
         categoryId: input.categoryId,
@@ -294,6 +323,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         date: input.date,
         repeatDays: input.repeatDays,
         repeatUntil: input.repeatUntil,
+        assigneeId: input.assigneeId,
+        rotate: input.rotate,
         updatedAt: stamp(),
       };
 
@@ -377,6 +408,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
    * 날짜만 옮긴다. cycleSince는 그대로 둔다 — 이번 주기가 시작된 날이 바뀐 건 아니니까.
    * 다음 회차 기준일이 date라, 미룬 만큼 다음 회차도 밀린다. 8/5에 하겠다고 옮긴 거니 그게 맞다.
    */
+  const setDoneBy = useCallback(
+    (id: string, who: string) => {
+      const current = tasks.find((t) => t.id === id);
+      if (!current || !current.done) return;
+      // doneOn은 손대지 않는다 — 한 날이 바뀌면 반복 계산이 통째로 흔들린다
+      const fixed: Task = { ...current, doneBy: who, updatedAt: stamp() };
+      setTasks((prev) => prev.map((t) => (t.id === id ? fixed : t)));
+      write((r) => r.saveTask(fixed));
+      toast(`${who}가 한 걸로 바꿨어요`);
+    },
+    [tasks, write],
+  );
+
   const postponeTasks = useCallback(
     (ids: string[], date: DateStr) => {
       const target = new Set(ids);
@@ -423,7 +467,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         done: true,
         // 그 날 한 걸로 적는다. 앞날짜를 미리 체크한 것만 오늘로 —  하지도 않은 날을 적을 수는 없다.
         doneOn: current.date < today ? current.date : today,
-        doneBy: null,
+        // 남의 차례인 일을 내가 해도 막지 않는다. 대신 누가 했는지는 여기 남는다.
+        doneBy: current.roomId ? myNameIn(current.roomId) || null : null,
         updatedAt: stamp(),
       };
 
@@ -431,7 +476,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const hasPending = tasks.some((t) => t.parentId === id && !t.done && !t.deletedAt);
       let next: Task | null = null;
       if (current.repeatDays > 0 && !hasPending) {
-        next = spawnNext(done);
+        // 번갈아는 방에 들어온 순서를 따른다
+        next = spawnNext(done, current.roomId ? membersOf(current.roomId).map((m) => m.userId) : []);
         // '8일 뒤'가 아니라 날짜를 적는다 — 지난 날짜를 체크하면 그 날 기준이라 뒤가 아닐 수 있다
         if (next) toast(`다음 ${done.title} → ${shortDate(next.date)}`);
         else toast(`${done.title} — 반복이 끝났습니다`);
@@ -452,7 +498,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const addPreset = useCallback(
     (input: PresetInput) => {
-      const preset: Preset = { id: uid(), roomId: null, ...input, updatedAt: stamp() };
+      // 즐겨찾기도 카테고리가 방을 정한다
+      const preset: Preset = {
+        id: uid(),
+        roomId: categoryOf(input.categoryId).roomId,
+        ...input,
+        updatedAt: stamp(),
+      };
       setPresets((prev) => [...prev, preset]);
       write((r) => r.savePreset(preset));
     },
@@ -491,6 +543,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         date,
         repeatDays: p.repeatDays,
         repeatUntil: p.repeatUntil,
+        assigneeId: p.assigneeId,
+        rotate: p.rotate,
       });
       toast(`${p.title} 추가`);
     },
@@ -810,6 +864,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       updateTask,
       removeTask,
       toggleTask,
+      setDoneBy,
       postponeTasks,
       addPreset,
       updatePreset,
@@ -854,6 +909,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       updateTask,
       removeTask,
       toggleTask,
+      setDoneBy,
       postponeTasks,
       addPreset,
       updatePreset,

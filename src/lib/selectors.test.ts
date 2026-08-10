@@ -13,6 +13,8 @@ const task = (over: Partial<Task> & { id: string }): Task => ({
   repeatUntil: null,
   cycleSince: null,
   parentId: null,
+  assigneeId: null,
+  rotate: 'once',
   done: false,
   doneOn: null,
   doneBy: null,

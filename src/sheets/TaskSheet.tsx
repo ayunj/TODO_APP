@@ -24,6 +24,8 @@ export default function TaskSheet({ id }: { id: string | null }) {
     repeatDays: editing?.repeatDays ?? 0,
     repeatUntil: editing?.repeatUntil ?? '',
     memo: editing?.memo ?? '',
+    assigneeId: editing?.assigneeId ?? null,
+    rotate: editing?.rotate ?? 'once',
   }));
 
   const patch = (p: Partial<FormValue>) => setValue((v) => ({ ...v, ...p }));
@@ -44,6 +46,8 @@ export default function TaskSheet({ id }: { id: string | null }) {
       date: value.date || cursor,
       repeatDays: value.repeatDays,
       repeatUntil: value.repeatUntil || null,
+      assigneeId: value.assigneeId,
+      rotate: value.rotate,
     };
 
     if (editing) {
@@ -59,6 +63,8 @@ export default function TaskSheet({ id }: { id: string | null }) {
           priority: input.priority,
           repeatDays: input.repeatDays,
           repeatUntil: input.repeatUntil,
+          assigneeId: input.assigneeId,
+          rotate: input.rotate,
         });
       }
       setCursor(input.date);

@@ -145,6 +145,25 @@ create table if not exists tasks (
   -- 방 `지운 것`에서 "남편이 지움"이라고 적는 자리
   deleted_by   uuid references auth.users
 );
+/*
+ * 누가 하나 — null이면 `안 정함`. **기본이 안 정함이다.**
+ * 이름(text)이 아니라 사람(uuid)으로 담는다. 이름으로 담으면 상대가 별명을 바꾼 순간
+ * 옛 할 일들이 옛 이름으로 남는다. done_by와 다른 칸인 까닭이기도 하다 —
+ * 저쪽은 `누가 했나`고 이쪽은 `누가 할까`다.
+ *
+ * 한 명만 고른다. 여럿을 담으면 표가 하나 더 필요하고
+ * "둘 중 하나만 하면 끝인가 둘 다 해야 끝인가"라는 답 없는 물음이 따라온다.
+ */
+alter table tasks add column if not exists assignee_id uuid references auth.users;
+
+/*
+ * 다음 회차는 — once(이번만) · same(같은 사람) · rotate(번갈아).
+ * 한 번 정한 사람이 다음 회차까지 계속 따라붙는 건 놀라운 일이라 **고를 때만 그렇게 된다.**
+ */
+alter table tasks   add column if not exists rotate text not null default 'once';
+alter table presets add column if not exists assignee_id uuid references auth.users;
+alter table presets add column if not exists rotate text not null default 'once';
+
 create index if not exists tasks_room_date  on tasks (room_id, date);
 create index if not exists tasks_owner_date on tasks (owner_id, date);
 -- 동기화는 "지난번 이후 바뀐 것만" 받아온다
@@ -467,6 +486,23 @@ begin
 end $$;
 
 /**
+ * 방에서 사람이 빠지면 그 사람에게 배정돼 있던 일은 `안 정함`으로 돌아간다.
+ * 없는 사람 이름이 차례 칩에 남으면 아무도 그 일을 안 하게 된다.
+ */
+create or replace function drop_assignments(room uuid, who uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update tasks set assignee_id = null, updated_at = now()
+   where room_id = room and assignee_id = who;
+  update presets set assignee_id = null, updated_at = now()
+   where room_id = room and assignee_id = who;
+end $$;
+
+/**
  * 맡기고 나가기 — **주인만 바뀐다.** 내 폰에서만 사라진다.
  *
  * `그만 나누기`만 있으면 회사방에서 사고가 난다. 내가 방을 열어 팀이 반년을
@@ -505,6 +541,8 @@ begin
 
   update rooms set created_by = heir where id = room;
   update room_members set role = 'owner'  where room_id = room and user_id = heir;
+  -- 내가 맡고 있던 차례는 비운다. 방에 없는 사람 이름이 남으면 아무도 그 일을 안 한다.
+  perform drop_assignments(room, auth.uid());
   delete from room_members where room_id = room and user_id = auth.uid();
 end $$;
 

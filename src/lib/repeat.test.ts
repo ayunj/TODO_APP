@@ -16,6 +16,8 @@ function task(over: Partial<Task> & { date: DateStr }): Task {
     repeatUntil: null,
     cycleSince: null,
     parentId: null,
+    assigneeId: null,
+    rotate: 'once',
     done: false,
     doneOn: null,
     doneBy: null,
@@ -91,5 +93,41 @@ describe('반복 주기', () => {
     expect(next?.memo).toBe('세제 새로 사기');
     expect(next?.cycleSince).toBe('2026-08-03');
     expect(next?.parentId).toBe('t1');
+  });
+});
+
+describe('다음 회차의 차례', () => {
+  const heirs = ['a', 'b', 'c'];
+
+  it('안 정함은 계속 안 정함이다', () => {
+    const t = task({ date: '2026-08-10', repeatDays: 1, assigneeId: null, rotate: 'rotate' });
+    expect(spawnNext(t, heirs)?.assigneeId).toBe(null);
+  });
+
+  it('이번만 — 다음부터는 비운다', () => {
+    const t = task({ date: '2026-08-10', repeatDays: 1, assigneeId: 'a', rotate: 'once' });
+    expect(spawnNext(t, heirs)?.assigneeId).toBe(null);
+  });
+
+  it('같은 사람 — 늘 그 사람', () => {
+    const t = task({ date: '2026-08-10', repeatDays: 1, assigneeId: 'b', rotate: 'same' });
+    expect(spawnNext(t, heirs)?.assigneeId).toBe('b');
+  });
+
+  it('번갈아 — 들어온 순서대로 돌고 끝에서 처음으로', () => {
+    const t = task({ date: '2026-08-10', repeatDays: 1, assigneeId: 'a', rotate: 'rotate' });
+    expect(spawnNext(t, heirs)?.assigneeId).toBe('b');
+    const last = task({ date: '2026-08-10', repeatDays: 1, assigneeId: 'c', rotate: 'rotate' });
+    expect(spawnNext(last, heirs)?.assigneeId).toBe('a');
+  });
+
+  it('그 사람이 방에서 빠졌으면 그대로 둔다 — 엉뚱한 사람에게 넘기지 않는다', () => {
+    const t = task({ date: '2026-08-10', repeatDays: 1, assigneeId: 'z', rotate: 'rotate' });
+    expect(spawnNext(t, heirs)?.assigneeId).toBe('z');
+  });
+
+  it('rotate 값은 다음 회차에도 그대로 따라간다', () => {
+    const t = task({ date: '2026-08-10', repeatDays: 1, assigneeId: 'a', rotate: 'rotate' });
+    expect(spawnNext(t, heirs)?.rotate).toBe('rotate');
   });
 });

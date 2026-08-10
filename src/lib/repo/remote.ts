@@ -1,6 +1,17 @@
 import { supabase } from '../supabase';
 import type { Snapshot } from '../repository';
-import type { Category, Memo, Preset, Priority, Room, RoomMember, RoomPeek, ShopItem, Task } from '../types';
+import type {
+  Category,
+  Memo,
+  Preset,
+  Priority,
+  Room,
+  RoomMember,
+  RoomPeek,
+  Rotate,
+  ShopItem,
+  Task,
+} from '../types';
 
 /**
  * 서버 쪽 한 겹.
@@ -21,6 +32,9 @@ const asPriority = (n: unknown): Priority => {
   const v = Number(n);
   return v === 1 || v === 3 ? v : 2;
 };
+
+/** 칸이 없던 시절 줄은 `이번만`으로 읽는다 — 기본이 그쪽이다 */
+const asRotate = (v: unknown): Rotate => (v === 'same' || v === 'rotate' ? v : 'once');
 
 export const TABLES = {
   categories: 'categories',
@@ -58,6 +72,8 @@ const out = {
     repeat_until: t.repeatUntil,
     cycle_since: t.cycleSince,
     parent_id: t.parentId,
+    assignee_id: t.assigneeId,
+    rotate: t.rotate,
     done: t.done,
     done_on: t.doneOn,
     done_by: t.doneBy,
@@ -76,6 +92,8 @@ const out = {
     priority: p.priority,
     repeat_days: p.repeatDays,
     repeat_until: p.repeatUntil,
+    assignee_id: p.assigneeId,
+    rotate: p.rotate,
     updated_at: p.updatedAt,
     deleted_at: null,
   }),
@@ -129,6 +147,8 @@ const back = {
     repeatUntil: (r.repeat_until as string) ?? null,
     cycleSince: (r.cycle_since as string) ?? null,
     parentId: (r.parent_id as string) ?? null,
+    assigneeId: (r.assignee_id as string) ?? null,
+    rotate: asRotate(r.rotate),
     done: Boolean(r.done),
     doneOn: (r.done_on as string) ?? null,
     doneBy: (r.done_by as string) ?? null,
@@ -146,6 +166,8 @@ const back = {
     priority: asPriority(r.priority),
     repeatDays: Number(r.repeat_days ?? 0),
     repeatUntil: (r.repeat_until as string) ?? null,
+    assigneeId: (r.assignee_id as string) ?? null,
+    rotate: asRotate(r.rotate),
     updatedAt: String(r.updated_at ?? ''),
   }),
   shopping: (r: Row): ShopItem => ({

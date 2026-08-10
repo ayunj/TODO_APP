@@ -1,5 +1,6 @@
 'use client';
 
+import DoneBySheet from './DoneBySheet';
 import PresetSheet from './PresetSheet';
 import RoomFieldSheet from './RoomFieldSheet';
 import ShopItemSheet from './ShopItemSheet';
@@ -19,6 +20,8 @@ export default function SheetHost() {
       return <TaskSheet key={sheet.id ?? 'new'} id={sheet.id} />;
     case 'preset':
       return <PresetSheet key={sheet.id ?? 'new'} id={sheet.id} />;
+    case 'doneBy':
+      return <DoneBySheet key={sheet.id} id={sheet.id} />;
     case 'shopItem':
       return <ShopItemSheet key={sheet.id} id={sheet.id} />;
     case 'roomField':
