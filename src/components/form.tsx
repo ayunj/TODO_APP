@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
-import { CalendarIcon } from './Icons';
+import { CalendarIcon, PeopleIcon } from './Icons';
 import { PALETTE, PRIORITY_LABEL } from '@/lib/constants';
 import { longDate } from '@/lib/date';
 import { useStore } from '@/lib/store';
@@ -115,12 +115,21 @@ export function CategoryPicker({
             type="button"
             aria-pressed={on}
             onClick={() => onChange(c.id)}
-            className={`inline-flex items-center gap-1.5 rounded-full px-[15px] py-2.5 text-[13px] shadow-card ${
-              on ? 'bg-accent text-white' : 'bg-card text-ink2'
-            }`}
+            /*
+              고른 칩은 **그 카테고리 색**으로 채운다.
+              칩 안에 카테고리 색 점을 달고 있으면서 채움만 앱 강조색이면 어긋난다.
+              필터 줄과 같은 규칙이라 새로 배울 게 없다. 담당자 칩만 코랄이다 —
+              카테고리에는 색이 있지만 사람에게는 없다.
+            */
+            className="inline-flex items-center gap-1.5 rounded-full px-[15px] py-2.5 text-[13px] shadow-card"
+            style={on ? { background: c.color, color: '#fff' } : undefined}
           >
-            <span className="h-2 w-2 rounded-full" style={{ background: c.color }} />
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ background: on ? 'rgba(255,255,255,.75)' : c.color }}
+            />
             {c.name}
+            {c.roomId && <PeopleIcon className="h-3 w-3 opacity-70" />}
           </button>
         );
       })}

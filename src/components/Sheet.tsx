@@ -9,11 +9,16 @@ interface Props {
   onClose: () => void;
   /** 하위 시트일 때 상위로 돌아가는 길. 주면 왼쪽 위 화살표가 이걸 탄다. */
   onBack?: () => void;
+  /**
+   * 제목 줄 오른쪽 빈자리. 콕 찌르기가 여기 얹힌다 —
+   * **제목 줄은 이미 있는 줄이고 오른쪽이 늘 비어 있어서 시트가 한 줄도 안 길어진다.**
+   */
+  right?: React.ReactNode;
   children: React.ReactNode;
 }
 
 /** 아래에서 올라오는 시트. 설정·즐겨찾기·카테고리·함께 쓰기가 전부 이걸 탄다. */
-export default function Sheet({ title, onClose, onBack, children }: Props) {
+export default function Sheet({ title, onClose, onBack, right, children }: Props) {
   const [on, setOn] = useState(false);
 
   useEffect(() => {
@@ -48,6 +53,7 @@ export default function Sheet({ title, onClose, onBack, children }: Props) {
             {onBack ? <BackIcon className="h-5 w-5" /> : <DownIcon className="h-5 w-5" />}
           </button>
           <h2 className="font-round text-[17px] font-normal">{title}</h2>
+          {right && <span className="absolute right-0">{right}</span>}
         </div>
         {children}
       </div>

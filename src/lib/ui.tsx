@@ -77,6 +77,12 @@ interface UiValue {
   /** 새로고침하면 전체로 돌아간다 — 그래서 저장하지 않는다 */
   filter: Filter;
   setFilter: (f: Filter) => void;
+  /**
+   * 누구 차례만 볼지 — null이면 전체.
+   * 공유 카테고리를 골랐을 때만 뜻이 있다. 카테고리를 바꾸면 저절로 풀린다.
+   */
+  who: string | null;
+  setWho: (id: string | null) => void;
   /** 기록 탭이 한 주치를 보는지 한 달치를 보는지 */
   logSpan: LogSpan;
   setLogSpan: (s: LogSpan) => void;
@@ -91,7 +97,8 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
   const [tab, setTabState] = useState<Tab>('day');
   const [stack, setStack] = useState<Route[]>([]);
   const [cursor, setCursor] = useState<DateStr>(() => todayStr());
-  const [filter, setFilter] = useState<Filter>(null);
+  const [filter, setFilterState] = useState<Filter>(null);
+  const [who, setWho] = useState<string | null>(null);
   const [logSpan, setLogSpan] = useState<LogSpan>('month');
   const [sheet, setSheet] = useState<Sheet | null>(null);
 
@@ -112,14 +119,20 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
       cursor,
       setCursor,
       filter,
-      setFilter,
+      // 카테고리를 옮기면 사람 줄이 닫힌다 — 방마다 사람이 달라 그대로 둘 수 없다
+      setFilter: (f) => {
+        setWho(null);
+        setFilterState(f);
+      },
+      who,
+      setWho,
       logSpan,
       setLogSpan,
       sheet,
       openSheet: setSheet,
       closeSheet: () => setSheet(null),
     }),
-    [tab, stack, route, cursor, filter, logSpan, sheet],
+    [tab, stack, route, cursor, filter, who, logSpan, sheet],
   );
 
   return <UiContext.Provider value={value}>{children}</UiContext.Provider>;

@@ -8,6 +8,21 @@ const stroke = {
   strokeLinejoin: 'round' as const,
 };
 
+/**
+ * 공유 표시 — **사람 둘**이다.
+ * 뒷사람을 옅게 그려서 작게 줄여도 둘인 게 보인다.
+ */
+export function PeopleIcon({ className }: Props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <circle cx="8.6" cy="8" r="3.5" />
+      <path d="M1.8 19.6c0-3.6 3-5.9 6.8-5.9s6.8 2.3 6.8 5.9z" />
+      <circle cx="17.2" cy="9" r="2.6" opacity=".55" />
+      <path d="M17.2 13.2c2.8 0 5 1.9 5 4.6h-3.6c0-1.8-.5-3.3-1.4-4.6z" opacity=".55" />
+    </svg>
+  );
+}
+
 export function GearIcon({ className }: Props) {
   return (
     <svg viewBox="0 0 24 24" className={className} {...stroke}>

@@ -15,11 +15,11 @@ import { useUi } from '@/lib/ui';
 /** 일별 — 진행 스트립 / 즐겨찾기 칩 / 목록 / 지난 미완료 */
 export default function DayScreen() {
   const { tasks, categoryOf } = useStore();
-  const { cursor, filter, openSheet } = useUi();
+  const { cursor, filter, who, openSheet } = useUi();
   const today = todayStr();
 
   const { open, shut, total } = useMemo(() => {
-    const all = tasksOn(tasks, cursor, filter);
+    const all = tasksOn(tasks, cursor, filter, who);
     return {
       open: sortTasks(all.filter((t) => !t.done)),
       shut: all.filter((t) => t.done),

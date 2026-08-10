@@ -15,7 +15,7 @@ import { useUi } from '@/lib/ui';
  */
 export default function LogScreen() {
   const { tasks, weekStart } = useStore();
-  const { cursor, filter, logSpan, setLogSpan } = useUi();
+  const { cursor, filter, who, logSpan, setLogSpan } = useUi();
 
   const weekly = logSpan === 'week';
   const from = weekly ? weekStartOf(cursor, weekStart) : monthStart(cursor);
@@ -27,9 +27,9 @@ export default function LogScreen() {
   const spanTasks = useMemo(
     () =>
       weekly
-        ? tasksInRange(tasks, from, addDays(from, 6), filter)
-        : tasksInMonth(tasks, cursor, filter),
-    [weekly, tasks, from, cursor, filter],
+        ? tasksInRange(tasks, from, addDays(from, 6), filter, who)
+        : tasksInMonth(tasks, cursor, filter, who),
+    [weekly, tasks, from, cursor, filter, who],
   );
 
   const done = spanTasks.filter((t) => t.done).length;

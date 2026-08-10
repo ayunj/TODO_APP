@@ -9,8 +9,8 @@ import { useUi } from '@/lib/ui';
 /** 오늘 화면 맨 아래 접힌 상태로. 빨갛게 강조하지 않는다. */
 export default function StaleSection() {
   const { tasks } = useStore();
-  const { filter } = useUi();
-  const stale = staleTasks(tasks, todayStr(), filter);
+  const { filter, who } = useUi();
+  const stale = staleTasks(tasks, todayStr(), filter, who);
 
   if (stale.length === 0) return null;
 

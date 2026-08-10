@@ -10,10 +10,13 @@ import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 
 export default function TaskSheet({ id }: { id: string | null }) {
-  const { tasks, presets, categories, addTask, updateTask, removeTask, addPreset } = useStore();
+  const { tasks, presets, categories, categoryOf, addTask, updateTask, removeTask, addPreset } =
+    useStore();
   const { cursor, filter, closeSheet, setCursor } = useUi();
 
   const editing = id ? (tasks.find((t) => t.id === id) ?? null) : null;
+  // 방 것일 때만 콕 자리가 생긴다 — 찌를 상대가 있어야 뜻이 있다
+  const shared = Boolean(editing && categoryOf(editing.categoryId).roomId);
   const [alsoPreset, setAlsoPreset] = useState(false);
   const [value, setValue] = useState<FormValue>(() => ({
     title: editing?.title ?? '',
@@ -74,7 +77,26 @@ export default function TaskSheet({ id }: { id: string | null }) {
   };
 
   return (
-    <Sheet title={editing ? '할 일 수정' : '할 일 추가'} onClose={closeSheet}>
+    <Sheet
+      title={editing ? '할 일 수정' : '할 일 추가'}
+      onClose={closeSheet}
+      /*
+        콕 찌르기 — 줄을 하나 더 만들지 않고 제목 줄 오른쪽 빈자리에 얹는다.
+        방이 없으면 안 그린다. **아직 자리만 잡아둔 것이라 누르면 알려주기만 한다** —
+        앱이 꺼진 남의 폰을 울려야 해서 푸시(FCM)와 서버 함수가 있어야 한다.
+      */
+      right={
+        editing && shared ? (
+          <button
+            type="button"
+            onClick={() => toast('콕 찌르기는 아직 준비 중이에요')}
+            className="inline-flex items-center gap-[5px] rounded-full bg-accent-tint px-3 py-1.5 text-[12px] font-medium text-accent active:opacity-70"
+          >
+            👋 콕
+          </button>
+        ) : null
+      }
+    >
       <TaskFormFields value={value} onChange={patch} editing={!!editing} />
 
       {!editing && (

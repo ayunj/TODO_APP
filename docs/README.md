@@ -7,7 +7,7 @@
 
 ```
 docs/
-  tasks/      screens  repeat  postpone  categories  presets
+  tasks/      screens  repeat  postpone  categories  presets  assign
   shopping/   list  history
   memo/
   rooms/
@@ -27,6 +27,7 @@ docs/
 | [postpone](tasks/postpone/기능.md) | 미루기 — 한꺼번에, 한 건씩, 날짜 지정 |
 | [categories](tasks/categories/기능.md) | 카테고리와 필터 |
 | [presets](tasks/presets/기능.md) | 즐겨찾기 |
+| [assign](tasks/assign/기능.md) | ★ **배정.** 누가 하나요, 반복이면 교대 |
 
 ## 장보기 — [shopping/](shopping/)
 
@@ -75,8 +76,9 @@ docs/
 넣고 싶은 기능은 [next/기능.md](next/기능.md)에 따로 적어뒀다 —
 배정, 콕 찌르기, 아침·저녁 알림. **아직 정한 게 아니라 생각해둔 것이다.**
 
-- **배정** — 할 일마다 담당자. `doneBy` 자리는 뚫어놨지만 늘 `null`.
-  기록 탭의 `누가 얼마나`도 이게 있어야 뜬다
+- **기록의 `누가 얼마나`** — 배정은 [붙었다](tasks/assign/기능.md). 접힌 한 줄만 남았다
+- **배정 알림** — `[집안일] 설거지가 내 차례가 됐어요`. 보내는 쪽이 있어야 한다
+- **콕 찌르기** — 버튼 자리만 잡아뒀다
 - **장보기·메모 나누기** — 방에 켜고 끄는 칸은 있지만 그쪽 화면이 아직 방을 모른다
   ([rooms](rooms/기능.md))
 - **실시간** — 앱 열 때 한 번만 맞춘다 ([sync](account/sync/기능.md))
