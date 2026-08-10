@@ -1,14 +1,14 @@
 'use client';
 
-import Sheet from '@/components/Sheet';
+import PageBar from '@/components/PageBar';
 import { GoButton } from '@/components/form';
 import { toast } from '@/lib/toast';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 
-export default function CategoryListSheet() {
+export default function CategoryListScreen() {
   const { categories, tasks, removeCategory } = useStore();
-  const { filter, setFilter, closeSheet, openSheet } = useUi();
+  const { filter, setFilter, openSheet } = useUi();
 
   const kill = (id: string) => {
     const target = categories.find((c) => c.id === id);
@@ -32,7 +32,9 @@ export default function CategoryListSheet() {
   };
 
   return (
-    <Sheet title="카테고리" onClose={closeSheet} onBack={() => openSheet({ kind: 'settings' })}>
+    <>
+      <PageBar title="카테고리" />
+
       <div className="mb-4 flex flex-col gap-[9px]">
         {categories.map((c) => (
           <div
@@ -67,6 +69,6 @@ export default function CategoryListSheet() {
       </div>
 
       <GoButton onClick={() => openSheet({ kind: 'category', id: null })}>새 카테고리</GoButton>
-    </Sheet>
+    </>
   );
 }

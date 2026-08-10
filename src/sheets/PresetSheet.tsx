@@ -12,7 +12,7 @@ import { useUi } from '@/lib/ui';
 /** 날짜 필드는 없고 주기·종료일·메모는 있다 */
 export default function PresetSheet({ id }: { id: string | null }) {
   const { presets, categories, addPreset, updatePreset } = useStore();
-  const { filter, openSheet, closeSheet } = useUi();
+  const { filter, closeSheet } = useUi();
 
   const editing = id ? (presets.find((p) => p.id === id) ?? null) : null;
   const [value, setValue] = useState<FormValue>(() => ({
@@ -26,8 +26,7 @@ export default function PresetSheet({ id }: { id: string | null }) {
     memo: editing?.memo ?? '',
   }));
 
-  const back = () => openSheet({ kind: 'presetList' });
-
+  // 내리면 목록 화면이 그대로 뒤에 있다 — 상위로 가는 화살표를 따로 두지 않는다
   const submit = () => {
     const title = value.title.trim();
     if (!title) {
@@ -50,15 +49,11 @@ export default function PresetSheet({ id }: { id: string | null }) {
       addPreset(input);
       toast('추가했습니다');
     }
-    back();
+    closeSheet();
   };
 
   return (
-    <Sheet
-      title={editing ? '즐겨찾기 수정' : '즐겨찾기 추가'}
-      onClose={closeSheet}
-      onBack={back}
-    >
+    <Sheet title={editing ? '즐겨찾기 수정' : '즐겨찾기 추가'} onClose={closeSheet}>
       <TaskFormFields
         value={value}
         onChange={(p) => setValue((v) => ({ ...v, ...p }))}

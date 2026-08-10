@@ -1,16 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import Sheet from '@/components/Sheet';
-import { ColorPicker, DangerButton, Field, GoButton, Hint } from '@/components/form';
-import { PALETTE } from '@/lib/constants';
+import PageBar from '@/components/PageBar';
+import { Group, Note, Row } from '@/components/rows';
+import { ColorPicker, Field, GoButton, Hint } from '@/components/form';
+import { PALETTE, tintOf } from '@/lib/constants';
 import { useAuth } from '@/lib/auth';
 import { useRooms } from '@/lib/rooms';
 import { toast } from '@/lib/toast';
 import { useUi } from '@/lib/ui';
 
 /** id가 null이면 새 방 만들기, 있으면 그 방 설정 */
-export default function RoomSheet({ id }: { id: string | null }) {
+export default function RoomScreen({ id }: { id: string | null }) {
   if (id === null) return <CreateRoom />;
   return <RoomSettings id={id} />;
 }
@@ -20,15 +21,13 @@ export default function RoomSheet({ id }: { id: string | null }) {
 function CreateRoom() {
   const { account } = useAuth();
   const { rooms, createRoom } = useRooms();
-  const { openSheet, closeSheet } = useUi();
+  const { replaceView } = useUi();
 
   const [name, setName] = useState('');
   // 이메일 앞부분을 이름 자리에 먼저 채워둔다 — 대개 그대로 쓴다
   const [myName, setMyName] = useState(account?.email?.split('@')[0] ?? '');
   const [color, setColor] = useState<string>(PALETTE[rooms.length % PALETTE.length]);
   const [busy, setBusy] = useState(false);
-
-  const back = () => openSheet({ kind: 'share' });
 
   const submit = async () => {
     if (!name.trim()) {
@@ -45,7 +44,8 @@ function CreateRoom() {
     try {
       const room = await createRoom(name, myName, color);
       toast(`${room.name} — 방을 만들었어요`);
-      openSheet({ kind: 'room', id: room.id });
+      // 갈아끼운다 — 뒤로가기가 방금 지나온 `방 만들기`로 돌아가면 안 된다
+      replaceView({ kind: 'room', id: room.id });
     } catch {
       toast('방을 만들지 못했습니다. 잠시 뒤에 다시 해주세요.');
       setBusy(false);
@@ -53,7 +53,9 @@ function CreateRoom() {
   };
 
   return (
-    <Sheet title="방 만들기" onClose={closeSheet} onBack={back}>
+    <>
+      <PageBar title="방 만들기" />
+
       <Field label="방 이름" htmlFor="room-name">
         <input
           id="room-name"
@@ -87,33 +89,36 @@ function CreateRoom() {
       <GoButton onClick={submit} disabled={busy}>
         {busy ? '만드는 중…' : '만들기'}
       </GoButton>
-    </Sheet>
+    </>
   );
 }
 
 /* ───────── 방 설정 ───────── */
 
+/**
+ * 주인과 손님이 보는 것이 다르다.
+ * **못 누르는 줄을 흐리게 두지 않고 아예 안 만든다** — 손님 화면에는 화살표도 없다.
+ */
 function RoomSettings({ id }: { id: string }) {
   const { account } = useAuth();
   const { rooms, membersOf, renameRoom, recolorRoom, resetCode, leaveRoom } = useRooms();
-  const { openSheet, closeSheet } = useUi();
+  const { pushView, popView } = useUi();
 
   const room = rooms.find((r) => r.id === id) ?? null;
   const [name, setName] = useState(room?.name ?? '');
 
-  const back = () => openSheet({ kind: 'share' });
-
-  // 방을 나갔거나 아직 못 받아온 참이면 목록으로 돌려보낸다
+  // 방을 나갔거나 아직 못 받아온 참이면 빈 화면 대신 한 줄을 보여준다
   if (!room) {
     return (
-      <Sheet title="방" onClose={closeSheet} onBack={back}>
+      <>
+        <PageBar title="방" />
         <p className="ml-1 text-[13px] text-ink3">방을 찾을 수 없어요.</p>
-      </Sheet>
+      </>
     );
   }
 
   const people = membersOf(room.id);
-  const line = 'flex items-center gap-2.5 rounded-2xl bg-card px-[15px] py-4 text-[14px] shadow-card';
+  const owner = people.find((m) => m.role === 'owner');
 
   const save = async () => {
     const trimmed = name.trim();
@@ -152,37 +157,54 @@ function RoomSettings({ id }: { id: string }) {
     try {
       await leaveRoom(room.id);
       toast(`${room.name} — 나왔어요`);
-      back();
+      popView();
     } catch {
       toast('나가지 못했습니다.');
     }
   };
 
   return (
-    <Sheet title={room.name} onClose={closeSheet} onBack={back}>
-      <p className="mb-2 ml-1 text-[12px] text-ink2">같이 쓰는 사람 {people.length}</p>
-      <div className="mb-4 flex flex-col gap-[9px]">
+    <>
+      <PageBar
+        title={room.name}
+        right={
+          <span
+            className="inline-flex flex-none items-center rounded-full px-2.5 py-[3px] text-[11px] font-medium"
+            style={{ background: tintOf(room.color), color: room.color }}
+          >
+            {room.mine ? '내가 연 방' : `${owner?.displayName ?? '누군가'}가 연 방`}
+          </span>
+        }
+      />
+
+      <Group label={`같이 쓰는 사람 ${people.length}`}>
         {people.map((m) => (
-          <div key={m.userId} className={line}>
+          <Row
+            key={m.userId}
+            value={[
+              m.userId === account?.id ? '나' : null,
+              m.role === 'owner' ? '방 주인' : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          >
             {m.displayName}
-            <span className="ml-auto text-[12px] text-ink3">
-              {m.userId === account?.id ? '나' : ''}
-              {m.userId === account?.id && m.role === 'owner' ? ' · ' : ''}
-              {m.role === 'owner' ? '방 주인' : ''}
-            </span>
-          </div>
+          </Row>
         ))}
-        <button
-          type="button"
-          onClick={() => openSheet({ kind: 'invite', id: room.id })}
-          className="rounded-2xl bg-accent px-[15px] py-4 text-center text-[14px] font-medium text-white shadow-fab active:scale-[.99]"
-        >
-          초대하기
-        </button>
-      </div>
+        {/* 초대는 주인만 한다 */}
+        {room.mine && (
+          <button
+            type="button"
+            onClick={() => pushView({ kind: 'invite', id: room.id })}
+            className="rounded-2xl bg-accent px-[15px] py-4 text-center text-[14px] font-medium text-white shadow-fab active:scale-[.99]"
+          >
+            초대하기
+          </button>
+        )}
+      </Group>
 
       {room.mine && (
-        <>
+        <div className="mt-[18px]">
           <p className="mb-2 ml-1 text-[12px] text-ink2">방</p>
           <Field label="방 이름" htmlFor="room-rename">
             <div className="flex gap-2">
@@ -210,19 +232,27 @@ function RoomSettings({ id }: { id: string }) {
             <ColorPicker value={room.color} onChange={onColor} />
           </Field>
 
-          <button
-            type="button"
-            onClick={onResetCode}
-            className="mb-4 flex w-full items-center gap-2.5 rounded-2xl bg-card px-[15px] py-4 text-[14px] shadow-card active:bg-sunk"
-          >
-            코드 새로 만들기
-            <span className="ml-auto font-mono text-[12px] text-ink3">{shortCode(room.code)}</span>
-          </button>
-        </>
+          <Group>
+            <Row value={shortCode(room.code)} onClick={onResetCode}>
+              코드 새로 만들기
+            </Row>
+          </Group>
+        </div>
       )}
 
-      <DangerButton onClick={onLeave}>나가기</DangerButton>
-    </Sheet>
+      <div className="mt-[18px]">
+        <Group label="끝내기">
+          <Row danger arrow={false} onClick={onLeave}>
+            나가기
+          </Row>
+        </Group>
+      </div>
+      <Note>
+        {room.mine
+          ? '방과 그 안의 것은 남은 사람에게 그대로 있어요.'
+          : '이 폰에서만 사라져요. 다시 코드로 들어오면 돌아옵니다.'}
+      </Note>
+    </>
   );
 }
 

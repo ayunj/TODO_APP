@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Sheet from '@/components/Sheet';
+import PageBar from '@/components/PageBar';
 import { Field, GoButton } from '@/components/form';
 import { tintOf } from '@/lib/constants';
 import { useAuth } from '@/lib/auth';
@@ -10,18 +10,19 @@ import { toast } from '@/lib/toast';
 import { useUi } from '@/lib/ui';
 import type { RoomPeek } from '@/lib/types';
 
-/** 코드를 넣으면 바로 안 들어간다. 어떤 방인지 먼저 보여주고 들어가기를 눌러야 들어간다. */
-export default function JoinSheet() {
+/**
+ * 코드를 넣으면 **바로 안 들어간다.** 어떤 방인지 먼저 보여주고 `들어가기`를 눌러야 들어간다.
+ * 코드를 잘못 받았거나 옛 초대장일 수 있고, 모르는 채 들어가면 남의 장보기가 갑자기 뜬다.
+ */
+export default function JoinScreen() {
   const { account } = useAuth();
   const { peekRoom, joinRoom } = useRooms();
-  const { openSheet, closeSheet } = useUi();
+  const { replaceView } = useUi();
 
   const [code, setCode] = useState('');
   const [peek, setPeek] = useState<RoomPeek | null>(null);
   const [myName, setMyName] = useState(account?.email?.split('@')[0] ?? '');
   const [busy, setBusy] = useState(false);
-
-  const back = () => openSheet({ kind: 'share' });
 
   const look = async () => {
     if (!code.trim()) return;
@@ -52,7 +53,8 @@ export default function JoinSheet() {
     try {
       const room = await joinRoom(code, myName);
       toast(`${room.name} — 들어왔어요`);
-      openSheet({ kind: 'room', id: room.id });
+      // 뒤로가기가 코드 넣던 자리로 돌아가지 않게 갈아끼운다
+      replaceView({ kind: 'room', id: room.id });
     } catch {
       toast('들어가지 못했습니다. 잠시 뒤에 다시 해주세요.');
       setBusy(false);
@@ -60,7 +62,9 @@ export default function JoinSheet() {
   };
 
   return (
-    <Sheet title="초대 코드 넣기" onClose={closeSheet} onBack={back}>
+    <>
+      <PageBar title="초대 코드 넣기" />
+
       <Field label="받은 코드" htmlFor="join-code">
         <input
           id="join-code"
@@ -117,6 +121,6 @@ export default function JoinSheet() {
           </GoButton>
         </>
       )}
-    </Sheet>
+    </>
   );
 }

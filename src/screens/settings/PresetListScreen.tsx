@@ -1,7 +1,7 @@
 'use client';
 
-import Sheet from '@/components/Sheet';
 import EmptyBox from '@/components/EmptyBox';
+import PageBar from '@/components/PageBar';
 import { GoButton } from '@/components/form';
 import { PRIORITY_LABEL } from '@/lib/constants';
 import { shortDate } from '@/lib/date';
@@ -9,16 +9,15 @@ import { toast } from '@/lib/toast';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 
-export default function PresetListSheet() {
+/** 목록은 화면, 한 건을 손보는 자리는 시트 — 층이 섞이지 않게 */
+export default function PresetListScreen() {
   const { presets, categoryOf, removePreset } = useStore();
-  const { closeSheet, openSheet } = useUi();
+  const { openSheet } = useUi();
 
   return (
-    <Sheet
-      title="즐겨찾기"
-      onClose={closeSheet}
-      onBack={() => openSheet({ kind: 'settings' })}
-    >
+    <>
+      <PageBar title="즐겨찾기" />
+
       <div className="mb-4 flex flex-col gap-[9px]">
         {presets.length === 0 ? (
           <EmptyBox title="비어 있습니다">
@@ -35,10 +34,7 @@ export default function PresetListSheet() {
                 <span className="min-w-0 flex-1">
                   <span className="block break-words text-[14.5px]">{p.title}</span>
                   <span className="mt-0.5 flex flex-wrap items-center gap-2 text-[11.5px] text-ink3">
-                    <span
-                      className="h-[7px] w-[7px] rounded-full"
-                      style={{ background: c.color }}
-                    />
+                    <span className="h-[7px] w-[7px] rounded-full" style={{ background: c.color }} />
                     {c.name}
                     <span>{PRIORITY_LABEL[p.priority]}</span>
                     {p.repeatDays > 0 && (
@@ -73,6 +69,6 @@ export default function PresetListSheet() {
       </div>
 
       <GoButton onClick={() => openSheet({ kind: 'preset', id: null })}>새로 추가</GoButton>
-    </Sheet>
+    </>
   );
 }

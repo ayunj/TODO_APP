@@ -14,6 +14,15 @@ import MemoScreen from '@/screens/MemoScreen';
 import NewPasswordScreen from '@/screens/NewPasswordScreen';
 import MonthScreen from '@/screens/MonthScreen';
 import ShopScreen from '@/screens/ShopScreen';
+import AccountScreen from '@/screens/settings/AccountScreen';
+import CategoryListScreen from '@/screens/settings/CategoryListScreen';
+import InviteScreen from '@/screens/settings/InviteScreen';
+import JoinScreen from '@/screens/settings/JoinScreen';
+import PrefsScreen from '@/screens/settings/PrefsScreen';
+import PresetListScreen from '@/screens/settings/PresetListScreen';
+import RoomScreen from '@/screens/settings/RoomScreen';
+import SettingsScreen from '@/screens/settings/SettingsScreen';
+import ShareScreen from '@/screens/settings/ShareScreen';
 import { useAuth } from '@/lib/auth';
 import { addDays, addMonths, monthKey } from '@/lib/date';
 import { useStore } from '@/lib/store';
@@ -23,7 +32,7 @@ import { useUi } from '@/lib/ui';
 export default function AppShell() {
   const { loading, onboarded } = useStore();
   const { enabled, loading: checking, account, recovering } = useAuth();
-  const { view, cursor, setCursor } = useUi();
+  const { view, route, depth, cursor, setCursor } = useUi();
 
   // 아래 이른 반환들보다 위에 있어야 한다 — 훅은 렌더마다 같은 수로 불려야 한다
   const step = (n: number) => setCursor(view === 'day' ? addDays(cursor, n) : addMonths(cursor, n));
@@ -32,7 +41,9 @@ export default function AppShell() {
     () => step(1),
   );
 
-  const pushed = view === 'shop' || view === 'memo';
+  const pushed = depth > 0;
+  // 장보기·메모는 헤더가 제목을 그리고, 설정 갈래는 화면마다 제 제목 줄(PageBar)을 갖는다
+  const headered = !route || route.kind === 'shop' || route.kind === 'memo';
   // 기록 탭은 뺀다. 달을 넘기는 화면이지만 격자를 옆으로 훑어보는 손짓과 겹친다.
   const swipeable = view === 'day' || view === 'month';
 
@@ -74,6 +85,51 @@ export default function AppShell() {
     );
   }
 
+  const screenOf = () => {
+    if (route) {
+      switch (route.kind) {
+        case 'shop':
+          return <ShopScreen />;
+        case 'memo':
+          return <MemoScreen />;
+        case 'settings':
+          return <SettingsScreen />;
+        case 'prefs':
+          return <PrefsScreen />;
+        case 'presetList':
+          return <PresetListScreen />;
+        case 'categoryList':
+          return <CategoryListScreen />;
+        case 'account':
+          return <AccountScreen />;
+        case 'share':
+          return <ShareScreen />;
+        case 'room':
+          // 방을 갈아탈 때 적던 이름이 남지 않게 열쇠를 갈라둔다
+          return <RoomScreen key={route.id ?? 'new'} id={route.id} />;
+        case 'invite':
+          return <InviteScreen id={route.id} />;
+        case 'join':
+          return <JoinScreen />;
+      }
+    }
+
+    return view === 'day' ? (
+      // key를 갈라둔다. 같은 자리에 있어서 안 그러면 탭을 옮길 때
+      // 일별이 쓰던 방향이 그대로 남아 월별이 까닭 없이 한 번 미끄러진다
+      <SlidePage key="day" cursor={cursor}>
+        <DayScreen />
+      </SlidePage>
+    ) : view === 'month' ? (
+      // 달을 넘기니까 날짜가 아니라 달을 열쇠로 준다 — 같은 달 안에서는 안 움직인다
+      <SlidePage key="month" cursor={monthKey(cursor)}>
+        <MonthScreen />
+      </SlidePage>
+    ) : (
+      <LogScreen />
+    );
+  };
+
   return (
     <>
       {/*
@@ -82,27 +138,8 @@ export default function AppShell() {
         그 아래를 쓸면 아무 일도 안 일어났다. 빈 곳도 넘기는 자리여야 한다.
       */}
       <div className={swipeable ? 'wrap min-h-[100dvh]' : 'wrap'} {...(swipeable ? swipe : {})}>
-        <Header />
-        <main>
-          {view === 'day' ? (
-            // key를 갈라둔다. 같은 자리에 있어서 안 그러면 탭을 옮길 때
-            // 일별이 쓰던 방향이 그대로 남아 월별이 까닭 없이 한 번 미끄러진다
-            <SlidePage key="day" cursor={cursor}>
-              <DayScreen />
-            </SlidePage>
-          ) : view === 'month' ? (
-            // 달을 넘기니까 날짜가 아니라 달을 열쇠로 준다 — 같은 달 안에서는 안 움직인다
-            <SlidePage key="month" cursor={monthKey(cursor)}>
-              <MonthScreen />
-            </SlidePage>
-          ) : view === 'shop' ? (
-            <ShopScreen />
-          ) : view === 'memo' ? (
-            <MemoScreen />
-          ) : (
-            <LogScreen />
-          )}
-        </main>
+        {headered && <Header />}
+        <main>{screenOf()}</main>
       </div>
 
       {/* 밀고 들어온 화면에서는 탭바도 + 버튼도 내린다 — 나가는 길은 뒤로가기 하나 */}

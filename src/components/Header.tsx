@@ -15,7 +15,7 @@ const round =
  * 윗줄에 드나드는 곳(장보기·메모·설정), 아랫줄에 날짜와 이동 — 한 줄에 몰면 좁은 폰에서 빡빡하다.
  */
 export default function Header() {
-  const { view, cursor, setCursor, openSheet, pushView, popView } = useUi();
+  const { view, cursor, setCursor, pushView, popView } = useUi();
   const { shopping, memos, memoSeenAt } = useStore();
   // 마지막으로 본 뒤에 고쳐진 메모가 있으면 점을 띄운다
   const unseenMemo = memos.some((m) => m.text.trim() && m.updatedAt > memoSeenAt);
@@ -87,7 +87,7 @@ export default function Header() {
         <button
           type="button"
           aria-label={left > 0 ? `장보기 ${left}개 담아둠` : '장보기'}
-          onClick={() => pushView('shop')}
+          onClick={() => pushView({ kind: 'shop' })}
           className={`relative ${round}`}
         >
           <ShopIcon className="h-[19px] w-[19px]" />
@@ -101,7 +101,7 @@ export default function Header() {
         <button
           type="button"
           aria-label={unseenMemo ? '메모 — 새로 적힌 것이 있음' : '메모'}
-          onClick={() => pushView('memo')}
+          onClick={() => pushView({ kind: 'memo' })}
           className={`relative ${round}`}
         >
           <MemoIcon className="h-[19px] w-[19px]" />
@@ -113,7 +113,7 @@ export default function Header() {
         <button
           type="button"
           aria-label="설정"
-          onClick={() => openSheet({ kind: 'settings' })}
+          onClick={() => pushView({ kind: 'settings' })}
           className={round}
         >
           <GearIcon className="h-[19px] w-[19px]" />

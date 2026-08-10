@@ -2,15 +2,15 @@
 
 import { useMemo } from 'react';
 import MonthCell from './month/MonthCell';
-import { DOW, daysInMonth, firstDow, monthKey, todayStr } from '@/lib/date';
+import { DOW, daysInMonth, dowOf, firstDow, monthKey, todayStr } from '@/lib/date';
 import { sortTasks, tasksInMonth, tasksOn } from '@/lib/selectors';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 
 /** 월별 — 상단 요약 세 숫자 + 달력. 막대 그래프로 대체하지 않는다. */
 export default function MonthScreen() {
-  const { tasks } = useStore();
-  const { cursor, filter, setCursor, setView } = useUi();
+  const { tasks, weekStart } = useStore();
+  const { cursor, filter, setCursor, setTab } = useUi();
   const today = todayStr();
 
   const monthTasks = useMemo(() => tasksInMonth(tasks, cursor, filter), [tasks, cursor, filter]);
@@ -18,12 +18,14 @@ export default function MonthScreen() {
   const rate = monthTasks.length ? Math.round((doneCount / monthTasks.length) * 100) : 0;
 
   const prefix = monthKey(cursor);
-  const pad = firstDow(cursor);
+  // 앞을 몇 칸 비울지는 주가 어디서 시작하느냐에 달렸다 (앱 설정 · 주 시작)
+  const pad = (firstDow(cursor) - weekStart + 7) % 7;
   const last = daysInMonth(cursor);
+  const dow = Array.from({ length: 7 }, (_, i) => (weekStart + i) % 7);
 
   const goto = (date: string) => {
     setCursor(date);
-    setView('day');
+    setTab('day');
   };
 
   return (
@@ -51,12 +53,12 @@ export default function MonthScreen() {
         7칸을 390px에 나누는 한 못 벗어나는 한계라, 여백을 지키는 쪽을 택했다.
       */}
       <div className="grid grid-cols-7 gap-[3px] rounded-card bg-card px-2 py-3 shadow-card">
-        {DOW.map((w, i) => (
+        {dow.map((d) => (
           <span
-            key={w}
-            className={`pb-[7px] text-center text-[11px] ${i === 0 ? 'text-high' : 'text-ink3'}`}
+            key={d}
+            className={`pb-[7px] text-center text-[11px] ${d === 0 ? 'text-high' : 'text-ink3'}`}
           >
-            {w}
+            {DOW[d]}
           </span>
         ))}
 
@@ -74,7 +76,8 @@ export default function MonthScreen() {
               day={day}
               date={date}
               isToday={date === today}
-              isSunday={(pad + i) % 7 === 0}
+              // 첫 칸이 아니라 진짜 일요일에 붉게 — 주가 월요일에 시작해도 자리를 안 옮긴다
+              isSunday={dowOf(date) === 0}
               tasks={sortTasks(all)}
               onSelect={goto}
             />

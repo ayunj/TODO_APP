@@ -74,6 +74,17 @@ interface StoreValue {
   memoSeenAt: string;
   markMemosSeen: () => void;
 
+  /* ── 앱 설정 — 이 기기에만 걸린다 ── */
+  /** 0=일요일, 1=월요일 */
+  weekStart: 0 | 1;
+  setWeekStart: (d: 0 | 1) => void;
+  notify: boolean;
+  setNotify: (on: boolean) => void;
+  /** 'HH:MM' */
+  notifyTodo: string;
+  notifyLeft: string;
+  setNotifyTime: (which: 'todo' | 'left', at: string) => void;
+
   addCategory: (name: string, color: string) => void;
   updateCategory: (id: string, name: string, color: string) => void;
   /** 지운 카테고리의 할 일은 남은 카테고리로 옮긴다. 옮겨진 개수를 돌려준다. */
@@ -98,6 +109,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [onboarded, setOnboarded] = useState(false);
   const [memoSeenAt, setMemoSeenAt] = useState('');
+  const [weekStart, setWeekStartState] = useState<0 | 1>(0);
+  const [notify, setNotifyState] = useState(false);
+  const [notifyTodo, setNotifyTodo] = useState('08:00');
+  const [notifyLeft, setNotifyLeft] = useState('19:00');
   const [categories, setCategories] = useState<Category[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [presets, setPresets] = useState<Preset[]>([]);
@@ -153,6 +168,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (!alive) return;
       setOnboarded(settings.onboarded);
       setMemoSeenAt(settings.memoSeenAt ?? '');
+      setWeekStartState(settings.weekStart === 1 ? 1 : 0);
+      setNotifyState(Boolean(settings.notify));
+      setNotifyTodo(settings.notifyTodo || '08:00');
+      setNotifyLeft(settings.notifyLeft || '19:00');
 
       let current = snap;
 
@@ -544,6 +563,33 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     write((r) => r.saveSettings({ memoSeenAt: now }));
   }, [write]);
 
+  /* ───────── 앱 설정 ───────── */
+
+  const setWeekStart = useCallback(
+    (d: 0 | 1) => {
+      setWeekStartState(d);
+      write((r) => r.saveSettings({ weekStart: d }));
+    },
+    [write],
+  );
+
+  const setNotify = useCallback(
+    (on: boolean) => {
+      setNotifyState(on);
+      write((r) => r.saveSettings({ notify: on }));
+    },
+    [write],
+  );
+
+  const setNotifyTime = useCallback(
+    (which: 'todo' | 'left', at: string) => {
+      if (which === 'todo') setNotifyTodo(at);
+      else setNotifyLeft(at);
+      write((r) => r.saveSettings(which === 'todo' ? { notifyTodo: at } : { notifyLeft: at }));
+    },
+    [write],
+  );
+
   const removeMemo = useCallback(
     (id: string) => {
       clearTimeout(memoTimers.current.get(id)); // 지운 뒤에 저장이 되살아나지 않게
@@ -654,6 +700,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       removeMemo,
       memoSeenAt,
       markMemosSeen,
+      weekStart,
+      setWeekStart,
+      notify,
+      setNotify,
+      notifyTodo,
+      notifyLeft,
+      setNotifyTime,
       addCategory,
       updateCategory,
       removeCategory,
@@ -688,6 +741,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       removeMemo,
       memoSeenAt,
       markMemosSeen,
+      weekStart,
+      setWeekStart,
+      notify,
+      setNotify,
+      notifyTodo,
+      notifyLeft,
+      setNotifyTime,
       addCategory,
       updateCategory,
       removeCategory,

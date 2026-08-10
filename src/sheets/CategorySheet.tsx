@@ -10,7 +10,7 @@ import { useUi } from '@/lib/ui';
 
 export default function CategorySheet({ id }: { id: string | null }) {
   const { categories, addCategory, updateCategory } = useStore();
-  const { openSheet, closeSheet } = useUi();
+  const { closeSheet } = useUi();
 
   const editing = id ? (categories.find((c) => c.id === id) ?? null) : null;
   const [name, setName] = useState(editing?.name ?? '');
@@ -18,8 +18,7 @@ export default function CategorySheet({ id }: { id: string | null }) {
     editing?.color ?? PALETTE[categories.length % PALETTE.length],
   );
 
-  const back = () => openSheet({ kind: 'categoryList' });
-
+  // 내리면 목록 화면이 그대로 뒤에 있다 — 상위로 가는 화살표를 따로 두지 않는다
   const submit = () => {
     const trimmed = name.trim();
     if (!trimmed) {
@@ -34,11 +33,11 @@ export default function CategorySheet({ id }: { id: string | null }) {
       addCategory(trimmed, color);
       toast('추가했습니다');
     }
-    back();
+    closeSheet();
   };
 
   return (
-    <Sheet title={editing ? '카테고리 수정' : '새 카테고리'} onClose={closeSheet} onBack={back}>
+    <Sheet title={editing ? '카테고리 수정' : '새 카테고리'} onClose={closeSheet}>
       <Field label="이름" htmlFor="c-name">
         <input
           id="c-name"

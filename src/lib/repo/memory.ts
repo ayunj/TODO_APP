@@ -9,7 +9,16 @@ export class MemoryRepository implements Repository {
   private shopping = new Map<string, ShopItem>();
   private memos = new Map<string, Memo>();
   private graveyard = new Map<string, Grave>();
-  private settings: Settings = { onboarded: false, memoSeenAt: '', syncedAt: '', ownerId: '' };
+  private settings: Settings = {
+    onboarded: false,
+    memoSeenAt: '',
+    weekStart: 0,
+    notify: false,
+    notifyTodo: '08:00',
+    notifyLeft: '19:00',
+    syncedAt: '',
+    ownerId: '',
+  };
 
   async init() {}
 

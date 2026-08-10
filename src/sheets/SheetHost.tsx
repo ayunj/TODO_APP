@@ -1,20 +1,15 @@
 'use client';
 
-import CategoryListSheet from './CategoryListSheet';
 import CategorySheet from './CategorySheet';
-import PresetListSheet from './PresetListSheet';
 import PresetSheet from './PresetSheet';
-import AccountSheet from './AccountSheet';
-import SettingsSheet from './SettingsSheet';
 import ShopItemSheet from './ShopItemSheet';
 import TaskSheet from './TaskSheet';
-import ShareSheet from './ShareSheet';
-import RoomSheet from './RoomSheet';
-import InviteSheet from './InviteSheet';
-import JoinSheet from './JoinSheet';
 import { useUi } from '@/lib/ui';
 
-/** 시트는 한 번에 하나만. 하위 시트에는 상위로 돌아가는 버튼을 둔다. */
+/**
+ * 시트는 한 번에 하나만, 그리고 **항목 하나를 손보는 자리**만 남는다.
+ * 목록·설정처럼 안으로 더 들어가는 것은 밀고 들어가는 화면이다 — 시트를 쌓지 않는다.
+ */
 export default function SheetHost() {
   const { sheet } = useUi();
   if (!sheet) return null;
@@ -22,27 +17,11 @@ export default function SheetHost() {
   switch (sheet.kind) {
     case 'task':
       return <TaskSheet key={sheet.id ?? 'new'} id={sheet.id} />;
-    case 'settings':
-      return <SettingsSheet />;
-    case 'presetList':
-      return <PresetListSheet />;
     case 'preset':
       return <PresetSheet key={sheet.id ?? 'new'} id={sheet.id} />;
-    case 'categoryList':
-      return <CategoryListSheet />;
     case 'category':
       return <CategorySheet key={sheet.id ?? 'new'} id={sheet.id} />;
     case 'shopItem':
       return <ShopItemSheet key={sheet.id} id={sheet.id} />;
-    case 'account':
-      return <AccountSheet />;
-    case 'share':
-      return <ShareSheet />;
-    case 'room':
-      return <RoomSheet key={sheet.id ?? 'new'} id={sheet.id} />;
-    case 'invite':
-      return <InviteSheet key={sheet.id} id={sheet.id} />;
-    case 'join':
-      return <JoinSheet />;
   }
 }

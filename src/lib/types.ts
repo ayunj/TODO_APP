@@ -133,8 +133,28 @@ export interface Memo {
   updatedAt: string;
 }
 
-/** shop·memo는 탭이 아니라 헤더에서 밀고 들어가는 화면 */
-export type ViewKind = 'day' | 'month' | 'log' | 'shop' | 'memo';
+/**
+ * 탭 셋(day·month·log) 위에 밀고 들어가는 화면이 쌓인다.
+ *
+ * 설정 아래는 층이 셋까지 간다 — 설정 → 같이 쓰기 → 방 설정.
+ * 시트 위에 시트를 쌓으면 어디까지 왔는지가 안 보여서, 설정 갈래는 전부 화면이다.
+ * 항목 하나를 손보는 자리(할 일·담기·즐겨찾기 한 건)만 시트로 남는다.
+ */
+export type ViewKind =
+  | 'day'
+  | 'month'
+  | 'log'
+  | 'shop'
+  | 'memo'
+  | 'settings'
+  | 'prefs'
+  | 'presetList'
+  | 'categoryList'
+  | 'account'
+  | 'share'
+  | 'room'
+  | 'invite'
+  | 'join';
 
 /** 할 일이 아니라 이 기기의 상태. 초기화해도 지워지지 않는다. */
 export interface Settings {
@@ -147,6 +167,20 @@ export interface Settings {
    * 서버에 없는 로컬 항목이 '아직 안 올린 것'인지 '남이 지운 것'인지를 이걸로 가른다.
    */
   syncedAt: string;
+  /**
+   * 주 시작 요일 — 0=일요일, 1=월요일.
+   * 달력과 기록 탭 주간 격자가 같이 따라간다. 주간을 넣기로 한 순간 반드시 걸리는 설정이다.
+   */
+  weekStart: 0 | 1;
+  /** 알림 받기. 이걸 켜야 아래 두 시각이 열린다. */
+  notify: boolean;
+  /**
+   * `오늘 할 일`을 받을 시각 'HH:MM'.
+   * `아침에`라고 안 적는다 — 오늘 할 일을 저녁에 받고 싶은 사람도 있다.
+   */
+  notifyTodo: string;
+  /** `오늘 남은 일`을 받을 시각 'HH:MM' */
+  notifyLeft: string;
   /**
    * 이 기기에 담겨 있는 목록의 주인.
    * 저장소는 계정별이 아니라 브라우저별이라, 이게 없으면
