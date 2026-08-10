@@ -15,7 +15,7 @@ import type { ShopItem } from '@/lib/types';
  * 칩이 없으면 나만 보는 것이다 — `나만`이라고 적지 않는다. 대부분이 그것이라서.
  */
 export default function ShopRow({ item }: { item: ShopItem }) {
-  const { toggleShopItem } = useStore();
+  const { toggleShopItem, removeShopItem } = useStore();
   const { rooms } = useRooms();
   const { openSheet } = useUi();
 
@@ -87,6 +87,20 @@ export default function ShopRow({ item }: { item: ShopItem }) {
             )}
           </span>
         )}
+      </button>
+
+      {/*
+        할 일 한 줄과 같은 자리에 같은 ×다. 여기만 없어서
+        안 살 것을 빼려면 시트를 열어 맨 아래까지 내려가야 했다.
+        지운 것은 30일 남는다 — 화면 맨 아래 `지운 것`에서 되돌린다.
+      */}
+      <button
+        type="button"
+        aria-label="삭제"
+        onClick={() => removeShopItem(item.id)}
+        className="mt-px grid h-7 w-7 flex-none place-items-center rounded-[10px] text-[16px] text-faint active:bg-sunk active:text-high"
+      >
+        ×
       </button>
     </li>
   );
