@@ -17,13 +17,24 @@ import { useUi } from '@/lib/ui';
  * 나눈 카테고리에는 **어느 방에 나눴는지를 여기서 붙인다.**
  * 안에 들어가야만 알 수 있으면, 왜 이 카테고리만 다르게 구는지를
  * (지운 것이 방 설정에 모이는 것 같은) 들어가 보고서야 알게 된다.
+ *
+ * **남이 연 방 카테고리는 여기 없다.** 그건 그 방을 연 사람 것이고,
+ * 이름이나 색을 손대면 방 사람들 화면이 다 같이 바뀐다.
+ * 손님 화면에 두면 "내 것을 고치는 자리"에 남의 것이 섞인다 —
+ * 흐리게 눕혀두는 대신 아예 안 그린다.
  */
 export default function CategoryListScreen() {
   const { categories, tasks } = useStore();
   const { rooms } = useRooms();
   const { pushView } = useUi();
 
-  const shared = categories.filter((c) => c.roomId).length;
+  // 방을 아직 못 받아온 참이면 가리지 않는다. 모르는 것을 없는 것으로 치면 안 된다.
+  const guest = (roomId: string | null) =>
+    Boolean(roomId) && rooms.find((r) => r.id === roomId)?.mine === false;
+
+  const list = categories.filter((c) => !guest(c.roomId));
+  const hidden = categories.length - list.length;
+  const shared = list.filter((c) => c.roomId).length;
 
   return (
     <>
@@ -31,7 +42,7 @@ export default function CategoryListScreen() {
 
       <div className="mb-4">
         <Group>
-          {categories.map((c) => {
+          {list.map((c) => {
             const room = c.roomId ? (rooms.find((r) => r.id === c.roomId) ?? null) : null;
             return (
               <Row
@@ -64,6 +75,12 @@ export default function CategoryListScreen() {
 
       {shared > 0 && (
         <Note>나눈 카테고리는 그 방 사람들과 함께 봅니다. 지운 것도 방 설정에 모여요.</Note>
+      )}
+      {/* 필터 줄에는 보이는데 여기엔 없으니, 어디 갔는지 한 줄로 말해준다 */}
+      {hidden > 0 && (
+        <Note>
+          남이 연 방에서 나눠준 카테고리 {hidden}개는 여기 없어요. 그 방을 연 사람이 손봅니다.
+        </Note>
       )}
 
       <div className="mt-4">
