@@ -30,15 +30,20 @@ export default function CategoryFilter() {
     내 것이 먼저, 그다음 **방마다 한 묶음**이다. 사이에 가는 줄을 세운다.
     방으로 화면을 가르지는 않는다 — 오늘 할 일은 집 것도 회사 것도 오늘 하니까.
     다만 한 줄에 늘어놓기만 하면 어디까지가 내 것인지가 안 보인다.
+
+    **묶음 앞에 방 이름을 붙인다.** 가는 줄만으로는 가른 것까지만 말하고
+    어느 방 것인지는 말하지 않는다. 방이 둘이면 `공유 | 공유`로 읽히고,
+    내 것이 하나도 없으면 줄 왼쪽이 텅 비어 더 그렇다.
+    내 것 묶음에는 이름표가 없다 — 맨 앞이 곧 내 것이고, 혼자 쓰면 줄도 이름표도 안 생긴다.
   */
   const mine = categories.filter((c) => !c.roomId);
   const groups = rooms
-    .map((r) => categories.filter((c) => c.roomId === r.id))
-    .filter((list) => list.length > 0);
+    .map((r) => ({ key: r.id, label: r.name, list: categories.filter((c) => c.roomId === r.id) }))
+    .filter((g) => g.list.length > 0);
   // 아직 못 받아온 방에 걸린 것도 흘리지 않는다 — 마지막에 한 묶음으로 붙인다
   const known = new Set(rooms.map((r) => r.id));
   const stray = categories.filter((c) => c.roomId && !known.has(c.roomId));
-  if (stray.length) groups.push(stray);
+  if (stray.length) groups.push({ key: 'stray', label: '공유', list: stray });
 
   // 고른 칩의 가운데를 재둔다 — 사람 줄을 그 밑에 놓으면 어디 딸린 줄인지가 위치만으로 보인다
   const chips = useRef(new Map<string, HTMLButtonElement>());
@@ -84,10 +89,15 @@ export default function CategoryFilter() {
               onClick={() => setFilter(c.id)}
             />
           ))}
-          {groups.map((list) => (
-            <span key={list[0].roomId} className="flex flex-none gap-2">
+          {groups.map((g) => (
+            <span key={g.key} className="flex flex-none items-center gap-2">
               <span className="mx-[3px] my-[5px] w-px flex-none self-stretch bg-line" />
-              {list.map((c) => (
+              {/* 이름표가 사람 둘 표시 노릇을 한다 — 칩마다 또 달면 같은 말을 두 번 한다 */}
+              <span className="flex flex-none items-center gap-1 text-[11px] text-ink3">
+                <PeopleIcon className="h-3 w-3" />
+                {g.label}
+              </span>
+              {g.list.map((c) => (
                 <Chip
                   key={c.id}
                   category={c}
@@ -124,7 +134,7 @@ export default function CategoryFilter() {
   );
 }
 
-/** 카테고리 칩 하나. 나눈 것에는 사람 둘이 붙는다. */
+/** 카테고리 칩 하나. 어느 방 것인지는 앞의 이름표가 말한다. */
 function Chip({
   category,
   on,
@@ -156,7 +166,6 @@ function Chip({
       }
     >
       {category.name}
-      {category.roomId && <PeopleIcon className="h-[13px] w-[13px] opacity-75" />}
     </button>
   );
 }
