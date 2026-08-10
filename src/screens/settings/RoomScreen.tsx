@@ -53,6 +53,19 @@ function CreateRoom() {
       toast('이 방에서 불릴 이름을 적어주세요');
       return;
     }
+    /*
+      할 일을 켰으면 카테고리를 하나는 골라야 한다.
+      안 고르고도 만들어져서, `할 일`에 체크는 되어 있는데 방에 들어가 보면
+      `아직 나누는 것이 없어요`인 방이 생겼다. 켠 사람은 나눈 줄 안다.
+
+      고를 게 아예 없으면(카테고리 0개) 막지 않는다 — 끄는 것 말고는 길이 없다.
+      나중에 카테고리를 만들어 `나누는 것`에서 올리면 된다.
+    */
+    if (shares.tasks && mine.length > 0 && shares.categoryIds.length === 0) {
+      document.getElementById('room-shares')?.scrollIntoView({ block: 'center' });
+      toast('나눌 카테고리를 하나는 골라주세요');
+      return;
+    }
     setBusy(true);
     try {
       const room = await createRoom(name, myName, color);
@@ -107,7 +120,7 @@ function CreateRoom() {
         방 만들 때 고르는 게 제일 좋은 안전장치다 —
         나중에 실수를 막는 게 아니라 길을 아예 안 내는 방식이라서 그렇다.
       */}
-      <div className="mb-4 mt-5 border-t border-line2 pt-5">
+      <div id="room-shares" className="mb-4 mt-5 border-t border-line2 pt-5">
         <ShareBox value={shares} onChange={setSharesValue} categories={mine} />
       </div>
 
