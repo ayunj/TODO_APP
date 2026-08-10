@@ -251,9 +251,12 @@ create policy "방 사람만 본다" on rooms
 drop policy if exists "누구나 자기 방을 만든다" on rooms;
 create policy "누구나 자기 방을 만든다" on rooms
   for insert with check (created_by = auth.uid());
+-- 방을 고치는 건 연 사람만. 손님이 방 이름·나누는 것·초대 코드를 바꿀 일이 없다.
+-- 주인이 바뀌는 길과 코드 새로 만들기는 security definer 함수라 여기 안 걸린다.
 drop policy if exists "방 사람이 방 이름을 고친다" on rooms;
-create policy "방 사람이 방 이름을 고친다" on rooms
-  for update using (is_member(id));
+drop policy if exists "방은 연 사람이 고친다" on rooms;
+create policy "방은 연 사람이 고친다" on rooms
+  for update using (created_by = auth.uid());
 
 drop policy if exists "같은 방 사람끼리 서로 보인다" on room_members;
 create policy "같은 방 사람끼리 서로 보인다" on room_members

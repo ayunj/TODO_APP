@@ -139,8 +139,51 @@ export class SyncedRepository implements Repository {
       memos: await this.settle('memos', mine.memos, theirs.memos, since),
     };
 
+    merged.tasks = await this.dedupeSpawns(merged.tasks);
+
     await this.local.saveSettings({ syncedAt: new Date().toISOString(), ownerId: this.owner });
     return merged;
+  }
+
+  /**
+   * 한 회차가 다음 회차를 둘 낳은 것을 거둔다.
+   *
+   * `설거지 매일`을 나와 남편이 거의 같은 때 체크하면 **각자 다음 회차를 하나씩 만든다.**
+   * 만들 때 하는 중복 검사는 제 폰 목록만 보기 때문에 서로를 모른다.
+   *
+   * DB에 유일 제약을 거는 길도 있는데 그러면 진 쪽 폰에 **못 올라가는 줄이 영영 남는다** —
+   * 아직 안 올린 것으로 읽혀서 다음 동기화마다 다시 밀어보고 또 튕긴다.
+   * 합치고 나서 거르는 쪽이 두 폰 모두 같은 답에 닿는다.
+   *
+   * 먼저 만들어진 것을 남긴다. 만든 때는 두 폰이 같은 값을 보므로 어느 쪽에서 돌려도 결과가 같다.
+   */
+  private async dedupeSpawns(tasks: Task[]): Promise<Task[]> {
+    const keep = new Map<string, Task>();
+    const drops: string[] = [];
+
+    for (const t of tasks) {
+      // 아직 안 한 회차만 겹칠 수 있다. 끝낸 것은 저마다 제 날의 기록이다.
+      if (!t.parentId || t.done || t.deletedAt) continue;
+      const rival = keep.get(t.parentId);
+      if (!rival) {
+        keep.set(t.parentId, t);
+        continue;
+      }
+      const older =
+        rival.createdAt < t.createdAt || (rival.createdAt === t.createdAt && rival.id < t.id)
+          ? rival
+          : t;
+      keep.set(t.parentId, older);
+      drops.push(older === rival ? t.id : rival.id);
+    }
+
+    if (drops.length === 0) return tasks;
+
+    // 되돌릴 것이 아니라 애초에 안 생겼어야 할 줄이라 `지운 것`에 안 남긴다
+    const gone = new Set(drops);
+    await this.local.purge('tasks', drops);
+    void this.quietly(() => drop('tasks', drops));
+    return tasks.filter((t) => !gone.has(t.id));
   }
 
   /**
