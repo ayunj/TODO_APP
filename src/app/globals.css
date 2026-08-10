@@ -167,17 +167,25 @@
   }
 }
 
-/* 날짜를 넘기면 그쪽에서 들어온다. 시트와 같은 곡선을 쓴다 */
+/*
+ * 날짜를 넘기면 그쪽에서 들어온다. 시트와 같은 곡선을 쓴다.
+ *
+ * **여백(16px)보다 짧게 움직인다.** 폭의 11%(40px 남짓)를 밀었더니 카드와 달력이
+ * 화면 오른쪽 끝에서 잘렸다. 헤더는 sticky라 제자리인데 본문만 잘린 채 밀려 있어서
+ * 넘어가는 것으로 안 보이고 화면이 깨진 것으로 보였다. 14px이면 여백 안에서 끝난다.
+ *
+ * **투명도 0에서 시작하지 않는다.** 한순간 빈 화면을 지나느라 글자가 유령처럼 비쳤다.
+ */
 @keyframes slide-next {
   from {
-    opacity: 0;
-    transform: translateX(11%);
+    opacity: 0.45;
+    transform: translateX(14px);
   }
 }
 @keyframes slide-prev {
   from {
-    opacity: 0;
-    transform: translateX(-11%);
+    opacity: 0.45;
+    transform: translateX(-14px);
   }
 }
 .slide-next {
