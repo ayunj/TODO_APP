@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth';
 import { useRooms } from '@/lib/rooms';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
+import type { Category } from '@/lib/types';
 
 /**
  * 헤더 아래 가로 스크롤. 세 화면 모두에 적용된다.
@@ -19,11 +20,25 @@ import { useUi } from '@/lib/ui';
 export default function CategoryFilter() {
   const { categories } = useStore();
   const { account } = useAuth();
-  const { membersOf } = useRooms();
+  const { rooms, membersOf } = useRooms();
   const { filter, setFilter, who, setWho } = useUi();
 
   const picked = categories.find((c) => c.id === filter) ?? null;
   const people = picked?.roomId ? membersOf(picked.roomId) : [];
+
+  /*
+    내 것이 먼저, 그다음 **방마다 한 묶음**이다. 사이에 가는 줄을 세운다.
+    방으로 화면을 가르지는 않는다 — 오늘 할 일은 집 것도 회사 것도 오늘 하니까.
+    다만 한 줄에 늘어놓기만 하면 어디까지가 내 것인지가 안 보인다.
+  */
+  const mine = categories.filter((c) => !c.roomId);
+  const groups = rooms
+    .map((r) => categories.filter((c) => c.roomId === r.id))
+    .filter((list) => list.length > 0);
+  // 아직 못 받아온 방에 걸린 것도 흘리지 않는다 — 마지막에 한 묶음으로 붙인다
+  const known = new Set(rooms.map((r) => r.id));
+  const stray = categories.filter((c) => c.roomId && !known.has(c.roomId));
+  if (stray.length) groups.push(stray);
 
   // 고른 칩의 가운데를 재둔다 — 사람 줄을 그 밑에 놓으면 어디 딸린 줄인지가 위치만으로 보인다
   const chips = useRef(new Map<string, HTMLButtonElement>());
@@ -59,30 +74,31 @@ export default function CategoryFilter() {
           >
             전체
           </button>
-          {categories.map((c) => {
-            const on = filter === c.id;
-            return (
-              <button
-                key={c.id}
-                ref={(el) => {
-                  if (el) chips.current.set(c.id, el);
-                  else chips.current.delete(c.id);
-                }}
-                type="button"
-                aria-pressed={on}
-                onClick={() => setFilter(c.id)}
-                className={chip}
-                style={
-                  on
-                    ? { background: c.color, color: '#fff' }
-                    : { background: tintOf(c.color), color: c.color }
-                }
-              >
-                {c.name}
-                {c.roomId && <PeopleIcon className="h-[13px] w-[13px] opacity-75" />}
-              </button>
-            );
-          })}
+          {mine.map((c) => (
+            <Chip
+              key={c.id}
+              category={c}
+              on={filter === c.id}
+              chips={chips}
+              className={chip}
+              onClick={() => setFilter(c.id)}
+            />
+          ))}
+          {groups.map((list) => (
+            <span key={list[0].roomId} className="flex flex-none gap-2">
+              <span className="mx-[3px] my-[5px] w-px flex-none self-stretch bg-line" />
+              {list.map((c) => (
+                <Chip
+                  key={c.id}
+                  category={c}
+                  on={filter === c.id}
+                  chips={chips}
+                  className={chip}
+                  onClick={() => setFilter(c.id)}
+                />
+              ))}
+            </span>
+          ))}
         </span>
 
         {/*
@@ -105,6 +121,43 @@ export default function CategoryFilter() {
         )}
       </span>
     </ScrollRow>
+  );
+}
+
+/** 카테고리 칩 하나. 나눈 것에는 사람 둘이 붙는다. */
+function Chip({
+  category,
+  on,
+  chips,
+  className,
+  onClick,
+}: {
+  category: Category;
+  on: boolean;
+  /** 고른 칩의 자리를 재려고 들고 있는다 — 사람 줄을 그 밑에 놓으려고 */
+  chips: React.MutableRefObject<Map<string, HTMLButtonElement>>;
+  className: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      ref={(el) => {
+        if (el) chips.current.set(category.id, el);
+        else chips.current.delete(category.id);
+      }}
+      type="button"
+      aria-pressed={on}
+      onClick={onClick}
+      className={className}
+      style={
+        on
+          ? { background: category.color, color: '#fff' }
+          : { background: tintOf(category.color), color: category.color }
+      }
+    >
+      {category.name}
+      {category.roomId && <PeopleIcon className="h-[13px] w-[13px] opacity-75" />}
+    </button>
   );
 }
 
