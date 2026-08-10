@@ -893,7 +893,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
 <div class="deck">
 
   <div class="slot">
-    <h3>목록</h3>
+    <h3><span class="dn">만듦</span>목록</h3>
     <p class="why">맨 위는 방 칩 줄, 기본은 <b>전체</b>라 마트에서는 그냥 훑는다. 방 칩은 <b>제목 줄 오른쪽</b>에.</p>
     <div class="phone">
       <div class="bar"><span class="back">‹</span><b>장보기</b><span class="gear" style="margin-left:auto">⚙</span></div>
@@ -948,7 +948,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3>담기 — 공유는 접혀 있다</h3>
+    <h3><span class="dn half">반만</span>담기 — 공유는 접혀 있다</h3>
     <p class="why">기본은 <b>나만</b>. 담는 대부분이 개인 것이라 아무것도 안 묻는다.</p>
     <div class="phone" style="padding-bottom:0">
       <div class="dim" style="height:74px"></div>
@@ -966,7 +966,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3>공유를 누르면 — 방 하나</h3>
+    <h3><span class="dn">만듦</span>공유를 누르면 — 방 하나</h3>
     <p class="why">장보기는 <b>한 곳만</b> 고른다. 두 곳에 필요하면 <b>두 번 적는다</b> — 어차피 따로 사야 한다.</p>
     <div class="phone" style="padding-bottom:0">
       <div class="dim" style="height:74px"></div>
@@ -989,7 +989,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3>긴 이름과 칩</h3>
+    <h3><span class="dn">만듦</span>긴 이름과 칩</h3>
     <p class="why">이름 칸과 칩 칸이 따로라 <b>겹칠 자리가 없다.</b> 두 줄이 돼도 칩은 첫 줄에 남는다.</p>
     <div class="phone">
       <div class="body" style="padding-top:15px">
@@ -1027,7 +1027,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
 <div class="deck">
 
   <div class="slot">
-    <h3>목록 — 접힘</h3>
+    <h3><span class="dn">만듦</span>목록 — 접힘</h3>
     <p class="why">두 줄까지 보이고 넘치면 <b>… 로 잘린다.</b> 칩은 두 개까지, 나머지는 작게 <b>+4</b>.</p>
     <div class="phone">
       <div class="bar"><span class="back">‹</span><b>메모</b><span class="gear" style="margin-left:auto">⚙</span></div>
@@ -1068,7 +1068,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3>펼침 — 칩이 글 밑으로</h3>
+    <h3><span class="dn">만듦</span>펼침 — 칩이 글 밑으로</h3>
     <p class="why">몇 줄이 되든 감긴다. <b>접힘에서 아낀 자리를 펼침에서 쓴다.</b></p>
     <div class="phone">
       <div class="bar"><span class="back">‹</span><b>메모</b><span class="gear" style="margin-left:auto">⚙</span></div>
@@ -1094,7 +1094,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3>같이 보기 — 여러 방</h3>
+    <h3><span class="dn">만듦</span>같이 보기 — 여러 방</h3>
     <p class="why">메모만 <b>여러 방에 동시에</b> 걸 수 있다. 내용은 한 벌이라 어디서 고쳐도 같이 바뀐다.</p>
     <div class="phone" style="padding-bottom:0">
       <div class="dim" style="height:74px"></div>
@@ -1114,7 +1114,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3>남이 고쳤을 때</h3>
+    <h3><span class="dn">만듦</span>남이 고쳤을 때</h3>
     <p class="why">내가 본 뒤에 <b>남이</b> 고친 것에만 점이 뜬다. 열면 사라지고, 누가 고쳤는지는 아래 줄에서.</p>
     <div class="phone">
       <div class="body" style="padding-top:16px">
@@ -1560,7 +1560,13 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
       여덟 자 초대 코드(<code>8F3K-2QMD</code>), 방마다 다른 내 이름,
       <code>그만 나누기</code>·<code>맡기고 나가기</code>·<code>나가기</code></li>
     <li><b>카테고리를 방에 여는 게 실제로 돈다.</b> 카테고리와 그 안의 할 일·즐겨찾기가
-      한 번에 옮겨간다. <b>장보기·메모는 켜고 끄는 칸만 있고 아직 안 이어졌다</b></li>
+      한 번에 옮겨간다. 카테고리 목록에는 <b>어느 방에 나눴는지</b>가 사람 둘 표시와 함께 붙고,
+      필터 줄은 <b>내 것 | 방마다</b> 가는 줄로 갈린다</li>
+    <li><b>장보기도 방과 나눈다.</b> 맨 위 방 칩 줄(기본 <code>전체</code>), 고른 자리에 담기,
+      줄에는 제목 줄 오른쪽에 방 칩. <b>한 곳만</b> 고른다 — 두 곳에 필요하면 두 번 적는다</li>
+    <li><b>메모는 여러 방에 동시에 걸린다.</b> <code>room_ids</code> 한 칸으로 담고 메모만 RLS를 따로 걸었다.
+      접힘은 두 줄까지에 칩 두 개 + <code>+N</code>, 펼치면 걸린 방이 다 보이고 <code>같이 보기</code>로 고친다.
+      <b>남이 고쳤을 때만</b> 점이 뜨고 누가 고쳤는지가 아래 줄에 뜬다</li>
     <li><b>기록에 주간이 붙었다.</b> 주 시작 요일을 따라가고, 월간 격자에서는 눈금을 뺐다.
       <code>누가 얼마나</code>는 <b>배정이 있어야</b> 뜬다 — 아직이다</li>
     <li><b>지운 것 — 30일.</b> 방 설정과 카테고리 설정, 장보기·메모 화면 맨 아래</li>
