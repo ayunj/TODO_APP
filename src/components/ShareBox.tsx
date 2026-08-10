@@ -7,7 +7,12 @@ export interface Shares {
   tasks: boolean;
   shop: boolean;
   memo: boolean;
-  /** 할 일에 딸린 것 — 나누기로 고른 카테고리 */
+  /**
+   * 할 일에 딸린 것 — 나누기로 고른 카테고리.
+   *
+   * **한 방에 하나다.** 배열로 남겨둔 건 지난 데이터가 여럿을 들고 있을 수 있어서고,
+   * 여기서 새로 고를 때는 늘 한 칸이다.
+   */
   categoryIds: string[];
 }
 
@@ -30,11 +35,14 @@ interface Props {
  *
  * **할 일만 밑에 목록이 하나 더 달린다.** 나머지 둘은 딸린 게 없어 체크뿐이다.
  * 왼쪽에 세로선을 그어 `할 일에 딸린 것`으로 보이게 한다.
+ *
+ * **카테고리는 한 방에 하나만 고른다.** 방 하나가 곧 카테고리 하나라
+ * 필터 줄에서도 칩 하나로 서고, 어디까지가 그 방 것인지를 따로 말할 필요가 없다.
+ * 두 가지를 나누려면 방을 둘 만든다 — 나누는 상대가 같아도 그렇다.
  */
 export default function ShareBox({ value, onChange, categories, label, busy }: Props) {
   const set = (patch: Partial<Shares>) => onChange({ ...value, ...patch });
   const picked = new Set(value.categoryIds);
-  const allOn = categories.length > 0 && categories.every((c) => picked.has(c.id));
 
   return (
     <div className={busy ? 'pointer-events-none opacity-60' : undefined}>
@@ -52,23 +60,18 @@ export default function ShareBox({ value, onChange, categories, label, busy }: P
 
       {value.tasks && (
         <div className="ml-[9px] mt-2 border-l-[1.5px] border-line2 pl-3">
-          <p className="mb-2 text-[11.5px] text-ink3">어느 카테고리를 나눌까요</p>
+          <p className="mb-2 text-[11.5px] text-ink3">
+            어느 카테고리를 나눌까요 <span className="text-ink3">· 하나만 고를 수 있어요</span>
+          </p>
           {categories.length === 0 ? (
             <p className="text-[12px] text-ink3">나눌 카테고리가 없어요.</p>
           ) : (
             <div className="flex flex-wrap gap-[6px]">
               {/*
-                `전체`는 앞으로 만드는 카테고리까지 따라 올라가는 게 아니라
-                지금 있는 것을 전부 고른 것과 같다. 새 카테고리는 만들 때 다시 고른다 —
-                안 그러면 회사방에 개인 카테고리가 조용히 새어 들어간다.
+                하나만 고른다. 여럿을 올릴 수 있던 때는 `전체` 칩이 있었는데,
+                한 번 누르면 그때 있던 것이 다 올라가서 개인 카테고리가 조용히 새어 들어갔다.
+                고를 것이 하나뿐이면 그 칩도 있을 자리가 없다.
               */}
-              <Chip
-                on={allOn}
-                color="var(--accent)"
-                onClick={() => set({ categoryIds: allOn ? [] : categories.map((c) => c.id) })}
-              >
-                전체
-              </Chip>
               {categories.map((c) => {
                 const on = picked.has(c.id);
                 return (
@@ -76,13 +79,8 @@ export default function ShareBox({ value, onChange, categories, label, busy }: P
                     key={c.id}
                     on={on}
                     color={c.color}
-                    onClick={() =>
-                      set({
-                        categoryIds: on
-                          ? value.categoryIds.filter((x) => x !== c.id)
-                          : [...value.categoryIds, c.id],
-                      })
-                    }
+                    // 다시 누르면 내려놓는다 — 고른 것을 무를 길이 있어야 한다
+                    onClick={() => set({ categoryIds: on ? [] : [c.id] })}
                   >
                     {c.name}
                   </Chip>

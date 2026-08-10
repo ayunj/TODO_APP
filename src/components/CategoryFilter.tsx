@@ -21,13 +21,17 @@ interface Bunch {
 /**
  * 헤더 아래 가로 스크롤 한 줄. 일·월·기록 세 화면이 같은 줄을 쓴다.
  *
- * **줄이 쌓이지 않고 바뀐다.** 평소엔 묶음(전체·나만·방들)만 보이고,
- * 묶음을 누르면 그 줄이 그 안의 카테고리로 갈린다. `‹`로 나온다.
+ * **방 하나에 카테고리 하나**라 나눈 것은 칩 하나로 선다. 이름도 색도 그 카테고리 것이다.
  *
- * 전에는 한 줄에 카테고리를 다 늘어놓고 묶음마다 이름표를 세웠는데,
+ * ```
+ * [전체] [건강] [공부] │ [집안일 👥] [기획서 👥]
+ *    내 것              방마다 하나씩
+ * ```
+ *
+ * 한 방에 여럿을 올릴 수 있던 때가 있었다. 그때는 묶음마다 방 이름표를 세워야 했고,
  * 방이 둘이면 이름표가 되풀이돼 정작 누를 칩이 화면 밖으로 밀렸다.
- * 두 줄로 늘리는 대신 한 줄이 안팎으로 오가게 했다 —
- * **좁히자고 화면이 두꺼워지는 건 거꾸로다.**
+ * **여럿 걸린 방은 지난 데이터에만 남아 있다** — 그때만 방 이름으로 서고,
+ * 누르면 이 줄이 그 방 안으로 갈린다(`‹`로 나온다).
  *
  * **차례로 거르는 자리는 없다.** 사람마다 칩을 두는 줄도, `내 차례` 토글도 안 둔다 —
  * 누가 할 일인지는 할 일 줄의 차례 칩이 이미 말하고 있고,
@@ -144,32 +148,46 @@ export default function CategoryFilter() {
                     onClick={() => setFilter(c.id)}
                   />
                 ))
-              : bunches.map((b, i) => (
-                  <span key={b.key} className="flex flex-none items-center gap-2">
-                    {/* 나만과 방 사이만 가른다 — 앞엣것은 자리가 아니라 보는 눈이다 */}
-                    {i === firstRoom && firstRoom > 0 && (
-                      <span className="mx-[3px] my-[5px] w-px flex-none self-stretch bg-line" />
-                    )}
-                    <button
-                      type="button"
-                      aria-pressed={scope === b.key}
-                      onClick={() => setScope(b.key)}
-                      className={chip}
-                      style={
-                        b.color
-                          ? scope === b.key
-                            ? { background: b.color, color: '#fff' }
-                            : { background: tintOf(b.color), color: b.color }
-                          : scope === b.key
-                            ? { background: 'var(--ink2)', color: '#fff' }
-                            : { background: 'var(--sunk)', color: 'var(--ink2)' }
-                      }
-                    >
-                      {b.name}
-                      {b.color && <PeopleIcon className="h-[13px] w-[13px] opacity-75" />}
-                    </button>
-                  </span>
-                ))}
+              : bunches.map((b, i) => {
+                  /*
+                    **방 하나에 카테고리 하나**라, 그 칩은 방이 아니라 그 카테고리로 선다 —
+                    이름도 색도 카테고리 것이다. 할 일 줄에 `● 집안일`이라고 적히는데
+                    거르는 칩만 `우리집`이면 같은 것을 두 이름으로 부르는 셈이다.
+                    여럿 걸린 방은 지난 데이터에만 남아 있다. 그때만 방 이름으로 서고 눌러서 들어간다.
+                  */
+                  const lone = b.key !== 'mine' && b.list.length === 1 ? b.list[0] : null;
+                  const on = scope === b.key;
+                  return (
+                    <span key={b.key} className="flex flex-none items-center gap-2">
+                      {/* 나만과 방 사이만 가른다 — 앞엣것은 자리가 아니라 보는 눈이다 */}
+                      {i === firstRoom && firstRoom > 0 && (
+                        <span className="mx-[3px] my-[5px] w-px flex-none self-stretch bg-line" />
+                      )}
+                      <button
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => setScope(b.key)}
+                        className={chip}
+                        style={
+                          lone
+                            ? on
+                              ? { background: lone.color, color: '#fff' }
+                              : { background: tintOf(lone.color), color: lone.color }
+                            : b.color
+                              ? on
+                                ? { background: b.color, color: '#fff' }
+                                : { background: tintOf(b.color), color: b.color }
+                              : on
+                                ? { background: 'var(--ink2)', color: '#fff' }
+                                : { background: 'var(--sunk)', color: 'var(--ink2)' }
+                        }
+                      >
+                        {lone ? lone.name : b.name}
+                        {b.key !== 'mine' && <PeopleIcon className="h-[13px] w-[13px] opacity-75" />}
+                      </button>
+                    </span>
+                  );
+                })}
           </>
         )}
       </span>

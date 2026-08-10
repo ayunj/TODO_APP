@@ -81,7 +81,19 @@ export default function RoomSharesScreen({ id }: { id: string }) {
 
       <ShareBox value={value} onChange={apply} categories={pickable} busy={busy} />
 
-      <Note>끈 것은 담을 때 목록에 안 나와요.</Note>
+      {/*
+        여럿 걸린 방은 카테고리를 하나만 올릴 수 있게 되기 전에 만들어진 것들이다.
+        내리는 건 남의 화면에서 사라지는 일이라 앱이 대신 정하지 않는다 — 말만 해둔다.
+      */}
+      {value.categoryIds.length > 1 ? (
+        <Note>
+          지금은 카테고리를 <b className="font-medium text-ink">하나만</b> 나눌 수 있어요. 여기
+          걸린 {value.categoryIds.length}개는 그대로 두셔도 되고, 하나를 누르면 나머지는 도로 내
+          것이 됩니다.
+        </Note>
+      ) : (
+        <Note>끈 것은 담을 때 목록에 안 나와요.</Note>
+      )}
     </>
   );
 }
