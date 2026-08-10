@@ -45,6 +45,10 @@ h1{font-size:19px; margin:0 0 6px; font-weight:700}
 .slot{width:344px}
 .slot h3{font-size:13.5px; font-weight:700; margin:0 0 3px}
 .slot h3 .st{color:var(--accent); margin-right:3px}
+/* 만든 것 — 앱에 들어가 있다. 그림과 다르면 앱이 맞다 */
+.slot h3 .dn{display:inline-block; margin-right:6px; padding:1px 7px; border-radius:999px;
+  background:#DFF0E6; color:#3f8a63; font-size:10.5px; font-weight:600; vertical-align:1px}
+.slot h3 .half{background:#FBEEDC; color:#a9752c}
 .slot .why{font-size:12px; color:var(--ink2); margin:0 0 11px; min-height:34px}
 
 .phone{background:var(--bg); border-radius:26px; padding:0 0 18px; box-shadow:0 10px 34px rgba(97,89,83,.13); overflow:hidden}
@@ -274,7 +278,11 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
 <p class="lede">
   앱 메뉴 순서대로 <b>일 · 월 · 기록 · 장보기 · 메모 · 설정</b>. 방 공유·배정·알림·찌르기를 다 얹었다.
   정한 것만 그렸다 — 대보고 버린 안은 남기지 않았다.<br>
-  <b class="st">★</b> 표는 <b>이번에 바뀐 칸</b>이다. 다음에 고칠 때 지우고 새로 단다.
+  <b class="st">★</b> 표는 <b>이번에 바뀐 칸</b>이다. 다음에 고칠 때 지우고 새로 단다.<br>
+  <span class="dn" style="display:inline-block;margin-right:6px;padding:1px 7px;border-radius:999px;background:#DFF0E6;color:#3f8a63;font-size:10.5px;font-weight:600">만듦</span>
+  은 <b>앱에 들어가 있는 칸</b>이다 — <b>그림과 다르면 앱이 맞다.</b>
+  <span class="dn half" style="display:inline-block;margin:0 6px;padding:1px 7px;border-radius:999px;background:#FBEEDC;color:#a9752c;font-size:10.5px;font-weight:600">반만</span>
+  은 화면은 섰는데 뒤가 아직 안 이어진 칸이다.
 </p>
 
 <!-- ══════════════ 일 ══════════════ -->
@@ -696,7 +704,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
 <div class="deck">
 
   <div class="slot">
-    <h3>달력 — 그대로 둔다</h3>
+    <h3><span class="dn">만듦</span>달력 — 그대로 둔다</h3>
     <p class="why">칸 하나가 폰에서 46px이다. <b>더 넣을 자리가 없고, 넣을 필요도 없다</b> — 글씨 바탕색이 이미 카테고리를 말한다.</p>
     <div class="phone">
       <div class="bar"><b>2026. 8</b><span class="day">›</span><span class="gear" style="margin-left:9px">⚙</span></div>
@@ -743,7 +751,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
 <div class="deck">
 
   <div class="slot">
-    <h3>월간</h3>
+    <h3><span class="dn">만듦</span>월간</h3>
     <p class="why">격자에서 <b>1~30 눈금을 뺐다.</b> 숫자를 세려고 보는 화면이 아니라 <b>흐름</b>을 보는 화면이다.</p>
     <div class="phone">
       <div class="bar"><b>2026. 8</b><span class="day">›</span><span class="gear" style="margin-left:9px">⚙</span></div>
@@ -803,7 +811,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3>주간</h3>
+    <h3><span class="dn">만듦</span>주간</h3>
     <p class="why">한 달치는 칸이 작아 하루하루가 안 보인다. <b>주간은 칸이 커서 요일이 들어간다.</b></p>
     <div class="phone">
       <div class="bar"><b>8월 3일 주</b><span class="day">›</span><span class="gear" style="margin-left:9px">⚙</span></div>
@@ -1138,7 +1146,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
 <div class="deck">
 
   <div class="slot">
-    <h3><span class="st">★</span> 설정 — 다섯 줄</h3>
+    <h3><span class="dn">만듦</span><span class="st">★</span> 설정 — 다섯 줄</h3>
     <p class="why">시트가 아니라 <b>밀고 들어가는 화면</b>이다. 첫 화면은 <b>무엇이 있는지 훑는 자리</b>지 값을 만지는 자리가 아니다.</p>
     <div class="phone">
       <div class="bar"><span class="back">‹</span><b>설정</b></div>
@@ -1162,7 +1170,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3><span class="st">★</span> 앱 설정</h3>
+    <h3><span class="dn half">반만</span><span class="st">★</span> 앱 설정</h3>
     <p class="why">주 시작 요일과 알림. <b>알림을 켜야 시각 줄이 열린다</b> — 안 받을 사람에게는 두 줄이 안 보인다.</p>
     <div class="phone">
       <div class="bar"><span class="back">‹</span><b>앱 설정</b></div>
@@ -1228,7 +1236,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3>같이 쓰기</h3>
+    <h3><span class="dn">만듦</span>같이 쓰기</h3>
     <p class="why">쓰는 방이 먼저, 밑에 <b>방 만들기 · 초대 코드 넣기</b>. 누가 연 방인지가 줄마다 보인다.</p>
     <div class="phone">
       <div class="bar"><span class="back">‹</span><b>같이 쓰기</b></div>
@@ -1249,7 +1257,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3>방 만들기</h3>
+    <h3><span class="dn">만듦</span>방 만들기</h3>
     <p class="why"><b>할 일을 켜면 그 밑에 카테고리 목록이 펼쳐진다.</b> 회사방은 장보기·메모를 꺼두면 그쪽으로 갈 길이 없다.</p>
     <div class="phone">
       <div class="bar"><span class="back">‹</span><b>방 만들기</b></div>
@@ -1285,7 +1293,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3>방 설정 — 내가 연 방</h3>
+    <h3><span class="dn">만듦</span>방 설정 — 내가 연 방</h3>
     <p class="why">주인에게만 <b>초대·코드·나눌 것 바꾸기</b>가 있다. 끝내는 길은 둘 — <b>맡기고 나가기</b>와 <b>그만 나누기</b>.</p>
     <div class="phone">
       <div class="bar"><span class="back">‹</span><b>우리집</b><span class="rp home" style="margin-left:auto">내가 연 방</span></div>
@@ -1326,7 +1334,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3>방 설정 — 남이 연 방</h3>
+    <h3><span class="dn">만듦</span>방 설정 — 남이 연 방</h3>
     <p class="why">손님 화면. 만들고 고치고 지우는 건 똑같이 다 되고, <b>방 자체를 다루는 줄만 없다.</b></p>
     <div class="phone">
       <div class="bar"><span class="back">‹</span><b>회사</b><span class="rp work" style="margin-left:auto">민수가 연 방</span></div>
@@ -1359,7 +1367,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3>코드 넣기 — 보고 나서 들어간다</h3>
+    <h3><span class="dn">만듦</span>코드 넣기 — 보고 나서 들어간다</h3>
     <p class="why">코드를 넣으면 <b>바로 안 들어간다.</b> 어떤 방인지 먼저 보여주고 <b>들어가기</b>를 눌러야 들어간다.</p>
     <div class="phone">
       <div class="bar"><span class="back">‹</span><b>초대 코드 넣기</b></div>
@@ -1394,7 +1402,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3>초대하기</h3>
+    <h3><span class="dn">만듦</span>초대하기</h3>
     <p class="why">코드가 든 <b>문구 한 덩이</b>를 복사하거나 그대로 보낸다.</p>
     <div class="phone">
       <div class="bar"><span class="back">‹</span><b>초대하기</b></div>
@@ -1416,7 +1424,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3><span class="st">★</span> 카테고리 설정 — 줄 하나</h3>
+    <h3><span class="dn">만듦</span><span class="st">★</span> 카테고리 설정 — 줄 하나</h3>
     <p class="why">접어서 펼치지 않는다. <b>들어가는 줄 하나</b>로 둔다 — 많으면 카테고리 화면이 통째로 길어진다.</p>
     <div class="phone">
       <div class="bar"><span class="back">‹</span><b>건강</b></div>
@@ -1444,7 +1452,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3><span class="st">★</span> 지운 것 — 내 카테고리</h3>
+    <h3><span class="dn">만듦</span><span class="st">★</span> 지운 것 — 내 카테고리</h3>
     <p class="width why">개인 카테고리라 <b>지운 사람은 늘 나</b>다. 이름을 안 적는다 — 날짜만 있으면 된다.</p>
     <div class="phone">
       <div class="bar"><span class="back">‹</span><b>지운 것</b><span class="gear" style="margin-left:auto;font-size:11.5px">건강 · 30일</span></div>
@@ -1478,7 +1486,7 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
   </div>
 
   <div class="slot">
-    <h3><span class="st">★</span> 지운 것 — 방</h3>
+    <h3><span class="dn">만듦</span><span class="st">★</span> 지운 것 — 방</h3>
     <p class="why">방 것은 <b>여러 카테고리에 걸쳐 있어</b> 한자리에 모은다. 여기서는 <b>누가 지웠는지</b>와 <b>어느 카테고리인지</b>를 적는다.</p>
     <div class="phone">
       <div class="bar"><span class="back">‹</span><b>지운 것</b><span class="gear" style="margin-left:auto;font-size:11.5px">우리집 · 30일</span></div>
@@ -1544,6 +1552,25 @@ ul.list{list-style:none; margin:0; padding:0; display:flex; flex-direction:colum
 </div>
 
 <div class="foot-note">
+  <h3><span class="dn" style="background:#DFF0E6;color:#3f8a63">만듦</span> 여기까지 왔다</h3>
+  <ul>
+    <li><b>설정이 시트에서 밀고 들어가는 화면이 됐다.</b> 다섯 줄 — 계정 · 즐겨찾기 ·
+      카테고리 · 앱 설정 · 같이 쓰기. 시트는 <b>항목 하나를 손보는 자리</b>만 남았다</li>
+    <li><b>방을 만들고 나누고 끝내는 길이 다 열렸다.</b> 무엇을 나눌지 고르는 자리,
+      여덟 자 초대 코드(<code>8F3K-2QMD</code>), 방마다 다른 내 이름,
+      <code>그만 나누기</code>·<code>맡기고 나가기</code>·<code>나가기</code></li>
+    <li><b>카테고리를 방에 여는 게 실제로 돈다.</b> 카테고리와 그 안의 할 일·즐겨찾기가
+      한 번에 옮겨간다. <b>장보기·메모는 켜고 끄는 칸만 있고 아직 안 이어졌다</b></li>
+    <li><b>기록에 주간이 붙었다.</b> 주 시작 요일을 따라가고, 월간 격자에서는 눈금을 뺐다.
+      <code>누가 얼마나</code>는 <b>배정이 있어야</b> 뜬다 — 아직이다</li>
+    <li><b>지운 것 — 30일.</b> 방 설정과 카테고리 설정, 장보기·메모 화면 맨 아래</li>
+    <li><b>앱 설정은 반만이다.</b> 주 시작은 달력과 주간 격자를 실제로 움직이는데,
+      <b>알림은 시각만 담아두고 아직 안 울린다</b></li>
+  </ul>
+  <p class="sub2" style="margin-bottom:18px">그림과 앱이 다르면 <b>앱이 맞다.</b>
+    여기 표가 붙은 칸은 이미 만든 것이라, 고칠 일이 생기면 그림이 아니라
+    <a href="../README.md">docs/</a>의 제 폴더를 먼저 본다.</p>
+
   <h3><span class="st">★</span> 이번에 바뀐 것</h3>
   <ul>
     <li><b>콕 찌르기를 시트 제목 줄 오른쪽에 작게 얹었다.</b> 제목 줄은 이미 있는 줄이고
