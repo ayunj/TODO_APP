@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { onAsk, type Question } from '@/lib/ask';
+import { holdAsk, onAsk, type Question } from '@/lib/ask';
 
 /**
  * 묻는 말은 두 줄로 — **무엇이 없어지는지 한 줄, 안심할 것 한 줄.** 그게 끝이다.
@@ -34,6 +34,12 @@ export default function AskHost() {
     reply.current = null;
     setQ(null);
   };
+
+  // 뒤로 제스처도 `그만두기`와 같은 뜻이다 — 밖에서 닫을 수 있게 손잡이를 걸어둔다
+  useEffect(() => {
+    holdAsk(q ? () => close(false) : null);
+    return () => holdAsk(null);
+  });
 
   if (!q) return null;
 

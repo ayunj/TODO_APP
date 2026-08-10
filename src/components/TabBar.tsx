@@ -1,6 +1,7 @@
 'use client';
 
 import { DayIcon, LogIcon, MonthIcon } from './Icons';
+import { todayStr } from '@/lib/date';
 import { useUi } from '@/lib/ui';
 import type { Tab } from '@/lib/ui';
 
@@ -13,9 +14,25 @@ const TABS: { v: Tab; label: string; Icon: IconType }[] = [
   { v: 'log', label: '기록', Icon: LogIcon },
 ];
 
-/** 하단 고정 탭바. 상단 세그먼트 컨트롤은 쓰지 않는다. */
+/**
+ * 하단 고정 탭바. 상단 세그먼트 컨트롤은 쓰지 않는다.
+ *
+ * **보고 있던 탭을 한 번 더 누르면 오늘로 돌아온다** — 일은 오늘, 월은 이번 달,
+ * 기록은 이번 주·이번 달. 사흘 뒤를 보다가 오늘로 오려면 그전에는 화살표를 세 번 눌러야 했다.
+ * 누르던 자리를 한 번 더 누르는 건 이미 손에 익은 손짓이라 새로 배울 게 없다.
+ */
 export default function TabBar() {
-  const { view, setTab } = useUi();
+  const { view, setTab, setCursor } = useUi();
+
+  const press = (v: Tab, on: boolean) => {
+    if (!on) {
+      setTab(v);
+      return;
+    }
+    setCursor(todayStr());
+    // 멀리 내려와 있으면 날짜만 바뀌고 화면은 그대로라 아무 일도 안 한 것처럼 보인다
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <nav
@@ -31,7 +48,7 @@ export default function TabBar() {
               type="button"
               role="tab"
               aria-selected={on}
-              onClick={() => setTab(v)}
+              onClick={() => press(v, on)}
               className={`flex flex-1 flex-col items-center gap-1 rounded-[14px] py-[5px] text-[10.5px] font-medium ${
                 on ? 'text-accent' : 'text-ink3'
               }`}

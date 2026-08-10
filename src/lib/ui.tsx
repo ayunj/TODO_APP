@@ -61,6 +61,8 @@ export type Sheet =
 interface UiValue {
   /** 지금 그리는 화면 — 쌓인 게 있으면 맨 위, 없으면 보던 탭 */
   view: ViewKind;
+  /** 밀고 들어간 것을 다 벗으면 돌아올 탭. 뒤로 제스처가 본다. */
+  tab: Tab;
   /** 쌓인 화면의 맨 위 (id 같은 딸린 값이 필요할 때). 탭에 있으면 null */
   route: Route | null;
   /** 몇 겹 들어와 있는지 */
@@ -109,6 +111,7 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<UiValue>(
     () => ({
       view: (route?.kind ?? tab) as ViewKind,
+      tab,
       route,
       depth: stack.length,
       setTab: (t) => {

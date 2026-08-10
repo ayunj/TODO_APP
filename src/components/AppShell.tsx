@@ -29,6 +29,7 @@ import SettingsScreen from '@/screens/settings/SettingsScreen';
 import TrashScreen from '@/screens/settings/TrashScreen';
 import ShareScreen from '@/screens/settings/ShareScreen';
 import { useAuth } from '@/lib/auth';
+import { useBackGesture } from '@/lib/back';
 import { addDays, addMonths, monthKey } from '@/lib/date';
 import { useStore } from '@/lib/store';
 import { useSwipe } from '@/lib/swipe';
@@ -38,6 +39,9 @@ export default function AppShell() {
   const { loading, onboarded } = useStore();
   const { enabled, loading: checking, account, recovering } = useAuth();
   const { view, route, depth, cursor, setCursor, logSpan } = useUi();
+
+  // 뒤로 제스처는 앱 전체가 한 자리에서 받는다 (한 번에 한 겹씩)
+  useBackGesture();
 
   // 아래 이른 반환들보다 위에 있어야 한다 — 훅은 렌더마다 같은 수로 불려야 한다
   const step = (n: number) =>

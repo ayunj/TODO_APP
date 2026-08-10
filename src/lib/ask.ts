@@ -43,3 +43,21 @@ export function onAsk(fn: Listener): () => void {
   listeners.add(fn);
   return () => listeners.delete(fn);
 }
+
+/**
+ * 지금 떠 있는 물음을 밖에서 닫는 길. **뒤로 제스처가 쓴다.**
+ * 물음이 떠 있는데 뒤로가 그걸 지나쳐 한 겹을 더 벗으면,
+ * 답을 기다리는 물음만 남고 화면은 딴 데로 가 있게 된다.
+ */
+let dismiss: (() => void) | null = null;
+
+export function holdAsk(fn: (() => void) | null): void {
+  dismiss = fn;
+}
+
+/** 닫았으면 true. 떠 있는 물음이 없으면 false. */
+export function dismissAsk(): boolean {
+  if (!dismiss) return false;
+  dismiss();
+  return true;
+}
