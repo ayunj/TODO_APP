@@ -164,13 +164,7 @@ export default function JoinScreen() {
 
           {already ? (
             <>
-              <p className="mb-3 ml-1 text-[12.5px] leading-[1.6] text-ink2">
-                {already.mine ? '내가 연 방이에요.' : '이미 들어와 있는 방이에요.'}
-                <br />
-                <span className="text-ink3">
-                  이름을 바꾸려면 방 설정에서 내 줄을 누르면 돼요.
-                </span>
-              </p>
+              <p className="mb-3 ml-1 text-[12.5px] text-ink2">이미 들어가 있는 방입니다.</p>
               <GoButton onClick={() => replaceView({ kind: 'room', id: already.id })}>
                 방 열기
               </GoButton>
