@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { CalendarIcon, PeopleIcon } from './Icons';
 import { PALETTE, PRIORITY_LABEL } from '@/lib/constants';
 import { longDate } from '@/lib/date';
+import { useRooms } from '@/lib/rooms';
 import { useStore } from '@/lib/store';
 import type { DateStr, Priority } from '@/lib/types';
 
@@ -96,7 +97,14 @@ export function DateField({
   );
 }
 
-/** 카테고리는 하나만 고른다. 태그는 만들지 않는다. */
+/**
+ * 카테고리는 하나만 고른다. 태그는 만들지 않는다.
+ *
+ * **내 것 먼저, 그다음 방마다 한 묶음**이다 — 필터 줄과 같은 순서라 새로 배울 게 없다.
+ * 여기서 고르는 카테고리가 곧 어느 방 일인지를 정하니까(할 일은 방을 따로 안 고른다)
+ * 내 것과 나눈 것이 한 줄에 섞여 있으면 무심코 방에 올라간다.
+ * 나눌 방이 없으면 머리글을 안 단다 — 묶음이 하나뿐인데 이름을 달면 설명이 된다.
+ */
 export function CategoryPicker({
   value,
   onChange,
@@ -105,34 +113,63 @@ export function CategoryPicker({
   onChange: (id: string) => void;
 }) {
   const { categories } = useStore();
+  const { rooms } = useRooms();
+
+  const groups: { key: string; label: string; list: typeof categories }[] = [];
+  const mine = categories.filter((c) => !c.roomId);
+  if (mine.length) groups.push({ key: 'mine', label: '내 카테고리', list: mine });
+  for (const r of rooms) {
+    const list = categories.filter((c) => c.roomId === r.id);
+    if (list.length) groups.push({ key: r.id, label: r.name, list });
+  }
+  // 아직 못 받아온 방에 걸린 것도 흘리지 않는다 — 마지막에 한 묶음으로 붙인다
+  const known = new Set(rooms.map((r) => r.id));
+  const stray = categories.filter((c) => c.roomId && !known.has(c.roomId));
+  if (stray.length) groups.push({ key: 'stray', label: '공유 카테고리', list: stray });
+
+  const labelled = groups.length > 1;
+
   return (
-    <div className="flex flex-wrap gap-[7px]">
-      {categories.map((c) => {
-        const on = c.id === value;
-        return (
-          <button
-            key={c.id}
-            type="button"
-            aria-pressed={on}
-            onClick={() => onChange(c.id)}
-            /*
-              고른 칩은 **그 카테고리 색**으로 채운다.
-              칩 안에 카테고리 색 점을 달고 있으면서 채움만 앱 강조색이면 어긋난다.
-              필터 줄과 같은 규칙이라 새로 배울 게 없다. 담당자 칩만 코랄이다 —
-              카테고리에는 색이 있지만 사람에게는 없다.
-            */
-            className="inline-flex items-center gap-1.5 rounded-full px-[15px] py-2.5 text-[13px] shadow-card"
-            style={on ? { background: c.color, color: '#fff' } : undefined}
-          >
-            <span
-              className="h-2 w-2 rounded-full"
-              style={{ background: on ? 'rgba(255,255,255,.75)' : c.color }}
-            />
-            {c.name}
-            {c.roomId && <PeopleIcon className="h-3 w-3 opacity-70" />}
-          </button>
-        );
-      })}
+    <div className="flex flex-col gap-3">
+      {groups.map((g) => (
+        <div key={g.key}>
+          {labelled && (
+            <span className="mb-1.5 flex items-center gap-1 text-[11.5px] text-ink3">
+              {g.label}
+              {g.key !== 'mine' && <PeopleIcon className="h-3 w-3" />}
+            </span>
+          )}
+          <div className="flex flex-wrap gap-[7px]">
+            {g.list.map((c) => {
+              const on = c.id === value;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => onChange(c.id)}
+                  /*
+                    고른 칩은 **그 카테고리 색**으로 채운다.
+                    칩 안에 카테고리 색 점을 달고 있으면서 채움만 앱 강조색이면 어긋난다.
+                    필터 줄과 같은 규칙이라 새로 배울 게 없다. 담당자 칩만 코랄이다 —
+                    카테고리에는 색이 있지만 사람에게는 없다.
+                  */
+                  className="inline-flex items-center gap-1.5 rounded-full px-[15px] py-2.5 text-[13px] shadow-card"
+                  style={on ? { background: c.color, color: '#fff' } : undefined}
+                >
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{ background: on ? 'rgba(255,255,255,.75)' : c.color }}
+                  />
+                  {c.name}
+                  {/* 머리글이 이미 말하고 있으면 칩마다 또 붙이지 않는다 */}
+                  {c.roomId && !labelled && <PeopleIcon className="h-3 w-3 opacity-70" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
