@@ -348,8 +348,22 @@ export async function peekRoom(code: string): Promise<RoomPeek | null> {
     name: String(d.name ?? ''),
     color: String(d.color ?? '#A9B8F4'),
     owner: (d.owner as string) ?? null,
-    members: Array.isArray(d.members) ? (d.members as string[]) : [],
+    members: Array.isArray(d.members)
+      ? (d.members as Record<string, unknown>[]).map((m) => ({
+          name: String(m.name ?? ''),
+          owner: m.owner === true,
+        }))
+      : [],
     count: Number(d.count ?? 0),
+    shareTasks: d.shareTasks !== false,
+    shareShop: d.shareShop === true,
+    shareMemo: d.shareMemo === true,
+    cats: Array.isArray(d.cats)
+      ? (d.cats as Record<string, unknown>[]).map((c) => ({
+          name: String(c.name ?? ''),
+          color: String(c.color ?? '#A9B8F4'),
+        }))
+      : [],
   };
 }
 

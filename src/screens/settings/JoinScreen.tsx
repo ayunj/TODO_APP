@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import PageBar from '@/components/PageBar';
+import Sheet from '@/components/Sheet';
 import { Field, GoButton } from '@/components/form';
 import { tintOf } from '@/lib/constants';
 import { useAuth } from '@/lib/auth';
@@ -12,7 +13,8 @@ import type { RoomPeek } from '@/lib/types';
 
 /**
  * 코드를 넣으면 **바로 안 들어간다.** 어떤 방인지 먼저 보여주고 `들어가기`를 눌러야 들어간다.
- * 코드를 잘못 받았거나 옛 초대장일 수 있고, 모르는 채 들어가면 남의 장보기가 갑자기 뜬다.
+ * 코드를 잘못 받았거나 옛 초대장일 수 있고, 무엇을 나누는 방인지 모른 채 들어가면
+ * 남의 장보기가 갑자기 내 화면에 뜬다.
  */
 export default function JoinScreen() {
   const { account } = useAuth();
@@ -61,6 +63,9 @@ export default function JoinScreen() {
     }
   };
 
+  // 안 나누는 것은 한 줄로만 적는다 — 없는 것을 칩으로 그리면 있는 것처럼 읽힌다
+  const off = [!peek?.shareShop && '장보기', !peek?.shareMemo && '메모'].filter(Boolean);
+
   return (
     <>
       <PageBar title="초대 코드 넣기" />
@@ -69,7 +74,7 @@ export default function JoinScreen() {
         <input
           id="join-code"
           type="text"
-          className="field-input font-mono tracking-wide"
+          className="field-input font-mono text-[17px] tracking-[1px]"
           placeholder="예: 8F3K-2QMD"
           autoComplete="off"
           autoCapitalize="off"
@@ -82,26 +87,69 @@ export default function JoinScreen() {
       </Field>
       <p className="-mt-2 mb-4 ml-1 text-[11.5px] text-ink3">대소문자와 하이픈은 안 따져요.</p>
 
-      {!peek ? (
-        <GoButton onClick={look} disabled={busy || !code.trim()}>
-          {busy ? '찾는 중…' : '방 보기'}
-        </GoButton>
-      ) : (
-        <>
-          <div className="mb-4 rounded-card bg-card p-4 shadow-card">
+      <GoButton onClick={look} disabled={busy || !code.trim()}>
+        {busy && !peek ? '찾는 중…' : '방 보기'}
+      </GoButton>
+
+      {/* 찾으면 아래에서 올라온다. 뒤가 어두워져 앞뒤가 갈린다. */}
+      {peek && (
+        <Sheet title="이 방이 맞나요" onClose={() => setPeek(null)}>
+          <h3 className="font-round text-[19px] leading-[1.3]">
             <span
-              className="inline-flex items-center rounded-full px-2.5 py-[3px] text-[11px] font-medium"
-              style={{ background: tintOf(peek.color), color: peek.color }}
-            >
-              {peek.name}
-            </span>
-            <p className="mt-2.5 text-[12px] text-ink2">
-              같이 쓰는 사람 {peek.count}
-              {peek.members.length > 0 && (
-                <span className="text-ink3"> · {peek.members.join(' · ')}</span>
+              className="mr-2 inline-block h-[10px] w-[10px] rounded-full align-[1px]"
+              style={{ background: peek.color }}
+            />
+            {peek.name}
+          </h3>
+          <p className="mb-4 mt-1 text-[12.5px] text-ink3">{peek.owner ?? '누군가'}이 연 방</p>
+
+          <p className="mb-2 text-[12.5px] font-medium text-ink2">
+            같이 쓰는 사람 {peek.count}
+          </p>
+          <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-card bg-card px-[15px] py-3.5 text-[13.5px] shadow-card">
+            {peek.members.length === 0 ? (
+              <span className="text-ink3">아직 아무도 없어요</span>
+            ) : (
+              peek.members.map((m, i) => (
+                <span key={`${m.name}-${i}`} className="inline-flex items-center gap-1.5">
+                  {i > 0 && <span className="text-faint">·</span>}
+                  {m.name || '이름 없음'}
+                  {m.owner && <span className="text-[11.5px] text-ink3">방 주인</span>}
+                </span>
+              ))
+            )}
+          </div>
+
+          <p className="mb-2 text-[12.5px] font-medium text-ink2">나누는 것</p>
+          <div className="mb-4 rounded-card bg-card px-[15px] py-3.5 shadow-card">
+            <div className="flex flex-wrap gap-[5px]">
+              {peek.shareTasks && peek.cats.length > 0 ? (
+                peek.cats.map((c) => (
+                  <span
+                    key={c.name}
+                    className="inline-flex items-center rounded-full px-2.5 py-[3px] text-[11.5px] font-medium"
+                    style={{ background: tintOf(c.color), color: c.color }}
+                  >
+                    {c.name}
+                  </span>
+                ))
+              ) : (
+                <span className="text-[13px] text-ink3">아직 나누는 것이 없어요</span>
               )}
-            </p>
-            {peek.owner && <p className="mt-1 text-[11.5px] text-ink3">{peek.owner}이 연 방</p>}
+              {peek.shareShop && (
+                <span className="inline-flex items-center rounded-full bg-sunk px-2.5 py-[3px] text-[11.5px] font-medium text-ink2">
+                  장보기
+                </span>
+              )}
+              {peek.shareMemo && (
+                <span className="inline-flex items-center rounded-full bg-sunk px-2.5 py-[3px] text-[11.5px] font-medium text-ink2">
+                  메모
+                </span>
+              )}
+            </div>
+            {off.length > 0 && (
+              <p className="mt-2 text-[11.5px] text-ink3">{off.join('와 ')}는 안 나눠요</p>
+            )}
           </div>
 
           <Field label="이 방에서 부를 이름" htmlFor="join-name">
@@ -119,7 +167,7 @@ export default function JoinScreen() {
           <GoButton onClick={enter} disabled={busy}>
             {busy ? '들어가는 중…' : '들어가기'}
           </GoButton>
-        </>
+        </Sheet>
       )}
     </>
   );

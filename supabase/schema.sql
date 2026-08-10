@@ -332,15 +332,26 @@ begin
     return null;
   end if;
 
+  -- 이름·색·사람·나누는 것만 돌려준다. 방 안의 할 일·메모 같은 내용은 주지 않는다.
   select json_build_object(
     'id', target.id,
     'name', target.name,
     'color', target.color,
     'owner', (select display_name from room_members
               where room_id = target.id and user_id = target.created_by),
-    'members', (select coalesce(json_agg(display_name order by joined_at), '[]'::json)
+    'members', (select coalesce(json_agg(
+                  json_build_object('name', display_name,
+                                    'owner', user_id = target.created_by)
+                  order by joined_at), '[]'::json)
                 from room_members where room_id = target.id),
-    'count', (select count(*) from room_members where room_id = target.id)
+    'count', (select count(*) from room_members where room_id = target.id),
+    'shareTasks', target.share_tasks,
+    'shareShop', target.share_shop,
+    'shareMemo', target.share_memo,
+    'cats', (select coalesce(json_agg(
+               json_build_object('name', name, 'color', color)
+               order by sort_order), '[]'::json)
+             from categories where room_id = target.id and deleted_at is null)
   ) into result;
 
   return result;

@@ -51,16 +51,26 @@ export interface RoomMember {
   joinedAt: string;
 }
 
-/** 코드를 넣었을 때 들어가기 전에 먼저 보여주는 방 미리보기 */
+/**
+ * 코드를 넣었을 때 들어가기 전에 먼저 보여주는 방 미리보기.
+ * **이름·사람·나누는 것만** 담는다 — 코드를 아는 사람에게도 들어오기 전까지는
+ * 할 일 한 줄도 보이면 안 된다.
+ */
 export interface RoomPeek {
   id: string;
   name: string;
   color: string;
   /** 방 주인 이름 */
   owner: string | null;
-  /** 든 사람들의 이름 */
-  members: string[];
+  /** 든 사람들 (들어온 순서) */
+  members: { name: string; owner: boolean }[];
   count: number;
+  /** 무엇을 나누는 방인지 — 모르고 들어가면 남의 장보기가 갑자기 뜬다 */
+  shareTasks: boolean;
+  shareShop: boolean;
+  shareMemo: boolean;
+  /** 나누는 카테고리 */
+  cats: { name: string; color: string }[];
 }
 
 /**
