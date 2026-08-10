@@ -18,7 +18,7 @@ import type { RoomPeek } from '@/lib/types';
  */
 export default function JoinScreen() {
   const { account } = useAuth();
-  const { peekRoom, joinRoom } = useRooms();
+  const { rooms, peekRoom, joinRoom } = useRooms();
   const { replaceView } = useUi();
 
   const [code, setCode] = useState('');
@@ -65,6 +65,16 @@ export default function JoinScreen() {
 
   // 안 나누는 것은 한 줄로만 적는다 — 없는 것을 칩으로 그리면 있는 것처럼 읽힌다
   const off = [!peek?.shareShop && '장보기', !peek?.shareMemo && '메모'].filter(Boolean);
+
+  /*
+    이미 들어와 있는 방이면 다시 들어갈 일이 없다.
+    join_room은 이름을 덮어쓰기까지 해서, 그냥 두면 코드를 두 번 넣었다가
+    그 방에서 부르던 이름이 조용히 바뀐다.
+
+    **버튼을 회색으로 눕혀두지 않는다** — 그러면 왜 안 눌리는지 알려주지 못한다.
+    할 수 있는 일로 갈아 끼운다.
+  */
+  const already = peek ? (rooms.find((r) => r.id === peek.id) ?? null) : null;
 
   return (
     <>
@@ -152,21 +162,38 @@ export default function JoinScreen() {
             )}
           </div>
 
-          <Field label="이 방에서 부를 이름" htmlFor="join-name">
-            <input
-              id="join-name"
-              type="text"
-              className="field-input"
-              placeholder="예: 엄마"
-              autoComplete="off"
-              value={myName}
-              onChange={(e) => setMyName(e.target.value)}
-            />
-          </Field>
+          {already ? (
+            <>
+              <p className="mb-3 ml-1 text-[12.5px] leading-[1.6] text-ink2">
+                {already.mine ? '내가 연 방이에요.' : '이미 들어와 있는 방이에요.'}
+                <br />
+                <span className="text-ink3">
+                  이름을 바꾸려면 방 설정에서 내 줄을 누르면 돼요.
+                </span>
+              </p>
+              <GoButton onClick={() => replaceView({ kind: 'room', id: already.id })}>
+                방 열기
+              </GoButton>
+            </>
+          ) : (
+            <>
+              <Field label="이 방에서 부를 이름" htmlFor="join-name">
+                <input
+                  id="join-name"
+                  type="text"
+                  className="field-input"
+                  placeholder="예: 엄마"
+                  autoComplete="off"
+                  value={myName}
+                  onChange={(e) => setMyName(e.target.value)}
+                />
+              </Field>
 
-          <GoButton onClick={enter} disabled={busy}>
-            {busy ? '들어가는 중…' : '들어가기'}
-          </GoButton>
+              <GoButton onClick={enter} disabled={busy}>
+                {busy ? '들어가는 중…' : '들어가기'}
+              </GoButton>
+            </>
+          )}
         </Sheet>
       )}
     </>
