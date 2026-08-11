@@ -1,7 +1,7 @@
 'use client';
 
 import { PeopleIcon } from './Icons';
-import { bandOf } from '@/lib/constants';
+import { tintOf } from '@/lib/constants';
 import type { Room } from '@/lib/types';
 
 /**
@@ -76,8 +76,18 @@ function Chip({
       className={`inline-flex flex-none items-center gap-1.5 rounded-full px-3.5 py-[7px] text-[12.5px] font-medium active:scale-95 ${
         color ? '' : plain
       }`}
+      /*
+        **할 일 필터 줄과 같은 규칙이다** — 안 눌린 칩은 옅은 틴트에 그 색 글씨,
+        눌린 칩은 그 색 바탕에 흰 글씨. 여기만 진한 밴드(`bandOf`)를 깔고 있었는데
+        같은 방이 화면마다 다른 색으로 보였다. 밴드는 **글자를 얹는 바탕**
+        (달력 칸·방 이름표)의 몫이지 고르는 칩의 몫이 아니다.
+      */
       style={
-        color ? (on ? { background: color, color: '#fff' } : { background: bandOf(color) }) : undefined
+        color
+          ? on
+            ? { background: color, color: '#fff' }
+            : { background: tintOf(color), color }
+          : undefined
       }
     >
       {children}

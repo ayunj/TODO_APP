@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import Sheet from '@/components/Sheet';
 import { PeopleIcon } from '@/components/Icons';
 import { DangerButton, Field, GoButton } from '@/components/form';
-import { bandOf } from '@/lib/constants';
+import { tintOf } from '@/lib/constants';
 import { toast } from '@/lib/toast';
 import { useRooms } from '@/lib/rooms';
 import { useStore } from '@/lib/store';
@@ -172,7 +172,13 @@ function RoomChip({
       className={`inline-flex items-center gap-1 rounded-full px-[15px] py-2.5 text-[13px] font-medium shadow-card active:scale-95 ${
         color ? '' : on ? 'bg-accent text-white' : 'bg-card text-ink2'
       }`}
-      style={color ? (on ? { background: color, color: '#fff' } : { background: bandOf(color) }) : undefined}
+      style={
+        color
+          ? on
+            ? { background: color, color: '#fff' }
+            : { background: tintOf(color), color }
+          : undefined
+      }
     >
       {children}
       {on && <span className="text-[10px]">✓</span>}
