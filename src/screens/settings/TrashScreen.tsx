@@ -96,11 +96,20 @@ export default function TrashScreen({ scope, id }: { scope: TrashScope; id: stri
         </ul>
       )}
 
-      {rows.length > 0 && (
-        <p className="ml-1 mt-3 text-[11.5px] leading-[1.6] text-ink3">
-          30일이 지나면 사라져요.
-        </p>
-      )}
+      <div className="ml-1 mt-3 flex flex-col gap-1.5 text-[11.5px] leading-[1.6] text-ink3">
+        {rows.length > 0 && <p>30일이 지나면 사라져요.</p>}
+        {/*
+          여기는 개인 것만 모이는 자리다. 방 것이 안 보여서 없어진 줄 알기 쉬운데,
+          **찾는 사람은 이미 급한 참**이라 어디로 가야 하는지를 이 자리에서 말해줘야 한다.
+          비어 있을 때도 적는다 — 못 찾은 그때가 이 말이 제일 필요한 때다.
+        */}
+        {scope !== 'room' && rooms.length > 0 && (
+          <p>
+            방에서 나눈 것은 여기 없어요. <b className="font-medium text-ink2">방 설정</b>의{' '}
+            <b className="font-medium text-ink2">지운 것</b>에서 되돌립니다.
+          </p>
+        )}
+      </div>
     </>
   );
 }
