@@ -48,6 +48,9 @@ export default function TrashScreen({ scope, id }: { scope: TrashScope; id: stri
           ? '장보기'
           : '메모';
 
+  /** 이 자리에 모이는 것을 그 이름으로 부른다 — `방에서 나눈 것`처럼 뭉뚱그리지 않는다 */
+  const kind: Record<string, string> = { shop: '장보기', memo: '메모', category: '할 일' };
+
   const undo = (t: Trashed) => {
     restore(t.kind, t.id);
     toast(`${t.title} — 되돌렸어요`);
@@ -101,12 +104,21 @@ export default function TrashScreen({ scope, id }: { scope: TrashScope; id: stri
         {/*
           여기는 개인 것만 모이는 자리다. 방 것이 안 보여서 없어진 줄 알기 쉬운데,
           **찾는 사람은 이미 급한 참**이라 어디로 가야 하는지를 이 자리에서 말해줘야 한다.
-          비어 있을 때도 적는다 — 못 찾은 그때가 이 말이 제일 필요한 때다.
+
+          `방에서 나눈 것`처럼 뭉뚱그리지 않는다 — 여기 무엇이 모이는지와
+          나머지가 어디 있는지를 **눌러 갈 길 그대로** 적는다. 방이 하나면 이름까지 적는다.
+          비어 있을 때도 적는다. 못 찾은 그때가 이 말이 제일 필요한 때다.
+
+          `우리집과`처럼 이름에 조사를 붙이면 받침에 따라 `회사과`가 된다. 안 붙는 말로 쓴다.
         */}
         {scope !== 'room' && rooms.length > 0 && (
           <p>
-            방에서 나눈 것은 여기 없어요. <b className="font-medium text-ink2">방 설정</b>의{' '}
-            <b className="font-medium text-ink2">지운 것</b>에서 되돌립니다.
+            여기는 나만 보는 {kind[scope]}만 모입니다.{' '}
+            {rooms.length === 1 ? rooms[0].name : '방'} 것은{' '}
+            <b className="font-medium text-ink2">
+              설정 › 같이 쓰기 › {rooms.length === 1 ? rooms[0].name : '그 방'} › 지운 것
+            </b>
+            에 있어요.
           </p>
         )}
       </div>
