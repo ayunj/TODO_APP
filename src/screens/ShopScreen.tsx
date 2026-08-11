@@ -89,8 +89,12 @@ export default function ShopScreen() {
       )}
 
       <ShopHistory items={history} />
-      {/* 장보기·메모에는 카테고리가 없다 — 각자 제 화면 맨 아래에서 같은 화면으로 들어간다 */}
-      <TrashLine scope="shop" />
+      {/*
+        장보기·메모에는 카테고리가 없다 — 각자 제 화면 맨 아래에서 같은 화면으로 들어간다.
+        방을 보고 있을 때는 안 그린다. 여기 오르는 건 개인 것뿐이고
+        방 장보기를 되돌리는 자리는 방 설정이다.
+      */}
+      {!room && <TrashLine scope="shop" />}
     </>
   );
 }

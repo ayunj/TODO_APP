@@ -177,8 +177,12 @@ export default function MemoScreen() {
         </div>
       )}
 
-      {/* 메모에는 카테고리가 없다 — 여기가 그 지운 것으로 들어가는 자리다 */}
-      <TrashLine scope="memo" />
+      {/*
+        메모에는 카테고리가 없다 — 여기가 그 지운 것으로 들어가는 자리다.
+        방을 보고 있을 때는 안 그린다. 여기 오르는 건 개인 것뿐이고
+        방 메모를 되돌리는 자리는 방 설정이다.
+      */}
+      {!here && <TrashLine scope="memo" />}
     </>
   );
 }

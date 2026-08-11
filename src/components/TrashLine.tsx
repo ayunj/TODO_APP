@@ -10,6 +10,10 @@ import type { TrashScope } from '@/lib/types';
  * 이 둘에는 카테고리가 없어서 들어갈 자리가 제 화면밖에 없다.
  * 비어 있어도 그린다 — 없어진 걸 찾는 사람은 이미 급한 참이라
  * 그때 처음 보이는 줄로는 늦다. **평소에 한 번 봐둬야 어디 있는지 안다.**
+ *
+ * **여기 오르는 것은 개인 것뿐이다.** 그래서 방 칩을 눌러둔 동안에는
+ * 이 줄을 아예 안 그린다(부르는 쪽이 정한다) — 방 것은 방 설정 한자리에 모이는데,
+ * 그 앞에서 개인 지운 것을 세고 있으면 방 것이 여기 있는 줄 알고 찾게 된다.
  */
 export default function TrashLine({ scope }: { scope: Extract<TrashScope, 'shop' | 'memo'> }) {
   const { trash } = useStore();
