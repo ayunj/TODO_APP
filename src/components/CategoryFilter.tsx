@@ -9,11 +9,11 @@ import { useStore } from '@/lib/store';
 import { useUi, type Scope } from '@/lib/ui';
 import type { Category } from '@/lib/types';
 
-/** 한 묶음 — 내 것 하나, 방마다 하나, 못 받아온 방 것 한 덩이 */
+/** 나눈 한 자리 — 방마다 하나, 못 받아온 방 것은 한 덩이로 */
 interface Bunch {
   key: Scope;
   name: string;
-  /** 방 색. 내 것에는 색이 없다 */
+  /** 방 색. 못 받아온 방 덩이에는 색이 없다 */
   color: string | null;
   list: Category[];
 }
@@ -27,6 +27,9 @@ interface Bunch {
  * [전체] [건강] [공부] │ [집안일 👥] [기획서 👥]
  *    내 것              방마다 하나씩
  * ```
+ *
+ * **내 것은 접지 않는다.** `나만` 하나로 묶어 눌러 들어가게도 해봤는데,
+ * 정작 늘 누르는 것이 내 카테고리라 한 번을 더 누르게 됐다. 밖에 그대로 편다.
  *
  * 한 방에 여럿을 올릴 수 있던 때가 있었다. 그때는 묶음마다 방 이름표를 세워야 했고,
  * 방이 둘이면 이름표가 되풀이돼 정작 누를 칩이 화면 밖으로 밀렸다.
@@ -42,10 +45,11 @@ export default function CategoryFilter() {
   const { rooms } = useRooms();
   const { scope, setScope, filter, setFilter } = useUi();
 
+  // 아무 방에도 안 건 것 — 접지 않고 칩 그대로 편다
+  const mine = useMemo(() => categories.filter((c) => !c.roomId), [categories]);
+
   const bunches = useMemo<Bunch[]>(() => {
     const out: Bunch[] = [];
-    const mine = categories.filter((c) => !c.roomId);
-    if (mine.length) out.push({ key: 'mine', name: '나만', color: null, list: mine });
 
     for (const r of rooms) {
       const list = categories.filter((c) => c.roomId === r.id);
@@ -68,10 +72,6 @@ export default function CategoryFilter() {
     `전체 / 건강` 둘을 나란히 두면 같은 것을 두 번 묻는 꼴이 된다.
   */
   const open = here && here.list.length > 1 ? here : null;
-  // 묶음이 내 것 하나뿐이면 접을 것이 없다 — 혼자 쓰는 사람에게는 예전 그대로 한 줄이다
-  const flat = bunches.length === 1 && bunches[0].key === 'mine';
-  // 내 것과 방 사이에만 줄을 세운다. 내 것이 없으면 가를 것도 없다.
-  const firstRoom = bunches.findIndex((b) => b.key !== 'mine');
 
   const chip =
     'flex-none inline-flex items-center gap-1.5 rounded-full px-[15px] py-[7px] text-[12.5px] font-medium transition-colors';
@@ -137,57 +137,61 @@ export default function CategoryFilter() {
               전체
             </button>
 
-            {flat
-              ? // 방이 없으면 묶음을 물을 것도 없다. 내 카테고리를 그냥 펼쳐둔다.
-                bunches[0].list.map((c) => (
-                  <Chip
-                    key={c.id}
-                    category={c}
-                    on={filter === c.id}
-                    className={chip}
-                    onClick={() => setFilter(c.id)}
-                  />
-                ))
-              : bunches.map((b, i) => {
-                  /*
-                    **방 하나에 카테고리 하나**라, 그 칩은 방이 아니라 그 카테고리로 선다 —
-                    이름도 색도 카테고리 것이다. 할 일 줄에 `● 집안일`이라고 적히는데
-                    거르는 칩만 `우리집`이면 같은 것을 두 이름으로 부르는 셈이다.
-                    여럿 걸린 방은 지난 데이터에만 남아 있다. 그때만 방 이름으로 서고 눌러서 들어간다.
-                  */
-                  const lone = b.key !== 'mine' && b.list.length === 1 ? b.list[0] : null;
-                  const on = scope === b.key;
-                  return (
-                    <span key={b.key} className="flex flex-none items-center gap-2">
-                      {/* 나만과 방 사이만 가른다 — 앞엣것은 자리가 아니라 보는 눈이다 */}
-                      {i === firstRoom && firstRoom > 0 && (
-                        <span className="mx-[3px] my-[5px] w-px flex-none self-stretch bg-line" />
-                      )}
-                      <button
-                        type="button"
-                        aria-pressed={on}
-                        onClick={() => setScope(b.key)}
-                        className={chip}
-                        style={
-                          lone
-                            ? on
-                              ? { background: lone.color, color: '#fff' }
-                              : { background: tintOf(lone.color), color: lone.color }
-                            : b.color
-                              ? on
-                                ? { background: b.color, color: '#fff' }
-                                : { background: tintOf(b.color), color: b.color }
-                              : on
-                                ? { background: 'var(--ink2)', color: '#fff' }
-                                : { background: 'var(--sunk)', color: 'var(--ink2)' }
-                        }
-                      >
-                        {lone ? lone.name : b.name}
-                        {b.key !== 'mine' && <PeopleIcon className="h-[13px] w-[13px] opacity-75" />}
-                      </button>
-                    </span>
-                  );
-                })}
+            {/* 내 것은 그대로 편다 — 늘 누르는 것이 이쪽이라 한 겹 두면 한 번을 더 누른다 */}
+            {mine.map((c) => (
+              <Chip
+                key={c.id}
+                category={c}
+                on={filter === c.id}
+                className={chip}
+                // 방 안에 들어와 있었다면 같이 나온다 — 내 것과 방 것을 한 번에 볼 일은 없다
+                onClick={() => {
+                  setScope('all');
+                  setFilter(c.id);
+                }}
+              />
+            ))}
+
+            {/* 내 것과 나눈 것 사이에만 줄을 세운다. 한쪽이 없으면 가를 것도 없다. */}
+            {mine.length > 0 && bunches.length > 0 && (
+              <span className="mx-[3px] my-[5px] w-px flex-none self-stretch bg-line" />
+            )}
+
+            {bunches.map((b) => {
+              /*
+                **방 하나에 카테고리 하나**라, 그 칩은 방이 아니라 그 카테고리로 선다 —
+                이름도 색도 카테고리 것이다. 할 일 줄에 `● 집안일`이라고 적히는데
+                거르는 칩만 `우리집`이면 같은 것을 두 이름으로 부르는 셈이다.
+                여럿 걸린 방은 지난 데이터에만 남아 있다. 그때만 방 이름으로 서고 눌러서 들어간다.
+              */
+              const lone = b.list.length === 1 ? b.list[0] : null;
+              const on = scope === b.key && !filter;
+              return (
+                <button
+                  key={b.key}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setScope(b.key)}
+                  className={chip}
+                  style={
+                    lone
+                      ? on
+                        ? { background: lone.color, color: '#fff' }
+                        : { background: tintOf(lone.color), color: lone.color }
+                      : b.color
+                        ? on
+                          ? { background: b.color, color: '#fff' }
+                          : { background: tintOf(b.color), color: b.color }
+                        : on
+                          ? { background: 'var(--ink2)', color: '#fff' }
+                          : { background: 'var(--sunk)', color: 'var(--ink2)' }
+                  }
+                >
+                  {lone ? lone.name : b.name}
+                  <PeopleIcon className="h-[13px] w-[13px] opacity-75" />
+                </button>
+              );
+            })}
           </>
         )}
       </span>

@@ -8,12 +8,12 @@ import type { DateStr, TrashScope, ViewKind } from './types';
 export type Tab = 'day' | 'month' | 'log';
 
 /**
- * 카테고리 줄이 보고 있는 **묶음**.
- * `all` 안 가림 · `mine` 아무 방에도 안 건 것 · `stray` 아직 못 받아온 방 것 · 그 밖엔 방 id.
+ * 카테고리 줄이 보고 있는 **나눈 자리**.
+ * `all` 안 가림 · `stray` 아직 못 받아온 방 것 · 그 밖엔 방 id.
  *
- * 장보기·메모 칩 줄(`ScopeChips`)과 같은 말이다 — 세 화면에서 같은 줄을 세 가지로 배우지 않게.
+ * 내 카테고리는 여기 없다 — 접지 않고 칩 그대로 펴두니 `filter` 하나로 족하다.
  */
-export type Scope = 'all' | 'mine' | 'stray' | (string & {});
+export type Scope = 'all' | 'stray' | (string & {});
 
 /**
  * 기록 탭이 보는 폭.

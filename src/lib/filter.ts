@@ -6,10 +6,11 @@ import { useStore } from './store';
 import { useUi } from './ui';
 
 /**
- * 헤더 줄에서 고른 것 → **어느 카테고리들을 볼 것인가**.
+ * 헤더 줄에서 고른 것 → **어느 카테고리들을 볼 것인가**. `null`이면 안 가린다.
  *
- * 묶음(내 것·방)을 고르면 그 안의 카테고리 여럿이 한꺼번에 걸리고,
- * 그 안에서 하나를 더 고르면 그것만 걸린다. `null`이면 안 가린다.
+ * 카테고리를 고르면 그것만 걸린다. 방을 고르면 그 방 카테고리가 걸리는데,
+ * **방 하나에 카테고리 하나**라 지금 만드는 것은 늘 한 칸이다 —
+ * 여럿이 나오는 건 여러 개를 올릴 수 있던 때 만든 방뿐이다.
  *
  * 화면 다섯 곳(일·월·기록·지난 미완료·즐겨찾기 칩)이 같은 답을 봐야 해서 여기 한 벌만 둔다.
  * 방으로 거르는 것을 `task.roomId`가 아니라 **카테고리로** 푸는 이유가 있다 —
@@ -29,11 +30,9 @@ export function useTaskFilter(): { cats: string[] | null; name: string | null } 
 
     const known = new Set(rooms.map((r) => r.id));
     const list = categories.filter((c) =>
-      scope === 'mine'
-        ? !c.roomId
-        : scope === 'stray'
-          ? Boolean(c.roomId) && !known.has(c.roomId ?? '')
-          : c.roomId === scope,
+      scope === 'stray'
+        ? Boolean(c.roomId) && !known.has(c.roomId ?? '')
+        : c.roomId === scope,
     );
     /*
       묶음이 비었으면 안 가린 것으로 돌린다.
@@ -43,11 +42,7 @@ export function useTaskFilter(): { cats: string[] | null; name: string | null } 
     if (!list.length) return { cats: null, name: null };
 
     const name =
-      scope === 'mine'
-        ? '내'
-        : scope === 'stray'
-          ? '공유'
-          : (rooms.find((r) => r.id === scope)?.name ?? null);
+      scope === 'stray' ? '공유' : (rooms.find((r) => r.id === scope)?.name ?? null);
 
     return { cats: list.map((c) => c.id), name };
   }, [categories, rooms, scope, filter]);
