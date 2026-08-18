@@ -12,6 +12,7 @@ export class MemoryRepository implements Repository {
   private settings: Settings = {
     onboarded: false,
     memoSeenAt: '',
+    assignSeenAt: '',
     weekStart: 0,
     notify: false,
     notifyTodo: '08:00',

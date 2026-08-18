@@ -17,6 +17,8 @@ function task(over: Partial<Task> & { date: DateStr }): Task {
     cycleSince: null,
     parentId: null,
     assigneeId: null,
+    assignedAt: null,
+    assignedBy: null,
     rotate: 'once',
     done: false,
     doneOn: null,
@@ -129,5 +131,32 @@ describe('다음 회차의 차례', () => {
   it('rotate 값은 다음 회차에도 그대로 따라간다', () => {
     const t = task({ date: '2026-08-10', repeatDays: 1, assigneeId: 'a', rotate: 'rotate' });
     expect(spawnNext(t, heirs)?.rotate).toBe('rotate');
+  });
+});
+
+describe('차례가 누구 손에서 넘어왔나', () => {
+  const heirs = ['a', 'b', 'c'];
+
+  it('체크한 사람이 넘긴 것으로 적는다 — a가 끝내서 b 차례가 됐다', () => {
+    const t = task({ date: '2026-08-10', repeatDays: 1, assigneeId: 'a', rotate: 'rotate' });
+    const next = spawnNext(t, heirs, 'a');
+    expect(next?.assigneeId).toBe('b');
+    expect(next?.assignedBy).toBe('a');
+    expect(next?.assignedAt).toBeTruthy();
+  });
+
+  it('안 정함으로 넘어가면 넘어온 자취도 없다', () => {
+    const t = task({ date: '2026-08-10', repeatDays: 1, assigneeId: 'a', rotate: 'once' });
+    const next = spawnNext(t, heirs, 'a');
+    expect(next?.assigneeId).toBe(null);
+    expect(next?.assignedBy).toBe(null);
+    expect(next?.assignedAt).toBe(null);
+  });
+
+  it('내가 끝내서 다음도 내 차례면 내가 넘긴 것이다 — 띠가 안 뜬다', () => {
+    const t = task({ date: '2026-08-10', repeatDays: 1, assigneeId: 'b', rotate: 'same' });
+    const next = spawnNext(t, heirs, 'b');
+    expect(next?.assigneeId).toBe('b');
+    expect(next?.assignedBy).toBe('b');
   });
 });

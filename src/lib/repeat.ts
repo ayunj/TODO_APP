@@ -44,12 +44,19 @@ export function nextAssignee(task: Task, heirs: string[] = []): string | null {
   return heirs[(i + 1) % heirs.length];
 }
 
-export function spawnNext(task: Task, heirs: string[] = []): Task | null {
+/**
+ * `by`는 **이 회차를 낳은 사람** — 앞 회차를 체크한 사람이다.
+ * 교대로 넘어온 차례는 그 사람 손에서 온 것으로 적는다. 남편이 오늘 것을 끝내서
+ * 내일이 내 차례가 됐으면 그건 남편이 넘긴 것이 맞다.
+ * 내가 체크해서 다음도 내 차례면 `assignedBy`가 나라서 띠가 안 뜬다 — 그래야 한다.
+ */
+export function spawnNext(task: Task, heirs: string[] = [], by: string | null = null): Task | null {
   if (task.repeatDays <= 0) return null;
   const since = baseOf(task);
   const next = addDays(since, task.repeatDays);
   if (task.repeatUntil && next > task.repeatUntil) return null; // 반복 종료
   const now = stamp();
+  const heir = nextAssignee(task, heirs);
   return {
     id: uid(),
     roomId: task.roomId,
@@ -62,7 +69,10 @@ export function spawnNext(task: Task, heirs: string[] = []): Task | null {
     repeatUntil: task.repeatUntil,
     cycleSince: since,
     parentId: task.id,
-    assigneeId: nextAssignee(task, heirs),
+    assigneeId: heir,
+    // 차례가 없으면 넘어온 자취도 없다
+    assignedAt: heir ? now : null,
+    assignedBy: heir ? by : null,
     rotate: task.rotate,
     done: false,
     doneOn: null,

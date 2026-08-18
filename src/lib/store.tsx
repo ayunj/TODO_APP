@@ -117,6 +117,11 @@ interface StoreValue {
   memoSeenAt: string;
   markMemosSeen: () => void;
 
+  /* ── 배정 띠 ── */
+  /** 이 시각 뒤에 넘어온 내 차례가 있으면 오늘 화면 위에 띠가 뜬다 */
+  assignSeenAt: string;
+  markAssignsSeen: () => void;
+
   /* ── 앱 설정 — 이 기기에만 걸린다 ── */
   /** 0=일요일, 1=월요일 */
   weekStart: 0 | 1;
@@ -152,6 +157,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [onboarded, setOnboarded] = useState(false);
   const [memoSeenAt, setMemoSeenAt] = useState('');
+  const [assignSeenAt, setAssignSeenAt] = useState('');
   const [weekStart, setWeekStartState] = useState<0 | 1>(0);
   const [notify, setNotifyState] = useState(false);
   const [notifyTodo, setNotifyTodo] = useState('08:00');
@@ -194,8 +200,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const spread = useCallback((snap: Snapshot) => {
     // 방 칸이 없던 시절 카테고리에는 roomId를 채워준다 (전부 개인 것이었다)
     setCategories(snap.categories.map((c) => ({ ...c, roomId: c.roomId ?? null })));
-    // 나중에 생긴 칸들이 없는 옛 항목에는 기본값을 채워준다
-    setTasks(snap.tasks.map(buried));
+    // 나중에 생긴 칸들이 없는 옛 항목에는 기본값을 채워준다.
+    // 차례 칸이 없던 시절 것은 **비워 둔다** — 채우면 앱을 열자마자 옛 차례로 띠가 선다.
+    setTasks(
+      snap.tasks.map((t) => ({
+        ...buried(t),
+        assignedAt: t.assignedAt ?? null,
+        assignedBy: t.assignedBy ?? null,
+      })),
+    );
     setPresets(snap.presets);
     setShopping(
       snap.shopping.map((i) => ({
@@ -226,6 +239,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (!alive) return;
       setOnboarded(settings.onboarded);
       setMemoSeenAt(settings.memoSeenAt ?? '');
+      setAssignSeenAt(settings.assignSeenAt ?? '');
       setWeekStartState(settings.weekStart === 1 ? 1 : 0);
       setNotifyState(Boolean(settings.notify));
       setNotifyTodo(settings.notifyTodo || '08:00');
@@ -307,6 +321,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         cycleSince: input.repeatDays > 0 ? addDays(input.date, -input.repeatDays) : null,
         parentId: null,
         assigneeId: input.assigneeId,
+        // 적으면서 누구 차례인지 골랐으면 그게 넘긴 것이다. 내가 나에게 준 것은 띠가 안 뜬다.
+        assignedAt: input.assigneeId ? now : null,
+        assignedBy: input.assigneeId ? owner : null,
         rotate: input.rotate,
         done: false,
         doneOn: null,
@@ -320,7 +337,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       write((r) => r.saveTask(task));
       return task;
     },
-    [write, categoryOf],
+    [write, categoryOf, owner],
   );
 
   const updateTask = useCallback(
@@ -328,6 +345,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const current = tasks.find((t) => t.id === id);
       if (!current) return;
       const today = todayStr();
+
+      /*
+        **차례가 바뀔 때만** 넘어온 때를 민다.
+        제목만 고쳤는데 밀면, 이미 내 차례인 일을 한 번 손본 것으로
+        `내 차례가 됐어요` 띠가 다시 뜬다. 그래서 updatedAt과 따로 센다.
+      */
+      const handed = input.assigneeId !== current.assigneeId;
+      const now = stamp();
 
       const updated: Task = {
         ...current,
@@ -341,8 +366,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         repeatDays: input.repeatDays,
         repeatUntil: input.repeatUntil,
         assigneeId: input.assigneeId,
+        assignedAt: handed ? (input.assigneeId ? now : null) : current.assignedAt,
+        assignedBy: handed ? (input.assigneeId ? owner : null) : current.assignedBy,
         rotate: input.rotate,
-        updatedAt: stamp(),
+        updatedAt: now,
       };
 
       // 완료해서 이미 생겨난 다음 회차가 있으면 결을 맞춰준다
@@ -389,7 +416,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (nextPending) await r.saveTask(nextPending);
       });
     },
-    [tasks, write],
+    [tasks, write, owner, categoryOf],
   );
 
   /**
@@ -493,8 +520,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const hasPending = tasks.some((t) => t.parentId === id && !t.done && !t.deletedAt);
       let next: Task | null = null;
       if (current.repeatDays > 0 && !hasPending) {
-        // 번갈아는 방에 들어온 순서를 따른다
-        next = spawnNext(done, current.roomId ? membersOf(current.roomId).map((m) => m.userId) : []);
+        // 번갈아는 방에 들어온 순서를 따른다.
+        // 다음 차례는 **내가 끝내서** 생긴 것이라 내 손에서 넘어간 것으로 적는다.
+        next = spawnNext(
+          done,
+          current.roomId ? membersOf(current.roomId).map((m) => m.userId) : [],
+          owner,
+        );
         // '8일 뒤'가 아니라 날짜를 적는다 — 지난 날짜를 체크하면 그 날 기준이라 뒤가 아닐 수 있다
         if (next) toast(`다음 ${done.title} → ${shortDate(next.date)}`);
         else toast(`${done.title} — 반복이 끝났습니다`);
@@ -508,7 +540,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (next) await r.saveTask(next);
       });
     },
-    [tasks, write],
+    [tasks, write, owner, membersOf, myNameIn],
   );
 
   /* ───────── 즐겨찾기 ───────── */
@@ -731,6 +763,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     write((r) => r.saveSettings({ memoSeenAt: now }));
   }, [write]);
 
+  /**
+   * 배정 띠의 `×`. 이 시각 앞의 차례는 다 본 것으로 친다.
+   *
+   * **띠 하나에 한 번 찍는다** — 줄마다 따로 닫게 하면 세 번 눌러야 없어진다.
+   * 서버에는 안 올린다. 폰에서 닫아도 PC에서 한 번 더 보이는 게 맞다.
+   */
+  const markAssignsSeen = useCallback(() => {
+    const now = stamp();
+    setAssignSeenAt(now);
+    write((r) => r.saveSettings({ assignSeenAt: now }));
+  }, [write]);
+
   /* ───────── 앱 설정 ───────── */
 
   const setWeekStart = useCallback(
@@ -938,6 +982,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       removeMemo,
       memoSeenAt,
       markMemosSeen,
+      assignSeenAt,
+      markAssignsSeen,
       weekStart,
       setWeekStart,
       notify,
@@ -984,6 +1030,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       removeMemo,
       memoSeenAt,
       markMemosSeen,
+      assignSeenAt,
+      markAssignsSeen,
       weekStart,
       setWeekStart,
       notify,

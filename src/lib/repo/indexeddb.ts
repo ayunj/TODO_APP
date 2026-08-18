@@ -12,6 +12,7 @@ const SETTINGS_ID = 'app';
 const DEFAULT_SETTINGS: Settings = {
   onboarded: false,
   memoSeenAt: '',
+  assignSeenAt: '',
   // 지금까지 달력이 일요일로 시작했다. 기본값을 옮기면 쓰던 사람 달력이 까닭 없이 밀린다.
   weekStart: 0,
   notify: false,

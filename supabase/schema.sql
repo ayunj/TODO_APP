@@ -164,6 +164,20 @@ alter table tasks   add column if not exists rotate text not null default 'once'
 alter table presets add column if not exists assignee_id uuid references auth.users;
 alter table presets add column if not exists rotate text not null default 'once';
 
+/*
+ * 차례가 **언제 · 누구 손에서** 넘어왔나. `앱을 열었을 때 뜨는 띠`가 이 둘로 선다.
+ *
+ * `updated_at`으로는 못 센다. 제목만 고쳐도 밀리는 칸이라
+ * 이미 내 차례인 일을 내가 한 번 고치면 `내 차례가 됐어요`가 다시 뜬다.
+ * **차례가 바뀔 때만** 미는 칸이 따로 있어야 한다.
+ *
+ * `assigned_by`가 있어야 내가 나에게 준 것을 거른다 — 방금 내가 적어 넣은 일로
+ * 띠가 뜨면 앱이 헛말을 하는 것이다. 교대로 넘어온 것은 체크한 사람이 넘긴 것으로 적는다.
+ * `deleted_at`·`deleted_by` 짝과 같은 결이다.
+ */
+alter table tasks add column if not exists assigned_at timestamptz;
+alter table tasks add column if not exists assigned_by uuid references auth.users;
+
 create index if not exists tasks_room_date  on tasks (room_id, date);
 create index if not exists tasks_owner_date on tasks (owner_id, date);
 -- 동기화는 "지난번 이후 바뀐 것만" 받아온다
@@ -566,7 +580,8 @@ security definer
 set search_path = public
 as $$
 begin
-  update tasks set assignee_id = null, updated_at = now()
+  -- 넘어온 자취도 같이 지운다. 차례가 비었는데 `누가 언제 넘겼다`만 남아 있을 이유가 없다.
+  update tasks set assignee_id = null, assigned_at = null, assigned_by = null, updated_at = now()
    where room_id = room and assignee_id = who;
   update presets set assignee_id = null, updated_at = now()
    where room_id = room and assignee_id = who;

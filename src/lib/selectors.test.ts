@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { alive, trashOf } from './selectors';
+import { alive, handedToMe, trashOf } from './selectors';
 import type { Memo, ShopItem, Task } from './types';
 
 const task = (over: Partial<Task> & { id: string }): Task => ({
@@ -14,6 +14,8 @@ const task = (over: Partial<Task> & { id: string }): Task => ({
   cycleSince: null,
   parentId: null,
   assigneeId: null,
+  assignedAt: null,
+  assignedBy: null,
   rotate: 'once',
   done: false,
   doneOn: null,
@@ -121,5 +123,56 @@ describe('trashOf', () => {
       SINCE,
     );
     expect(rows[0].categoryId).toBeNull();
+  });
+});
+
+describe('handedToMe — 배정 띠에 오르는 줄', () => {
+  const ME = 'me';
+  const SEEN = '2026-08-10T00:00:00.000Z';
+  /** 남편이 어제 나에게 넘긴 것 */
+  const handed = (over: Partial<Task> & { id: string }) =>
+    task({ assigneeId: ME, assignedBy: 'u2', assignedAt: '2026-08-11T00:00:00.000Z', ...over });
+
+  it('남이 넘긴 내 차례가 오른다', () => {
+    expect(handedToMe([handed({ id: 'a' })], ME, SEEN).map((t) => t.id)).toEqual(['a']);
+  });
+
+  it('남의 차례는 안 오른다 — 거드는 게 아니라 감시가 된다', () => {
+    expect(handedToMe([handed({ id: 'a', assigneeId: 'u2' })], ME, SEEN)).toEqual([]);
+  });
+
+  it('내가 나에게 준 것은 안 오른다 — 방금 적어 넣은 일로 띠가 뜨면 헛말이다', () => {
+    expect(handedToMe([handed({ id: 'a', assignedBy: ME })], ME, SEEN)).toEqual([]);
+  });
+
+  it('닫기 전에 넘어온 것은 안 오른다', () => {
+    const old = handed({ id: 'a', assignedAt: '2026-08-09T00:00:00.000Z' });
+    expect(handedToMe([old], ME, SEEN)).toEqual([]);
+  });
+
+  it('차례 칸이 없던 시절 것은 안 오른다 — 이미 알고 있는 것이다', () => {
+    const legacy = task({ id: 'a', assigneeId: ME, assignedBy: null, assignedAt: null });
+    expect(handedToMe([legacy], ME, SEEN)).toEqual([]);
+  });
+
+  it('해버리면 셈에서 빠진다 — 띠를 닫는 길이 둘이다', () => {
+    expect(handedToMe([handed({ id: 'a', done: true })], ME, SEEN)).toEqual([]);
+  });
+
+  it('날짜는 안 본다 — 다음 주 것이 내 차례가 됐어도 알아야 한다', () => {
+    const later = handed({ id: 'a', date: '2026-12-25' });
+    expect(handedToMe([later], ME, SEEN).map((t) => t.id)).toEqual(['a']);
+  });
+
+  it('늦게 넘어온 것이 앞에 온다', () => {
+    const rows = [
+      handed({ id: 'a', assignedAt: '2026-08-11T00:00:00.000Z' }),
+      handed({ id: 'b', assignedAt: '2026-08-12T00:00:00.000Z' }),
+    ];
+    expect(handedToMe(rows, ME, SEEN).map((t) => t.id)).toEqual(['b', 'a']);
+  });
+
+  it('로그인 전에는 아무것도 안 오른다', () => {
+    expect(handedToMe([handed({ id: 'a' })], null, SEEN)).toEqual([]);
   });
 });

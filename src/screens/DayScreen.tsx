@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import AssignedBanner from './day/AssignedBanner';
 import ProgressStrip from './day/ProgressStrip';
 import PostponeRow from './day/PostponeRow';
 import PresetChips from './day/PresetChips';
@@ -31,6 +32,9 @@ export default function DayScreen() {
 
   return (
     <>
+      {/* 걸린 카테고리도 보고 있는 날짜도 안 가린다 — 알리는 자리라 목록보다 위에 선다 */}
+      <AssignedBanner />
+
       {total > 0 && <ProgressStrip done={shut.length} total={total} />}
 
       <PresetChips />

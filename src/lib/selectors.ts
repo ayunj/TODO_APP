@@ -132,6 +132,39 @@ export const tasksOn = (tasks: Task[], date: DateStr, filter: Filter): Task[] =>
 export const canPostpone = (date: DateStr, today: DateStr): boolean =>
   date === today || date === addDays(today, -1);
 
+/**
+ * 남이 나에게 넘긴 차례 — 앱을 열었을 때 뜨는 띠가 이걸 센다. 늦게 넘어온 것이 앞에 온다.
+ *
+ * 네 가지를 다 통과해야 한 줄이 된다.
+ *
+ * | 거르는 것 | 왜 |
+ * |---|---|
+ * | 내 차례인가 | 남의 차례는 내가 알 일이 아니다. 그건 거드는 게 아니라 감시다 |
+ * | **내가 넘긴 게 아닌가** | 방금 내가 적어 넣은 일로 띠가 뜨면 앱이 헛말을 한다 |
+ * | 닫은 뒤에 온 것인가 | `×`를 누른 뒤로 넘어온 것만 |
+ * | 아직 안 한 것인가 | 해버렸으면 띠도 같이 사라진다. 그래서 닫는 길이 둘이다 |
+ *
+ * **날짜는 안 본다.** 다음 주 것이 내 차례가 됐어도 알아야 한다 —
+ * 오늘 목록에 없다고 안 알리면 정작 미리 알아야 할 것만 조용하다.
+ *
+ * 걸린 카테고리(`filter`)도 안 본다. 필터는 **찾아보는 자리**고 이건 **알리는 자리**다.
+ * 우리집 칩을 눌러둔 동안 회사 것이 넘어왔다고 안 알리면 그건 못 본 게 된다.
+ */
+export const handedToMe = (tasks: Task[], me: string | null, seenAt: string): Task[] =>
+  me
+    ? tasks
+        .filter(
+          (t) =>
+            t.assigneeId === me &&
+            t.assignedBy !== null &&
+            t.assignedBy !== me &&
+            t.assignedAt !== null &&
+            t.assignedAt > seenAt &&
+            !t.done,
+        )
+        .sort((a, b) => b.assignedAt!.localeCompare(a.assignedAt!))
+    : [];
+
 /** 오늘 화면 맨 아래 접어두는 지난 미완료 */
 export const staleTasks = (tasks: Task[], today: DateStr, filter: Filter): Task[] =>
   sortTasks(tasks.filter((t) => !t.done && t.date < today && matches(t, filter)));
