@@ -120,7 +120,9 @@ for (const [r, [y0, y1]] of rows.entries()) {
     await sharp(SRC)
       .extract(box)
       .resize({ width: MAX, height: MAX, fit: 'inside', withoutEnlargement: true })
-      .png({ compressionLevel: 9 })
+      // 폰에 설치해 쓰는 앱이라 무게가 곧 값이다. 색을 팔레트로 줄이면 열 컷이 1.5MB→260KB인데,
+      // 크레용 질감이 눌리는지 확대해 견줘보니 차이가 안 보인다. 실제로는 이보다 훨씬 작게 뜬다.
+      .png({ compressionLevel: 9, palette: true, quality: 90 })
       .toFile(out);
 
     const dropped = parts.length - big - 1;
