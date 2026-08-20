@@ -20,7 +20,7 @@ export default function PresetListScreen() {
 
       <div className="mb-4 flex flex-col gap-[9px]">
         {presets.length === 0 ? (
-          <EmptyBox title="비어 있습니다">
+          <EmptyBox pose="cheer" title="비어 있습니다">
             되풀이하는 일을 넣어두면 한 번 눌러 추가할 수 있어요.
           </EmptyBox>
         ) : (

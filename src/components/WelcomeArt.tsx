@@ -1,5 +1,23 @@
-/** 첫 화면 그림 — 체크 하나만 켜진 목록. 설명 대신 이걸로 말한다. */
+import Tomato from './Tomato';
+
+/**
+ * 첫 화면 그림 — 하트를 안은 토마토. 설명 대신 이걸로 말한다.
+ *
+ * 그림을 아직 안 잘랐으면(=public/tomato가 비었으면) 예전 체크리스트 그림이 대신 나온다.
+ * 첫 화면은 자리가 비면 곧장 허전해지는 곳이라 여기만 대체를 둔다.
+ */
 export default function WelcomeArt() {
+  return (
+    <Tomato
+      pose="heart"
+      size={168}
+      className="mx-auto mb-[26px] mt-auto"
+      fallback={<Checklist />}
+    />
+  );
+}
+
+function Checklist() {
   return (
     <svg
       viewBox="0 0 200 150"

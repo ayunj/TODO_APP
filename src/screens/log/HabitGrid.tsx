@@ -29,7 +29,7 @@ export default function HabitGrid({ spanTasks, days }: { spanTasks: Task[]; days
   if (rows.length === 0) {
     return (
       <div className="mt-2.5">
-        <EmptyBox title={weekly ? '이 주는 비어 있습니다' : '아직 채운 칸이 없습니다'}>
+        <EmptyBox pose="cheer" title={weekly ? '이 주는 비어 있습니다' : '아직 채운 칸이 없습니다'}>
           {weekly
             ? '할 일을 적어두면 한 일이 하루씩 칸으로 칠해집니다.'
             : '주기를 정한 할 일이나 즐겨찾기에 넣어둔 일이 이 달에 있으면, 하루씩 칸으로 칠해집니다.'}

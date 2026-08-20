@@ -555,7 +555,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           owner,
         );
         // '8일 뒤'가 아니라 날짜를 적는다 — 지난 날짜를 체크하면 그 날 기준이라 뒤가 아닐 수 있다
-        if (next) toast(`다음 ${done.title} → ${shortDate(next.date)}`);
+        // 주기가 돌아왔다는 말이라 그림을 붙인다 — 날짜만 적힌 줄은 그냥 지나치기 쉽다
+        if (next) toast(`다음 ${done.title} → ${shortDate(next.date)}`, 'cycle');
         else toast(`${done.title} — 반복이 끝났습니다`);
       }
 

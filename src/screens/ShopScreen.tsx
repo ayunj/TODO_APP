@@ -55,7 +55,7 @@ export default function ShopScreen() {
       <FrequentChips history={history} onList={onList} />
 
       {open.length + bought.length === 0 ? (
-        <EmptyBox title="담아둘 것이 없습니다">
+        <EmptyBox pose="peek" title="담아둘 것이 없습니다">
           {room ? `${room.name} 목록이 비어 있어요.` : '떠오를 때마다 위에 적어두세요.'}
           <br />장 보러 가서 하나씩 지우면 됩니다.
         </EmptyBox>
@@ -68,7 +68,7 @@ export default function ShopScreen() {
               ))}
             </ul>
           ) : (
-            <EmptyBox title="다 담았습니다">{bought.length}개 전부 챙겼어요.</EmptyBox>
+            <EmptyBox pose="rest" title="다 담았습니다">{bought.length}개 전부 챙겼어요.</EmptyBox>
           )}
 
           {/* 담은 것은 오늘까지만 여기 남는다 — 마트에서 "이거 담았나" 확인이 돼야 하니까 */}
