@@ -1,0 +1,872 @@
+<title>도도두 홈 시안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@300;400;700&family=Gowun+Dodum&display=swap">
+
+<style>
+  /*
+   * 도도두 홈 시안 — 손그림 감성의 첫 화면.
+   *
+   * 색은 전부 여기 :root 한 블록에서만 정한다 (앱의 globals.css와 같은 규칙).
+   * 바깥 배경(--page*)만 어두운 화면을 따라가고, 폰 안쪽은 기기 화면이라 늘 밝다.
+   */
+  :root {
+    /* 바깥 — 시안을 올려두는 책상 */
+    --page: #efe7d9;
+    --page-2: #f7f1e6;
+    --page-ink: #857b6f;
+    --page-line: #ded4c4;
+    --shadow: 0 26px 60px rgba(96, 82, 62, .18), 0 3px 10px rgba(96, 82, 62, .08);
+
+    /* 안쪽 — 앱 화면 */
+    --bg: #fdf8e7;
+    --card: #fffdf6;
+    --band: #fcf1cf;
+    --ink: #4b443e;
+    --ink2: #8b8177;
+    --ink3: #aba298;
+    --line: #efe7d6;
+    --edge: #dcd4c4;
+
+    --tomato: #ee4b3b;
+    --leaf: #8daf4b;
+    --sprout: #a9ce7e;
+    --sprout-deep: #93bd63;
+
+    --ok-band: #e4f0d2;
+    --ok-ink: #6e9440;
+    --warn-band: #fbdcda;
+    --warn-ink: #d9584a;
+    --sage: #7fb08a;
+
+    --dirt: #d9b78d;
+    --grass: #cfe39a;
+    --sun: #ffd34e;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --page: #221f1c;
+      --page-2: #2b2723;
+      --page-ink: #a79c8e;
+      --page-line: #3a342d;
+      --shadow: 0 26px 60px rgba(0, 0, 0, .5), 0 3px 10px rgba(0, 0, 0, .3);
+    }
+  }
+  :root[data-theme="dark"] {
+    --page: #221f1c;
+    --page-2: #2b2723;
+    --page-ink: #a79c8e;
+    --page-line: #3a342d;
+    --shadow: 0 26px 60px rgba(0, 0, 0, .5), 0 3px 10px rgba(0, 0, 0, .3);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 28px 16px 22px;
+    background: radial-gradient(120% 90% at 50% 0%, var(--page-2), var(--page));
+    color: var(--page-ink);
+    font-family: 'Gowun Dodum', 'Apple SD Gothic Neo', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─────────────── 기기 ─────────────── */
+
+  .phone {
+    position: relative;
+    width: min(392px, 100%);
+    height: min(846px, 100dvh - 92px);
+    min-height: 560px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 40px;
+    background: var(--bg);
+    box-shadow: var(--shadow);
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.5;
+    letter-spacing: -.01em;
+  }
+
+  /* 종이결 — 아주 옅게 깔아 크레용 그림과 톤을 맞춘다 */
+  .phone::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+    opacity: .5;
+    background-image: radial-gradient(rgba(150, 130, 90, .09) .6px, transparent .7px);
+    background-size: 4px 4px;
+  }
+
+  .screen {
+    flex: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    padding: 0 20px calc(112px);
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ─────────────── 머리줄 ─────────────── */
+
+  .appbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 22px 2px 6px;
+  }
+
+  .logo {
+    flex: 1;
+    text-align: center;
+    font-family: 'Gaegu', 'Gowun Dodum', cursive;
+    font-weight: 700;
+    font-size: 38px;
+    line-height: 1;
+    letter-spacing: -.03em;
+    color: var(--leaf);
+    margin: 0;
+  }
+  .logo .do { color: var(--tomato); }
+  .logo .dot { color: var(--leaf); }
+
+  .icon-btn {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    position: relative;
+    transition: transform .12s ease, background .12s ease;
+  }
+  .icon-btn:active { transform: scale(.9); background: rgba(0, 0, 0, .04); }
+  .icon-btn svg { width: 25px; height: 25px; }
+  .icon-btn .dot-alert {
+    position: absolute;
+    top: 3px;
+    right: 4px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--tomato);
+    box-shadow: 0 0 0 2px var(--bg);
+  }
+
+  /* ─────────────── 인사 ─────────────── */
+
+  .hello {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    padding: 6px 0 18px;
+    min-height: 168px;
+  }
+
+  .hello-words {
+    flex: 1;
+    padding-bottom: 34px;
+    font-family: 'Gaegu', 'Gowun Dodum', cursive;
+    font-size: 23px;
+    line-height: 1.45;
+    letter-spacing: -.01em;
+    text-wrap: balance;
+  }
+
+  .sun {
+    display: block;
+    width: 62px;
+    height: 62px;
+    margin: 0 0 4px -6px;
+    animation: sway 7s ease-in-out infinite;
+  }
+
+  .hello-art {
+    flex: none;
+    width: 208px;
+    margin: 0 -24px -6px -46px;
+    animation: bob 5.5s ease-in-out infinite;
+  }
+
+  @keyframes bob {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-5px) rotate(-1.2deg); }
+  }
+  @keyframes sway {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(14deg); }
+  }
+
+  /* ─────────────── 카드 ─────────────── */
+
+  .card {
+    border-radius: 22px;
+    background: var(--card);
+    box-shadow: 0 8px 22px rgba(120, 100, 70, .07);
+    border: 1px solid var(--line);
+  }
+  .card + .card { margin-top: 16px; }
+
+  .card-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 20px 4px;
+  }
+  .card-title {
+    margin: 0;
+    flex: 1;
+    font-family: 'Gaegu', 'Gowun Dodum', cursive;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: -.02em;
+  }
+
+  .pill {
+    flex: none;
+    padding: 4px 13px;
+    border-radius: 999px;
+    font-family: 'Gaegu', 'Gowun Dodum', cursive;
+    font-size: 16px;
+    line-height: 1.35;
+    font-weight: 700;
+    background: var(--warn-band);
+    color: var(--warn-ink);
+    font-variant-numeric: tabular-nums;
+    transition: background .2s ease, color .2s ease;
+  }
+  .pill.clear { background: var(--ok-band); color: var(--ok-ink); }
+
+  .badge {
+    flex: none;
+    padding: 3px 12px;
+    border-radius: 999px;
+    font-family: 'Gaegu', 'Gowun Dodum', cursive;
+    font-size: 15.5px;
+    font-weight: 700;
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+  }
+  .badge.soon { background: var(--ok-band); color: var(--ok-ink); }
+  .badge.today { background: var(--warn-band); color: var(--warn-ink); }
+  .badge.later { color: var(--ink3); font-weight: 400; }
+
+  /* 할 일 줄 */
+
+  .tasks { padding: 6px 20px 0; }
+
+  .task {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding: 15px 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .task + .task { border-top: 1px dashed var(--line); }
+
+  .check {
+    flex: none;
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 2px solid var(--edge);
+    color: transparent;
+    transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+  }
+  .check svg { width: 15px; height: 15px; }
+  .task:active .check { transform: scale(.88); }
+
+  .task-name {
+    flex: 1;
+    font-family: 'Gaegu', 'Gowun Dodum', cursive;
+    font-size: 19px;
+    letter-spacing: -.01em;
+    transition: color .18s ease;
+  }
+
+  .task.done .check {
+    background: var(--sage);
+    border-color: var(--sage);
+    color: #fff;
+  }
+  .task.done .task-name {
+    color: var(--ink3);
+    text-decoration: line-through;
+    text-decoration-color: var(--edge);
+  }
+  .task.done .badge { opacity: .45; }
+
+  .card-foot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+    padding: 14px 20px 16px;
+    border-top: 1px solid var(--line);
+  }
+  .count {
+    flex: 1;
+    font-family: 'Gaegu', 'Gowun Dodum', cursive;
+    font-size: 18px;
+    color: var(--ink2);
+    font-variant-numeric: tabular-nums;
+  }
+  .count b { color: var(--ink); font-weight: 700; }
+
+  .ghost-btn {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 15px;
+    border-radius: 999px;
+    border: 1px solid var(--edge);
+    background: var(--card);
+    font-family: 'Gaegu', 'Gowun Dodum', cursive;
+    font-size: 16px;
+    color: var(--ink2);
+    cursor: pointer;
+    transition: transform .12s ease, background .12s ease;
+  }
+  .ghost-btn:active { transform: scale(.96); background: var(--bg); }
+  .ghost-btn svg { width: 13px; height: 13px; }
+
+  /* 주기 도래 */
+
+  .cycle {
+    background: var(--band);
+    border-color: #f3e3b8;
+  }
+  .cycle .card-head { padding-bottom: 0; }
+
+  .link-btn {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 2px;
+    border: 0;
+    background: transparent;
+    font-family: 'Gowun Dodum', sans-serif;
+    font-size: 14px;
+    color: var(--ink2);
+    cursor: pointer;
+  }
+  .link-btn svg { width: 12px; height: 12px; }
+  .link-btn:active { color: var(--ink); }
+
+  .cycle-body {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 20px 20px 12px;
+  }
+
+  .cycle-art {
+    flex: none;
+    width: 122px;
+    align-self: flex-end;
+    margin-bottom: -4px;
+  }
+
+  .cycle-list { flex: 1; min-width: 0; }
+
+  .cycle-row { padding: 10px 0; }
+  .cycle-row + .cycle-row { border-top: 1px dashed #eadcb4; }
+  .cycle-row .row-top {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .cycle-name {
+    font-family: 'Gaegu', 'Gowun Dodum', cursive;
+    font-size: 19px;
+    letter-spacing: -.01em;
+  }
+  .cycle-meta {
+    margin-top: 2px;
+    font-size: 12.5px;
+    color: var(--ink2);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ─────────────── 탭 ─────────────── */
+
+  .tabs {
+    position: relative;
+    z-index: 2;
+    flex: none;
+    display: flex;
+    align-items: flex-end;
+    padding: 8px 6px 16px;
+    background: var(--card);
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -6px 20px rgba(120, 100, 70, .06);
+  }
+
+  .tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 0 2px;
+    border: 0;
+    background: transparent;
+    font-family: 'Gowun Dodum', sans-serif;
+    font-size: 11.5px;
+    color: var(--ink3);
+    cursor: pointer;
+    transition: transform .12s ease;
+  }
+  .tab:active { transform: scale(.92); }
+  .tab svg { width: 27px; height: 27px; }
+  .tab.on { color: var(--tomato); }
+
+  .tab-gap { flex: 1; }
+
+  .fab {
+    position: absolute;
+    left: 50%;
+    bottom: 46px;
+    width: 66px;
+    height: 66px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: radial-gradient(75% 75% at 34% 28%, var(--sprout), var(--sprout-deep));
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(120, 150, 80, .3);
+    transform: translateX(-50%);
+    transition: transform .14s ease, box-shadow .14s ease;
+  }
+  .fab:active {
+    transform: translateX(-50%) scale(.93);
+    box-shadow: 0 6px 12px rgba(120, 150, 80, .28);
+  }
+  .fab svg { width: 30px; height: 30px; }
+
+  /* ─────────────── 토스트 ─────────────── */
+
+  .toast {
+    position: absolute;
+    left: 50%;
+    bottom: 120px;
+    z-index: 5;
+    max-width: 78%;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: rgba(75, 68, 62, .93);
+    color: #fdf8e7;
+    font-family: 'Gaegu', 'Gowun Dodum', cursive;
+    font-size: 16px;
+    text-align: center;
+    transform: translate(-50%, 10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .22s ease, transform .22s ease;
+  }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ─────────────── 시안 이름표 ─────────────── */
+
+  .caption {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 12.5px;
+    letter-spacing: .02em;
+    color: var(--page-ink);
+  }
+  .caption .swatch {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--tomato);
+  }
+  .caption .swatch + .swatch { background: var(--leaf); margin-left: -5px; }
+
+  :focus-visible {
+    outline: 2px solid var(--leaf);
+    outline-offset: 2px;
+    border-radius: 10px;
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 0; gap: 0; }
+    .phone {
+      width: 100%;
+      height: 100dvh;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .caption { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<!-- 아이콘 한 벌 — 선은 둥글게, 굵기는 1.9로 통일 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="crayon" x="-15%" y="-15%" width="130%" height="130%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="9" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="crayon-soft" x="-15%" y="-15%" width="130%" height="130%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="1.8" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+
+    <g id="i-menu" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+      <path d="M4 7h15M4 12h11M4 17h15"/>
+      <circle cx="19.5" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+    </g>
+    <g id="i-bell" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6.4 16.2c.9-1 1.3-2.2 1.3-3.6v-2A4.9 4.9 0 0 1 12.6 5.7a4.9 4.9 0 0 1 4.9 4.9v2c0 1.4.4 2.6 1.3 3.6z"/>
+      <path d="M10.4 18.6a2.3 2.3 0 0 0 4.3 0"/>
+      <path d="M4.6 6.6C5.2 5.5 6 4.7 7.1 4.1"/>
+    </g>
+    <g id="i-people" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="9.6" cy="8" r="3.4"/>
+      <path d="M3.6 19.4c0-3.3 2.7-5.6 6-5.6s6 2.3 6 5.6"/>
+      <path d="M16.2 5.2a3.4 3.4 0 0 1 0 6.4M17.6 14.2c2.4.5 4 2.5 4 5.2"/>
+    </g>
+    <g id="i-chev" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 4l8 8-8 8"/>
+    </g>
+    <g id="i-check" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 12.5l5 5L20 6.5"/>
+    </g>
+    <g id="i-plus" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+      <path d="M12 5.5v13M5.5 12h13"/>
+    </g>
+
+    <g id="i-home">
+      <path d="M12 3.6 3.4 10.4h1.5v9.3a1 1 0 0 0 1 1h12.2a1 1 0 0 0 1-1v-9.3h1.5z" fill="currentColor" opacity=".2"/>
+      <path d="M3.4 10.6 12 3.8l8.6 6.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M5.2 10v9.6a.9.9 0 0 0 .9.9h11.8a.9.9 0 0 0 .9-.9V10" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="9.8" y="14.2" width="4.4" height="6.3" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.7"/>
+    </g>
+    <g id="i-cal" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3.6" y="5.4" width="16.8" height="15" rx="3"/>
+      <path d="M8 3.4v3.6M16 3.4v3.6M3.6 10.2h16.8"/>
+      <circle cx="8.2" cy="14" r=".9" fill="currentColor" stroke="none"/>
+      <circle cx="12" cy="14" r=".9" fill="currentColor" stroke="none"/>
+      <circle cx="15.8" cy="14" r=".9" fill="currentColor" stroke="none"/>
+      <circle cx="8.2" cy="17.4" r=".9" fill="currentColor" stroke="none"/>
+      <circle cx="12" cy="17.4" r=".9" fill="currentColor" stroke="none"/>
+    </g>
+    <g id="i-basket" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8.4 9 11 3.9M15.6 9 13 3.9"/>
+      <path d="M3.2 9.4h17.6l-1.9 8.8a2.2 2.2 0 0 1-2.1 1.7H7.2a2.2 2.2 0 0 1-2.1-1.7z"/>
+      <path d="M9.6 12.8v3.6M14.4 12.8v3.6"/>
+    </g>
+    <g id="i-house2">
+      <path d="M3.6 10.6 12 3.8l8.6 6.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M5.4 10.2v9.4a.9.9 0 0 0 .9.9h11.4a.9.9 0 0 0 .9-.9v-9.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="9.7" cy="15" r="2.1" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <circle cx="14.3" cy="15" r="2.1" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <circle cx="9.7" cy="15" r=".75" fill="currentColor"/>
+      <circle cx="14.3" cy="15" r=".75" fill="currentColor"/>
+    </g>
+  </defs>
+</svg>
+
+<div class="phone">
+  <div class="screen">
+
+    <header class="appbar">
+      <button class="icon-btn" type="button" aria-label="메뉴">
+        <svg viewBox="0 0 24 24"><use href="#i-menu"/></svg>
+      </button>
+      <h1 class="logo"><span class="do">do</span><span class="dot">·</span>dodu</h1>
+      <button class="icon-btn" type="button" aria-label="알림 — 새로 온 것이 있음">
+        <svg viewBox="0 0 24 24"><use href="#i-bell"/></svg>
+        <span class="dot-alert"></span>
+      </button>
+      <button class="icon-btn" type="button" aria-label="우리 방 사람들">
+        <svg viewBox="0 0 24 24"><use href="#i-people"/></svg>
+      </button>
+    </header>
+
+    <section class="hello">
+      <div class="hello-words">
+        <!-- 해 -->
+        <svg class="sun" viewBox="0 0 60 60" aria-hidden="true" filter="url(#crayon-soft)">
+          <g stroke="var(--sun)" stroke-width="4.2" stroke-linecap="round">
+            <path d="M30 5v7M30 48v7M5 30h7M48 30h7M12.2 12.2l5 5M42.8 42.8l5 5M47.8 12.2l-5 5M17.2 42.8l-5 5"/>
+          </g>
+          <circle cx="30" cy="30" r="11.5" fill="var(--sun)"/>
+        </svg>
+        안녕하세요!<br>오늘도 도도두와 함께해요 :)
+      </div>
+
+      <!-- 엎드린 토마토 -->
+      <svg class="hello-art" viewBox="0 0 220 168" aria-hidden="true">
+        <ellipse cx="112" cy="140" rx="94" ry="21" fill="var(--grass)" filter="url(#crayon)"/>
+        <g stroke="#b7d383" stroke-width="3.4" stroke-linecap="round" filter="url(#crayon-soft)">
+          <path d="M26 136c-3-7-2-12 1-16M34 138c1-6 4-10 8-12M190 133c3-6 3-11 1-15M180 138c-1-6-4-9-8-11"/>
+        </g>
+
+        <g filter="url(#crayon)">
+          <!-- 몸 -->
+          <ellipse cx="112" cy="97" rx="66" ry="48" fill="#ef5140"/>
+          <ellipse cx="112" cy="97" rx="66" ry="48" fill="none" stroke="#d9382a" stroke-width="2.4" opacity=".55"/>
+          <path d="M62 74c-6 10-6 22-1 31" fill="none" stroke="#ffa093" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+          <path d="M150 118c8-7 12-16 12-25" fill="none" stroke="#c93023" stroke-width="4.5" stroke-linecap="round" opacity=".35"/>
+
+          <!-- 꼭지 -->
+          <g fill="#7fb03f">
+            <path d="M142 56c8-9 19-13 25-9 5 4 2 12-6 17z"/>
+            <path d="M139 55c-3-11 1-21 8-22 6-1 10 6 9 16z"/>
+            <path d="M136 57c-9-6-19-6-22 0-2 6 4 12 14 14z"/>
+            <path d="M141 64c-9 4-16 12-14 18 2 5 11 5 18-2z"/>
+            <path d="M147 63c9 2 16 8 15 14-1 5-9 6-16 1z"/>
+          </g>
+          <circle cx="140" cy="59" r="6" fill="#6d9a35"/>
+
+          <!-- 얼굴 -->
+          <ellipse cx="110" cy="101" rx="33" ry="29" fill="#fffdf6"/>
+        </g>
+
+        <!-- 눈·입 -->
+        <g fill="#3b332e">
+          <ellipse cx="98" cy="97" rx="3.4" ry="4.6"/>
+          <ellipse cx="123" cy="97" rx="3.4" ry="4.6"/>
+        </g>
+        <g stroke="#3b332e" stroke-width="2.1" stroke-linecap="round">
+          <path d="M92 89.5l3.5 2.5M98 87v3M104 89.5l-3.5 2.5"/>
+          <path d="M117 89.5l3.5 2.5M123 87v3M129 89.5l-3.5 2.5"/>
+          <path d="M104 108c3.5 3.4 9 3.4 12.5 0" fill="none" stroke-width="2.4"/>
+        </g>
+        <g fill="#f5a49a" opacity=".65">
+          <ellipse cx="88" cy="106" rx="7" ry="4.6"/>
+          <ellipse cx="133" cy="106" rx="7" ry="4.6"/>
+        </g>
+
+        <!-- 땀 한 방울 -->
+        <path d="M158 46c3 4 5 7 5 9.5a5 5 0 0 1-10 0c0-2.5 2-5.5 5-9.5z" fill="#bfdcea" stroke="#9cc3d6" stroke-width="1.4"/>
+
+        <!-- 팔다리 -->
+        <g stroke="#3b332e" stroke-width="4" stroke-linecap="round" fill="none">
+          <path d="M60 128c-8 2-14 6-17 10"/>
+          <path d="M96 137c-6 3-9 7-10 11"/>
+          <path d="M150 130c9 1 16 5 20 10"/>
+        </g>
+        <g fill="#3b332e">
+          <ellipse cx="41" cy="139" rx="5.5" ry="4" transform="rotate(-14 41 139)"/>
+          <ellipse cx="85" cy="149" rx="5" ry="4"/>
+          <ellipse cx="172" cy="141" rx="5.5" ry="4" transform="rotate(12 172 141)"/>
+        </g>
+      </svg>
+    </section>
+
+    <!-- ── 오늘의 할 일 ── -->
+    <section class="card" aria-labelledby="today-title">
+      <div class="card-head">
+        <h2 class="card-title" id="today-title">오늘의 할 일</h2>
+        <span class="pill" id="left-pill">3개 남음</span>
+      </div>
+
+      <div class="tasks">
+        <button class="task" type="button" aria-pressed="false">
+          <span class="check"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg></span>
+          <span class="task-name">화장실 청소</span>
+          <span class="badge soon">D-1</span>
+        </button>
+        <button class="task" type="button" aria-pressed="false">
+          <span class="check"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg></span>
+          <span class="task-name">빨래하기</span>
+          <span class="badge today">오늘</span>
+        </button>
+        <button class="task" type="button" aria-pressed="false">
+          <span class="check"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg></span>
+          <span class="task-name">장보기</span>
+          <span class="badge later">2일 후</span>
+        </button>
+      </div>
+
+      <div class="card-foot">
+        <span class="count"><b id="done-count">0</b> / 3개 완료</span>
+        <button class="ghost-btn" type="button" data-soon="할 일 전체 화면은 아직 시안에 없어요">
+          전체 보기 <svg viewBox="0 0 24 24"><use href="#i-chev"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ── 주기 도래 ── -->
+    <section class="card cycle" aria-labelledby="cycle-title">
+      <div class="card-head">
+        <h2 class="card-title" id="cycle-title">주기 도래</h2>
+        <button class="link-btn" type="button" data-soon="주기 목록은 아직 시안에 없어요">
+          더보기 <svg viewBox="0 0 24 24"><use href="#i-chev"/></svg>
+        </button>
+      </div>
+
+      <div class="cycle-body">
+        <!-- 삽 든 토마토 -->
+        <svg class="cycle-art" viewBox="0 0 140 150" aria-hidden="true">
+          <ellipse cx="72" cy="134" rx="56" ry="12" fill="var(--dirt)" filter="url(#crayon)"/>
+
+          <!-- 삽 -->
+          <g filter="url(#crayon-soft)">
+            <path d="M40 44 L26 92" stroke="#b9a48f" stroke-width="6" stroke-linecap="round"/>
+            <path d="M33 36h14v10H33z" fill="#a99280" transform="rotate(15 40 41)"/>
+            <path d="M18 86c-8 4-12 12-9 20 3 7 12 9 19 5 6-4 8-12 4-19z" fill="#c3cbd0" stroke="#9aa5ac" stroke-width="2"/>
+          </g>
+
+          <g filter="url(#crayon)">
+            <ellipse cx="76" cy="82" rx="44" ry="41" fill="#ef5140"/>
+            <ellipse cx="76" cy="82" rx="44" ry="41" fill="none" stroke="#d9382a" stroke-width="2.2" opacity=".5"/>
+            <path d="M44 62c-4 8-4 16-1 22" fill="none" stroke="#ffa093" stroke-width="4.4" stroke-linecap="round" opacity=".5"/>
+
+            <g fill="#7fb03f">
+              <path d="M72 44c-3-11 0-19 6-19 5 0 8 7 6 15z"/>
+              <path d="M69 46c-8-6-17-6-19-1s4 10 12 12z"/>
+              <path d="M83 46c8-7 17-8 19-3s-4 10-12 12z"/>
+            </g>
+            <circle cx="76" cy="47" r="5" fill="#6d9a35"/>
+
+            <ellipse cx="75" cy="86" rx="24" ry="22" fill="#fffdf6"/>
+          </g>
+
+          <g fill="#3b332e">
+            <ellipse cx="66" cy="83" rx="2.8" ry="3.8"/>
+            <ellipse cx="85" cy="83" rx="2.8" ry="3.8"/>
+          </g>
+          <g stroke="#3b332e" stroke-width="1.9" stroke-linecap="round" fill="none">
+            <path d="M61 76.5l3 2M66 74.5v2.5M71 76.5l-3 2"/>
+            <path d="M80 76.5l3 2M85 74.5v2.5M90 76.5l-3 2"/>
+            <path d="M70 93c3 2.8 7.5 2.8 10.5 0" stroke-width="2.2"/>
+          </g>
+          <g fill="#f5a49a" opacity=".6">
+            <ellipse cx="57" cy="91" rx="5.5" ry="3.6"/>
+            <ellipse cx="94" cy="91" rx="5.5" ry="3.6"/>
+          </g>
+
+          <g stroke="#3b332e" stroke-width="3.6" stroke-linecap="round" fill="none">
+            <path d="M38 90c-6 2-8 5-9 8"/>
+            <path d="M114 92c6 3 9 7 9 11"/>
+            <path d="M62 122v10M90 122v10"/>
+          </g>
+          <g fill="#3b332e">
+            <ellipse cx="27" cy="99" rx="4.6" ry="3.6"/>
+            <ellipse cx="124" cy="105" rx="4.6" ry="3.6"/>
+            <ellipse cx="60" cy="134" rx="6" ry="4"/>
+            <ellipse cx="92" cy="134" rx="6" ry="4"/>
+          </g>
+        </svg>
+
+        <div class="cycle-list">
+          <div class="cycle-row">
+            <div class="row-top">
+              <span class="cycle-name">필터 청소</span>
+              <span class="badge soon">D-day</span>
+            </div>
+            <div class="cycle-meta">매 30일마다 · 마지막 5/20</div>
+          </div>
+          <div class="cycle-row">
+            <div class="row-top">
+              <span class="cycle-name">침구 세탁</span>
+              <span class="badge soon">D-2</span>
+            </div>
+            <div class="cycle-meta">매 14일마다 · 마지막 5/28</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ── 탭 ── -->
+  <nav class="tabs" role="tablist" aria-label="주요 화면">
+    <button class="tab on" type="button" role="tab" aria-selected="true">
+      <svg viewBox="0 0 24 24"><use href="#i-home"/></svg>홈
+    </button>
+    <button class="tab" type="button" role="tab" aria-selected="false" data-soon="일정 화면은 아직 시안에 없어요">
+      <svg viewBox="0 0 24 24"><use href="#i-cal"/></svg>일정
+    </button>
+    <span class="tab-gap" aria-hidden="true"></span>
+    <button class="tab" type="button" role="tab" aria-selected="false" data-soon="장보기 화면은 아직 시안에 없어요">
+      <svg viewBox="0 0 24 24"><use href="#i-basket"/></svg>장보기
+    </button>
+    <button class="tab" type="button" role="tab" aria-selected="false" data-soon="우리집 화면은 아직 시안에 없어요">
+      <svg viewBox="0 0 24 24"><use href="#i-house2"/></svg>우리집
+    </button>
+  </nav>
+
+  <button class="fab" type="button" aria-label="새로 적기" data-soon="새로 적는 창은 아직 시안에 없어요">
+    <svg viewBox="0 0 24 24"><use href="#i-plus"/></svg>
+  </button>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<p class="caption"><span class="swatch"></span><span class="swatch"></span> do·dodu 홈 화면 시안 · 체크해 보세요</p>
+
+<script>
+  // 체크하면 남은 개수와 완료 개수가 같이 움직인다 — 시안도 눌러봐야 감이 온다
+  const tasks = Array.from(document.querySelectorAll('.task'));
+  const pill = document.getElementById('left-pill');
+  const doneCount = document.getElementById('done-count');
+
+  function sync() {
+    const done = tasks.filter((t) => t.classList.contains('done')).length;
+    const left = tasks.length - done;
+    doneCount.textContent = done;
+    pill.textContent = left > 0 ? left + '개 남음' : '다 했어요!';
+    pill.classList.toggle('clear', left === 0);
+  }
+
+  tasks.forEach((t) => {
+    t.addEventListener('click', () => {
+      const on = t.classList.toggle('done');
+      t.setAttribute('aria-pressed', String(on));
+      sync();
+    });
+  });
+
+  // 시안에 없는 화면은 조용히 알려준다
+  const toast = document.getElementById('toast');
+  let timer;
+  document.querySelectorAll('[data-soon]').forEach((el) => {
+    el.addEventListener('click', () => {
+      toast.textContent = el.dataset.soon;
+      toast.classList.add('on');
+      clearTimeout(timer);
+      timer = setTimeout(() => toast.classList.remove('on'), 1900);
+    });
+  });
+
+  sync();
+</script>
