@@ -3,13 +3,17 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuth } from './auth';
 import {
+  clearNudges as clearNudgesRemote,
   closeRoom as closeRoomRemote,
   createRoom as createRoomRemote,
   handOverRoom as handOverRoomRemote,
   joinRoom as joinRoomRemote,
   leaveRoom as leaveRoomRemote,
+  nudgesLeft as nudgesLeftRemote,
   peekRoom as peekRoomRemote,
+  pullNudges as pullNudgesRemote,
   pullRooms,
+  sendNudge as sendNudgeRemote,
   renameMe as renameMeRemote,
   resetJoinCode as resetJoinCodeRemote,
   shareCategory as shareCategoryRemote,
@@ -17,7 +21,7 @@ import {
   updateRoom as updateRoomRemote,
 } from './repo/remote';
 import { hasSupabase } from './supabase';
-import type { Room, RoomMember, RoomPeek } from './types';
+import type { Nudge, Room, RoomMember, RoomPeek } from './types';
 
 interface RoomsValue {
   /** 방을 쓸 수 있는 상태인지 — 로그인해야 켜진다 */
@@ -31,11 +35,24 @@ interface RoomsValue {
   myNameIn: (roomId: string) => string;
   /** 그 방에서 불릴 내 이름을 고친다 — 방마다 따로 걸린다 */
   renameMe: (roomId: string, name: string) => Promise<void>;
-  /** 이 방이 무엇을 나누는지 — 할 일·장보기·메모 */
+  /** 이 방이 무엇을 나누는지 — 할 일·장보기·메모, 그리고 콕 찌르기 */
   setShares: (
     roomId: string,
-    shares: { tasks: boolean; shop: boolean; memo: boolean },
+    shares: { tasks: boolean; shop: boolean; memo: boolean; nudge: boolean },
   ) => Promise<void>;
+
+  /* ── 콕 찌르기 ── */
+  /**
+   * 콕 한 번. 남은 횟수를 돌려준다.
+   * `whom`이 없으면 방 전체에게 간다 — `안 정함`인 일을 찌르는 자리다.
+   */
+  sendNudge: (roomId: string, taskId: string, whom: string | null) => Promise<number>;
+  /** 남은 횟수 — **누르기 전에** 보여준다 */
+  nudgesLeft: (roomId: string) => Promise<number>;
+  /** 나에게 온 콕. 앱을 열 때 한 번 받아온다. */
+  nudges: Nudge[];
+  /** 본 것은 지운다 — 기록으로 안 남긴다 */
+  clearNudges: (ids: string[]) => Promise<void>;
   /** 내 카테고리를 이 방에 연다 (주인만). 그 안의 할 일·즐겨찾기가 같이 간다 */
   shareCategory: (categoryId: string, roomId: string) => Promise<void>;
   /** 도로 개인 것으로 거둔다 */
@@ -199,16 +216,59 @@ export function RoomsProvider({ children }: { children: React.ReactNode }) {
   );
 
   const setShares = useCallback(
-    async (roomId: string, shares: { tasks: boolean; shop: boolean; memo: boolean }) => {
+    async (
+      roomId: string,
+      shares: { tasks: boolean; shop: boolean; memo: boolean; nudge: boolean },
+    ) => {
       await updateRoomRemote(roomId, {
         share_tasks: shares.tasks,
         share_shop: shares.shop,
         share_memo: shares.memo,
+        share_nudge: shares.nudge,
       });
       await refresh();
     },
     [refresh],
   );
+
+  /*
+    받은 콕 — **앱을 열 때 한 번 받아온다.** 실시간이 아직이라 그 자리가 여기다.
+    푸시가 붙으면 이 함은 그때 비워도 된다.
+  */
+  const [nudges, setNudges] = useState<Nudge[]>([]);
+  useEffect(() => {
+    if (!enabled) {
+      setNudges([]);
+      return;
+    }
+    let alive = true;
+    pullNudgesRemote()
+      .then((rows) => {
+        if (alive) setNudges(rows);
+      })
+      .catch(() => {
+        /* 못 받아오면 없는 것처럼 둔다 — 찌르기 하나로 화면을 막지 않는다 */
+      });
+    return () => {
+      alive = false;
+    };
+  }, [enabled]);
+
+  const sendNudge = useCallback(
+    (roomId: string, taskId: string, whom: string | null) =>
+      sendNudgeRemote(roomId, taskId, whom),
+    [],
+  );
+
+  const nudgesLeft = useCallback((roomId: string) => nudgesLeftRemote(roomId), []);
+
+  const clearNudges = useCallback(async (ids: string[]) => {
+    // 화면에서 먼저 지운다. 서버가 늦어도 본 것이 다시 뜨지 않게.
+    setNudges((prev) => prev.filter((n) => !ids.includes(n.id)));
+    await clearNudgesRemote(ids).catch(() => {
+      /* 못 지웠으면 다음에 열 때 한 번 더 뜬다 — 잃는 것보다 낫다 */
+    });
+  }, []);
 
   const shareCategory = useCallback(
     async (categoryId: string, roomId: string) => {
@@ -230,6 +290,10 @@ export function RoomsProvider({ children }: { children: React.ReactNode }) {
       membersOf,
       myNameIn,
       renameMe,
+      sendNudge,
+      nudgesLeft,
+      nudges,
+      clearNudges,
       setShares,
       shareCategory,
       unshareCategory,

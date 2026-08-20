@@ -3,6 +3,7 @@ import type { Snapshot } from '../repository';
 import type {
   Category,
   Memo,
+  Nudge,
   Preset,
   Priority,
   Room,
@@ -299,6 +300,8 @@ const roomBack = (r: Row, me: string): Room => ({
   shareTasks: r.share_tasks !== false,
   shareShop: r.share_shop === true,
   shareMemo: r.share_memo === true,
+  // 칸이 없던 시절 방은 켜져 있던 것으로 읽는다 — 기본이 켜짐이다
+  shareNudge: r.share_nudge !== false,
 });
 
 const memberBack = (r: Row): RoomMember => ({
@@ -431,6 +434,7 @@ export async function updateRoom(
     share_tasks?: boolean;
     share_shop?: boolean;
     share_memo?: boolean;
+    share_nudge?: boolean;
   },
 ): Promise<void> {
   const client = await supabase();
@@ -469,3 +473,68 @@ export async function unshareCategory(categoryId: string): Promise<void> {
   const { error } = await client.rpc('unshare_category', { target: categoryId });
   if (error) throw error;
 }
+
+/* ───────── 콕 찌르기 ───────── */
+
+/**
+ * 콕 한 번. 남은 횟수를 돌려준다.
+ *
+ * **세는 것도 넣는 것도 서버가 한다.** 폰에서 세면 앱을 지웠다 깔면 0이 되고,
+ * 표에 바로 넣게 두면 한도가 뜻을 잃는다.
+ *
+ * `whom`이 없으면 방 전체에게 간다 — `안 정함`인 일을 찌르는 자리다.
+ */
+export async function sendNudge(
+  roomId: string,
+  taskId: string,
+  whom: string | null,
+): Promise<number> {
+  const client = await supabase();
+  const { data, error } = await client.rpc('send_nudge', {
+    room: roomId,
+    task: taskId,
+    whom,
+  });
+  if (error) throw error;
+  return Number(data ?? 0);
+}
+
+/** 남은 횟수 — **누르기 전에** 보여준다. 읽기만 하고 채우지는 않는다. */
+export async function nudgesLeft(roomId: string): Promise<number> {
+  const client = await supabase();
+  const { data, error } = await client.rpc('nudges_left', { room: roomId });
+  if (error) throw error;
+  return Number(data ?? 0);
+}
+
+/** 나에게 온 콕. 늦게 온 것이 앞에 온다. */
+export async function pullNudges(): Promise<Nudge[]> {
+  const client = await supabase();
+  const { data, error } = await client
+    .from('nudges')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((r) => nudgeBack(r as Row));
+}
+
+/**
+ * 본 것은 지운다. **기록으로 안 남긴다** —
+ * 쌓아두면 증거가 되고, 증거가 되면 싸움이 된다.
+ */
+export async function clearNudges(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const client = await supabase();
+  const { error } = await client.from('nudges').delete().in('id', ids);
+  if (error) throw error;
+}
+
+const nudgeBack = (r: Row): Nudge => ({
+  id: String(r.id),
+  roomId: String(r.room_id),
+  fromName: String(r.from_name ?? '누군가'),
+  taskId: (r.task_id as string) ?? null,
+  taskTitle: String(r.task_title ?? ''),
+  categoryId: (r.category_id as string) ?? null,
+  createdAt: String(r.created_at ?? ''),
+});

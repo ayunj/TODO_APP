@@ -14,7 +14,7 @@ import type { Task } from '@/lib/types';
 export default function TaskRow({ task, showDate = false }: { task: Task; showDate?: boolean }) {
   const { categoryOf, toggleTask, removeTask, postponeTasks } = useStore();
   const { account } = useAuth();
-  const { membersOf } = useRooms();
+  const { membersOf, rooms } = useRooms();
   const { openSheet } = useUi();
   const today = todayStr();
   const category = categoryOf(task.categoryId);
@@ -27,6 +27,15 @@ export default function TaskRow({ task, showDate = false }: { task: Task; showDa
       ? '내 차례'
       : `${people.find((m) => m.userId === task.assigneeId)?.displayName ?? '누군가'} 차례`
     : '';
+
+  /*
+    찌를 수 있는 줄인가 — 방 것이고, 그 방이 콕을 켜뒀고, 나 말고 사람이 더 있어야 한다.
+    내 차례를 나에게 찌르는 자리는 아니다.
+  */
+  const nudgeable =
+    Boolean(task.roomId) &&
+    people.length > 1 &&
+    rooms.some((r) => r.id === task.roomId && r.shareNudge);
 
   const cycleLabel =
     task.repeatDays === 1 ? '매일' : task.repeatDays > 1 ? `${task.repeatDays}일마다` : '';
@@ -114,7 +123,29 @@ export default function TaskRow({ task, showDate = false }: { task: Task; showDa
             뒤엣것은 일어난 일이다.
           */}
           {!task.done && turn && (
-            <span className="rounded-full bg-accent-tint px-[9px] py-0.5 text-[10.5px] font-medium text-accent">
+            /*
+              **차례 칩은 콕 찌르기 지름길이기도 하다.** 칩만 있으면 숨은 기능이 되고
+              시트만 있으면 두 번 눌러야 해서, 보이는 자리 하나(시트 제목 줄)와 지름길 하나를 둔다.
+
+              줄 전체가 이미 `수정`이라 그 안에 단추를 또 두지는 못한다.
+              눌림을 여기서 멈춰 세우고 위로 안 올려보낸다.
+            */
+            <span
+              role={nudgeable ? 'button' : undefined}
+              tabIndex={nudgeable ? 0 : undefined}
+              aria-label={nudgeable ? `${turn} — 콕 찌르기` : undefined}
+              onClick={
+                nudgeable
+                  ? (e) => {
+                      e.stopPropagation();
+                      openSheet({ kind: 'nudge', id: task.id });
+                    }
+                  : undefined
+              }
+              className={`rounded-full bg-accent-tint px-[9px] py-0.5 text-[10.5px] font-medium text-accent ${
+                nudgeable ? 'active:opacity-60' : ''
+              }`}
+            >
               {turn}
             </span>
           )}

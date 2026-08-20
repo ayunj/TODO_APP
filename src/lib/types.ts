@@ -38,6 +38,27 @@ export interface Room {
   shareTasks: boolean;
   shareShop: boolean;
   shareMemo: boolean;
+  /**
+   * 콕 찌르기를 받는 방인지.
+   * **집에서 오는 콕은 귀엽지만 회사방에서 오는 건 재촉이다.**
+   */
+  shareNudge: boolean;
+}
+
+/**
+ * 받은 콕 하나. **기록이 아니라 우편함이다** — 보고 나면 지운다.
+ * 남는 것은 보낸 사람의 남은 횟수뿐이다.
+ */
+export interface Nudge {
+  id: string;
+  roomId: string;
+  /** 보낸 사람의 **그때 그 이름**. 방을 나간 사람이 보낸 것도 이름은 읽혀야 한다. */
+  fromName: string;
+  taskId: string | null;
+  taskTitle: string;
+  /** 칩을 그리려고 담아둔다. 카테고리가 지워졌으면 null. */
+  categoryId: string | null;
+  createdAt: string;
 }
 
 /** 방에 든 사람. 이름은 방마다 다르게 부를 수 있다. */

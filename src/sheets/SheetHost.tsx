@@ -2,6 +2,7 @@
 
 import DoneBySheet from './DoneBySheet';
 import MemoRoomsSheet from './MemoRoomsSheet';
+import NudgeSheet from './NudgeSheet';
 import PresetSheet from './PresetSheet';
 import RoomFieldSheet from './RoomFieldSheet';
 import ShopItemSheet from './ShopItemSheet';
@@ -23,6 +24,8 @@ export default function SheetHost() {
       return <PresetSheet key={sheet.id ?? 'new'} id={sheet.id} />;
     case 'doneBy':
       return <DoneBySheet key={sheet.id} id={sheet.id} />;
+    case 'nudge':
+      return <NudgeSheet key={sheet.id} id={sheet.id} />;
     case 'shopItem':
       return <ShopItemSheet key={sheet.id} id={sheet.id} />;
     case 'memoRooms':

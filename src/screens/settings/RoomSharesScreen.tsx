@@ -36,6 +36,7 @@ export default function RoomSharesScreen({ id }: { id: string }) {
     tasks: room.shareTasks,
     shop: room.shareShop,
     memo: room.shareMemo,
+    nudge: room.shareNudge,
     categoryIds: categories.filter((c) => c.roomId === room.id).map((c) => c.id),
   };
 
@@ -61,8 +62,18 @@ export default function RoomSharesScreen({ id }: { id: string }) {
 
     setBusy(true);
     try {
-      if (next.tasks !== value.tasks || next.shop !== value.shop || next.memo !== value.memo) {
-        await setShares(room.id, { tasks: next.tasks, shop: next.shop, memo: next.memo });
+      if (
+        next.tasks !== value.tasks ||
+        next.shop !== value.shop ||
+        next.memo !== value.memo ||
+        next.nudge !== value.nudge
+      ) {
+        await setShares(room.id, {
+          tasks: next.tasks,
+          shop: next.shop,
+          memo: next.memo,
+          nudge: next.nudge,
+        });
       }
       for (const cid of added) await shareCategory(cid, room.id);
       for (const cid of removed) await unshareCategory(cid);

@@ -7,19 +7,23 @@ import TaskFormFields, { type FormValue } from './TaskFormFields';
 import { shortDate } from '@/lib/date';
 import { useTaskFilter } from '@/lib/filter';
 import { toast } from '@/lib/toast';
+import { useRooms } from '@/lib/rooms';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 
 export default function TaskSheet({ id }: { id: string | null }) {
   const { tasks, presets, categories, categoryOf, addTask, updateTask, removeTask, addPreset } =
     useStore();
-  const { cursor, closeSheet, setCursor } = useUi();
+  const { cursor, closeSheet, setCursor, openSheet } = useUi();
+  const { rooms } = useRooms();
   // 보고 있던 자리에서 적는다 — 우리집을 보다가 적으면 우리집 카테고리로 시작한다
   const { cats } = useTaskFilter();
 
   const editing = id ? (tasks.find((t) => t.id === id) ?? null) : null;
-  // 방 것일 때만 콕 자리가 생긴다 — 찌를 상대가 있어야 뜻이 있다
-  const shared = Boolean(editing && categoryOf(editing.categoryId).roomId);
+  // 방 것일 때만 콕 자리가 생긴다 — 찌를 상대가 있어야 뜻이 있다.
+  // 그 방이 콕을 꺼뒀으면 자리도 안 만든다 — 고를 수 없으니 잘못 누를 수 없다.
+  const roomOf = editing ? categoryOf(editing.categoryId).roomId : null;
+  const shared = Boolean(roomOf && rooms.some((r) => r.id === roomOf && r.shareNudge));
   const [alsoPreset, setAlsoPreset] = useState(false);
   const [value, setValue] = useState<FormValue>(() => ({
     title: editing?.title ?? '',
@@ -85,14 +89,14 @@ export default function TaskSheet({ id }: { id: string | null }) {
       onClose={closeSheet}
       /*
         콕 찌르기 — 줄을 하나 더 만들지 않고 제목 줄 오른쪽 빈자리에 얹는다.
-        방이 없으면 안 그린다. **아직 자리만 잡아둔 것이라 누르면 알려주기만 한다** —
-        앱이 꺼진 남의 폰을 울려야 해서 푸시(FCM)와 서버 함수가 있어야 한다.
+        제목 줄은 이미 있는 줄이고 오른쪽이 늘 비어 있어서 **시트가 한 줄도 안 길어진다.**
+        방이 없거나 그 방이 콕을 꺼뒀으면 안 그린다.
       */
       right={
         editing && shared ? (
           <button
             type="button"
-            onClick={() => toast('콕 찌르기는 아직 준비 중이에요')}
+            onClick={() => openSheet({ kind: 'nudge', id: editing.id })}
             className="inline-flex items-center gap-[5px] rounded-full bg-accent-tint px-3 py-1.5 text-[12px] font-medium text-accent active:opacity-70"
           >
             👋 콕

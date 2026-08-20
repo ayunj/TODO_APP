@@ -62,6 +62,8 @@ export type Sheet =
   | { kind: 'memoRooms'; id: string }
   /** 누가 했나 — 이름만 갈아 끼운다 */
   | { kind: 'doneBy'; id: string }
+  /** 콕 찌를까요 — 고를 게 없어서 확인 한 장이다 */
+  | { kind: 'nudge'; id: string }
   /** 방 이름·방 색·이 방에서 불릴 내 이름 — 값 하나를 손보는 자리 */
   | { kind: 'roomField'; id: string; field: 'name' | 'color' | 'myName' };
 

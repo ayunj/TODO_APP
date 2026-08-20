@@ -11,6 +11,7 @@ docs/
   shopping/   list  history
   memo/
   rooms/
+  nudge/
   trash/
   account/    login  sync  database
   app/        architecture  navigation  design  prefs  notify  pwa  native
@@ -46,6 +47,11 @@ docs/
 [기능.md](rooms/기능.md) · [파일.md](rooms/파일.md) — ★ **방.** 무엇을 나눌지, 초대와 코드,
 주인과 손님, 끝내는 길 셋
 
+## 콕 찌르기 — [nudge/](nudge/)
+
+[기능.md](nudge/기능.md) · [파일.md](nudge/파일.md) — 하루 세 번, 아침 6시에 다시 채운다.
+왜 말은 안 고르고 기록은 안 쌓는지
+
 ## 지운 것 — [trash/](trash/)
 
 [기능.md](trash/기능.md) · [파일.md](trash/파일.md) — 30일, 되돌리기 하나.
@@ -77,7 +83,7 @@ docs/
 
 **[next/남은-것.md](next/남은-것.md)** 하나에 모아뒀다. 무엇이 왜 남았는지, 안 하기로 한 것은 무엇인지.
 
-- **콕 찌르기** — 시트에 자리만 있고 누르면 준비 중이라고만 한다
+- **콕 찌르기의 푸시** — 보내고 받는 건 되는데 앱을 열어야 뜬다 ([nudge](nudge/기능.md))
 - **누가 얼마나** — 기록 탭에 접어둘 사람별 숫자
 - **실시간** — 앱 열 때 한 번만 맞춘다 ([sync](account/sync/기능.md))
 - 내보내기, 홈 화면 위젯

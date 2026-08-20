@@ -7,6 +7,8 @@ export interface Shares {
   tasks: boolean;
   shop: boolean;
   memo: boolean;
+  /** 콕 찌르기를 주고받는 방인지. 집에서 오는 콕은 귀엽지만 회사방에서 오는 건 재촉이다. */
+  nudge: boolean;
   /**
    * 할 일에 딸린 것 — 나누기로 고른 카테고리.
    *
@@ -97,6 +99,16 @@ export default function ShareBox({ value, onChange, categories, label, busy }: P
         </Check>
         <Check on={value.memo} onClick={() => set({ memo: !value.memo })} grow>
           메모
+        </Check>
+      </div>
+
+      {/*
+        나누는 것 셋과 줄을 갈랐다. 앞의 셋은 **무엇이 오가는지**고
+        이건 **어떻게 부르는지**라 성격이 다르다 — 같은 줄에 두면 넷 다 같은 것으로 읽힌다.
+      */}
+      <div className="mt-[9px]">
+        <Check on={value.nudge} onClick={() => set({ nudge: !value.nudge })}>
+          👋 콕 찌르기
         </Check>
       </div>
     </div>

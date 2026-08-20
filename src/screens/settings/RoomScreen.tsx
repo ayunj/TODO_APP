@@ -36,6 +36,9 @@ function CreateRoom() {
     tasks: true,
     shop: false,
     memo: false,
+    // 켜둔 채로 연다. 방을 만드는 사람은 대개 같이 쓰자고 부르는 참이라
+    // 여기서 굳이 끄고 싶은 사람만 끄면 된다.
+    nudge: true,
     categoryIds: [],
   });
   const [busy, setBusy] = useState(false);
@@ -70,7 +73,12 @@ function CreateRoom() {
     try {
       const room = await createRoom(name, myName, color);
       // 방을 연 다음에 무엇을 나눌지 얹는다. 여기서 걸려도 방은 이미 만들어져 있다.
-      await setShares(room.id, { tasks: shares.tasks, shop: shares.shop, memo: shares.memo });
+      await setShares(room.id, {
+        tasks: shares.tasks,
+        shop: shares.shop,
+        memo: shares.memo,
+        nudge: shares.nudge,
+      });
       if (shares.tasks) {
         for (const cid of shares.categoryIds) await shareCategory(cid, room.id);
         if (shares.categoryIds.length) await resync();
