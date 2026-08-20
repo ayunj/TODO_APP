@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { daysFrom, dowOf, weekStartOf } from './date';
+import { atTime, daysFrom, dowOf, weekStartOf } from './date';
 
 /** 2026-08-10은 월요일이다 (0=일 … 6=토) */
 describe('weekStartOf', () => {
@@ -35,5 +35,21 @@ describe('daysFrom', () => {
 
   it('달 끝을 넘어간다', () => {
     expect(daysFrom('2026-08-30', 3)).toEqual(['2026-08-30', '2026-08-31', '2026-09-01']);
+  });
+});
+
+describe('atTime — 알림 걸 시각', () => {
+  it('그 날 그 시각을 로컬로 읽는다', () => {
+    const d = atTime('2026-08-14', '08:00');
+    expect(d.getFullYear()).toBe(2026);
+    expect(d.getMonth()).toBe(7);
+    expect(d.getDate()).toBe(14);
+    expect(d.getHours()).toBe(8);
+    expect(d.getMinutes()).toBe(0);
+    expect(d.getSeconds()).toBe(0);
+  });
+
+  it('분까지 그대로 간다', () => {
+    expect(atTime('2026-08-14', '19:35').getMinutes()).toBe(35);
   });
 });

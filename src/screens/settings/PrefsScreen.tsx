@@ -2,7 +2,9 @@
 
 import PageBar from '@/components/PageBar';
 import { Group, Note, ToggleRow } from '@/components/rows';
+import { askNotifyPermission, isApp } from '@/lib/notify';
 import { useStore } from '@/lib/store';
+import { toast } from '@/lib/toast';
 
 /**
  * 앱 설정 — 주 시작 요일과 알림. **이 기기에만 걸린다.**
@@ -18,6 +20,16 @@ export default function PrefsScreen() {
     notifyLeft,
     setNotifyTime,
   } = useStore();
+
+  /*
+    **권한은 켤 때 묻는다.** 앱을 처음 켤 때가 아니라 — 이유를 알고 누른 사람은 허용을 누른다.
+    거절하면 토글을 안 켠다. 켜둔 채로 조용하면 고장난 것으로 읽힌다.
+  */
+  const turn = async (on: boolean) => {
+    if (!on || !isApp()) return setNotify(on);
+    if (await askNotifyPermission()) return setNotify(true);
+    toast('폰 설정에서 이 앱의 알림을 켜주세요');
+  };
 
   return (
     <>
@@ -44,7 +56,7 @@ export default function PrefsScreen() {
 
       <div className="mt-[18px]">
         <Group label="알림">
-          <ToggleRow on={notify} onChange={setNotify}>
+          <ToggleRow on={notify} onChange={(v) => void turn(v)}>
             알림 받기
           </ToggleRow>
 
@@ -59,6 +71,11 @@ export default function PrefsScreen() {
             </>
           )}
         </Group>
+        {/*
+          브라우저에서는 켜도 안 울린다. 아무 일도 안 하는 토글을 조용히 두면
+          고장난 것으로 읽혀서 한 줄 적어둔다 — 앱을 깔 이유가 하나 는 것이다.
+        */}
+        {notify && !isApp() && <Note>알림은 안드로이드 앱에서만 울려요.</Note>}
       </div>
     </>
   );

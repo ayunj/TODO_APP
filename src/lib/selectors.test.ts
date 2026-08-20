@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { alive, handedToMe, trashOf } from './selectors';
+import { alive, handedToMe, myTasksOn, trashOf } from './selectors';
 import type { Memo, ShopItem, Task } from './types';
 
 const task = (over: Partial<Task> & { id: string }): Task => ({
@@ -174,5 +174,37 @@ describe('handedToMe — 배정 띠에 오르는 줄', () => {
 
   it('로그인 전에는 아무것도 안 오른다', () => {
     expect(handedToMe([handed({ id: 'a' })], null, SEEN)).toEqual([]);
+  });
+});
+
+describe('myTasksOn — 알림이 세는 것', () => {
+  const ME = 'me';
+  const D = '2026-08-14';
+
+  it('남의 차례만 뺀다 — 안 정함은 내 몫이기도 하다', () => {
+    const rows = [
+      task({ id: 'mine', date: D, assigneeId: ME }),
+      task({ id: 'open', date: D }),
+      task({ id: 'his', date: D, assigneeId: 'u2' }),
+    ];
+    expect(myTasksOn(rows, D, ME).map((t) => t.id).sort()).toEqual(['mine', 'open']);
+  });
+
+  it('내 차례가 앞에 온다', () => {
+    const rows = [task({ id: 'open', date: D }), task({ id: 'mine', date: D, assigneeId: ME })];
+    expect(myTasksOn(rows, D, ME).map((t) => t.id)).toEqual(['mine', 'open']);
+  });
+
+  it('한 것과 다른 날은 안 센다', () => {
+    const rows = [
+      task({ id: 'done', date: D, done: true }),
+      task({ id: 'other', date: '2026-08-15' }),
+    ];
+    expect(myTasksOn(rows, D, ME)).toEqual([]);
+  });
+
+  it('로그인 전에는 안 정함만 남는다', () => {
+    const rows = [task({ id: 'open', date: D }), task({ id: 'his', date: D, assigneeId: 'u2' })];
+    expect(myTasksOn(rows, D, null).map((t) => t.id)).toEqual(['open']);
   });
 });

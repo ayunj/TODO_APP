@@ -165,6 +165,19 @@ export const handedToMe = (tasks: Task[], me: string | null, seenAt: string): Ta
         .sort((a, b) => b.assignedAt!.localeCompare(a.assignedAt!))
     : [];
 
+/**
+ * 알림이 세는 것 — 그 날 **내가 할 수 있는** 안 한 일. 내 차례가 앞에 온다.
+ *
+ * **남의 차례만 뺀다.** `안 정함`은 먼저 보는 사람이 하는 것이라 내 몫이기도 하다 —
+ * 이걸 빼면 아무도 안 정한 방에서 아침마다 `오늘 0개`가 온다.
+ *
+ * 걸린 카테고리는 안 본다. 필터는 화면에서 골라 보는 것이지
+ * **내일 아침에 무엇이 있는지와는 상관이 없다.**
+ */
+export const myTasksOn = (tasks: Task[], date: DateStr, me: string | null): Task[] =>
+  sortTasks(tasks.filter((t) => t.date === date && !t.done && (!t.assigneeId || t.assigneeId === me)))
+    .sort((a, b) => Number(Boolean(b.assigneeId)) - Number(Boolean(a.assigneeId)));
+
 /** 오늘 화면 맨 아래 접어두는 지난 미완료 */
 export const staleTasks = (tasks: Task[], today: DateStr, filter: Filter): Task[] =>
   sortTasks(tasks.filter((t) => !t.done && t.date < today && matches(t, filter)));

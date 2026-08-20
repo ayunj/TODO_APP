@@ -11,6 +11,7 @@ import { useRooms } from './rooms';
 import { reclaimMyRooms, TRASH_DAYS } from './repo/remote';
 import type { Repository, Snapshot } from './repository';
 import { alive, onShopList, trashOf } from './selectors';
+import { reschedule } from './notify';
 import { toast } from './toast';
 import type {
   Category,
@@ -944,6 +945,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     화면마다 `t.deletedAt`을 따지게 하면 언젠가 한 군데를 빠뜨린다.
   */
   const liveTasks = useMemo(() => alive(tasks), [tasks]);
+
+  /*
+    알림은 **예약할 때의 글씨를 들고 잔다.** 그래서 할 일이 바뀔 때마다 이틀치를 다시 건다 —
+    앱을 열 때도 여기가 한 번 돈다(처음 그릴 때 tasks가 들어오면서).
+    앱이 아니거나 껐으면 `reschedule`이 그 자리에서 돌아선다.
+  */
+  useEffect(() => {
+    void reschedule(liveTasks, owner, notify, { todo: notifyTodo, left: notifyLeft });
+  }, [liveTasks, owner, notify, notifyTodo, notifyLeft]);
   const liveShopping = useMemo(() => alive(shopping), [shopping]);
   const liveMemos = useMemo(() => alive(memos), [memos]);
 

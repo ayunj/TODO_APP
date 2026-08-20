@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import Fab from './Fab';
 import Header from './Header';
 import TabBar from './TabBar';
@@ -31,17 +32,44 @@ import ShareScreen from '@/screens/settings/ShareScreen';
 import { useAuth } from '@/lib/auth';
 import { useBackGesture } from '@/lib/back';
 import { addDays, addMonths, monthKey } from '@/lib/date';
+import { onNotifyAction, POSTPONE } from '@/lib/notify';
+import { myTasksOn } from '@/lib/selectors';
+import { toast } from '@/lib/toast';
 import { useStore } from '@/lib/store';
 import { useSwipe } from '@/lib/swipe';
 import { useUi } from '@/lib/ui';
 
 export default function AppShell() {
-  const { loading, onboarded } = useStore();
+  const { loading, onboarded, tasks, postponeTasks } = useStore();
   const { enabled, loading: checking, account, recovering } = useAuth();
   const { view, route, depth, cursor, setCursor, logSpan } = useUi();
 
   // 뒤로 제스처는 앱 전체가 한 자리에서 받는다 (한 번에 한 겹씩)
   useBackGesture();
+
+  /*
+    저녁 알림의 `내일로 미루기`. **그 날 남은 것을 통째로 옮긴다** —
+    하나씩 고르는 것은 어차피 앱을 봐야 하는 일이고, 저녁 알림은 하루를 닫는 자리다.
+    미루기 줄([PostponeRow](../screens/day/PostponeRow.tsx))과 같은 뜻으로 움직인다.
+  */
+  const latest = useRef({ tasks, postponeTasks, me: account?.id ?? null });
+  latest.current = { tasks, postponeTasks, me: account?.id ?? null };
+  useEffect(
+    () =>
+      onNotifyAction((actionId, date) => {
+        if (actionId !== POSTPONE) return;
+        const { tasks: rows, postponeTasks: move, me } = latest.current;
+        const left = myTasksOn(rows, date, me);
+        if (left.length === 0) return; // 그 사이 다 했으면 아무 일도 안 한다
+        const to = addDays(date, 1);
+        move(
+          left.map((t) => t.id),
+          to,
+        );
+        toast(`${left.length}개를 내일로 미뤘어요`);
+      }),
+    [],
+  );
 
   // 아래 이른 반환들보다 위에 있어야 한다 — 훅은 렌더마다 같은 수로 불려야 한다
   const step = (n: number) =>

@@ -19,6 +19,18 @@ export const parseKey = (s: DateStr): Date => parseISO(s);
 
 export const todayStr = (): DateStr => toKey(new Date());
 
+/**
+ * 그 날 그 시각. 알림을 걸 때만 쓴다 — **`Date`가 나가는 유일한 자리다.**
+ *
+ * `'HH:MM'`은 [`Settings`](./types.ts)가 담고 있는 꼴이다.
+ * 로컬 시간으로 읽는다. 폰이 든 시간대에서 8시면 그 8시다.
+ */
+export const atTime = (s: DateStr, hhmm: string): Date => {
+  const d = parseKey(s);
+  d.setHours(Number(hhmm.slice(0, 2)), Number(hhmm.slice(3, 5)), 0, 0);
+  return d;
+};
+
 export const addDays = (s: DateStr, n: number): DateStr => toKey(addDaysFn(parseKey(s), n));
 
 export const addMonths = (s: DateStr, n: number): DateStr => toKey(addMonthsFn(parseKey(s), n));

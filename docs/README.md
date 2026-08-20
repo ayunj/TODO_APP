@@ -13,7 +13,7 @@ docs/
   rooms/
   trash/
   account/    login  sync  database
-  app/        architecture  navigation  design  prefs  pwa  native
+  app/        architecture  navigation  design  prefs  notify  pwa  native
 ```
 
 ---
@@ -67,6 +67,7 @@ docs/
 | [navigation](app/navigation/기능.md) | ★ 헤더, 탭바, 밀고 들어가는 화면 스택, 시트 |
 | [design](app/design/기능.md) | 색 토큰, 말투 |
 | [prefs](app/prefs/기능.md) | 앱 설정 — 주 시작 요일과 알림 |
+| [notify](app/notify/기능.md) | 아침·저녁 알림 — 기기가 스스로 띄운다 |
 | [pwa](app/pwa/기능.md) | 홈 화면 설치, 아이콘, 서비스워커 |
 | [native](app/native/기능.md) | 안드로이드 앱 (Capacitor) — APK 굽기 |
 
@@ -77,7 +78,6 @@ docs/
 **[next/남은-것.md](next/남은-것.md)** 하나에 모아뒀다. 무엇이 왜 남았는지, 안 하기로 한 것은 무엇인지.
 
 - **콕 찌르기** — 시트에 자리만 있고 누르면 준비 중이라고만 한다
-- **알림** — 시각을 담아두는 화면까지 왔다. 실제로 울리는 길이 없다 ([prefs](app/prefs/기능.md))
 - **누가 얼마나** — 기록 탭에 접어둘 사람별 숫자
 - **실시간** — 앱 열 때 한 번만 맞춘다 ([sync](account/sync/기능.md))
 - 내보내기, 홈 화면 위젯
