@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>do·dodu 홈</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Gowun+Dodum&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/*
+  홈 시안 — 그림을 뺀 것.
+  색은 앱과 같은 토큰을 쓴다(src/app/globals.css). 여기서 새로 만들지 않는다.
+*/
+:root{
+  --bg:#faf6f0; --card:#fff; --sunk:#f5f0e9;
+  --ink:#615953; --ink2:#8c8078; --ink3:#a59a92;
+  --line:#efe8df;
+  --accent:#d97a5e; --accent-tint:#fcf2ed;
+  --ok:#73b79f; --done:#d9d2cb;
+  --track:#f2ece6; --edge:#d8d3ce; --faint:#d9d2cb;
+  --paper:#f2ece4;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; padding:34px 20px 80px; background:var(--paper);
+  font-family:'Noto Sans KR',system-ui,-apple-system,sans-serif;
+  color:var(--ink); line-height:1.55; letter-spacing:-.01em; font-size:14px;
+}
+:focus-visible{outline:2px solid var(--accent); outline-offset:-2px; border-radius:8px}
+
+.head{max-width:820px; margin:0 auto 26px}
+.head h1{font-size:19px; margin:0 0 6px; font-weight:700}
+.head p{color:var(--ink2); font-size:13px; margin:0; max-width:62ch}
+.head b{color:var(--accent); font-weight:500}
+
+.deck{display:flex; flex-wrap:wrap; gap:26px; justify-content:center; align-items:flex-start}
+
+/* ── 폰 ── */
+.phone{
+  width:344px; flex:none; background:var(--bg); border-radius:26px;
+  box-shadow:0 10px 34px rgba(97,89,83,.13); overflow:hidden;
+}
+.appbar{display:flex; align-items:center; gap:12px; padding:16px 16px 12px}
+.logo{font-family:'Gowun Dodum',sans-serif; font-size:21px; margin:0; font-weight:400}
+.logo .do{color:var(--accent)}
+.logo .du{color:var(--ok)}
+.logo .mid{color:var(--accent); margin:0 1px}
+.side{margin-left:auto; display:flex; gap:4px}
+.iconbtn{
+  border:0; background:transparent; font:inherit; font-size:11.5px; color:var(--ink3);
+  padding:5px 9px; border-radius:999px; cursor:pointer;
+}
+.iconbtn:hover{background:var(--sunk)}
+.bell{position:relative}
+.bell::after{
+  content:""; position:absolute; top:-2px; right:-5px; width:5px; height:5px;
+  border-radius:999px; background:var(--accent);
+}
+.hello{padding:2px 18px 16px; margin:0; font-family:'Gowun Dodum',sans-serif; font-size:15px; color:var(--ink2)}
+.hello b{display:block; color:var(--ink); font-weight:400}
+
+.screen{padding:0 16px 16px}
+
+/* ── 카드 ── */
+.card{background:var(--card); border-radius:20px; box-shadow:0 8px 24px rgba(0,0,0,.05); margin-bottom:11px}
+.card.cyc{background:#fdfaf4}
+.card-head{display:flex; align-items:center; gap:8px; padding:16px 17px 10px}
+.card-title{font-size:14.5px; font-weight:700; margin:0}
+.left{
+  margin-left:auto; font-size:11px; font-weight:500; padding:3px 10px; border-radius:999px;
+  background:var(--accent-tint); color:var(--accent); font-variant-numeric:tabular-nums;
+}
+.more{
+  margin-left:auto; border:0; background:transparent; font:inherit; font-size:12px;
+  color:var(--ink3); cursor:pointer; padding:3px 4px; border-radius:8px;
+}
+.more:hover{color:var(--accent)}
+
+/* ── 할 일 한 줄 ── */
+ul.list{list-style:none; margin:0; padding:0 17px}
+ul.list li{display:flex; align-items:flex-start; gap:12px; padding:12px 0; border-top:1px solid var(--line)}
+ul.list li:first-child{border-top:0}
+.tick{
+  flex:none; width:25px; height:25px; margin-top:1px; border-radius:999px;
+  border:1.8px solid var(--edge); background:transparent; display:grid; place-items:center;
+  font-size:12px; font-weight:700; color:transparent; cursor:pointer; padding:0;
+  transition:transform .12s ease, background-color .12s ease, border-color .12s ease;
+}
+.tick:active{transform:scale(.9)}
+.tick[aria-pressed="true"]{background:var(--ok); border-color:var(--ok); color:#fff}
+.mid{min-width:0; flex:1}
+.t{display:block; font-size:15px; font-weight:500; line-height:1.45; overflow-wrap:anywhere}
+li.done .t{color:var(--done); text-decoration:line-through; text-decoration-thickness:1px}
+.meta{display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin-top:5px; font-size:11.5px; color:var(--ink3)}
+.cat{display:inline-flex; align-items:center; gap:5px}
+.cat i{width:7px; height:7px; border-radius:999px; display:block}
+.meta .sep{color:var(--faint)}
+li.done .meta{color:var(--done)}
+li.done .cat i{opacity:.4}
+
+/* ── 카드 발 ── */
+.track{display:block; height:6px; border-radius:999px; background:var(--track); overflow:hidden; margin:6px 17px 0}
+.track i{display:block; height:100%; border-radius:999px; background:var(--accent); transition:width .3s ease}
+.card-foot{display:flex; align-items:baseline; gap:10px; padding:12px 17px 15px}
+.say{font-family:'Gowun Dodum',sans-serif; font-size:13.5px; color:var(--accent); min-width:0; flex:1}
+.count{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink2); font-variant-numeric:tabular-nums}
+.count b{color:var(--accent); font-weight:500; font-size:14px}
+
+/* ── 주기 도래 ── */
+ul.cycles{list-style:none; margin:0; padding:0 17px 16px}
+ul.cycles li{padding:11px 0; border-top:1px solid var(--line)}
+ul.cycles li:first-child{border-top:0}
+.cyc-top{display:flex; align-items:center; gap:8px}
+.cyc-name{font-size:14px; font-weight:500}
+.dday{
+  font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:500; padding:2px 8px;
+  border-radius:999px; background:#eef6f1; color:#4e9179; font-variant-numeric:tabular-nums;
+}
+.dday.now{background:var(--accent-tint); color:var(--accent)}
+.cyc-sub{margin-top:3px; font-size:11.5px; color:var(--ink3); font-variant-numeric:tabular-nums}
+
+/* ── 탭 ── */
+.tabs{display:flex; align-items:center; border-top:1px solid var(--line); background:var(--card); padding:8px 6px}
+.tab{
+  flex:1; border:0; background:transparent; font:inherit; font-size:11px; color:var(--ink3);
+  padding:7px 2px; cursor:pointer; border-radius:12px;
+}
+.tab[aria-current="page"]{color:var(--accent); font-weight:500}
+.tab:hover{background:var(--sunk)}
+.fab{
+  flex:none; width:46px; height:46px; margin:0 4px; border:0; border-radius:999px;
+  background:var(--ok); color:#fff; font-size:22px; line-height:1; cursor:pointer;
+  box-shadow:0 8px 20px rgba(115,183,159,.35);
+}
+
+/* ── 곁의 설명 ── */
+.notes{width:344px; flex:none}
+.notes h2{font-size:13.5px; font-weight:700; margin:0 0 10px}
+.notes ul{list-style:none; margin:0 0 22px; padding:0; display:flex; flex-direction:column; gap:9px}
+.notes li{background:#fff; border-radius:14px; padding:11px 13px; font-size:12.5px; color:var(--ink2); line-height:1.62}
+.notes li b{color:var(--ink); font-weight:500}
+.notes code{background:var(--sunk); padding:1px 5px; border-radius:5px; font-family:'IBM Plex Mono',monospace; font-size:11.5px}
+.notes .off{background:transparent; padding:2px 0; color:var(--ink3)}
+.notes .off b{color:var(--ink2)}
+.notes .off code{background:#e9e2d8}
+
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>do·dodu 홈 — 그림을 뺀 것</h1>
+  <p>
+    같은 화면에서 <b>그림만 걷어내고 도는 것만 남겼다.</b>
+    체크하면 남은 개수와 아래 문구가 같이 움직이고, 끝낸 것은 아래로 내려가 취소선이 그어진다.
+    주기 도래의 D-일은 적어둔 것이 아니라 <b>마지막 한 날과 주기로 그때그때 센다.</b>
+  </p>
+</div>
+
+<div class="deck">
+  <div class="phone">
+    <header class="appbar">
+      <h1 class="logo"><span class="do">do</span><span class="mid">·</span><span class="du">dodu</span></h1>
+      <div class="side">
+        <button type="button" class="iconbtn"><span class="bell">알림</span></button>
+        <button type="button" class="iconbtn">우리집</button>
+      </div>
+    </header>
+
+    <p class="hello"><b>안녕하세요!</b>오늘도 도도두와 함께해요 :)</p>
+
+    <div class="screen">
+      <!-- ── 오늘의 할 일 ── -->
+      <section class="card" aria-labelledby="today-title">
+        <div class="card-head">
+          <h2 class="card-title" id="today-title">오늘의 할 일</h2>
+          <span class="left" id="left">3개 남음</span>
+        </div>
+        <ul class="list" id="list"></ul>
+        <span class="track"><i id="fill" style="width:0%"></i></span>
+        <div class="card-foot">
+          <span class="say" id="say"></span>
+          <span class="count"><b id="done">0</b> / <span id="total">3</span></span>
+        </div>
+      </section>
+
+      <!-- ── 주기 도래 ── -->
+      <section class="card cyc" aria-labelledby="cycle-title">
+        <div class="card-head">
+          <h2 class="card-title" id="cycle-title">주기 도래</h2>
+          <button type="button" class="more">더보기 ›</button>
+        </div>
+        <ul class="cycles" id="cycles"></ul>
+      </section>
+    </div>
+
+    <nav class="tabs" aria-label="주요 화면">
+      <button type="button" class="tab" aria-current="page">홈</button>
+      <button type="button" class="tab">일정</button>
+      <button type="button" class="fab" aria-label="새로 적기">+</button>
+      <button type="button" class="tab">장보기</button>
+      <button type="button" class="tab">우리집</button>
+    </nav>
+  </div>
+
+  <div class="notes">
+    <h2>도는 것</h2>
+    <ul>
+      <li><b>체크하면 넷이 같이 움직인다.</b> 오른쪽 위 남은 개수, 막대, 아래 문구, 그리고 줄 차례.</li>
+      <li><b>끝낸 것을 숨기지 않는다.</b> 아래로 내리고 취소선만 긋는다 — 앱 규칙 그대로다.</li>
+      <li><b>문구는 숫자를 세지 않는다.</b> <code>세 가지 중에 한 가지 했어요</code> — 앱 <code>saying()</code>과 같은 말이다.</li>
+      <li><b>D-일을 적어두지 않았다.</b> 마지막 한 날과 주기로 다음 날을 세서 오늘과 견준다. 내일 열면 내일 것이 나온다.</li>
+    </ul>
+
+    <h2>시안과 달라진 것</h2>
+    <ul>
+      <li class="off"><b>그림을 다 뺐다.</b> 토마토·해·손그림 아이콘 전부. 글자와 자리만 남았다.</li>
+      <li class="off">
+        <b>오늘 것과 다가오는 것을 갈랐다.</b>
+        시안은 <code>오늘의 할 일</code> 안에 <code>2일 후</code>가 섞여 있었다.
+        오늘 것은 위 카드가, 다가오는 것은 <code>주기 도래</code>가 맡는다.
+      </li>
+      <li class="off"><b>밀린 것을 붉게 칠하지 않는다.</b> <code>3일 지남</code>이라고만 적는다.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+/* ── 오늘의 할 일 ───────────────────────────────────────── */
+const CATS = { 집안일:'#8EC9B5', 건강:'#A8D8F0', 장보기:'#F0C58A' };
+
+const tasks = [
+  { title:'화장실 청소', cat:'집안일', cycle:'8일마다', late:0, done:false },
+  { title:'빨래하기',   cat:'집안일', cycle:'',        late:0, done:false },
+  { title:'장보기',     cat:'장보기', cycle:'',        late:3, done:false },
+];
+
+/* 숫자를 세는 대신 말로 — 앱 constants.ts의 saying()과 같은 말 */
+const NUM = ['영','한','두','세','네','다섯','여섯','일곱','여덟','아홉','열'];
+const num = (n) => NUM[n] ?? String(n);
+const saying = (done, total) =>
+  done === 0 ? num(total) + ' 가지가 기다리고 있어요'
+  : done === total ? num(total) + ' 가지 모두 했어요'
+  : num(total) + ' 가지 중에 ' + num(done) + ' 가지 했어요';
+
+const $ = (id) => document.getElementById(id);
+
+function render() {
+  // 끝낸 것은 숨기지 않는다. 아래로 내리고 취소선만 긋는다.
+  const order = tasks.map((t, i) => i).sort((a, b) => Number(tasks[a].done) - Number(tasks[b].done));
+
+  $('list').replaceChildren(...order.map((i) => {
+    const t = tasks[i];
+    const li = document.createElement('li');
+    if (t.done) li.className = 'done';
+
+    const tick = document.createElement('button');
+    tick.type = 'button';
+    tick.className = 'tick';
+    tick.textContent = '✓';
+    tick.setAttribute('aria-pressed', String(t.done));
+    tick.setAttribute('aria-label', t.title + ' 완료 표시');
+    tick.addEventListener('click', () => { t.done = !t.done; render(); });
+
+    const title = document.createElement('span');
+    title.className = 't';
+    title.textContent = t.title;
+
+    const meta = document.createElement('span');
+    meta.className = 'meta';
+    const cat = document.createElement('span');
+    cat.className = 'cat';
+    const dot = document.createElement('i');
+    dot.style.background = CATS[t.cat];
+    cat.append(dot, t.cat);
+    meta.append(cat);
+
+    // 밀린 일을 빨갛게 칠하지 않는다 — 지났으면 며칠 지났다고만 적는다
+    const bits = [t.cycle, !t.done && t.late ? t.late + '일 지남' : ''];
+    for (const bit of bits) {
+      if (!bit) continue;
+      const sep = document.createElement('span');
+      sep.className = 'sep';
+      sep.textContent = '·';
+      const s = document.createElement('span');
+      s.textContent = bit;
+      meta.append(sep, s);
+    }
+
+    const mid = document.createElement('div');
+    mid.className = 'mid';
+    mid.append(title, meta);
+
+    li.append(tick, mid);
+    return li;
+  }));
+
+  const done = tasks.filter((t) => t.done).length;
+  const total = tasks.length;
+  $('done').textContent = String(done);
+  $('total').textContent = String(total);
+  $('say').textContent = saying(done, total);
+  $('fill').style.width = Math.round((done / total) * 100) + '%';
+  $('left').textContent = done === total ? '다 했어요' : (total - done) + '개 남음';
+}
+
+/* ── 주기 도래 ─────────────────────────────────────────────
+   D-일을 적어두지 않는다. 마지막 한 날과 주기로 다음 날을 세서 오늘과 견준다.
+   그래야 내일 열어도 내일 것이 나온다.                          */
+const DAY = 86400000;
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const md = (d) => (d.getMonth() + 1) + '/' + d.getDate();
+
+const cycles = [
+  { name:'필터 청소', every:30, ago:30 },
+  { name:'침구 세탁', every:14, ago:12 },
+];
+
+$('cycles').replaceChildren(...cycles.map(({ name, every, ago }) => {
+  const last = new Date(today.getTime() - ago * DAY);
+  const next = new Date(last.getTime() + every * DAY);
+  const left = Math.round((next - today) / DAY);
+
+  const nm = document.createElement('span');
+  nm.className = 'cyc-name';
+  nm.textContent = name;
+
+  const dd = document.createElement('span');
+  dd.className = left <= 0 ? 'dday now' : 'dday';
+  dd.textContent = left <= 0 ? 'D-day' : 'D-' + left;
+
+  const top = document.createElement('div');
+  top.className = 'cyc-top';
+  top.append(nm, dd);
+
+  const sub = document.createElement('div');
+  sub.className = 'cyc-sub';
+  sub.textContent = '매 ' + every + '일마다 · 마지막 ' + md(last);
+
+  const li = document.createElement('li');
+  li.append(top, sub);
+  return li;
+}));
+
+render();
+</script>
+</body>
+</html>
