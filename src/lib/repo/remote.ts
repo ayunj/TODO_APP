@@ -538,3 +538,29 @@ const nudgeBack = (r: Row): Nudge => ({
   categoryId: (r.category_id as string) ?? null,
   createdAt: String(r.created_at ?? ''),
 });
+
+/* ───────── 푸시 ───────── */
+
+/**
+ * 이 기기를 콕 받을 곳으로 적어둔다.
+ * 열쇠가 토큰이라 같은 기기가 다시 불러도 줄이 안 늘어난다.
+ */
+export async function saveDeviceToken(token: string, me: string): Promise<void> {
+  const client = await supabase();
+  const { error } = await client
+    .from('device_tokens')
+    .upsert({ token, user_id: me, updated_at: new Date().toISOString() }, { onConflict: 'token' });
+  if (error) throw error;
+}
+
+/**
+ * 방금 보낸 콕을 상대 폰까지 밀어준다.
+ *
+ * **안 되면 그냥 넘어간다.** 콕은 이미 `nudges`에 들어가 있어서 상대가
+ * 앱을 열면(또는 열려 있으면 실시간으로) 뜬다 — 푸시는 그걸 **빨리** 알리는 것뿐이다.
+ * 파이어베이스가 안 붙어 있어도 여기서 앱이 멈추면 안 된다.
+ */
+export async function pushNudge(roomId: string, taskId: string): Promise<void> {
+  const client = await supabase();
+  await client.functions.invoke('push-nudge', { body: { room: roomId, task: taskId } });
+}

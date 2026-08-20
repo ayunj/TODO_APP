@@ -62,7 +62,8 @@ captures/
 .cxx/
 
 # Google Services (e.g. APIs or Firebase)
-# google-services.json
+# 앱마다 다른 열쇠다. 저장소에 있을 것이 아니라서 주석을 풀어뒀다.
+google-services.json
 
 # Freeline
 freeline.py

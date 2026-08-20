@@ -11,6 +11,7 @@ import { useRooms } from './rooms';
 import { reclaimMyRooms, TRASH_DAYS } from './repo/remote';
 import type { Repository, Snapshot } from './repository';
 import { alive, onShopList, trashOf } from './selectors';
+import { watchData } from './repo/live';
 import { reschedule } from './notify';
 import { toast } from './toast';
 import type {
@@ -141,6 +142,9 @@ interface StoreValue {
 
   resetAll: () => void;
 }
+
+/** 실시간으로 온 것을 묶어두는 짬 — 우르르 바뀔 때 같은 일을 열 번 안 하려고 */
+const LIVE_GAP = 700;
 
 const StoreContext = createContext<StoreValue | null>(null);
 
@@ -292,6 +296,28 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       toast('아직 맞추지 못했습니다. 연결되면 다시 시도해요.');
     }
   }, [repo, spread]);
+
+  /*
+    실시간 — **상대가 체크한 게 바로 넘어온다.** 그전에는 앱을 열 때 한 번만 맞췄다.
+
+    알림은 **신호로만** 쓰고 맞추는 일은 `resync`로 하던 길에 한 번 더 돌린다.
+    받은 줄을 하나씩 끼워 넣으면 합치는 규칙이 두 벌이 된다 — `settle`이 이미 하는 일이다.
+
+    **잠깐 묶는다.** 방 하나를 정리하면 줄이 열 개씩 한꺼번에 바뀌는데
+    그때마다 맞추면 같은 일을 열 번 한다.
+  */
+  useEffect(() => {
+    if (!owner || !repo().sync) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const off = watchData(() => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => void resync(), LIVE_GAP);
+    });
+    return () => {
+      if (timer) clearTimeout(timer);
+      off();
+    };
+  }, [owner, repo, resync]);
 
   const categoryOf = useCallback(
     (id: string) => categories.find((c) => c.id === id) ?? categories[0] ?? FALLBACK_CATEGORY,

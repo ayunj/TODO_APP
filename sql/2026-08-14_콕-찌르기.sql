@@ -171,3 +171,12 @@ as $$
     from room_members m
    where m.room_id = room and m.user_id = auth.uid()
 $$;
+
+
+-- 실시간으로도 받는다. **표를 만든 뒤에** 올려야 한다 —
+-- 위쪽 publication 묶음은 이 표보다 먼저 도는 자리다.
+do $$
+begin
+  alter publication supabase_realtime add table nudges;
+exception when duplicate_object then null;
+end $$;

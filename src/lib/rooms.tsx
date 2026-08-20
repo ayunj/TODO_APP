@@ -13,6 +13,8 @@ import {
   peekRoom as peekRoomRemote,
   pullNudges as pullNudgesRemote,
   pullRooms,
+  pushNudge as pushNudgeRemote,
+  saveDeviceToken as saveDeviceTokenRemote,
   sendNudge as sendNudgeRemote,
   renameMe as renameMeRemote,
   resetJoinCode as resetJoinCodeRemote,
@@ -20,6 +22,8 @@ import {
   unshareCategory as unshareCategoryRemote,
   updateRoom as updateRoomRemote,
 } from './repo/remote';
+import { watchNudges } from './repo/live';
+import { registerPush } from './push';
 import { hasSupabase } from './supabase';
 import type { Nudge, Room, RoomMember, RoomPeek } from './types';
 
@@ -254,9 +258,44 @@ export function RoomsProvider({ children }: { children: React.ReactNode }) {
     };
   }, [enabled]);
 
+  /*
+    앱이 열려 있는 동안 온 콕은 **그 자리에서** 뜬다.
+    이게 붙기 전에는 찔러도 상대가 앱을 다시 열어야 보였는데, 그러면 찌른 게 아니다.
+
+    같은 것이 두 번 오를 수 있다 — 위에서 받아오는 사이에 하나가 들어오면 그렇다.
+    id로 한 번 거른다.
+  */
+  useEffect(() => {
+    if (!enabled || !myId) return;
+    return watchNudges(myId, (n) =>
+      setNudges((prev) => (prev.some((x) => x.id === n.id) ? prev : [n, ...prev])),
+    );
+  }, [enabled, myId]);
+
+  /*
+    이 기기를 콕 받을 곳으로 적어둔다. **앱에서만, 로그인해 있을 때만.**
+    파이어베이스가 안 붙어 있으면 아무 일도 안 일어난다 — 그래도 앱은 그대로 돈다.
+  */
+  useEffect(() => {
+    if (!enabled || !myId) return;
+    return registerPush((token) => {
+      void saveDeviceTokenRemote(token, myId).catch(() => {
+        /* 다음에 열 때 다시 적는다 */
+      });
+    });
+  }, [enabled, myId]);
+
   const sendNudge = useCallback(
-    (roomId: string, taskId: string, whom: string | null) =>
-      sendNudgeRemote(roomId, taskId, whom),
+    async (roomId: string, taskId: string, whom: string | null) => {
+      const left = await sendNudgeRemote(roomId, taskId, whom);
+      /*
+        상대 폰까지 밀어준다. **안 되면 그냥 넘어간다** —
+        콕은 이미 서버에 들어가 있어서 상대가 앱을 열면(열려 있으면 실시간으로) 뜬다.
+        푸시는 그걸 **빨리** 알리는 것뿐이라, 여기서 걸려도 보낸 것은 보낸 것이다.
+      */
+      void pushNudgeRemote(roomId, taskId).catch(() => {});
+      return left;
+    },
     [],
   );
 
