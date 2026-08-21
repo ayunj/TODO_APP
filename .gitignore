@@ -7,3 +7,6 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store
+
+# 글꼴 원본 — 비교 화면 만들 때만 받아서 쓴다 (scripts/build-font-compare.py)
+.fontcache/

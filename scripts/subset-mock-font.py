@@ -3,7 +3,7 @@
     pip install fonttools brotli
     python scripts/subset-mock-font.py
 
-`public/fonts/uiyeon.woff2`(온글잎 의연체)에서 `docs/app/design/dodudu-home.html`에
+`public/fonts/uiyeon.woff2`(온글잎 의연체)에서 `design/dodudu-home.html`에
 **실제로 나오는 글자만** 골라 base64로 그 파일의 `uiyeon-font-start` ~ `uiyeon-font-end`
 사이에 다시 쓴다. 60KB 남짓이라 한 파일로 열어도 글꼴이 같이 따라온다.
 
@@ -22,7 +22,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 FONT = ROOT / 'public' / 'fonts' / 'uiyeon.woff2'
-HTML = ROOT / 'docs' / 'app' / 'design' / 'dodudu-home.html'
+HTML = ROOT / 'design' / 'dodudu-home.html'
 
 BLOCK = re.compile(
     r'(/\* uiyeon-font-start.*?src: url\(data:font/woff2;base64,)([^)]*)(\).*?/\* uiyeon-font-end \*/)',

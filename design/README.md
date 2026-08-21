@@ -1,0 +1,23 @@
+# 시안
+
+브라우저로 바로 열어보는 화면 그림. 앱 코드가 아니라 **정하기 전에 눈으로 보는 것**이다.
+파일 하나씩 혼자 열린다 — 서버도 설치도 필요 없다. (색·말투 기준은 [docs/app/design](../docs/app/design/기능.md))
+
+| 파일 | 무엇 |
+|---|---|
+| [dodudu-home.html](dodudu-home.html) | do·dodu 홈 화면 시안 — 손그림 토마토, 오늘의 할 일, 주기 도래 |
+| [font-compare.html](font-compare.html) | 같은 홈 화면을 글씨 넷으로 찍어 나란히 놓은 것 (지금 앱 글씨 · 온글잎 셋) |
+
+## 다시 만들기
+
+글꼴을 파일 안에 박아 넣기 때문에 **글을 고치면 한 번 돌려야 한다.** 안 그러면 새로 적은
+글자만 다른 글씨로 찍힌다 — 없는 글자는 조용히 대체 글꼴로 넘어가서 눈에 잘 안 띈다.
+
+```bash
+pip install fonttools brotli
+python scripts/subset-mock-font.py      # 홈 시안의 글꼴 조각
+python scripts/build-font-compare.py    # 비교 화면 (홈 시안에서 떠 온다)
+```
+
+비교 화면은 온글잎 원본 ttf가 내려받기 폴더에 있어야 만들어진다(`--src`로 자리를 바꿀 수 있다).
+고운돋움·본고딕은 구글 폰트라 없으면 알아서 받는다.
