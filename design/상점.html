@@ -148,7 +148,7 @@ body{
 
 /*
   ── 갈래 칩 ──
-  **전체 · 늘 있는 옷 · 시즌 옷**, 그리고 줄 하나 건너 **내 코스튬**.
+  **전체 · 늘 있는 옷 · 시즌 옷**, 그리고 줄 하나 건너 **내 옷장**.
   부위(머리·몸·악세사리)로는 안 가른다 — 부위를 나누는 순간 사람들은 겹쳐 입기를 기대한다.
 */
 .chipbar{
@@ -207,7 +207,7 @@ body{
 /* 값은 지우지 않는다 — 얼마를 모아야 하는지까지 가리면 모을 이유가 사라진다 */
 .item.lock .price{background:var(--sunk); color:var(--ink3)}
 .item.lock .price .coin{background:var(--faint)}
-/* 시즌 배지 — 묶음 제목이 없는 `내 코스튬` 칸에서 대신 말해준다. 자물쇠는 오른쪽이라 안 부딪힌다. */
+/* 시즌 배지 — 묶음 제목이 없는 `내 옷장` 칸에서 대신 말해준다. 자물쇠는 오른쪽이라 안 부딪힌다. */
 .item .season{
   position:absolute; left:5px; top:5px; border-radius:999px; padding:2px 7px;
   background:rgba(255,255,255,.9); color:var(--ink3); font-size:9px; font-weight:500;
@@ -263,7 +263,7 @@ body{
      폰은 <b>안드로이드 실기기 크기 그대로</b> <code>360 × 800</code>.</p>
   <p>뼈대는 한 줄이다 — <b>카드는 고르는 자리, 위 칸은 하는 자리.</b>
      카드를 누르면 곰돌이가 <b>걸쳐만 보고</b>, 사는 것도 입는 것도 위 칸의 단추 하나로 한다.
-     갈래는 <b>늘 있는 옷</b>과 <b>시즌 옷</b>, 그리고 <b>내 코스튬</b>이다.
+     갈래는 <b>늘 있는 옷</b>과 <b>시즌 옷</b>, 그리고 <b>내 옷장</b>이다.
      아래 손잡이로 포인트를 바꿔가며 눌러보면 된다.</p>
 </div>
 
@@ -277,7 +277,7 @@ body{
 <div class="deck">
   <div><p class="devname"><b>상점</b><span>늘 있는 옷 · 시즌 옷</span></p><div class="phone" data-cat="all" data-try="base"></div></div>
   <div><p class="devname"><b>시즌 옷</b><span>걸쳐보는 중</span></p><div class="phone" data-cat="season" data-try="xmas"></div></div>
-  <div><p class="devname"><b>내 코스튬</b><span>가진 것</span></p><div class="phone" data-cat="mine" data-try="hat"></div></div>
+  <div><p class="devname"><b>내 옷장</b><span>가진 것</span></p><div class="phone" data-cat="mine" data-try="hat"></div></div>
 
   <div class="note">
     <h2>한 벌이 곧 한 모습</h2>
@@ -309,7 +309,7 @@ body{
     <div class="warn">
       가운데 칩은 <b>없애도 된다.</b> <code>전체</code>가 이미 다 보여주니
       <code>늘 있는 옷</code>은 <b>시즌 것만 빼고 보는 자리</b>인데, 그걸 굳이 볼 일이 흔치 않다.
-      <code>전체 · 시즌 옷 · 내 코스튬</code> 셋으로 줄여도 화면은 그대로 돈다.
+      <code>전체 · 시즌 옷 · 내 옷장</code> 셋으로 줄여도 화면은 그대로 돈다.
     </div>
 
     <h3>봄·여름·가을·겨울로도 안 가른다</h3>
@@ -354,7 +354,7 @@ body{
     <table>
       <tr><th>안 쓴 말</th><th>쓴 말</th><th>왜</th></tr>
       <tr><td><code>가짐</code></td><td><b>내 옷</b></td>
-        <td>가짐은 세는 말이다. <code>내 코스튬</code>과 같은 결로 맞췄다</td></tr>
+        <td>가짐은 세는 말이다. <code>내 옷장</code>에 걸린 것이니 <b>내 옷</b>이다</td></tr>
       <tr><td><code>100P 주고 사기</code></td><td><b>구매</b></td>
         <td>값은 <b>바로 윗줄에 이미 있다.</b> 두 번 적으면 값을 치르라고 미는 말이 된다</td></tr>
     </table>
@@ -496,7 +496,7 @@ function preview(trying) {
 }
 
 /*
-  파는 것을 가르는 칩 셋에, `내 코스튬`을 줄 하나 세워 끝에 떼어 붙인다 —
+  파는 것을 가르는 칩 셋에, `내 옷장`을 줄 하나 세워 끝에 떼어 붙인다 —
   앞의 셋은 무엇을 파는지 가르는 말이고 이건 가진 것을 보는 자리라 뜻이 다르다.
 
   **`세트`라고 안 부른다.** 부위별을 접은 뒤로는 파는 것이 전부 세트라
@@ -511,7 +511,7 @@ function chipbar(cat) {
   return '<div class="chipbar">' +
     one('all', '전체') + one('set', '늘 있는 옷') + one('season', '시즌 옷') +
     '<span class="vline"></span>' +
-    one('mine', '내 코스튬<em>' + mineCount() + '</em>') +
+    one('mine', '내 옷장<em>' + mineCount() + '</em>') +
   '</div>';
 }
 
@@ -529,7 +529,7 @@ function card(it, trying) {
   return '<button class="' + cls + '" type="button" data-try="' + it.k + '">' +
     '<span class="nm">' + it.n + '</span>' +
     '<span class="art">' + artOf(it) +
-      /* 내 코스튬 칸에서는 묶음 제목이 없어서, 배지가 그때 대신 말해준다 */
+      /* 내 옷장 칸에서는 묶음 제목이 없어서, 배지가 그때 대신 말해준다 */
       (it.season ? '<span class="season">시즌</span>' : '') +
       (lock ? '<span class="lockmark">' + I_LOCK + '</span>' : '') +
     '</span>' + foot +
@@ -554,10 +554,10 @@ function grid(cat, trying) {
       : cat === 'set' ? ITEMS.filter(function (i) { return !i.season; })
         : ITEMS.filter(function (i) { return i.season; });
 
-    /* 여기 비는 건 `내 코스튬`뿐이다. 비었다고 문장만 두지 않고 어디로 가면 되는지 적는다. */
+    /* 여기 비는 건 `내 옷장`뿐이다. 비었다고 문장만 두지 않고 어디로 가면 되는지 적는다. */
     if (!list.length) {
       return '<div class="screen list"><div class="grid"><div class="empty">' +
-        '<b>아직 가진 옷이 없어요</b>할 일을 끝내면 포인트가 쌓여요.<br />' +
+        '<b>옷장이 아직 비어 있어요</b>할 일을 끝내면 포인트가 쌓여요.<br />' +
         '<b style="display:inline; font-size:12.5px; color:var(--accent)">전체</b>에서 살 수 있는 것을 볼 수 있어요.' +
         '</div></div></div>';
     }
