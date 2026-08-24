@@ -1,29 +1,36 @@
-import Tomato from './Tomato';
+'use client';
+
+import { useState } from 'react';
 
 /**
- * 첫 화면 그림 — 하트를 안은 토마토. 설명 대신 이걸로 말한다.
- *
- * 그림을 아직 안 잘랐으면(=public/tomato가 비었으면) 예전 체크리스트 그림이 대신 나온다.
- * 첫 화면은 자리가 비면 곧장 허전해지는 곳이라 여기만 대체를 둔다.
+ * 첫 화면 그림 — 안경 쓴 곰돌이와 dododu 이름.
+ * 로그인·첫 화면·새 비밀번호가 같이 쓴다. 여기 자리가 비면 곧장 허전해져서
+ * 못 불러오면 예전 체크리스트 그림이 대신 나온다.
  */
 export default function WelcomeArt() {
+  const [gone, setGone] = useState(false);
+  const box = 'mx-auto mb-[26px] mt-auto';
+
+  if (gone) return <Checklist className={box} />;
+
   return (
-    <Tomato
-      pose="heart"
-      size={168}
-      className="mx-auto mb-[26px] mt-auto"
-      fallback={<Checklist />}
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/login_logo.png"
+      alt="dododu"
+      onError={() => setGone(true)}
+      className={`${box} h-[168px] w-auto select-none object-contain`}
     />
   );
 }
 
-function Checklist() {
+function Checklist({ className }: { className: string }) {
   return (
     <svg
       viewBox="0 0 200 150"
       fill="none"
       aria-hidden="true"
-      className="mx-auto mb-[26px] mt-auto w-[230px] max-w-[66vw]"
+      className={`${className} w-[230px] max-w-[66vw]`}
     >
       <circle cx="34" cy="30" r="7" fill="#F0C58A" opacity=".6" />
       <circle cx="170" cy="26" r="5" fill="#F3A8A8" opacity=".6" />
