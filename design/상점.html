@@ -122,11 +122,13 @@ body{
 }
 .name{display:flex; align-items:baseline; gap:8px; margin:12px 0 0}
 .name .n{font-family:'Gowun Dodum',sans-serif; font-size:17px; color:var(--ink)}
+/* 값은 **여기 한 번만** 적는다. 단추에 또 적으면 값을 치르라고 미는 말이 된다. */
 .name .p{
   display:inline-flex; align-items:center; gap:4px; margin-left:auto; flex:none;
-  font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink3);
+  border-radius:999px; background:var(--accent-tint); padding:3px 11px 3px 4px;
+  font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:500; color:var(--accent);
 }
-.name .p .coin{width:15px; height:15px; font-size:9px; background:var(--faint)}
+.name .p .coin{width:16px; height:16px; font-size:9px}
 
 .act{width:100%; margin-top:11px; border:0; border-radius:16px; padding:14px; cursor:pointer;
   font-family:inherit; font-size:14px; font-weight:500; display:flex; align-items:center;
@@ -206,12 +208,11 @@ body{
 /* 값은 지우지 않는다 — 얼마를 모아야 하는지까지 가리면 모을 이유가 사라진다 */
 .item.lock .price{background:var(--sunk); color:var(--ink3)}
 .item.lock .price .coin{background:var(--faint)}
-/* 철 배지 — 왜 이 옷이 여기 있는지 한 낱말로 말한다. 자물쇠는 오른쪽이라 안 부딪힌다. */
+/* 시즌 배지 — 묶음 제목이 없는 `내 코스튬` 칸에서 대신 말해준다. 자물쇠는 오른쪽이라 안 부딪힌다. */
 .item .season{
   position:absolute; left:5px; top:5px; border-radius:999px; padding:2px 7px;
   background:rgba(255,255,255,.9); color:var(--ink3); font-size:9px; font-weight:500;
 }
-.item.here .season{background:var(--accent); color:#fff}
 .item .tag{border-radius:999px; padding:3px 10px; font-size:10.5px; font-weight:500; background:var(--accent-tint); color:var(--accent)}
 .item.on .tag{background:var(--accent); color:#fff}
 /* 지금 걸쳐보고 있는 칸 — 위 칸이 무엇을 보여주는 중인지 격자에서도 짚어준다 */
@@ -263,6 +264,7 @@ body{
      폰은 <b>안드로이드 실기기 크기 그대로</b> <code>360 × 800</code>.</p>
   <p>뼈대는 한 줄이다 — <b>카드는 고르는 자리, 위 칸은 하는 자리.</b>
      카드를 누르면 곰돌이가 <b>걸쳐만 보고</b>, 사는 것도 입는 것도 위 칸의 단추 하나로 한다.
+     갈래는 <b>세트</b>와 <b>시즌 세트</b> 둘뿐이다.
      아래 손잡이로 포인트를 바꿔가며 눌러보면 된다.</p>
 </div>
 
@@ -271,24 +273,17 @@ body{
   <button type="button" data-pt="120">120</button>
   <button type="button" data-pt="350" aria-pressed="true">350</button>
   <button type="button" data-pt="1000">1000</button>
-  <span style="width:20px"></span>
-  <b>지금 철</b>
-  <button type="button" data-season="봄">봄</button>
-  <button type="button" data-season="여름" aria-pressed="true">여름</button>
-  <button type="button" data-season="가을">가을</button>
-  <button type="button" data-season="겨울">겨울</button>
 </div>
 
 <div class="deck">
-  <div><p class="devname"><b>상점</b><span>지금 철이 위로</span></p><div class="phone" data-cat="all" data-try="base"></div></div>
+  <div><p class="devname"><b>상점</b><span>세트 · 시즌 세트</span></p><div class="phone" data-cat="all" data-try="base"></div></div>
   <div><p class="devname"><b>걸쳐보기</b><span>아직 못 사는 것</span></p><div class="phone" data-cat="all" data-try="xmas"></div></div>
   <div><p class="devname"><b>내 코스튬</b><span>가진 것</span></p><div class="phone" data-cat="mine" data-try="hat"></div></div>
 
   <div class="note">
-    <h2>세트로 · 철마다</h2>
+    <h2>세트로 · 시즌 세트로</h2>
     <div class="pick"><b>정했다 — 한 벌이 곧 한 모습이다.</b> 부위로 쪼개지 않고,
-      크리스마스 세트 · 설빔 세트처럼 <b>철마다 한 벌씩</b> 는다.
-      위 손잡이로 <b>철을 바꿔보면</b> 상점이 어떻게 다시 놓이는지 보인다.</div>
+      갈래는 <code>세트</code>와 <code>시즌 세트</code> <b>둘뿐</b>이다.</div>
     <ul>
       <li><b>그림이 곱으로 안 는다.</b> 세트는 한 벌에 두 장(<code>front</code>·<code>sleep</code>)이면 끝이다.
           부위별은 <b>조합마다</b> 어긋나는 데가 없는지 봐야 한다 — 머리 5 × 몸 5면 볼 것이 25가지다</li>
@@ -297,14 +292,22 @@ body{
       <li>이건 <b>꾸미기 게임이 아니라 집안일 앱의 덤</b>이다. 조합의 재미를 파고들 자리가 아니다</li>
     </ul>
 
-    <h3>철이 지나도 안 없앤다</h3>
-    <div class="pick"><b>사라지는 게 아니라 자리만 바뀐다.</b> 지금 철이 맨 위로 오고,
-      지난 철은 <code>다른 철 옷</code>에 그대로 남는다.</div>
+    <h3>봄·여름·가을·겨울로 안 가른다</h3>
+    <p>철 이름을 달면 <b>넉 자리가 생기고</b>, 그러면 대부분의 날에 그중 셋이
+       <b>지금이 아닌 것</b>으로 읽힌다. 크리스마스 옷 옆에 <code>겨울</code>이라 적혀 있으면
+       8월에는 <b>안 사도 되는 것</b>이 된다 — 팔 생각이 없는 물건을 진열한 꼴이다.</p>
+    <p><code>시즌 세트</code> 한 낱말이면 <b>때가 있는 옷</b>이라는 말은 이미 다 한 것이고,
+       무슨 때인지는 <b>크리스마스</b>·<b>설빔</b>이라는 이름이 말한다.</p>
+    <div class="pick">
+      지금 시기 것은 <b>이름표 대신 순서로</b> 말한다 —
+      그 묶음 안에서 <b>앞에 세우면</b> 그만이다.
+    </div>
+
+    <h3>때가 지나도 안 없앤다</h3>
     <ul>
-      <li><b>“지금 아니면 못 사요”는 이 앱이 안 하는 말이다.</b>
+      <li><b>&ldquo;지금 아니면 못 사요&rdquo;는 이 앱이 안 하는 말이다.</b>
           밀린 일을 빨갛게 안 칠하기로 해놓고 옷은 조르면 앞뒤가 안 맞는다</li>
-      <li><b>3월에 앱을 깐 사람이 12월까지 볼 것이 없으면 안 된다.</b>
-          한 철 것만 팔면 상점이 대부분의 날에 카드 한두 장짜리가 된다</li>
+      <li><b>3월에 앱을 깐 사람이 12월까지 볼 것이 없으면 안 된다</b></li>
       <li>8월에 크리스마스 옷을 입고 싶으면 입으면 된다. <b>귀여우면 그만이다</b></li>
     </ul>
     <div class="warn">
@@ -312,33 +315,29 @@ body{
       <b>못 산 사람을 아쉽게 만드는 것</b>으로 만든 재미다. 이 앱이 그걸로 벌 것이 없다.
     </div>
 
-    <h3>철마다 한 벌이면 1년에 넉 장</h3>
-    <p>세트 하나에 <code>front</code>·<code>sleep</code> 두 장이니
-       <b>한 철에 한 벌이면 1년에 여덟 장</b>이다. 지금 발주서의 일곱 벌은
-       <b>전부 늘 있는 옷</b>으로 두고, 철 옷은 그 위에 얹는다.</p>
+    <h3>시즌 세트 넷이면 여덟 장</h3>
+    <p>세트 하나에 <code>front</code>·<code>sleep</code> 두 장이다.
+       지금 발주서의 일곱 벌은 <b>전부 그냥 세트</b>로 두고 그 위에 얹는다.</p>
     <table>
-      <tr><th>철</th><th>세트</th><th>그림</th></tr>
-      <tr><td><b>봄</b></td><td>곰토끼</td><td><b>이미 있다</b></td></tr>
-      <tr><td><b>여름</b></td><td>물놀이</td><td>그려야 한다</td></tr>
-      <tr><td><b>가을</b></td><td>핼러윈</td><td>그려야 한다</td></tr>
-      <tr><td><b>겨울</b></td><td>크리스마스 · 설빔</td><td>그려야 한다</td></tr>
+      <tr><th>시즌 세트</th><th>값</th></tr>
+      <tr><td>물놀이</td><td>300</td></tr>
+      <tr><td>핼러윈</td><td>350</td></tr>
+      <tr><td>크리스마스</td><td>400</td></tr>
+      <tr><td>설빔</td><td>400</td></tr>
     </table>
-    <div class="pick">
-      <b>이미 그린 것에 철만 달아도 시즌이 된다.</b> 곰토끼가 그렇다 —
-      부활절 자리를 <b>새로 그리지 않고</b> 채웠다.
-    </div>
     <div class="warn">
-      <b>100P 셋(모자·리본·목도리)은 철을 안 탄다.</b> 발주서에 이미 있는 규칙이다 —
-      들어오자마자 살 수 있는 것이 죄다 철 옷이면 <b>8월에 가입한 사람이 어색하다.</b>
+      <b>100P 셋(모자·리본·목도리)은 시즌을 안 탄다.</b> 발주서에 이미 있는 규칙이다 —
+      들어오자마자 살 수 있는 것이 죄다 시즌 것이면 <b>8월에 가입한 사람이 어색하다.</b>
     </div>
 
-    <h3>갈래 칩은 여전히 둘이다</h3>
-    <p>철이 생겼다고 <code>봄 · 여름 · 가을 · 겨울</code> 칩을 세우지 않았다.
-       <b>고르기 전에 고르는 짐이 먼저 생긴다.</b> 대신 한 화면 안에서
-       <b>묶음 제목</b>으로 가른다 — 내려가면 다 보인다.</p>
-    <p>목도리·모자·리본도 <a href="g/그릴-것.md">발주서</a>에서는 이미
-       <b>곰돌이가 그걸 걸친 그림 한 장</b>이다. 부품이 아니라 <b>작은 세트</b>라
-       세트로 가도 목록은 그대로다.</p>
+    <h3>말을 고른 자리 둘</h3>
+    <table>
+      <tr><th>안 쓴 말</th><th>쓴 말</th><th>왜</th></tr>
+      <tr><td><code>가짐</code></td><td><b>내 옷</b></td>
+        <td>가짐은 세는 말이다. <code>내 코스튬</code>과 같은 결로 맞췄다</td></tr>
+      <tr><td><code>100P 주고 사기</code></td><td><b>사기</b></td>
+        <td>값은 <b>바로 윗줄에 이미 있다.</b> 두 번 적으면 값을 치르라고 미는 말이 된다</td></tr>
+    </table>
 
     <h2 style="margin-top:24px">사는 순간을 어디에 둘까</h2>
     <div class="pick"><b>걸쳐보고 → 사기.</b> 카드를 누르면 곰돌이가 입어보기만 하고,
@@ -407,8 +406,10 @@ var SHADE = '<svg viewBox="0 0 100 100" aria-hidden="true">' +
   값은 발주서(g/그릴-것.md)를 그대로 옮긴 것이다.
   **한 줄이 한 세트다.** 머리·몸으로 쪼개지 않는다 — 쪼개면 조합마다 그림을 맞춰야 한다.
 
-  `season`이 있으면 그 철에 맨 위로 올라온다. **철이 지나도 사라지지는 않는다.**
-  `season`이 없는 것은 늘 있는 옷이다 — 발주서의 `100P 셋은 철을 안 타야 한다`가 이 줄들이다.
+  `season`이 붙은 것은 **때가 있는 옷**이다. 갈래는 그것 하나뿐이다 —
+  봄·여름·가을·겨울로 이름표를 달면 넉 자리가 생기고, 그러면 대부분의 날에
+  그중 셋이 `지금이 아닌 것`이 된다. **`세트`와 `시즌 세트` 둘이면 된다.**
+
   `img`가 없는 것은 아직 안 그린 옷이라 그림자가 대신 선다.
 */
 var ITEMS = [
@@ -417,18 +418,16 @@ var ITEMS = [
   { k: 'ribbon', n: '리본',          p: 100 },
   { k: 'scarf',  n: '목도리',        p: 100 },
   { k: 'apron',  n: '앞치마',        p: 200 },
+  { k: 'rabbit', n: '곰토끼',        p: 300, img: 'g/rabbit-front-mock.png' },
   { k: 'dino',   n: '곰공룡',        p: 350 },
   { k: 'lion',   n: '곰사자',        p: 400 },
-  /* 곰토끼는 이미 그려둔 그림이다 — **철만 달아서** 봄 자리를 채웠다 */
-  { k: 'rabbit', n: '곰토끼',        p: 300, img: 'g/rabbit-front-mock.png', season: '봄' },
-  { k: 'swim',   n: '물놀이 세트',   p: 300, season: '여름' },
-  { k: 'hallow', n: '핼러윈 세트',   p: 350, season: '가을' },
-  { k: 'xmas',   n: '크리스마스 세트', p: 400, season: '겨울' },
-  { k: 'hanbok', n: '설빔 세트',     p: 400, season: '겨울' }
+  /* 앞에 놓인 것이 지금 시기 것이다. 이름표 대신 **순서로만** 말한다. */
+  { k: 'swim',   n: '물놀이 세트',   p: 300, season: true },
+  { k: 'hallow', n: '핼러윈 세트',   p: 350, season: true },
+  { k: 'xmas',   n: '크리스마스 세트', p: 400, season: true },
+  { k: 'hanbok', n: '설빔 세트',     p: 400, season: true }
 ];
-var SEASONS = ['봄', '여름', '가을', '겨울'];
 
-var now = '여름';  /* 지금 철 — 시안에서 손잡이로 바꿔볼 수 있다 */
 var pt = 350;      /* 내 포인트 */
 var worn = 'base'; /* 정말 입고 있는 옷 */
 var owned = { base: true, hat: true };
@@ -457,9 +456,12 @@ function preview(trying) {
     ? '<div class="act now">입는 중</div>'
     : own
       ? '<button class="act wear" type="button" data-wear="' + it.k + '">입기</button>'
+      /*
+        값을 단추에 또 적지 않는다 — 바로 윗줄에 이미 `Ⓟ 300`이 있다.
+        두 번 적으면 `300P 주고 사기`처럼 값을 치르라고 밀어붙이는 말이 된다.
+      */
       : it.p <= pt
-        ? '<button class="act buy" type="button" data-buy="' + it.k + '">' +
-          '<i class="coin">P</i>' + it.p + ' 주고 사기</button>'
+        ? '<button class="act buy" type="button" data-buy="' + it.k + '">사기</button>'
         /* 못 누르는 단추 대신 얼마가 모자란지 적는다 */
         : '<div class="act short">' + (it.p - pt) + 'P 더 모으면 살 수 있어요</div>';
 
@@ -490,16 +492,17 @@ function card(it, trying) {
   var own = Boolean(owned[it.k]);
   var lock = !own && it.p > pt;
   var cls = 'item' + (worn === it.k ? ' on' : '') + (lock ? ' lock' : '') +
-    (trying === it.k ? ' try' : '') + (it.season === now ? ' here' : '');
+    (trying === it.k ? ' try' : '');
 
   var foot = own
-    ? '<span class="tag">' + (worn === it.k ? '입는 중' : '가짐') + '</span>'
+    ? '<span class="tag">' + (worn === it.k ? '입는 중' : '내 옷') + '</span>'
     : '<span class="price"><i class="coin">P</i>' + it.p + '</span>';
 
   return '<button class="' + cls + '" type="button" data-try="' + it.k + '">' +
     '<span class="nm">' + it.n + '</span>' +
     '<span class="art">' + artOf(it) +
-      (it.season ? '<span class="season">' + it.season + '</span>' : '') +
+      /* 내 코스튬 칸에서는 묶음 제목이 없어서, 배지가 그때 대신 말해준다 */
+      (it.season ? '<span class="season">시즌</span>' : '') +
       (lock ? '<span class="lockmark">' + I_LOCK + '</span>' : '') +
     '</span>' + foot +
   '</button>';
@@ -512,8 +515,9 @@ function section(title, aside, list, trying) {
 }
 
 /*
-  **묶음 셋으로 가른다.** 지금 철이 맨 위고, 늘 있는 옷이 가운데,
-  다른 철 옷은 아래에 그대로 남는다 — 사라지지 않는다.
+  **묶음 둘로 가른다 — `세트`와 `시즌 세트`.**
+  시즌 것도 **때가 지나면 없어지지 않는다.** 그 자리에 그대로 있고,
+  지금 시기 것이 그 묶음 안에서 앞에 설 뿐이다.
   `지금 아니면 못 산다`는 조르는 구조라 이 앱에 안 맞고,
   3월에 앱을 깐 사람이 12월까지 볼 것이 없어도 안 된다.
 */
@@ -531,14 +535,10 @@ function grid(cat, trying) {
       mine.map(function (i) { return card(i, trying); }).join('') + '</div></div>';
   }
 
-  var here = ITEMS.filter(function (i) { return i.season === now; });
-  var ever = ITEMS.filter(function (i) { return !i.season; });
-  var away = ITEMS.filter(function (i) { return i.season && i.season !== now; });
-
   return '<div class="screen list">' +
-    section('지금 — ' + now, '이 철에 어울리는 옷', here, trying) +
-    section('늘 있는 옷', '', ever, trying) +
-    section('다른 철 옷', '지금 사도 괜찮아요', away, trying) +
+    section('세트', '', ITEMS.filter(function (i) { return !i.season; }), trying) +
+    section('시즌 세트', '때가 지나도 없어지지 않아요',
+      ITEMS.filter(function (i) { return i.season; }), trying) +
   '</div>';
 }
 
@@ -568,16 +568,6 @@ document.addEventListener('click', function (e) {
     pt = Number(knob.dataset.pt);
     document.querySelectorAll('.knobs button[data-pt]').forEach(function (b) {
       b.setAttribute('aria-pressed', String(b === knob));
-    });
-    drawAll();
-    return;
-  }
-
-  var season = e.target.closest('.knobs button[data-season]');
-  if (season) {
-    now = season.dataset.season;
-    document.querySelectorAll('.knobs button[data-season]').forEach(function (b) {
-      b.setAttribute('aria-pressed', String(b === season));
     });
     drawAll();
     return;
