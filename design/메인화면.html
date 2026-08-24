@@ -47,7 +47,7 @@ body{
 
 /* ── 폰 ── */
 .phone{
-  width:352px; flex:none; background:var(--bg); border-radius:26px;
+  width:360px; flex:none; background:var(--bg); border-radius:26px;
   box-shadow:0 10px 34px rgba(97,89,83,.13); overflow:hidden;
   display:flex; flex-direction:column;
 }
@@ -77,7 +77,8 @@ body{
   background:var(--accent); border:1.5px solid var(--card);
 }
 
-.screen{padding:0 15px 14px}
+/* 앱의 .wrap과 같은 여백 — max-width 520, padding 0 16 */
+.screen{padding:0 16px 14px}
 
 .card{background:var(--card); border-radius:20px; box-shadow:0 8px 24px rgba(0,0,0,.05); margin-bottom:11px}
 .card-head{display:flex; align-items:center; gap:7px; padding:14px 16px 10px}
@@ -99,7 +100,7 @@ body{
   방은 배경 한 장, 곰돌이는 그 위에 얹는다.
 */
 .room{
-  position:relative; flex:none; width:152px; aspect-ratio:1/1;
+  position:relative; flex:none; width:54%; aspect-ratio:1/1;
   background:var(--sunk); display:grid; place-items:end center; overflow:hidden;
 }
 .room .props{position:absolute; inset:0; width:100%; height:100%}
