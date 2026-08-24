@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>관리자 시안 — 상점 채우기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Gowun+Dodum&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/*
+  관리자 — 상점에 물건을 올리는 자리.
+
+  **이건 폰 화면이 아니다.** 파는 사람 화면이고, 올릴 그림이 컴퓨터에 있고,
+  값 매기고 순서 보는 일에 표가 필요하다. 그래서 넓은 판으로 그린다 —
+  앱 토큰(색·글씨·모서리)은 그대로 쓰되 360px 틀에 우겨넣지 않는다.
+
+  뼈대는 한 줄이다 —
+  **왼쪽은 그림이 상점에서 어떻게 보이나, 오른쪽은 그 그림이 무엇인가.**
+  올리고 나서 상점에 들어가 확인하는 왕복이 생기면
+  그림 스물아홉 장을 스물아홉 번 왕복하게 된다.
+
+  파는 것의 갈래는 상점 시안(`상점.html`)의 `BEARS` · `ROOMS` · `POSES` 그대로다.
+*/
+:root{
+  --bg:#faf6f0; --card:#ffffff; --sunk:#f5f0e9; --memo:#fbf6ee;
+  --ink:#615953; --ink2:#8c8078; --ink3:#a59a92;
+  --line:#efe8df; --line2:#f5efe7;
+  --accent:#d97a5e; --accent-soft:#f4d7cc; --accent-tint:#fcf2ed;
+  --ok:#73b79f; --cycle:#c9a068; --high:#d98b7a; --done:#d9d2cb;
+  --track:#f2ece6; --star:#f0c58a; --edge:#d8d3ce; --faint:#d9d2cb;
+  --paper:#f2ece4;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; padding:34px 20px 80px; background:var(--paper);
+  font-family:'Noto Sans KR',system-ui,-apple-system,sans-serif;
+  color:var(--ink); line-height:1.55; letter-spacing:-.01em; font-size:14px;
+}
+:focus-visible{outline:2px solid var(--accent); outline-offset:-2px; border-radius:8px}
+
+.head{max-width:1040px; margin:0 auto 18px}
+.head h1{font-size:19px; margin:0 0 6px; font-weight:700}
+.head p{color:var(--ink2); font-size:13px; margin:0 0 4px; max-width:78ch}
+.head b{color:var(--accent); font-weight:500}
+.head code{background:#fff; padding:1px 6px; border-radius:6px; font-size:12px}
+
+/* 눌러 보는 손잡이 — 시안에만 있는 줄이다 */
+.knobs{display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center; margin:0 0 20px}
+.knobs b{font-size:11.5px; color:var(--ink2); font-weight:500; margin-right:2px}
+.knobs button{
+  border:1px solid var(--line); background:#fff; font:inherit; font-size:12px;
+  padding:6px 13px; border-radius:999px; cursor:pointer; color:var(--ink2);
+}
+.knobs button[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
+
+.wrap{max-width:1040px; margin:0 auto}
+
+/* ── 판 ── */
+.admin{
+  background:var(--bg); border-radius:24px; overflow:hidden;
+  box-shadow:0 10px 34px rgba(97,89,83,.14);
+}
+.abar{
+  display:flex; align-items:center; gap:12px; padding:15px 22px;
+  background:var(--card); border-bottom:1px solid var(--line);
+}
+.abar b{font-family:'Gowun Dodum',sans-serif; font-weight:400; font-size:18px; letter-spacing:-.02em}
+.abar .crumb{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink3)}
+.abar .who{margin-left:auto; display:inline-flex; align-items:center; gap:7px; font-size:12px; color:var(--ink2)}
+.abar .who i{
+  width:26px; height:26px; border-radius:999px; background:var(--accent-tint); color:var(--accent);
+  display:grid; place-items:center; font-style:normal; font-size:11px; font-weight:700;
+}
+
+.cols{display:grid; grid-template-columns:392px minmax(0,1fr); align-items:start}
+.left{padding:22px; border-right:1px solid var(--line)}
+.right{padding:22px}
+.sect{font-size:11px; font-weight:500; color:var(--ink3); margin:0 0 9px}
+
+/*
+  ── 그림 올리는 자리 ──
+  **한 물건에 그림 한 장이다.** 곰은 앞모습 한 장, 방은 정사각 한 장.
+  올릴 그림의 규격이 종류마다 다르니 **안내문도 종류를 따라 바뀐다** —
+  안 그러면 방 그림을 투명 배경으로 그려 오는 일이 생긴다.
+*/
+.drop{
+  position:relative; width:100%; aspect-ratio:4/3; border-radius:18px;
+  border:1.6px dashed var(--edge); background:var(--sunk);
+  display:grid; place-items:center; text-align:center; padding:20px; cursor:pointer;
+}
+.drop:hover{border-color:var(--accent-soft); background:var(--accent-tint)}
+.drop svg{width:30px; height:30px; color:var(--ink3); margin:0 auto 9px; display:block}
+.drop .t1{font-size:12.5px; color:var(--ink2)}
+.drop .t2{font-size:11px; color:var(--ink3); margin-top:5px; font-family:'IBM Plex Mono',monospace}
+/* 그림이 들어온 뒤 — 점선을 걷고 그림 자체가 칸이 된다 */
+.drop.has{border-style:solid; border-color:var(--line); background:var(--card); padding:0; overflow:hidden}
+.drop.has img{max-width:76%; max-height:82%; width:auto; height:auto; display:block}
+.drop.has img.fill{width:100%; height:100%; max-width:none; max-height:none; object-fit:cover}
+.drop .swap{
+  position:absolute; right:9px; top:9px; border:0; cursor:pointer;
+  border-radius:999px; background:rgba(255,255,255,.92); color:var(--ink2);
+  font:inherit; font-size:11px; padding:5px 11px; box-shadow:0 3px 10px rgba(97,89,83,.12);
+}
+.drop:not(.has) .swap{display:none}
+
+/*
+  ── 상점에서 이렇게 보여요 ──
+  **자르는 규칙이 종류마다 다르다.** 곰은 칸 안에 88%로 앉고,
+  방은 `object-fit:cover`로 칸을 꽉 채운다 — 방 그림의 위아래가 잘린다는 뜻이다.
+  그 잘림을 여기서 보여주지 않으면 올린 뒤에야 알게 된다.
+*/
+.prev{margin-top:18px}
+.prevrow{display:flex; gap:12px; align-items:flex-start}
+.pv{flex:none}
+.pv .cap{font-size:10px; color:var(--ink3); margin-bottom:6px; text-align:center}
+.mini{
+  width:103px; border-radius:16px; background:var(--card); box-shadow:0 0 0 1.4px var(--line);
+  padding:9px 8px 10px; display:flex; flex-direction:column; align-items:center; gap:6px;
+}
+.mini .nm{
+  width:100%; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-size:11.5px; font-weight:500; color:var(--ink2); line-height:1.3;
+}
+.mini .art{
+  position:relative; width:100%; aspect-ratio:1/1; border-radius:12px; background:var(--sunk);
+  display:grid; place-items:center; overflow:hidden;
+}
+.mini .art img{max-width:88%; max-height:88%; width:auto; height:auto; display:block}
+.mini .art img.fill{width:100%; height:100%; max-width:none; max-height:none; object-fit:cover}
+.mini .foot{
+  display:inline-flex; align-items:center; gap:4px; border-radius:999px; padding:4px 10px 4px 5px;
+  background:var(--card); box-shadow:0 0 0 1.2px var(--line); color:var(--ink2);
+  font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:500;
+}
+.mini .foot .coin{
+  width:14px; height:14px; flex:none; display:block;
+  background:url(g/ic-coin.png) center/contain no-repeat;
+}
+.mini .foot.gift{font-family:inherit; background:var(--sunk); box-shadow:none; padding:4px 10px; color:var(--cycle)}
+.mini .foot.gift img{width:12px; height:12px; display:block}
+/* 홈 칸 — 방과 곰이 **따로 얹히는** 자리라 둘을 겹쳐 보여준다 */
+.stage{
+  position:relative; width:233px; aspect-ratio:16/10; border-radius:14px; background:var(--sunk);
+  display:grid; place-items:end center; overflow:hidden;
+}
+.stage .room{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+.stage .bear{position:relative; z-index:1; max-height:74%; max-width:46%; width:auto; height:auto; margin-bottom:6%}
+.croph{font-size:11px; color:var(--ink3); margin:11px 0 0; line-height:1.5}
+.croph b{color:var(--ink2); font-weight:500}
+
+/* ── 적는 자리 ── */
+.row{margin-bottom:17px}
+.row.off{display:none}
+.row > label{display:block; font-size:11.5px; font-weight:500; color:var(--ink2); margin-bottom:7px}
+.hint{font-size:11px; color:var(--ink3); margin-top:7px; line-height:1.5}
+.hint b{color:var(--ink2); font-weight:500}
+.two{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+
+.seg{display:flex; gap:4px; border-radius:14px; background:var(--sunk); padding:4px}
+.seg button{
+  flex:1; border:0; background:transparent; cursor:pointer; border-radius:11px;
+  padding:9px 6px; font:inherit; font-size:12.5px; color:var(--ink2);
+}
+.seg button[aria-pressed="true"]{background:var(--card); color:var(--accent); font-weight:500; box-shadow:0 2px 8px rgba(97,89,83,.07)}
+.seg button[disabled]{opacity:.4; cursor:not-allowed}
+/* 고를 수 없는 갈래 — 왜 잠겼는지는 아래 안내문이 말한다 */
+.seg.locked{background:var(--accent-tint)}
+
+.t{
+  width:100%; border:0; box-shadow:0 0 0 1.4px var(--line); border-radius:12px;
+  padding:11px 13px; font:inherit; font-size:13.5px; background:var(--card); color:var(--ink);
+}
+.t::placeholder{color:var(--faint)}
+.t:focus{outline:0; box-shadow:0 0 0 1.6px var(--accent-soft)}
+select.t{appearance:none; cursor:pointer}
+.code{
+  display:flex; align-items:center; gap:8px; border-radius:12px; background:var(--sunk);
+  padding:10px 13px; font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--ink2);
+}
+.code span{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.code button{border:0; background:transparent; font:inherit; font-size:11px; color:var(--accent); cursor:pointer}
+.pwrap{position:relative}
+.pwrap .t{padding-left:36px}
+.pwrap .coin{
+  position:absolute; left:12px; top:50%; margin-top:-9px; width:18px; height:18px;
+  background:url(g/ic-coin.png) center/contain no-repeat;
+}
+/* 값이 없는 물건 — 칸을 비워두지 않고 **왜 없는지**를 그 자리에 적는다 */
+.noprice{
+  display:flex; align-items:center; gap:9px; border-radius:12px; background:var(--accent-tint);
+  padding:9px 12px; font-size:11.5px; color:var(--accent); line-height:1.4;
+}
+.noprice img{width:22px; height:22px; flex:none}
+
+.acts{display:flex; gap:9px; margin-top:22px; padding-top:18px; border-top:1px solid var(--line)}
+.acts button{border:0; cursor:pointer; border-radius:13px; padding:12px 20px; font:inherit; font-size:13px; font-weight:500}
+.acts .save{background:var(--accent); color:#fff}
+.acts .draft{background:var(--card); box-shadow:0 0 0 1.4px var(--line); color:var(--ink2)}
+.acts .note{margin-left:auto; align-self:center; max-width:24ch; font-size:11px; line-height:1.45; color:var(--ink3)}
+
+/* ── 올린 것 ── */
+.listwrap{background:var(--card); border-top:1px solid var(--line); padding:19px 22px 24px}
+.lhead{display:flex; align-items:baseline; gap:10px}
+.lhead b{font-size:13.5px; font-weight:500}
+.lhead span{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink3)}
+/* 세트는 곰 1 + 방 1 + 소품 1이 다 차야 열린다 — 몇 개 남았는지 여기서 센다 */
+.setbar{display:flex; flex-wrap:wrap; gap:6px; margin:11px 0 14px}
+.setbar span{
+  display:inline-flex; align-items:center; gap:5px; border-radius:999px; background:var(--sunk);
+  padding:5px 11px; font-size:11px; color:var(--ink2);
+}
+.setbar span b{font-family:'IBM Plex Mono',monospace; font-weight:500}
+.setbar span.done{background:var(--accent-tint); color:var(--accent)}
+.setbar span img{width:12px; height:12px}
+
+table.list{width:100%; border-collapse:collapse; font-size:12.5px}
+table.list th{
+  text-align:left; font-size:10.5px; font-weight:500; color:var(--ink3);
+  padding:0 9px 9px; border-bottom:1px solid var(--line);
+}
+table.list td{padding:9px; border-bottom:1px solid var(--line2); vertical-align:middle; color:var(--ink2)}
+table.list tr:last-child td{border-bottom:0}
+.thumb{width:40px; height:40px; border-radius:11px; background:var(--sunk); display:grid; place-items:center; overflow:hidden}
+.thumb img{max-width:84%; max-height:84%; width:auto; height:auto}
+.thumb img.fill{width:100%; height:100%; max-width:none; max-height:none; object-fit:cover}
+.nmcell b{display:block; font-size:12.5px; font-weight:500; color:var(--ink)}
+.nmcell span{display:block; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink3)}
+.tag{display:inline-block; border-radius:999px; padding:3px 9px; font-size:10.5px; font-weight:500}
+.tag.deco{background:var(--sunk); color:var(--ink2)}
+.tag.season{background:var(--accent-tint); color:var(--accent)}
+.tag.gift{background:#f7f0e2; color:var(--cycle)}
+.pcell{font-family:'IBM Plex Mono',monospace; color:var(--ink2)}
+.pcell.free{color:var(--ink3); font-family:inherit; font-size:11.5px}
+/* 파는 중인지 아닌지 — **올리자마자 팔지 않는다.** 여기서 켜야 상점에 뜬다 */
+.sw{
+  width:38px; height:22px; border-radius:999px; background:var(--track); border:0; cursor:pointer;
+  position:relative; padding:0; transition:background .15s;
+}
+.sw::after{
+  content:''; position:absolute; left:3px; top:3px; width:16px; height:16px; border-radius:999px;
+  background:#fff; box-shadow:0 1px 3px rgba(97,89,83,.2); transition:left .15s;
+}
+.sw[aria-pressed="true"]{background:var(--accent)}
+.sw[aria-pressed="true"]::after{left:19px}
+.rowact{border:0; background:transparent; cursor:pointer; color:var(--ink3); font:inherit; font-size:11.5px; white-space:nowrap}
+.rowact:hover{color:var(--accent)}
+
+/* ── 설명 ── */
+.doc{max-width:1040px; margin:30px auto 0; background:#fff; border-radius:20px; padding:24px 26px 28px}
+.doc h2{font-size:15.5px; margin:0 0 10px}
+.doc h3{font-size:13px; margin:20px 0 6px; color:var(--accent)}
+.doc p{font-size:13px; color:var(--ink2); margin:0 0 8px; max-width:80ch}
+.doc b{color:var(--ink); font-weight:500}
+.doc code{background:var(--sunk); padding:1px 6px; border-radius:6px; font-size:12px; font-family:'IBM Plex Mono',monospace}
+.doc ul{margin:0 0 8px; padding-left:18px; font-size:13px; color:var(--ink2)}
+.doc li{margin-bottom:4px}
+.doc table{border-collapse:collapse; margin:8px 0 12px; font-size:12.5px}
+.doc th,.doc td{border:1px solid var(--line); padding:6px 12px; text-align:left; color:var(--ink2)}
+.doc th{background:var(--sunk); font-weight:500; font-size:11.5px; color:var(--ink3)}
+.doc blockquote{
+  margin:8px 0 12px; padding:10px 14px; border-left:3px solid var(--accent-soft);
+  background:var(--accent-tint); border-radius:0 10px 10px 0; font-size:12.5px; color:var(--ink2);
+}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>관리자 시안 — 상점 채우기</h1>
+  <p>그림 한 장 올리고, <b>이름 적고, 무엇인지 고르면 끝</b>이다.
+     무엇인지는 두 갈래로 갈린다 — <b>종류</b>(캐릭터 · 배경 · 소품 든 캐릭터)와
+     <b>갈래</b>(꾸미기 · 시즌).</p>
+  <p>폰이 아니라 <b>넓은 판</b>이다. 올릴 그림이 컴퓨터에 있고, 값 매기고 순서 보는 데 표가 필요하다.
+     색·글씨·모서리는 앱 토큰 그대로 쓰되 360px 틀에 우겨넣지 않았다.</p>
+  <p>파는 것의 갈래는 <code>상점.html</code>의 <code>BEARS</code> · <code>ROOMS</code> · <code>POSES</code>와 같다.</p>
+</div>
+
+<div class="knobs">
+  <b>종류</b>
+  <button type="button" data-kind="bear">캐릭터</button>
+  <button type="button" data-kind="room">배경</button>
+  <button type="button" data-kind="pose">소품 든 캐릭터</button>
+  <b style="margin-left:12px">그림</b>
+  <button type="button" data-img="0">올리기 전</button>
+  <button type="button" data-img="1">올린 뒤</button>
+</div>
+
+<div class="wrap">
+  <div class="admin">
+
+    <div class="abar">
+      <b>상점 채우기</b>
+      <span class="crumb" id="crumb">올린 것 29 · 파는 중 12</span>
+      <span class="who"><i>윤</i>윤정</span>
+    </div>
+
+    <div class="cols">
+
+      <!-- 왼쪽 — 그림이 상점에서 어떻게 보이나 -->
+      <div class="left">
+        <p class="sect">그림</p>
+        <div class="drop" id="drop">
+          <div id="dropEmpty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 16V4m0 0L8 8m4-4 4 4"/>
+              <path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/>
+            </svg>
+            <div class="t1">그림을 끌어다 놓거나 눌러서 고르세요</div>
+            <div class="t2" id="dropSpec">PNG · 배경 투명 · 세로로 긴 한 장</div>
+          </div>
+          <img id="dropImg" alt="" style="display:none" />
+          <button class="swap" type="button">바꾸기</button>
+        </div>
+
+        <div class="prev">
+          <p class="sect" style="margin-top:18px">상점에서 이렇게 보여요</p>
+          <div class="prevrow">
+            <div class="pv">
+              <div class="cap">격자 칸</div>
+              <div class="mini">
+                <span class="nm" id="mnm">이름 없음</span>
+                <span class="art" id="mart"></span>
+                <span class="foot" id="mfoot"></span>
+              </div>
+            </div>
+            <div class="pv">
+              <div class="cap">홈 칸</div>
+              <div class="stage" id="stage"></div>
+            </div>
+          </div>
+          <p class="croph" id="cropHint"></p>
+        </div>
+      </div>
+
+      <!-- 오른쪽 — 그 그림이 무엇인가 -->
+      <div class="right">
+
+        <!--
+          **종류가 맨 위다.** 이걸 고르는 순간 아래 칸들의 모양이 정해진다 —
+          올릴 그림 규격, 값이 붙느냐, 세트를 물어보느냐.
+          거꾸로 두면 이름부터 적어놓고 종류를 바꿔 칸이 흔들린다.
+        -->
+        <div class="row">
+          <label>종류</label>
+          <div class="seg" id="segKind">
+            <button type="button" data-kind="bear" aria-pressed="true">캐릭터</button>
+            <button type="button" data-kind="room" aria-pressed="false">배경</button>
+            <button type="button" data-kind="pose" aria-pressed="false">소품 든 캐릭터</button>
+          </div>
+          <div class="hint" id="kindHint"></div>
+        </div>
+
+        <div class="row">
+          <label for="nm">이름</label>
+          <input class="t" id="nm" type="text" placeholder="모자 곰" />
+          <div class="hint">상점 카드에 그대로 뜬다. <b>여덟 자를 넘기면</b> 103px 칸에서 잘린다.</div>
+        </div>
+
+        <!--
+          코드는 **손으로 안 적는다.** 이름에서 만들고 고칠 수 있게만 둔다.
+          손으로 적게 하면 `b-swim`과 `bswim`이 섞이고, 세트가 물건을 못 찾는다.
+        -->
+        <div class="row">
+          <label>코드</label>
+          <div class="code"><span id="codeVal">b-hat</span><button type="button">고치기</button></div>
+          <div class="hint">이름에서 자동으로 짓는다. 세트가 이 코드로 물건을 찾는다.</div>
+        </div>
+
+        <div class="two">
+          <div class="row" style="margin-bottom:0">
+            <label>갈래</label>
+            <div class="seg" id="segCat">
+              <button type="button" data-cat="deco" aria-pressed="true">꾸미기</button>
+              <button type="button" data-cat="season" aria-pressed="false">시즌</button>
+            </div>
+          </div>
+          <div class="row" id="rowPrice" style="margin-bottom:0">
+            <label for="pp">값</label>
+            <div class="pwrap"><i class="coin"></i><input class="t" id="pp" type="text" inputmode="numeric" placeholder="100" /></div>
+          </div>
+          <div class="row off" id="rowFree" style="margin-bottom:0">
+            <label>값</label>
+            <div class="noprice">
+              <img src="g/ic-gift.png" alt="" />
+              <span><b>세트 완성 보상</b>이라 값이 없어요</span>
+            </div>
+          </div>
+        </div>
+        <p class="hint" id="catHint" style="margin:8px 0 17px"></p>
+
+        <!-- 시즌을 골랐을 때만 열리는 줄. 세트 없는 시즌 물건은 상점에서 갈 곳이 없다. -->
+        <div class="row off" id="rowSet">
+          <label for="st">어느 세트</label>
+          <select class="t" id="st">
+            <option>물놀이 세트 — 곰 ○ · 방 ○ · 소품 ✕</option>
+            <option>할로윈 세트 — 곰 ○ · 방 ○ · 소품 ○</option>
+            <option>크리스마스 세트 — 곰 ✕ · 방 ○ · 소품 ✕</option>
+            <option>봄꽃 세트 — 곰 ○ · 방 ✕ · 소품 ✕</option>
+            <option>여름휴가 세트 — 곰 ✕ · 방 ✕ · 소품 ✕</option>
+            <option>+ 새 세트 만들기</option>
+          </select>
+          <div class="hint">곰 하나 · 방 하나 · 소품 하나가 <b>다 차야</b> 세트가 열린다.</div>
+        </div>
+
+        <div class="acts">
+          <button class="save" type="button">저장하고 팔기</button>
+          <button class="draft" type="button">숨김으로 두기</button>
+          <span class="note">숨김으로 두면 그림만 올려두고 값은 나중에 정할 수 있어요</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── 올린 것 ── -->
+    <div class="listwrap">
+      <div class="lhead"><b>올린 것</b><span id="lcount">29개 · 파는 중 12</span></div>
+      <div class="setbar" id="setbar"></div>
+      <table class="list">
+        <thead>
+          <tr>
+            <th style="width:56px"></th><th>이름</th><th style="width:112px">종류</th>
+            <th style="width:80px">갈래</th><th style="width:76px">값</th>
+            <th style="width:78px">파는 중</th><th style="width:64px"></th>
+          </tr>
+        </thead>
+        <tbody id="tb"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<div class="doc">
+  <h2>왜 이렇게 뒀나</h2>
+
+  <h3>종류가 갈래보다 먼저다</h3>
+  <p><b>종류를 고르면 나머지 칸의 모양이 정해진다</b> — 올릴 그림 규격, 잘리는 방식, 값이 붙느냐,
+     세트를 물어보느냐. 갈래를 먼저 묻게 두면 다 적어놓고 종류를 바꿔 칸이 통째로 흔들린다.</p>
+  <table>
+    <tr><th>종류</th><th>올릴 그림</th><th>칸에서</th><th>값</th><th>상점 데이터</th></tr>
+    <tr><td>캐릭터</td><td>투명 PNG · 세로로 긴 한 장</td><td>88%로 <b>앉는다</b></td><td>있다</td><td><code>BEARS</code></td></tr>
+    <tr><td>배경</td><td>정사각 · 배경까지 꽉 찬 한 장</td><td><b>꽉 채운다</b>(위아래 잘림)</td><td>있다</td><td><code>ROOMS</code></td></tr>
+    <tr><td>소품 든 캐릭터</td><td>투명 PNG · 세로로 긴 한 장</td><td>88%로 앉는다</td><td><b>없다</b></td><td><code>POSES</code></td></tr>
+  </table>
+
+  <h3>소품 든 캐릭터에는 값 칸이 없다</h3>
+  <p>이건 <b>파는 물건이 아니라 세트를 다 모으면 오는 것</b>이다(상점 시안의 규칙 그대로).
+     값이 붙는 순간 안 산 사람에게 <code>못 산 것</code>이 된다.
+     그래서 이 종류를 고르면 갈래도 <b>시즌으로 잠긴다</b> — 꾸미기에는 보상이 없다.</p>
+  <blockquote>칸을 그냥 비워두지 않고 <b>왜 없는지를 그 자리에 적었다.</b>
+     빈 칸은 고장으로 읽히고, 고장으로 읽히면 되묻는 일이 생긴다.</blockquote>
+
+  <h3>갈래는 둘뿐이고, 시즌은 세트를 묻는다</h3>
+  <p>상점 칩이 <code>꾸미기</code>와 <code>시즌</code> 둘로 갈리니 여기도 둘이다.
+     시즌을 고르면 <b>어느 세트인지 묻는 줄이 하나 열린다.</b>
+     세트를 안 정한 시즌 물건은 상점에서 갈 곳이 없다 — 시즌 칩은 세트만 보여주는 자리라서다.</p>
+  <p>세트가 열리려면 <b>곰 하나 · 방 하나 · 소품 하나</b>가 다 차야 한다.
+     그래서 표 위에 <b>세트마다 몇 개 찼는지</b>를 띠로 세워뒀다 — 하나 모자란 세트가 눈에 밟혀야 채운다.</p>
+
+  <h3>올리자마자 팔지 않는다</h3>
+  <p>올린 것은 <b>숨김으로 들어온다.</b> 표에서 켜야 상점에 뜬다.
+     그림만 먼저 올려두고 값은 나중에 정하는 일이 잦고,
+     반쯤 그린 것이 상점에 뜨는 사고를 막는다.</p>
+
+  <h3>미리보기가 왼쪽 절반을 먹는 까닭</h3>
+  <p><b>자르는 규칙이 종류마다 다르다.</b> 곰은 칸 안에 앉고 방은 칸을 꽉 채운다 —
+     방 그림은 위아래가 잘린다는 뜻이다. 여기서 안 보여주면
+     올리고 → 상점 들어가 보고 → 다시 그리는 왕복이 생기고, 그림이 스물아홉 장이니 그 왕복도 스물아홉 번이다.</p>
+  <p>홈 칸을 같이 놓은 건 <b>방과 곰이 따로 얹히기</b> 때문이다.
+     방만 보면 예쁜데 곰을 세우면 곰 얼굴이 가구에 묻히는 일이 여기서 걸린다.</p>
+
+  <h3>코드는 손으로 안 적는다</h3>
+  <p>이름에서 짓고 고칠 수만 있게 뒀다. 손으로 적게 하면 <code>b-swim</code>과 <code>bswim</code>이
+     섞이고, 세트가 <code>has</code>로 물건을 못 찾는다.</p>
+
+  <h2 style="margin-top:24px">아직 안 정한 것</h2>
+  <ul>
+    <li><b>누가 들어오나</b> — 지금은 만든 사람 하나다. 로그인 위에 얹을지, 주소만 숨길지.</li>
+    <li><b>그림을 어디에 두나</b> — Supabase Storage 한 통에 <code>shop/&lt;코드&gt;.png</code>로 두면 표와 이름이 맞는다.</li>
+    <li><b>순서</b> — 지금은 올린 차례다. 상점에서 끌어 옮기고 싶어지면 그때 칸을 하나 더 만든다.</li>
+    <li><b>세트를 여기서 만드나</b> — 지금은 <code>+ 새 세트 만들기</code> 한 줄로만 뒀다. 세트가 다섯을 넘으면 따로 떼야 한다.</li>
+  </ul>
+</div>
+
+<script>
+/*
+  손잡이 둘(종류 · 그림)로 화면이 바뀐다. 진짜 올리기는 없다 —
+  **여기서 볼 것은 종류에 따라 칸이 어떻게 달라지나**지, 업로드 그 자체가 아니다.
+*/
+var kind = 'bear';   /* bear | room | pose */
+var cat  = 'deco';   /* deco | season */
+var hasImg = true;
+
+/* 종류마다 미리보기에 세울 대역 그림. 소품 든 캐릭터는 아직 안 그려서 곰토끼가 대신 선다. */
+var ART = {
+  bear: { src: 'g/base-front.png',        fill: false, nm: '모자 곰',    code: 'b-hat',     p: 100, spec: 'PNG · 배경 투명 · 세로로 긴 한 장' },
+  room: { src: 'g/main_room_2.png',       fill: true,  nm: '카페 룸',    code: 'r-cafe',    p: 400, spec: 'PNG · 정사각 · 배경까지 꽉 차게' },
+  pose: { src: 'g/rabbit-front-mock.png', fill: false, nm: '튜브 포즈',  code: 'pose-tube', p: null, spec: 'PNG · 배경 투명 · 소품까지 든 한 장' }
+};
+var KIND_HINT = {
+  bear: '앞모습 <b>한 장</b>이면 된다. 자는 모습은 안 쓴다.',
+  room: '<b>정사각 한 장.</b> 격자 칸과 홈 칸에서 위아래가 잘리니 가운데를 비워두면 안전하다.',
+  pose: '그 옷을 입고 <b>소품까지 든 한 장</b>이다. 옷 위에 얹는 조각이 아니라 다른 한 장이다.'
+};
+var CAT_HINT = {
+  deco:   '늘 파는 것. 상점 <b>꾸미기</b> 칩 아래 곰·방 묶음으로 들어간다.',
+  season: '철 따라 여는 것. 상점 <b>시즌</b> 칩은 세트만 보여준다.',
+  locked: '소품 든 캐릭터는 <b>세트 완성 보상</b>이라 시즌 말고 갈 곳이 없다.'
+};
+var CROP = {
+  bear: '칸 안에 <b>88%로 앉는다</b> — 그림 둘레의 여백은 그대로 여백이 된다.',
+  room: '칸을 <b>꽉 채운다 — 위아래가 잘린다.</b> 홈 칸은 더 납작해서 더 잘린다.',
+  pose: '칸 안에 88%로 앉고, 값 자리에 <b>선물 표</b>가 대신 선다.'
+};
+
+var SETS = [
+  { n: '물놀이', c: 2 }, { n: '할로윈', c: 3 }, { n: '크리스마스', c: 1 },
+  { n: '봄꽃',   c: 1 }, { n: '여름휴가', c: 0 }
+];
+var ROWS = [
+  { nm: '카페 룸',     code: 'r-cafe',    k: '배경',           c: 'deco',   p: 400,  on: true,  img: 'g/main_room_2.png', fill: true },
+  { nm: '피크닉 룸',   code: 'r-picnic',  k: '배경',           c: 'deco',   p: 300,  on: true,  img: 'g/main_room_3.png', fill: true },
+  { nm: '곰토끼',      code: 'rabbit',    k: '캐릭터',         c: 'deco',   p: 300,  on: true,  img: 'g/rabbit-front-mock.png' },
+  { nm: '기본 곰돌이', code: 'base',      k: '캐릭터',         c: 'deco',   p: 0,    on: true,  img: 'g/base-front.png' },
+  { nm: '물놀이 곰',   code: 'b-swim',    k: '캐릭터',         c: 'season', p: 300,  on: false },
+  { nm: '여름 바다',   code: 'r-sea',     k: '배경',           c: 'season', p: 400,  on: false },
+  { nm: '튜브 포즈',   code: 'pose-tube', k: '소품 든 캐릭터', c: 'gift',   p: null, on: false }
+];
+
+function q(s){ return document.querySelector(s); }
+function esc(s){ return String(s).replace(/[&<>]/g, function (m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]; }); }
+function press(box, key, val){
+  Array.prototype.forEach.call(box.querySelectorAll('[data-' + key + ']'), function (b) {
+    b.setAttribute('aria-pressed', String(b.getAttribute('data-' + key) === val));
+  });
+}
+function imgTag(src, fill){ return '<img src="' + src + '" alt="" class="' + (fill ? 'fill' : '') + '" />'; }
+
+function draw(){
+  var a = ART[kind];
+  var isPose = kind === 'pose';
+
+  press(q('#segKind'), 'kind', kind);
+  press(q('#segCat'), 'cat', cat);
+  q('#segCat').classList.toggle('locked', isPose);
+  q('#segCat').querySelector('[data-cat="deco"]').disabled = isPose;
+  q('#kindHint').innerHTML = KIND_HINT[kind];
+  q('#catHint').innerHTML = isPose ? CAT_HINT.locked : CAT_HINT[cat];
+
+  q('#rowPrice').classList.toggle('off', isPose);
+  q('#rowFree').classList.toggle('off', !isPose);
+  q('#rowSet').classList.toggle('off', cat !== 'season');
+
+  q('#nm').placeholder = a.nm;
+  if (!q('#nm').value) q('#codeVal').textContent = a.code;
+
+  /* 그림 칸 */
+  q('#drop').classList.toggle('has', hasImg);
+  q('#dropEmpty').style.display = hasImg ? 'none' : '';
+  q('#dropSpec').textContent = a.spec;
+  var di = q('#dropImg');
+  di.style.display = hasImg ? '' : 'none';
+  di.src = a.src;
+  di.className = a.fill ? 'fill' : '';
+
+  /* 격자 칸 — 그림이 없으면 아직 안 그린 자리에 서는 그림자 곰이 선다 */
+  q('#mnm').textContent = a.nm;
+  q('#mart').innerHTML = hasImg ? imgTag(a.src, a.fill) : '<img src="g/ic-bear.png" alt="" />';
+  q('#mfoot').className = 'foot' + (isPose ? ' gift' : '');
+  q('#mfoot').innerHTML = isPose
+    ? '<img src="g/ic-gift.png" alt="" />세트 보상'
+    : '<i class="coin"></i>' + a.p;
+
+  /* 홈 칸 — 배경을 올리는 중이면 그 배경 위에 기본 곰을 세워 본다 */
+  var room = (kind === 'room' && hasImg) ? a.src : 'g/main_room.png';
+  var bear = (kind !== 'room' && hasImg) ? a.src : 'g/base-front.png';
+  q('#stage').innerHTML =
+    '<img class="room" src="' + room + '" alt="" />' +
+    '<img class="bear" src="' + bear + '" alt="" />';
+  q('#cropHint').innerHTML = CROP[kind];
+
+  var kn = document.querySelector('.knobs');
+  press(kn, 'kind', kind);
+  press(kn, 'img', hasImg ? '1' : '0');
+}
+
+function drawList(){
+  q('#setbar').innerHTML = SETS.map(function (s) {
+    var done = s.c === 3;
+    return '<span class="' + (done ? 'done' : '') + '">' +
+      (done ? '<img src="g/ic-gift.png" alt="" />' : '') +
+      s.n + ' <b>' + s.c + '/3</b></span>';
+  }).join('');
+
+  q('#tb').innerHTML = ROWS.map(function (r, i) {
+    var tag = r.c === 'gift' ? '<span class="tag gift">보상</span>'
+      : r.c === 'season' ? '<span class="tag season">시즌</span>'
+      : '<span class="tag deco">꾸미기</span>';
+    var art = r.img ? imgTag(r.img, r.fill)
+      : '<img src="g/ic-bear.png" alt="" style="max-width:70%;max-height:70%" />';
+    var price = r.p === null ? '<span class="pcell free">값 없음</span>'
+      : r.p === 0 ? '<span class="pcell free">기본</span>'
+      : '<span class="pcell">' + r.p + 'P</span>';
+    return '<tr>' +
+      '<td><span class="thumb">' + art + '</span></td>' +
+      '<td class="nmcell"><b>' + esc(r.nm) + '</b><span>' + r.code + '</span></td>' +
+      '<td>' + r.k + '</td><td>' + tag + '</td><td>' + price + '</td>' +
+      '<td><button class="sw" type="button" aria-pressed="' + r.on + '" data-on="' + i + '" aria-label="파는 중"></button></td>' +
+      '<td><button class="rowact" type="button">고치기</button></td>' +
+    '</tr>';
+  }).join('');
+}
+
+document.addEventListener('click', function (e) {
+  var k = e.target.closest('[data-kind]');
+  if (k) {
+    kind = k.getAttribute('data-kind');
+    if (kind === 'pose') cat = 'season';   /* 보상은 시즌 말고 갈 곳이 없다 */
+    return draw();
+  }
+  var c = e.target.closest('[data-cat]');
+  if (c && !c.disabled) { cat = c.getAttribute('data-cat'); return draw(); }
+  var g = e.target.closest('[data-img]');
+  if (g) { hasImg = g.getAttribute('data-img') === '1'; return draw(); }
+  var s = e.target.closest('[data-on]');
+  if (s) {
+    var i = +s.getAttribute('data-on');
+    ROWS[i].on = !ROWS[i].on;
+    var n = 8 + ROWS.filter(function (r) { return r.on; }).length;
+    q('#crumb').textContent = '올린 것 29 · 파는 중 ' + n;
+    q('#lcount').textContent = '29개 · 파는 중 ' + n;
+    return drawList();
+  }
+});
+
+/* 이름을 적으면 코드는 거기서 짓는다 — 손으로 적게 두지 않는다 */
+q('#nm').addEventListener('input', function () {
+  q('#codeVal').textContent = this.value ? '(이름에서 지음)' : ART[kind].code;
+});
+
+draw();
+drawList();
+</script>
+</body>
+</html>
