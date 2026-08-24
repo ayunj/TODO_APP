@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import CategoryFilter from './CategoryFilter';
-import { BackIcon, GearIcon, MemoIcon, ShopIcon } from './Icons';
+import { BackIcon, MemoIcon, ShopIcon } from './Icons';
 import {
   DOW,
   addDays,
@@ -21,7 +21,10 @@ const round =
 
 /**
  * 상단 고정 헤더.
- * 윗줄에 드나드는 곳(장보기·메모·설정), 아랫줄에 날짜와 이동 — 한 줄에 몰면 좁은 폰에서 빡빡하다.
+ * 윗줄에 드나드는 곳(장보기·메모), 아랫줄에 날짜와 이동 — 한 줄에 몰면 좁은 폰에서 빡빡하다.
+ *
+ * **홈에는 아랫줄이 없다.** 넘길 날짜가 없고, 곰돌이 칸이 바로 와야 한다.
+ * 설정은 이제 탭이라 여기 톱니를 두지 않는다.
  */
 export default function Header() {
   const { view, cursor, setCursor, pushView, popView, logSpan } = useUi();
@@ -127,16 +130,13 @@ export default function Header() {
           )}
         </button>
 
-        <button
-          type="button"
-          aria-label="설정"
-          onClick={() => pushView({ kind: 'settings' })}
-          className={round}
-        >
-          <GearIcon className="h-[19px] w-[19px]" />
-        </button>
       </div>
 
+      {/* 홈은 여기서 끝난다 — 넘길 날짜도 가릴 카테고리도 없다 */}
+      {view === 'home' ? (
+        <div className="h-3" />
+      ) : (
+        <>
       {/* 아랫줄 — 날짜와 이동 */}
       <div className="flex items-end gap-2 pb-3 pt-1.5">
         <h1 className="min-w-0 flex-1 font-round text-[22px] font-normal leading-[1.2] tracking-[-.02em]">
@@ -183,6 +183,8 @@ export default function Header() {
       </div>
 
       <CategoryFilter />
+        </>
+      )}
     </header>
   );
 }

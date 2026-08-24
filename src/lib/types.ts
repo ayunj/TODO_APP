@@ -253,6 +253,7 @@ export interface Trashed {
  * 항목 하나를 손보는 자리(할 일·담기·즐겨찾기 한 건)만 시트로 남는다.
  */
 export type ViewKind =
+  | 'home'
   | 'day'
   | 'month'
   | 'log'

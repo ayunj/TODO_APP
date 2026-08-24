@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "icons": "node scripts/make-icons.mjs",
     "tomato": "node scripts/cut-tomato.mjs",
-    "logo": "node scripts/trim-logo.mjs"
+    "logo": "node scripts/trim-logo.mjs",
+    "gomdori": "node scripts/gomdori.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",

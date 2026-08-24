@@ -113,6 +113,17 @@ export function MemoIcon({ className }: Props) {
   );
 }
 
+/** 홈 — 지붕과 문 하나. 곰돌이가 사는 자리다. */
+export function HomeIcon({ className }: Props) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={1.5}>
+      <path d="M3.5 10.6 12 3.8l8.5 6.8" />
+      <path d="M6 9.6V20h12V9.6" />
+      <path d="M10 20v-5h4v5" />
+    </svg>
+  );
+}
+
 export function LogIcon({ className }: Props) {
   return (
     <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={1.5}>

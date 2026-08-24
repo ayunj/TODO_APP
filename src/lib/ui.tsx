@@ -4,8 +4,13 @@ import { createContext, useContext, useMemo, useState } from 'react';
 import { todayStr } from './date';
 import type { DateStr, TrashScope, ViewKind } from './types';
 
-/** 탭 셋. 밀고 들어간 화면을 다 빠져나오면 여기로 돌아온다. */
-export type Tab = 'day' | 'month' | 'log';
+/**
+ * 탭 다섯. 밀고 들어간 화면을 다 빠져나오면 여기로 돌아온다.
+ *
+ * **가운데가 홈이다.** 곰돌이가 사는 자리이고 앱을 켜면 여기가 먼저 뜬다.
+ * 설정은 예전에 헤더 톱니였는데, 탭이 다섯이 되면서 그 한 자리를 가져갔다.
+ */
+export type Tab = 'day' | 'month' | 'home' | 'log' | 'settings';
 
 /**
  * 카테고리 줄이 보고 있는 **나눈 자리**.
@@ -112,7 +117,7 @@ interface UiValue {
 const UiContext = createContext<UiValue | null>(null);
 
 export function UiProvider({ children }: { children: React.ReactNode }) {
-  const [tab, setTabState] = useState<Tab>('day');
+  const [tab, setTabState] = useState<Tab>('home');
   const [stack, setStack] = useState<Route[]>([]);
   const [cursor, setCursor] = useState<DateStr>(() => todayStr());
   const [scope, setScopeState] = useState<Scope>('all');

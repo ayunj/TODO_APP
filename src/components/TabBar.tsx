@@ -1,17 +1,22 @@
 'use client';
 
-import { DayIcon, LogIcon, MonthIcon } from './Icons';
+import { DayIcon, GearIcon, HomeIcon, LogIcon, MonthIcon } from './Icons';
 import { todayStr } from '@/lib/date';
 import { useUi } from '@/lib/ui';
 import type { Tab } from '@/lib/ui';
 
 type IconType = React.ComponentType<{ className?: string }>;
 
-/** 메인은 할 일이다. 장보기는 탭이 아니라 헤더에서 밀고 들어간다. */
+/**
+ * **가운데가 홈이다.** 곰돌이가 사는 자리라 손가락이 제일 잘 닿는 곳에 둔다.
+ * 장보기·메모는 탭이 아니라 헤더에서 밀고 들어간다 — 하루에도 몇 번씩 여는 자리다.
+ */
 const TABS: { v: Tab; label: string; Icon: IconType }[] = [
   { v: 'day', label: '일', Icon: DayIcon },
   { v: 'month', label: '월', Icon: MonthIcon },
+  { v: 'home', label: '홈', Icon: HomeIcon },
   { v: 'log', label: '기록', Icon: LogIcon },
+  { v: 'settings', label: '설정', Icon: GearIcon },
 ];
 
 /**
@@ -29,7 +34,8 @@ export default function TabBar() {
       setTab(v);
       return;
     }
-    setCursor(todayStr());
+    // 홈·설정은 날짜를 안 본다 — 한 번 더 눌러도 맨 위로만 올라간다
+    if (v !== 'home' && v !== 'settings') setCursor(todayStr());
     // 멀리 내려와 있으면 날짜만 바뀌고 화면은 그대로라 아무 일도 안 한 것처럼 보인다
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };

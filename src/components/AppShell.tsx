@@ -10,6 +10,7 @@ import AskHost from './AskHost';
 import WelcomeScreen from './WelcomeScreen';
 import SheetHost from '@/sheets/SheetHost';
 import DayScreen from '@/screens/DayScreen';
+import HomeScreen from '@/screens/HomeScreen';
 import LoginScreen from '@/screens/LoginScreen';
 import LogScreen from '@/screens/LogScreen';
 import MemoScreen from '@/screens/MemoScreen';
@@ -87,9 +88,14 @@ export default function AppShell() {
   );
 
   const pushed = depth > 0;
-  // 장보기·메모는 헤더가 제목을 그리고, 설정 갈래는 화면마다 제 제목 줄(PageBar)을 갖는다
-  const headered = !route || route.kind === 'shop' || route.kind === 'memo';
+  /*
+    장보기·메모는 헤더가 제목을 그리고, 설정 갈래는 화면마다 제 제목 줄(PageBar)을 갖는다.
+    설정은 탭이 되면서 route 없이도 뜨는데, 그때는 제 PageBar를 쓰니 헤더를 안 붙인다.
+  */
+  const headered =
+    view !== 'settings' && (!route || route.kind === 'shop' || route.kind === 'memo');
   // 기록 탭은 뺀다. 달을 넘기는 화면이지만 격자를 옆으로 훑어보는 손짓과 겹친다.
+  // 홈은 늘 오늘이라 넘길 날짜가 없다.
   const swipeable = view === 'day' || view === 'month';
 
   if (loading || checking) {
@@ -168,6 +174,9 @@ export default function AppShell() {
       }
     }
 
+    if (view === 'home') return <HomeScreen />;
+    if (view === 'settings') return <SettingsScreen />;
+
     return view === 'day' ? (
       // key를 갈라둔다. 같은 자리에 있어서 안 그러면 탭을 옮길 때
       // 일별이 쓰던 방향이 그대로 남아 월별이 까닭 없이 한 번 미끄러진다
@@ -199,7 +208,8 @@ export default function AppShell() {
       {/* 밀고 들어온 화면에서는 탭바도 + 버튼도 내린다 — 나가는 길은 뒤로가기 하나 */}
       {!pushed && (
         <>
-          <Fab />
+          {/* 설정을 보다가 할 일을 적는 일은 없다 */}
+          {view !== 'settings' && <Fab />}
           <TabBar />
         </>
       )}

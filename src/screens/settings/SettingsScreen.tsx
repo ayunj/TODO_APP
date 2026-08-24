@@ -19,11 +19,12 @@ export default function SettingsScreen() {
   const { presets, categories, resetAll } = useStore();
   const { enabled, account } = useAuth();
   const { enabled: roomsEnabled, rooms } = useRooms();
-  const { pushView, popView } = useUi();
+  const { depth, pushView, popView } = useUi();
 
   return (
     <>
-      <PageBar title="설정" />
+      {/* 탭으로 뜰 때는 벗을 겹이 없다 — 그때만 화살표를 안 그린다 */}
+      <PageBar title="설정" back={depth > 0} />
 
       <Group>
         {/* 누구로 들어와 있는지가 맨 먼저다 — 나머지 줄이 다 이 계정에 딸린 것이다 */}
