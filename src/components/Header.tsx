@@ -11,7 +11,6 @@ import {
   monthOf,
   todayStr,
   weekStartOf,
-  yearOf,
   dayOf,
 } from '@/lib/date';
 import { useStore } from '@/lib/store';
@@ -79,26 +78,28 @@ export default function Header() {
   const weekly = view === 'log' && logSpan === 'week';
   const step = (n: number) =>
     setCursor(view === 'day' ? addDays(cursor, n) : weekly ? addDays(cursor, n * 7) : addMonths(cursor, n));
-  const isToday = cursor === todayStr();
   const left = shopping.filter((i) => !i.done).length;
-  const eyebrow =
-    view === 'day'
-      ? isToday
-        ? '오늘도 하나씩'
-        : `${yearOf(cursor)}년`
-      : view === 'month'
-        ? `${yearOf(cursor)}년`
-        : '반복 기록';
   // 주간은 그 주의 첫날로 제목을 단다 — `8월 3일 주`
   const weekFrom = weekly ? weekStartOf(cursor, weekStart) : cursor;
 
   return (
     <header className={shell}>
-      {/* 윗줄 — 드나드는 곳 */}
+      {/* 윗줄 — 로고와 드나드는 곳 */}
       <div className="flex items-center gap-2 pt-[calc(12px+env(safe-area-inset-top))]">
-        <span className="min-w-0 flex-1 truncate text-[10.5px] font-medium tracking-[.1em] text-ink3">
-          {eyebrow}
-        </span>
+        {/*
+          로고는 여백을 깎아 내보낸 것이라 그림 높이가 곧 글자 높이다 — `npm run logo`.
+          안 뜨면 조용히 물러난다. 여기 자리가 비어도 아랫줄 날짜가 화면을 알려준다.
+        */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo.png"
+          alt="dododu"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+          }}
+          className="h-5 w-auto flex-none select-none object-contain"
+        />
+        <span className="min-w-0 flex-1" />
 
         <button
           type="button"

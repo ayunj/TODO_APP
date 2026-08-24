@@ -60,10 +60,8 @@ body{
 .scrollarea::-webkit-scrollbar{width:0}
 
 .appbar{display:flex; align-items:center; gap:8px; padding:16px 16px 10px}
-.logo{font-family:'Gowun Dodum',sans-serif; font-size:25px; margin:0; font-weight:400; letter-spacing:.01em}
-.logo .do{color:var(--accent)}
-.logo .du{color:var(--ok)}
-.logo .hh{color:var(--accent-soft); font-size:14px; vertical-align:super; margin-left:2px}
+/* 앱 Header와 같다 — 깎아 내보낸 그림이라 높이가 곧 글자 높이다 */
+.logo{height:20px; width:auto; display:block; flex:none}
 .tools{margin-left:auto; display:flex; align-items:center; gap:7px}
 /* 상단 원형 단추 — 지금 앱 Header.tsx의 그것이다 */
 .iconbtn{
@@ -445,7 +443,7 @@ function screenHtml() {
   return '' +
   '<div class="scrollarea">' +
     '<div class="appbar">' +
-      '<h1 class="logo"><span class="do">do</span><span class="du">dodu</span><span class="hh">&hearts;</span></h1>' +
+      '<img class="logo" src="../public/logo.png" alt="dododu" />' +
       '<div class="tools">' +
         '<button class="iconbtn" type="button" title="메모">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h14v15H5z"/><path d="M8.5 9h7M8.5 12.5h7M8.5 16h4"/></svg>' +
