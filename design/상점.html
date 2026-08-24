@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>상점 시안 — dododu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Gowun+Dodum&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/*
+  상점 — 홈의 띠를 눌러 들어오는 화면.
+
+  **밀고 들어온 화면이라 탭바도 + 버튼도 없다.** 나가는 길은 왼쪽 화살표 하나다
+  (장보기·메모와 같은 규칙 — AppShell.tsx의 `pushed`).
+
+  이 화면의 뼈대는 한 줄이다 —
+  **카드는 고르는 자리(무엇이 있나), 위 칸은 하는 자리(입어보기·사기).**
+  103px 카드 안에 사는 단추까지 넣으면 잘못 눌러 300P가 날아간다.
+
+  색·글씨·카드 모양은 앱 토큰 그대로. 폰은 안드로이드 360 × 800.
+*/
+:root{
+  --bg:#faf6f0; --card:#ffffff; --sunk:#f5f0e9; --memo:#fbf6ee;
+  --ink:#615953; --ink2:#8c8078; --ink3:#a59a92;
+  --line:#efe8df; --line2:#f5efe7;
+  --accent:#d97a5e; --accent-soft:#f4d7cc; --accent-tint:#fcf2ed;
+  --ok:#73b79f; --cycle:#c9a068; --high:#d98b7a; --done:#d9d2cb;
+  --track:#f2ece6; --star:#f0c58a; --edge:#d8d3ce; --faint:#d9d2cb;
+  --paper:#f2ece4;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; padding:34px 20px 80px; background:var(--paper);
+  font-family:'Noto Sans KR',system-ui,-apple-system,sans-serif;
+  color:var(--ink); line-height:1.55; letter-spacing:-.01em; font-size:14px;
+}
+:focus-visible{outline:2px solid var(--accent); outline-offset:-2px; border-radius:8px}
+
+.head{max-width:1000px; margin:0 auto 18px}
+.head h1{font-size:19px; margin:0 0 6px; font-weight:700}
+.head p{color:var(--ink2); font-size:13px; margin:0 0 4px; max-width:78ch}
+.head b{color:var(--accent); font-weight:500}
+.head a{color:var(--accent)}
+.head code{background:#fff; padding:1px 6px; border-radius:6px; font-size:12px}
+
+/* 눌러 보는 손잡이 — 시안에만 있는 줄이다 */
+.knobs{display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center; margin:0 0 20px}
+.knobs b{font-size:11.5px; color:var(--ink2); font-weight:500; margin-right:2px}
+.knobs button{
+  border:1px solid var(--line); background:#fff; font:inherit; font-size:12px;
+  padding:6px 13px; border-radius:999px; cursor:pointer; color:var(--ink2);
+}
+.knobs button[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
+
+.deck{display:flex; flex-wrap:wrap; gap:26px; justify-content:center; align-items:flex-start}
+.devname{text-align:center; margin:0 0 9px}
+.devname b{font-size:13.5px}
+.devname span{display:block; font-size:11px; color:var(--ink3); margin-top:1px; font-family:'IBM Plex Mono',monospace}
+
+/* ── 폰 ── */
+.phone{
+  position:relative; flex:none; width:360px; height:800px;
+  background:var(--bg); border-radius:30px; overflow:hidden;
+  box-shadow:0 10px 34px rgba(97,89,83,.14); display:flex; flex-direction:column;
+}
+.scrollarea{flex:1; overflow-y:auto; overscroll-behavior:contain}
+.scrollarea::-webkit-scrollbar{width:0}
+
+/*
+  제목 줄 — 앱 PageBar와 같다. 높이가 66px이고 칩 줄이 그 아래에 붙는다.
+  포인트를 여기 둔 건 **격자를 내리는 동안에도 보여야** 하기 때문이다 —
+  값을 보면서 고르는 화면이라 위로 올라가 확인하게 만들면 안 된다.
+*/
+.pbar{
+  position:sticky; top:0; z-index:16; display:flex; align-items:center; gap:6px;
+  background:var(--bg); padding:14px 16px;
+}
+.pbar .back{
+  width:38px; height:38px; margin-left:-6px; flex:none; border:0; background:transparent;
+  border-radius:999px; color:var(--ink2); cursor:pointer; display:grid; place-items:center;
+}
+.pbar .back svg{width:20px; height:20px}
+.pbar h1{
+  flex:1; min-width:0; margin:0; font-family:'Gowun Dodum',sans-serif; font-weight:400;
+  font-size:19px; line-height:1.2; letter-spacing:-.02em;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+/* 내 포인트 — 누르는 것이 아니라 **지금 얼마인지 알리는 자리**다 */
+.wallet{
+  flex:none; display:inline-flex; align-items:center; gap:6px; border-radius:999px;
+  background:var(--card); box-shadow:0 8px 24px rgba(0,0,0,.05); padding:7px 13px 7px 8px;
+}
+.coin{
+  width:19px; height:19px; border-radius:999px; background:var(--star); color:#fff; flex:none;
+  display:grid; place-items:center; font-size:11px; font-weight:700; line-height:1;
+}
+.wallet b{font-family:'IBM Plex Mono',monospace; font-size:13.5px; font-weight:500; color:var(--ink)}
+
+.screen{padding:0 16px}
+
+/*
+  ── 입어보는 칸 ──
+  **여기가 이 화면에서 유일하게 무언가를 하는 자리다.** 카드를 누르면 여기 옷이 갈리고,
+  사는 것도 입는 것도 이 아래 단추 하나로 한다.
+  옷을 고르는 화면에서 정작 입은 모습이 작으면 무엇을 바꾸는 건지 안 보인다.
+*/
+.preview{
+  position:relative; border-radius:20px; background:var(--card); box-shadow:0 8px 24px rgba(0,0,0,.05);
+  padding:14px 16px 16px; margin-bottom:12px; overflow:hidden;
+}
+.stage{
+  position:relative; height:186px; border-radius:16px; background:var(--sunk);
+  display:grid; place-items:end center; overflow:hidden;
+}
+.stage img{max-height:94%; max-width:64%; width:auto; height:auto; display:block; margin-bottom:4%}
+.stage svg{height:86%; width:auto; display:block; margin-bottom:4%}
+/* 지금 입은 옷이 아니라 **걸쳐만 본 것**이라고 알린다. 안 알리면 산 줄 안다. */
+.stage .trying{
+  position:absolute; left:12px; top:12px; border-radius:999px;
+  background:rgba(255,255,255,.9); color:var(--ink2); padding:4px 11px; font-size:11px; font-weight:500;
+}
+.name{display:flex; align-items:baseline; gap:8px; margin:12px 0 0}
+.name .n{font-family:'Gowun Dodum',sans-serif; font-size:17px; color:var(--ink)}
+.name .p{
+  display:inline-flex; align-items:center; gap:4px; margin-left:auto; flex:none;
+  font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink3);
+}
+.name .p .coin{width:15px; height:15px; font-size:9px; background:var(--faint)}
+
+.act{width:100%; margin-top:11px; border:0; border-radius:16px; padding:14px; cursor:pointer;
+  font-family:inherit; font-size:14px; font-weight:500; display:flex; align-items:center;
+  justify-content:center; gap:7px;
+}
+.act.buy{background:var(--accent); color:#fff; box-shadow:0 8px 24px rgba(217,122,94,.18)}
+.act.buy .coin{background:rgba(255,255,255,.35)}
+.act.buy:active{transform:scale(.98)}
+.act.wear{background:var(--card); color:var(--accent); box-shadow:0 0 0 1.6px var(--accent-soft)}
+.act.wear:active{background:var(--accent-tint)}
+/*
+  못 누르는 단추를 흐리게 두지 않는다 — 회색으로 눕혀두면 언젠가 눌리는 것으로 보여
+  계속 눌러보게 된다. 그 자리에 **얼마가 모자란지** 한 줄로 적는다.
+*/
+.act.short{background:var(--sunk); color:var(--ink3); cursor:default; font-size:12.5px; font-weight:400}
+.act.now{background:var(--sunk); color:var(--ink2); cursor:default}
+
+/*
+  ── 갈래 칩 ──
+  **둘뿐이다.** 머리·몸·악세사리로 가르지 않는 까닭은 옆 설명에 적어뒀다 —
+  한 줄로 줄이면, 부위를 나누는 순간 사람들은 겹쳐 입기를 기대한다.
+*/
+.chipbar{
+  position:sticky; top:66px; z-index:15; display:flex; align-items:stretch; gap:7px;
+  background:var(--bg); padding:2px 16px 12px; overflow-x:auto; scrollbar-width:none;
+}
+.chipbar::-webkit-scrollbar{display:none}
+.chipbar button{
+  flex:none; border:0; cursor:pointer; border-radius:999px; padding:7px 15px;
+  background:var(--accent-tint); color:var(--accent);
+  font-family:inherit; font-size:12.5px; font-weight:500;
+}
+.chipbar button[aria-pressed="true"]{background:var(--accent); color:#fff}
+.chipbar button em{font-family:'IBM Plex Mono',monospace; font-style:normal; opacity:.75; margin-left:4px}
+
+/* ── 격자 — 세 칸 ── */
+.grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; padding-bottom:26px}
+.item{
+  position:relative; border:0; padding:9px 7px 10px; cursor:pointer; text-align:center;
+  border-radius:16px; background:var(--card); box-shadow:0 8px 24px rgba(0,0,0,.05);
+  display:flex; flex-direction:column; align-items:center; gap:6px; font-family:inherit;
+}
+.item:active{transform:scale(.97)}
+.item .nm{font-size:11.5px; font-weight:500; color:var(--ink2); line-height:1.3}
+.item .art{
+  position:relative; width:100%; aspect-ratio:1/1; border-radius:12px; background:var(--sunk);
+  display:grid; place-items:center; overflow:hidden;
+}
+.item .art img{max-width:88%; max-height:88%; width:auto; height:auto; display:block}
+.item .art svg{width:66%; height:66%}
+/*
+  **못 사는 것도 그림은 그대로 보여준다.** 무엇인지 가려두면 뭘 모으는지 모르는 채로
+  모으게 된다. 대신 그림을 한 톤 재우고 자물쇠를 얹어 아직 내 것이 아님만 말한다.
+*/
+.item.lock .art img,.item.lock .art svg{opacity:.42; filter:saturate(.5)}
+.item .lockmark{
+  position:absolute; right:5px; top:5px; width:20px; height:20px; border-radius:999px;
+  background:rgba(255,255,255,.9); display:grid; place-items:center; color:var(--ink3);
+}
+.item .lockmark svg{width:12px; height:12px}
+.item .price{
+  display:inline-flex; align-items:center; gap:4px; border-radius:999px;
+  background:var(--accent-tint); padding:3px 9px 3px 4px;
+  font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:500; color:var(--accent);
+}
+.item .price .coin{width:15px; height:15px; font-size:9px}
+/* 값은 지우지 않는다 — 얼마를 모아야 하는지까지 가리면 모을 이유가 사라진다 */
+.item.lock .price{background:var(--sunk); color:var(--ink3)}
+.item.lock .price .coin{background:var(--faint)}
+.item .tag{border-radius:999px; padding:3px 10px; font-size:10.5px; font-weight:500; background:var(--accent-tint); color:var(--accent)}
+.item.on .tag{background:var(--accent); color:#fff}
+/* 지금 걸쳐보고 있는 칸 — 위 칸이 무엇을 보여주는 중인지 격자에서도 짚어준다 */
+.item.try{box-shadow:0 0 0 2px var(--accent), 0 8px 24px rgba(0,0,0,.05)}
+
+.empty{
+  grid-column:1 / -1; border-radius:20px; background:var(--card); box-shadow:0 8px 24px rgba(0,0,0,.05);
+  padding:34px 18px 36px; text-align:center; font-size:13px; line-height:1.7; color:var(--ink3);
+}
+.empty b{display:block; margin-bottom:6px; font-family:'Gowun Dodum',sans-serif; font-size:15px; font-weight:500; color:var(--ink2)}
+
+/* 산 순간에만 뜬다 — 갈아입기는 눈에 바로 보이니 말이 필요 없다 */
+.flash{
+  position:absolute; left:50%; bottom:60px; transform:translateX(-50%); z-index:30;
+  background:var(--ink); color:#fff; border-radius:999px; padding:9px 16px;
+  font-size:12.5px; opacity:0; pointer-events:none; white-space:nowrap;
+}
+.flash.go{animation:pop 1.6s ease-out}
+@keyframes pop{
+  0%{opacity:0; transform:translate(-50%,8px)}
+  12%{opacity:1; transform:translate(-50%,0)}
+  80%{opacity:1}
+  100%{opacity:0}
+}
+
+/* ── 설명 ── */
+.note{width:346px; flex:none}
+.note h2{font-size:15px; margin:0 0 10px; font-weight:700}
+.note h3{font-size:13px; margin:19px 0 7px; font-weight:700; color:var(--accent)}
+.note p{font-size:12.5px; color:var(--ink2); margin:0 0 9px; line-height:1.65}
+.note b{color:var(--ink); font-weight:500}
+.note code{background:#fff; padding:1px 5px; border-radius:5px; font-size:11.5px}
+.note ul{margin:0 0 9px; padding-left:17px; font-size:12.5px; color:var(--ink2); line-height:1.65}
+.note li{margin-bottom:5px}
+.note table{width:100%; border-collapse:collapse; font-size:11.5px; margin:0 0 10px}
+.note th,.note td{text-align:left; padding:6px 7px; border-bottom:1px solid var(--line); vertical-align:top}
+.note th{color:var(--ink3); font-weight:500; font-size:10.5px}
+.warn{background:#fff; border-left:3px solid var(--star); border-radius:0 10px 10px 0; padding:11px 13px; font-size:12px; color:var(--ink2); margin:0 0 10px; line-height:1.6}
+.pick{background:#fff; border-left:3px solid var(--ok); border-radius:0 10px 10px 0; padding:11px 13px; font-size:12px; color:var(--ink2); margin:0 0 10px; line-height:1.6}
+.note a{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>상점 시안 — dododu</h1>
+  <p><a href="메인화면.html">홈</a>의 띠를 눌러 들어오는 화면이다.
+     <b>밀고 들어온 화면이라 탭바도 + 버튼도 없다</b> — 장보기·메모와 같다.
+     폰은 <b>안드로이드 실기기 크기 그대로</b> <code>360 × 800</code>.</p>
+  <p>뼈대는 한 줄이다 — <b>카드는 고르는 자리, 위 칸은 하는 자리.</b>
+     카드를 누르면 곰돌이가 <b>걸쳐만 보고</b>, 사는 것도 입는 것도 위 칸의 단추 하나로 한다.
+     아래 손잡이로 포인트를 바꿔가며 눌러보면 된다.</p>
+</div>
+
+<div class="knobs">
+  <b>내 포인트</b>
+  <button type="button" data-pt="120">120</button>
+  <button type="button" data-pt="350" aria-pressed="true">350</button>
+  <button type="button" data-pt="1000">1000</button>
+</div>
+
+<div class="deck">
+  <div><p class="devname"><b>상점</b><span>고르는 중</span></p><div class="phone" data-cat="all" data-try="base"></div></div>
+  <div><p class="devname"><b>걸쳐보기</b><span>아직 못 사는 것</span></p><div class="phone" data-cat="all" data-try="lion"></div></div>
+  <div><p class="devname"><b>내 코스튬</b><span>가진 것</span></p><div class="phone" data-cat="mine" data-try="hat"></div></div>
+
+  <div class="note">
+    <h2>부위별로 코디할까, 세트로 갈까</h2>
+    <div class="pick"><b>세트로 가는 쪽을 권한다.</b> 토끼 세트 · 공룡 세트 · 걸스카우트 세트처럼
+      <b>한 벌이 곧 한 모습</b>이고, 누르면 그 세트로 갈아입는다.</div>
+    <ul>
+      <li><b>그림이 곱으로 늘지 않는다.</b> 세트는 옷 한 벌에 두 장(<code>front</code>·<code>sleep</code>)이면 끝난다.
+          부위별은 <b>조합마다</b> 어긋나는 데가 없는지 봐야 한다 — 머리 5 × 몸 5면 볼 것이 25가지다</li>
+      <li><b>겹쳐 입기는 이미 막혀 있다.</b> 곰사자 갈기 위에 모자를 얹으면 겹친다.
+          <a href="g/그릴-것.md">발주서</a>가 <code>모자는 귀를 안 덮는 것으로</code>라고 적어둔 이유가 그거다</li>
+      <li><b>모으는 목표가 뚜렷하다.</b> 300P 모아 <code>곰토끼</code>를 얻는 편이
+          100P짜리 부품 셋을 모으는 것보다 할 말이 분명하다</li>
+      <li>이건 <b>꾸미기 게임이 아니라 집안일 앱의 덤</b>이다. 조합의 재미를 파고들 자리가 아니다</li>
+    </ul>
+    <p><b>그래서 갈래 칩을 둘로 줄였다</b> — <code>전체</code>와 <code>내 코스튬</code>.
+       머리·몸·악세사리로 가르는 순간 사람들은 <b>겹쳐 입기를 기대한다.</b>
+       칩을 안 나누면 그 기대가 아예 안 생긴다.</p>
+    <div class="warn">
+      옷이 열 벌을 넘어 갈래가 필요해지면 그때는 <b>부위가 아니라 결</b>로 가른다 —
+      <code>동물</code> · <code>계절</code> · <code>일하는 옷</code>처럼.
+      같은 세트끼리 묶는 말이라 <b>겹쳐 입기를 약속하지 않는다.</b>
+    </div>
+    <p>목도리·모자·리본도 <a href="g/그릴-것.md">발주서</a>에서는 이미
+       <b>곰돌이가 그걸 걸친 그림 한 장</b>이다. 부품이 아니라 <b>작은 세트</b>라
+       세트로 가도 목록은 그대로다.</p>
+
+    <h2 style="margin-top:24px">사는 순간을 어디에 둘까</h2>
+    <div class="pick"><b>걸쳐보고 → 사기.</b> 카드를 누르면 곰돌이가 입어보기만 하고,
+      <b>실제로 사는 건 위 칸의 단추</b>다.</div>
+    <ul>
+      <li><b>돈은 되돌릴 수 없다.</b> 카드가 곧 구매 단추면 잘못 눌러 300P가 날아간다.
+          한 번 더 묻는 대신 <b>보여주고 나서 묻는다</b></li>
+      <li><b>옷은 입혀봐야 안다.</b> 103px 카드 그림으로는 어울리는지 알 수 없다 —
+          위 칸이 186px인 이유가 그거다</li>
+      <li>단추 하나가 상태에 따라 말을 바꾼다 —
+          <code>300 주고 사기</code> · <code>입기</code> · <code>입는 중</code> ·
+          <code>50P 더 모으면 살 수 있어요</code></li>
+    </ul>
+    <div class="warn">
+      <b>못 사는 것에는 흐린 단추를 두지 않는다.</b> 회색으로 눕혀두면 언젠가 눌리는 것으로 보여
+      계속 눌러보게 된다. 그 자리에 <b>얼마가 모자란지</b>만 적는다 (rows.tsx의 규칙과 같다).
+    </div>
+
+    <h2 style="margin-top:24px">못 사는 것도 그림은 보여준다</h2>
+    <p>실루엣과 <code>???</code>로 가려도 봤는데 <b>무엇을 모으는지 모르는 채로 모으게 된다.</b>
+       그림은 그대로 두고 <b>한 톤 재운 뒤 자물쇠</b>만 얹었다.
+       값도 안 지운다 — 얼마를 모아야 하는지까지 가리면 모을 이유가 사라진다.</p>
+
+    <h2 style="margin-top:24px">이름은 상점</h2>
+    <p><code>코스튬 상점</code>에서 <b>상점</b>으로 줄였다. 안에 옷밖에 없어도
+       제목이 짧으면 나중에 <b>다른 것을 팔 자리</b>가 생긴다.</p>
+    <div class="warn">
+      <b>홈의 띠는 그림 한 장이고 글씨가 그 안에 박혀 있다</b>
+      (<code>g/main_costume.png</code>). 이름을 바꾸면 <b>띠를 다시 그려야 한다</b> —
+      시안의 글씨만 고쳐도 앱에서는 옛 이름이 그대로 뜬다.
+    </div>
+
+    <h2 style="margin-top:24px">그림은 아직 하나뿐</h2>
+    <p>곰토끼만 <code>rabbit-front-mock.png</code>가 있어 제 모습으로 뜨고,
+       나머지는 <b>그림자가 대신 서 있다.</b> 그림이 오면 파일 이름만 채우면 된다.</p>
+    <table>
+      <tr><th>세트</th><th>값</th><th>그림</th></tr>
+      <tr><td>기본 곰돌이</td><td>—</td><td>있음</td></tr>
+      <tr><td>모자 · 리본 · 목도리</td><td>100</td><td>없음</td></tr>
+      <tr><td>앞치마</td><td>200</td><td>없음</td></tr>
+      <tr><td>곰토끼</td><td>300</td><td><b>있음</b></td></tr>
+      <tr><td>곰공룡</td><td>350</td><td>없음</td></tr>
+      <tr><td>곰사자</td><td>400</td><td>없음</td></tr>
+    </table>
+  </div>
+</div>
+
+<script>
+var SV = function (d, w) {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (w || 1.6) +
+    '" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+};
+var I_BACK = SV('<path d="M15 5l-7 7 7 7"/>', 1.8);
+var I_LOCK = SV('<rect x="5" y="10.5" width="14" height="9.5" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>');
+
+/* 옷 그림이 아직 없는 자리에 서는 곰돌이 그림자. 귀 둘이 보이는 쪽이 이 캐릭터다. */
+var SHADE = '<svg viewBox="0 0 100 100" aria-hidden="true">' +
+  '<g fill="#8c8078" opacity=".55">' +
+  '<circle cx="30" cy="27" r="12.5"/><circle cx="70" cy="27" r="12.5"/>' +
+  '<ellipse cx="50" cy="44" rx="27" ry="23"/>' +
+  '<path d="M25 62c16-6 34-6 50 0 7 12 5 26-3 30H28c-8-4-10-18-3-30z"/>' +
+  '</g></svg>';
+
+/*
+  ── 파는 것 ──
+  값은 발주서(g/그릴-것.md)를 그대로 옮긴 것이다.
+  **한 줄이 한 세트다.** 머리·몸으로 쪼개지 않는다 — 쪼개면 조합마다 그림을 맞춰야 한다.
+  `img`가 없는 것은 아직 안 그린 옷이라 그림자가 대신 선다.
+*/
+var ITEMS = [
+  { k: 'base',   n: '기본 곰돌이', p: 0,   img: 'g/base-front.png', own: true },
+  { k: 'hat',    n: '모자',        p: 100 },
+  { k: 'ribbon', n: '리본',        p: 100 },
+  { k: 'scarf',  n: '목도리',      p: 100 },
+  { k: 'apron',  n: '앞치마',      p: 200 },
+  { k: 'rabbit', n: '곰토끼',      p: 300, img: 'g/rabbit-front-mock.png' },
+  { k: 'dino',   n: '곰공룡',      p: 350 },
+  { k: 'lion',   n: '곰사자',      p: 400 }
+];
+
+var pt = 350;      /* 내 포인트 */
+var worn = 'base'; /* 정말 입고 있는 옷 */
+var owned = { base: true, hat: true };
+
+var find = function (k) { return ITEMS.filter(function (i) { return i.k === k; })[0]; };
+var artOf = function (it) {
+  return it.img ? '<img src="' + it.img + '" alt="" onerror="this.outerHTML=SHADE" />' : SHADE;
+};
+var mineCount = function () { return ITEMS.filter(function (i) { return owned[i.k]; }).length; };
+
+function header() {
+  return '<div class="pbar">' +
+    '<button class="back" type="button" aria-label="돌아가기">' + I_BACK + '</button>' +
+    '<h1>상점</h1>' +
+    '<span class="wallet"><i class="coin">P</i><b>' + pt + '</b></span>' +
+  '</div>';
+}
+
+/* 위 칸 — 걸쳐보는 자리이자 사는 자리 */
+function preview(trying) {
+  var it = find(trying);
+  var own = Boolean(owned[it.k]);
+  var here = worn === it.k;
+
+  var act = here
+    ? '<div class="act now">입는 중</div>'
+    : own
+      ? '<button class="act wear" type="button" data-wear="' + it.k + '">입기</button>'
+      : it.p <= pt
+        ? '<button class="act buy" type="button" data-buy="' + it.k + '">' +
+          '<i class="coin">P</i>' + it.p + ' 주고 사기</button>'
+        /* 못 누르는 단추 대신 얼마가 모자란지 적는다 */
+        : '<div class="act short">' + (it.p - pt) + 'P 더 모으면 살 수 있어요</div>';
+
+  return '<div class="screen"><section class="preview">' +
+    '<div class="stage">' + artOf(it) +
+      (here ? '' : '<span class="trying">걸쳐보는 중</span>') +
+    '</div>' +
+    '<div class="name"><span class="n">' + it.n + '</span>' +
+      (own ? '' : '<span class="p"><i class="coin">P</i>' + it.p + '</span>') +
+    '</div>' + act +
+  '</section></div>';
+}
+
+/*
+  갈래는 둘뿐이다. 부위로 가르면 겹쳐 입기를 기대하게 된다.
+  `내 코스튬`은 파는 것을 가르는 말이 아니라 가진 것을 보는 자리라 옆에 개수를 단다.
+*/
+function chipbar(cat) {
+  return '<div class="chipbar">' +
+    '<button type="button" data-cat="all"' + (cat === 'all' ? ' aria-pressed="true"' : '') + '>전체</button>' +
+    '<button type="button" data-cat="mine"' + (cat === 'mine' ? ' aria-pressed="true"' : '') + '>' +
+      '내 코스튬<em>' + mineCount() + '</em></button>' +
+  '</div>';
+}
+
+/* 카드는 **고르는 자리**다. 상태만 말하고 아무것도 사지 않는다. */
+function card(it, trying) {
+  var own = Boolean(owned[it.k]);
+  var lock = !own && it.p > pt;
+  var cls = 'item' + (worn === it.k ? ' on' : '') + (lock ? ' lock' : '') + (trying === it.k ? ' try' : '');
+
+  var foot = own
+    ? '<span class="tag">' + (worn === it.k ? '입는 중' : '가짐') + '</span>'
+    : '<span class="price"><i class="coin">P</i>' + it.p + '</span>';
+
+  return '<button class="' + cls + '" type="button" data-try="' + it.k + '">' +
+    '<span class="nm">' + it.n + '</span>' +
+    '<span class="art">' + artOf(it) +
+      (lock ? '<span class="lockmark">' + I_LOCK + '</span>' : '') +
+    '</span>' + foot +
+  '</button>';
+}
+
+function grid(cat, trying) {
+  var list = cat === 'mine' ? ITEMS.filter(function (i) { return owned[i.k]; }) : ITEMS;
+
+  /* 비었다고 문장만 두지 않는다 — 어디로 가면 되는지까지 적는다 */
+  if (!list.length) {
+    return '<div class="screen"><div class="grid"><div class="empty">' +
+      '<b>아직 가진 옷이 없어요</b>할 일을 끝내면 포인트가 쌓여요.<br />' +
+      '<b style="display:inline; font-size:12.5px; color:var(--accent)">전체</b>에서 살 수 있는 것을 볼 수 있어요.' +
+      '</div></div></div>';
+  }
+  return '<div class="screen"><div class="grid">' +
+    list.map(function (i) { return card(i, trying); }).join('') + '</div></div>';
+}
+
+function render(ph) {
+  var cat = ph.dataset.cat;
+  var trying = ph.dataset.try || worn;
+  ph.innerHTML =
+    '<div class="scrollarea">' + header() + preview(trying) + chipbar(cat) + grid(cat, trying) + '</div>' +
+    '<div class="flash"></div>';
+}
+
+var phones = Array.prototype.slice.call(document.querySelectorAll('.phone'));
+var drawAll = function () { phones.forEach(render); };
+
+/* 산 순간에만 뜬다 — 갈아입기는 눈에 바로 보이니 말이 필요 없다 */
+function flash(ph, text) {
+  var f = ph.querySelector('.flash');
+  f.textContent = text;
+  f.classList.remove('go');
+  void f.offsetWidth;
+  f.classList.add('go');
+}
+
+document.addEventListener('click', function (e) {
+  var knob = e.target.closest('.knobs button[data-pt]');
+  if (knob) {
+    pt = Number(knob.dataset.pt);
+    document.querySelectorAll('.knobs button[data-pt]').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b === knob));
+    });
+    drawAll();
+    return;
+  }
+
+  var ph = e.target.closest ? e.target.closest('.phone') : null;
+  if (!ph) return;
+
+  var chip = e.target.closest('.chipbar button[data-cat]');
+  if (chip) { ph.dataset.cat = chip.dataset.cat; render(ph); return; }
+
+  /* 카드를 누르면 걸쳐보기만 한다. 여기서는 아무것도 안 사고 안 입는다. */
+  var pick = e.target.closest('.item[data-try]');
+  if (pick) { ph.dataset.try = pick.dataset.try; render(ph); return; }
+
+  var wear = e.target.closest('[data-wear]');
+  if (wear) { worn = wear.dataset.wear; drawAll(); return; }
+
+  var buy = e.target.closest('[data-buy]');
+  if (!buy) return;
+  var x = find(buy.dataset.buy);
+  if (x.p > pt) return;
+  pt -= x.p;
+  owned[x.k] = true;
+  worn = x.k; /* 사자마자 입는다 — 걸쳐보고 산 것이라 한 번 더 물을 것이 없다 */
+  drawAll();
+  /* 조사를 안 붙인다 — `곰토끼를`은 되는데 받침 없는 이름이 오면 어색해진다 (lib/ko.ts) */
+  flash(ph, x.n + ' — 샀어요 · 남은 ' + pt + 'P');
+}, false);
+
+drawAll();
+</script>
+</body>
+</html>

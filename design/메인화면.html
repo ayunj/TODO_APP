@@ -508,9 +508,9 @@ function screenHtml() {
           '</ul><button class="allbtn" type="button">모두 보기 &rsaquo;</button></section>' +
       '</div>' +
 
-      '<button class="shop" type="button" aria-label="코스튬 상점 바로가기">' +
+      '<button class="shop" type="button" aria-label="상점 바로가기">' +
         '<img class="bg" src="g/main_costume.png" alt="" />' +
-        '<span class="ph" aria-hidden="true"><b>코스튬 상점</b>' +
+        '<span class="ph" aria-hidden="true"><b>상점</b>' +
           '<span>귀여운 옷으로 곰돌이를 꾸며보세요</span></span>' +
         '<span class="goto">바로가기 &rsaquo;</span>' +
       '</button>' +
@@ -602,7 +602,7 @@ document.querySelectorAll('.shop .bg').forEach(function (img) {
 
 /* 띠를 누르면 상점 시안으로 — 홈에서 상점으로 가는 길은 이 띠 하나뿐이다 */
 document.querySelectorAll('.shop').forEach(function (b) {
-  b.addEventListener('click', function () { location.href = '코스튬.html'; });
+  b.addEventListener('click', function () { location.href = '상점.html'; });
 });
 
 document.querySelectorAll('.states button[data-state]').forEach(function (b) {
