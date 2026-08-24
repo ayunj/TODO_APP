@@ -160,7 +160,7 @@ body{
   border-radius:999px; background:var(--c-home);
 }
 
-/* ── 할 일 줄 — 시각은 없다. 앱은 시각을 안 다룬다. ── */
+/* ── 할 일 줄 — 시각이 붙되 **기한이 아니라 알림**이다 ── */
 .sec{display:flex; align-items:baseline; margin:0 2px 8px}
 .sec h2{font-size:14px; font-weight:700; margin:0}
 .sec button{
@@ -190,6 +190,14 @@ li.done .t .pri{color:var(--done)}
 .cyc{color:var(--cycle)}
 .late{color:var(--ink2)}
 .turn{color:var(--accent)}
+/*
+  알림 시각 — **기한이 아니라 알려주는 때다.**
+  그래서 옅은 회색 한 톤으로만 쓰고, **시각이 지나도 색이 안 바뀐다.**
+  빨개지는 순간 기한으로 읽히고, 그때부터 하루에도 여러 번 지각이 생긴다.
+*/
+.at{display:inline-flex; align-items:center; gap:3px; color:var(--ink3); font-variant-numeric:tabular-nums}
+.at svg{width:12px; height:12px; opacity:.8}
+li.done .at{color:var(--done)}
 .sep{color:var(--faint)}
 li.done .meta{color:var(--done)}
 li.done .cat i{opacity:.4}
@@ -270,8 +278,8 @@ li.done .cyc,li.done .late,li.done .turn{color:var(--done)}
 <div class="head">
   <h1>메인 화면 시안 두 가지</h1>
   <p>색은 <b>앱 토큰 그대로</b>다(<code>src/app/globals.css</code>). 아이콘도 <code>Icons.tsx</code>의 것을 그대로 썼다.
-     <b>할 일에 시각은 없다</b> — 이 앱은 시각을 안 다루니 그 자리에
-     <b>카테고리 · 주기 · 지난 날수 · 차례</b>가 온다.</p>
+     할 일 줄에는 <b>카테고리 · 주기 · 지난 날수 · 차례</b>가 오고,
+     <b>시각은 기한이 아니라 알림</b>이라 종과 함께 회색으로만 붙는다.</p>
   <p>하단 탭은 <b>평평하다.</b> 튀어나온 가운데 버튼은 뺐다.
      상태를 바꾸면 두 시안이 <b>같이</b> 바뀌고, 할 일 줄은 <b>정말 눌린다</b>.</p>
 </div>
@@ -476,34 +484,54 @@ li.done .cyc,li.done .late,li.done .turn{color:var(--done)}
        우선순위가 높으면 제목 옆에 <b>★</b>이 붙는다(즐겨찾기 별이 아니다).</p>
     <p><code>1.6L / 2L</code> 같은 물 마시기도 뺐다. <b>이 앱에 없는 기능이다.</b></p>
 
-    <h3>시각 대신 `때`를 권한다</h3>
-    <p>다른 앱들이 시각을 두는 건 <b>약속과 일정</b>을 담기 때문이다.
-       이 앱은 <b>집안일</b>이다 — <code>8일마다 화장실 청소</code>에 오후 3시를 붙이면
-       그 3시는 매번 안 지켜지고, <b>안 지켜지는 약속이 화면에 남는다.</b></p>
-    <p>시각을 넣으면 <b>지각이 하루 단위에서 시간 단위로 촘촘해진다.</b>
-       지금 이 앱은 <code>3일 지남</code>만 말하고 밀린 일을 빨갛게 안 칠하는데,
-       오후 7시 운동을 8시에 하면 그 줄은 이미 늦은 것이 된다.</p>
-    <div class="warn">
-      <b>알림 값도 확 는다.</b> 지금은 하루 두 번 예약하면 끝인데
-      (<code>docs/app/notify</code>), 할 일마다 시각이 붙으면 <b>할 일 개수만큼</b> 예약해야 한다.
-      정확한 시각을 지키려면 안드로이드 <b>정확 알람 권한</b>이 필요한데,
-      그건 <b>일부러 안 묻기로 한 것</b>이다 — `8시 3분에 떠도 아무 문제가 없다`.
-    </div>
-    <p><b>대신 `때`를 세 갈래로 둔다.</b></p>
+    <h3>시각은 알림이지 기한이 아니다</h3>
+    <p><b>이게 답이다.</b> 시각을 정하면 그 시각에 알림이 오고,
+       <b>기한은 그대로 그날 하루</b>다.
+       2시로 해뒀어도 4시에 하면 그만이고, 아무 데도 늦었다고 안 적힌다.</p>
+    <p>내가 걱정한 것은 시각이 <b>기한</b>이 되는 경우였다 —
+       그러면 지각이 하루 단위에서 시간 단위로 촘촘해지고,
+       <code>3일 지남</code>만 말하기로 한 결정이 깨진다.
+       <b>기한을 하루로 묶어두면 그 문제가 통째로 사라진다.</b></p>
     <table>
-      <tr><th>고르는 것</th><th>알림</th></tr>
-      <tr><td><b>하루 중 (기본)</b></td><td>아침 알림에 담긴다</td></tr>
-      <tr><td>아침에</td><td>아침 알림</td></tr>
-      <tr><td>저녁에</td><td><b>저녁 알림</b></td></tr>
+      <tr><th></th><th>이 앱</th></tr>
+      <tr><td>시각이 하는 일</td><td><b>그때 알려준다</b></td></tr>
+      <tr><td>기한</td><td>그날 하루 — <b>시각과 무관</b></td></tr>
+      <tr><td>지남 계산</td><td><code>3일 지남</code>. <b>2시간 지남은 없다</b></td></tr>
+      <tr><td>시각이 지나면</td><td><b>아무 일도 안 일어난다</b></td></tr>
     </table>
-    <p>집안일의 진짜 필요는 <code>몇 시</code>가 아니라
-       <b>쓰레기는 저녁, 빨래는 아침</b>이다.
-       그리고 이건 <b>이미 있는 아침·저녁 알림 둘과 정확히 맞아서 새로 만들 게 없다</b> —
-       아침 알림에 아침 것만, 저녁 알림에 저녁 것만 담으면 끝이다.</p>
-    <p>때는 묶음이라 <b>지각이 안 생긴다.</b> `아침에`는 약속이 아니다.</p>
-    <p>그래도 시각을 넣기로 한다면 최소로 —
-       <b>기본은 없음</b>, 시각이 있는 것만 알림, 그리고 <b>시각은 내 것이지 방 공유가 아니다.</b>
-       내가 정한 7시가 상대 폰을 울리면 그건 재촉이 된다.</p>
+
+    <h3>그래서 화면에서 회색이다</h3>
+    <div class="warn">
+      <b>시각이 빨개지는 순간 기한으로 읽힌다.</b>
+      그래서 종 아이콘과 함께 <b>옅은 회색 한 톤</b>으로만 쓰고,
+      <b>시각이 지나도 색이 안 바뀐다.</b> 이 한 줄이 규칙의 증거다.
+    </div>
+    <p>목록에서 <code>스트레칭</code>·<code>세탁기 돌리기</code>·<code>영양제</code>에 붙어 있다.
+       <code>3일 지남</code>과 나란히 놓고 보면 <b>둘의 무게가 다르게 읽힌다.</b></p>
+
+    <h3>기한이 아니라서 붙이기도 쉬워진다</h3>
+    <p>알림이 <b>2시 3분에 떠도 아무 문제가 없다.</b> 약속이 아니니까.
+       그래서 안드로이드 <b>정확 알람 권한을 안 물어도 된다</b> —
+       <code>docs/app/notify</code>에서 이미 안 묻기로 한 것 그대로다.</p>
+    <p>예약 개수도 <b>같은 시각끼리 묶으면</b> 준다.
+       2시에 셋이면 알림 하나로 <code>오후 2시 — 3개</code>.
+       하루 서너 번이면 충분하고, <b>시각을 안 정한 것들은 지금처럼 아침·저녁 알림에</b> 담긴다.</p>
+
+    <h3>데이터는 한 칸, 이름이 곧 규칙이다</h3>
+    <p><code>Task</code>에 <b><code>remindAt: 'HH:MM' | null</code></b> 한 칸.
+       날짜는 이미 <code>date</code>에 있으니 시각만 있으면 된다.</p>
+    <div class="warn">
+      <b><code>dueAt</code>이라고 적으면 안 된다.</b> 다음에 코드를 여는 사람이
+      그 이름을 보고 기한 로직을 짠다. <b><code>remindAt</code></b>이면 안 짠다.
+    </div>
+    <p>반복 회차로는 <b>승계한다</b> — <code>8일마다 오후 2시</code>면 다음 회차도 2시다.
+       메모가 승계되는 것과 같은 결이다.</p>
+
+    <h3>남는 물음 하나 — 방에서 누구 폰이 울리나</h3>
+    <p>할 일은 <b>공유물</b>인데 시각은 <b>취향</b>이다.
+       내가 2시로 정했다고 상대 폰이 2시에 울리면 그건 재촉이 된다.</p>
+    <p><b>담당자가 있으면 담당자에게만, 없으면 정한 사람에게만.</b>
+       배정이 이미 있으니 <code>assigneeId</code>로 갈리고 칸을 더 안 만들어도 된다.</p>
 
     <h3>주간 줄이 `일정`을 대신한다</h3>
     <p><b>가</b>의 주간 줄은 시각 없이도 <code>어느 날에 무엇이 있나</code>를 말해준다.
@@ -567,15 +595,17 @@ var BITS = {
   할 일 — **시각이 없다.** 이 앱의 Task에는 date만 있다.
   대신 카테고리·주기·지난 날수·차례가 붙는다.
 */
+var BELL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.6a6 6 0 1 0-12 0c0 5-2 6.4-2 6.4h16s-2-1.4-2-6.4z"/><path d="M10.3 18.6a2 2 0 0 0 3.4 0"/></svg>';
+
 var TASKS = [
-  { t: '분리수거',      cat: '집안일', c: 'var(--c-home)', cyc: '8일마다', late: 0, turn: '',        pri: false },
-  { t: '화장실 청소',   cat: '집안일', c: 'var(--c-home)', cyc: '',        late: 0, turn: '내 차례', pri: false },
-  { t: '스트레칭',      cat: '건강',   c: 'var(--c-body)', cyc: '매일',    late: 0, turn: '',        pri: true  },
-  { t: '수건 삶기',     cat: '집안일', c: 'var(--c-home)', cyc: '',        late: 3, turn: '',        pri: false },
-  { t: '장 본 것 정리', cat: '장보기', c: 'var(--c-shop)', cyc: '',        late: 0, turn: '남편 차례', pri: false },
-  { t: '세탁기 돌리기', cat: '집안일', c: 'var(--c-home)', cyc: '3일마다', late: 0, turn: '',        pri: false },
-  { t: '영양제 챙기기', cat: '건강',   c: 'var(--c-body)', cyc: '매일',    late: 0, turn: '',        pri: false },
-  { t: '재활용 내놓기', cat: '집안일', c: 'var(--c-home)', cyc: '',        late: 0, turn: '',        pri: false }
+  { t: '분리수거',      cat: '집안일', c: 'var(--c-home)', cyc: '8일마다', late: 0, turn: '',          pri: false, at: '' },
+  { t: '화장실 청소',   cat: '집안일', c: 'var(--c-home)', cyc: '',        late: 0, turn: '내 차례',   pri: false, at: '' },
+  { t: '스트레칭',      cat: '건강',   c: 'var(--c-body)', cyc: '매일',    late: 0, turn: '',          pri: true,  at: '오후 2:00' },
+  { t: '수건 삶기',     cat: '집안일', c: 'var(--c-home)', cyc: '',        late: 3, turn: '',          pri: false, at: '' },
+  { t: '장 본 것 정리', cat: '장보기', c: 'var(--c-shop)', cyc: '',        late: 0, turn: '남편 차례', pri: false, at: '' },
+  { t: '세탁기 돌리기', cat: '집안일', c: 'var(--c-home)', cyc: '3일마다', late: 0, turn: '',          pri: false, at: '오전 9:00' },
+  { t: '영양제 챙기기', cat: '건강',   c: 'var(--c-body)', cyc: '매일',    late: 0, turn: '',          pri: false, at: '오후 8:00' },
+  { t: '재활용 내놓기', cat: '집안일', c: 'var(--c-home)', cyc: '',        late: 0, turn: '',          pri: false, at: '' }
 ];
 
 var TABS = [
@@ -621,6 +651,10 @@ function row(i, done, slot) {
   if (d.cyc) bits.push('<span class="cyc">' + d.cyc + '</span>');
   if (d.late) bits.push('<span class="late">' + d.late + '일 지남</span>');
   if (d.turn) bits.push('<span class="turn">' + d.turn + '</span>');
+  /* 알림 시각 — **기한이 아니다.** 지나도 색이 안 바뀐다. */
+  if (d.at) bits.push('<span class="at">' + BELL + d.at + '</span>');
+  /* 알림 시각 — 기한이 아니다. 지나도 색이 안 바뀐다. */
+  if (d.at) bits.push('<span class="at">' + BELL + d.at + '</span>');
 
   li.innerHTML =
     '<button class="tick" type="button" aria-pressed="' + done + '" aria-label="' + d.t + '">✓</button>' +
