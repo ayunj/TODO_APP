@@ -66,7 +66,7 @@ export default function TrashScreen({ scope, id }: { scope: TrashScope; id: stri
       />
 
       {rows.length === 0 ? (
-        <EmptyBox pose="peek" title="비어 있습니다">30일 안에 지운 것이 여기 모여요.</EmptyBox>
+        <EmptyBox title="비어 있습니다">30일 안에 지운 것이 여기 모여요.</EmptyBox>
       ) : (
         <ul className="flex list-none flex-col gap-[9px] p-0">
           {rows.map((t) => (

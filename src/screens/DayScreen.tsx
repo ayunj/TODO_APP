@@ -46,7 +46,6 @@ export default function DayScreen() {
 
       {total === 0 ? (
         <EmptyBox
-          pose="empty"
           title={
             name
               ? `${name} 할 일이 없습니다`
@@ -66,7 +65,7 @@ export default function DayScreen() {
               ))}
             </ul>
           ) : (
-            <EmptyBox pose="all" title="다 끝났습니다">{total}개 전부 완료했어요.</EmptyBox>
+            <EmptyBox title="다 끝났습니다">{total}개 전부 완료했어요.</EmptyBox>
           )}
 
           {/* 완료한 것은 숨기지 않는다. 아래로 내리고 취소선만 긋는다. */}

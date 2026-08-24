@@ -138,11 +138,7 @@ export default function MemoScreen() {
       </div>
 
       {list.length === 0 ? (
-        <EmptyBox
-          // 못 찾은 자리에까지 그림이 웃고 있으면 놀린다 — 아직 안 적은 자리에만 붙인다
-          pose={query ? undefined : 'run'}
-          title={query ? '찾는 말이 없습니다' : '아직 적어둔 것이 없습니다'}
-        >
+        <EmptyBox title={query ? '찾는 말이 없습니다' : '아직 적어둔 것이 없습니다'}>
           {query ? (
             '다른 말로 찾아보세요.'
           ) : (
