@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>할 일에 알림 시각 넣기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Gowun+Dodum&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/*
+  할 일 시트에 `알림 시각` 줄을 넣는 자리.
+  색·글씨·칸 모양은 앱 그대로다 — globals.css의 토큰과 components/form.tsx의 Field·Hint.
+*/
+:root{
+  --bg:#faf6f0; --card:#ffffff; --sunk:#f5f0e9; --memo:#fbf6ee;
+  --ink:#615953; --ink2:#8c8078; --ink3:#a59a92;
+  --line:#efe8df; --line2:#f5efe7;
+  --accent:#d97a5e; --accent-soft:#f4d7cc; --accent-tint:#fcf2ed;
+  --ok:#73b79f; --cycle:#c9a068; --high:#d98b7a; --done:#d9d2cb;
+  --track:#f2ece6; --star:#f0c58a; --edge:#d8d3ce; --faint:#d9d2cb;
+  --placeholder:#c7bdb5; --paper:#f2ece4;
+  --c-home:#8EC9B5; --c-body:#A8D8F0; --c-shop:#F0C58A;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; padding:34px 20px 80px; background:var(--paper);
+  font-family:'Noto Sans KR',system-ui,-apple-system,sans-serif;
+  color:var(--ink); line-height:1.55; letter-spacing:-.01em; font-size:14px;
+}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:10px}
+
+.head{max-width:900px; margin:0 auto 20px}
+.head h1{font-size:19px; margin:0 0 6px; font-weight:700}
+.head p{color:var(--ink2); font-size:13px; margin:0 0 4px; max-width:68ch}
+.head b{color:var(--accent); font-weight:500}
+.head code{background:#fff; padding:1px 6px; border-radius:6px; font-size:12px}
+
+.deck{display:flex; flex-wrap:wrap; gap:28px; justify-content:center; align-items:flex-start}
+.col{flex:none; width:344px}
+.tag-line{text-align:center; margin:0 0 10px}
+.tag-line b{font-size:14px}
+.tag-line span{display:block; font-size:12px; color:var(--ink2); margin-top:2px}
+
+/* ── 시트 ── */
+.sheet{
+  width:344px; background:var(--card); border-radius:24px 24px 0 0;
+  box-shadow:0 -6px 34px rgba(97,89,83,.16); overflow:hidden;
+}
+.grip{width:38px; height:4px; border-radius:999px; background:var(--edge); margin:9px auto 0}
+.sheet-head{display:flex; align-items:center; gap:10px; padding:12px 18px 6px}
+.sheet-head h2{font-size:16px; font-weight:700; margin:0}
+.sheet-head .x{
+  margin-left:auto; border:0; background:transparent; cursor:pointer; color:var(--ink3);
+  width:30px; height:30px; border-radius:999px; display:grid; place-items:center;
+}
+.sheet-head .x svg{width:17px; height:17px}
+.body{padding:8px 18px 20px; max-height:560px; overflow:auto}
+
+/* form.tsx의 Field / Hint */
+.field{margin-bottom:16px}
+.field > label{display:block; margin-bottom:8px; font-size:12.5px; font-weight:500; color:var(--ink2)}
+.hint{margin:-6px 0 16px; font-size:11.5px; line-height:1.6; color:var(--ink3)}
+.hint b{color:var(--ink2); font-weight:500}
+.field-input{
+  width:100%; border:0; background:var(--sunk); border-radius:14px; padding:13px 15px;
+  font:inherit; font-size:14.5px; color:var(--ink);
+}
+.field-input::placeholder{color:var(--placeholder)}
+.rowline{display:flex; align-items:center; gap:9px}
+
+/* 칩 — CategoryPicker와 같은 모양 */
+.chips{display:flex; flex-wrap:wrap; gap:7px}
+.chip{
+  border:0; background:var(--card); box-shadow:0 2px 8px rgba(0,0,0,.06); cursor:pointer;
+  border-radius:999px; padding:10px 15px; font:inherit; font-size:13px; color:var(--ink2);
+  display:inline-flex; align-items:center; gap:6px;
+}
+.chip i{width:8px; height:8px; border-radius:999px; display:block}
+.chip[aria-pressed="true"]{background:var(--accent); color:#fff; box-shadow:none}
+.chip[aria-pressed="true"] svg{color:#fff}
+.chip svg{width:15px; height:15px; color:var(--ink3)}
+
+/* 시각 고르는 칸 */
+.timebox{
+  display:flex; align-items:center; gap:10px; background:var(--sunk); border-radius:14px;
+  padding:12px 15px; margin-top:9px;
+}
+.timebox svg{width:18px; height:18px; color:var(--ink3); flex:none}
+.timebox input{
+  border:0; background:transparent; font:inherit; font-size:16px; color:var(--ink);
+  font-variant-numeric:tabular-nums; flex:1; min-width:0;
+}
+.timebox .off{margin-left:auto; border:0; background:transparent; color:var(--ink3); cursor:pointer; font:inherit; font-size:11.5px}
+.timebox .off:hover{color:var(--high)}
+
+.star-row{display:flex; gap:4px}
+.star-row button{border:0; background:transparent; cursor:pointer; padding:2px; line-height:0}
+.star-row svg{width:26px; height:26px}
+
+.go{
+  margin-top:4px; width:100%; border:0; border-radius:16px; background:var(--accent);
+  color:#fff; font:inherit; font-size:15px; font-weight:500; padding:16px; cursor:pointer;
+}
+.go:active{transform:scale(.99)}
+
+/* 미리보기 줄 */
+.preview{margin-top:14px; background:var(--card); border-radius:20px; box-shadow:0 8px 24px rgba(0,0,0,.05); overflow:hidden}
+.preview .cap{padding:12px 16px 0; font-size:11.5px; color:var(--ink3)}
+.prow{display:flex; align-items:flex-start; gap:11px; padding:12px 16px 14px}
+.tick{
+  flex:none; width:25px; height:25px; margin-top:1px; border-radius:999px;
+  border:1.8px solid var(--edge); background:transparent; display:grid; place-items:center;
+  font-size:12px; font-weight:700; color:transparent; padding:0;
+}
+.t{display:block; font-size:14.5px; font-weight:500; line-height:1.45}
+.meta{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:4px; font-size:11px; color:var(--ink3)}
+.cat{display:inline-flex; align-items:center; gap:5px}
+.cat i{width:7px; height:7px; border-radius:999px; display:block}
+.pill{font-size:10px; font-weight:500; padding:2px 7px; border-radius:999px; background:#eef6f1; color:#5e9c85}
+/* 알림 시각 — **기한이 아니다.** 지나도 색이 안 바뀐다. */
+.at{display:inline-flex; align-items:center; gap:3px; color:var(--ink3); font-variant-numeric:tabular-nums}
+.at svg{width:12px; height:12px; opacity:.8}
+
+/* ── 알림이 뜬 모습 ── */
+.notif{
+  width:344px; margin-top:16px; background:#3e3a4d; color:#fff; border-radius:18px;
+  padding:13px 15px; display:flex; align-items:flex-start; gap:11px;
+  box-shadow:0 10px 28px rgba(62,58,77,.28);
+}
+.notif .ic{width:30px; height:30px; border-radius:9px; background:#fff; display:grid; place-items:center; flex:none}
+.notif .ic svg{width:18px; height:18px; color:var(--accent)}
+.notif .tx{min-width:0; flex:1}
+.notif .tx b{display:block; font-size:12.5px; font-weight:500}
+.notif .tx span{font-size:12.5px; opacity:.78}
+.notif .tm{font-size:11px; opacity:.6; flex:none; font-variant-numeric:tabular-nums}
+
+/* ── 설명 ── */
+.note{width:336px; flex:none}
+.note h2{font-size:15px; margin:0 0 10px; font-weight:700}
+.note h3{font-size:13px; margin:19px 0 7px; font-weight:700; color:var(--accent)}
+.note p{font-size:12.5px; color:var(--ink2); margin:0 0 9px; line-height:1.65}
+.note b{color:var(--ink); font-weight:500}
+.note code{background:#fff; padding:1px 5px; border-radius:5px; font-size:11.5px}
+.note ul{margin:0 0 9px; padding-left:17px; font-size:12.5px; color:var(--ink2); line-height:1.65}
+.note li{margin-bottom:5px}
+.note table{width:100%; border-collapse:collapse; font-size:12px; margin:0 0 10px}
+.note th,.note td{text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top}
+.note th{color:var(--ink3); font-weight:500; font-size:11px}
+.warn{background:#fff; border-left:3px solid var(--star); border-radius:0 10px 10px 0; padding:11px 13px; font-size:12px; color:var(--ink2); margin:0 0 10px; line-height:1.6}
+.note a{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>할 일에 알림 시각 넣기</h1>
+  <p><b>일</b> 탭에서 할 일을 담거나 고칠 때 여는 시트다.
+     <code>sheets/TaskFormFields.tsx</code>에 <b>줄 하나</b>가 는다.
+     칸 모양·글씨·색은 <code>components/form.tsx</code>의 <code>Field</code>·<code>Hint</code> 그대로다.</p>
+  <p><b>칩을 눌러보면</b> 아래 미리보기 줄과 알림이 따라 바뀐다.</p>
+</div>
+
+<div class="deck">
+
+  <div class="col">
+    <p class="tag-line"><b>할 일 시트</b><span>새 줄은 `알림` 하나뿐이다</span></p>
+
+    <div class="sheet">
+      <div class="grip"></div>
+      <div class="sheet-head">
+        <h2>할 일</h2>
+        <button class="x" type="button" aria-label="닫기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 9.5l6 6 6-6"/></svg>
+        </button>
+      </div>
+
+      <div class="body">
+        <div class="field">
+          <label for="f-title">이름</label>
+          <input id="f-title" class="field-input" type="text" value="스트레칭" />
+        </div>
+
+        <div class="field">
+          <label>카테고리</label>
+          <div class="chips">
+            <button class="chip" type="button"><i style="background:var(--c-home)"></i>집안일</button>
+            <button class="chip" type="button" aria-pressed="true"><i style="background:var(--c-body)"></i>건강</button>
+            <button class="chip" type="button"><i style="background:var(--c-shop)"></i>장보기</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-date">날짜</label>
+          <div class="rowline">
+            <input id="f-date" class="field-input" type="text" value="2026. 08. 20. (목)" readonly />
+          </div>
+        </div>
+
+        <!-- ▼ 새로 드는 줄 ▼ -->
+        <div class="field">
+          <label>알림</label>
+          <div class="chips" id="whenChips">
+            <button class="chip" type="button" data-at="" aria-pressed="true">안 함</button>
+            <button class="chip" type="button" data-at="08:00">아침 8:00</button>
+            <button class="chip" type="button" data-at="20:00">저녁 8:00</button>
+            <button class="chip" type="button" data-at="custom">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+              직접
+            </button>
+          </div>
+
+          <div class="timebox" id="timeBox" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+            <input type="time" id="timeIn" value="14:00" />
+            <button class="off" type="button" id="clearAt">지우기</button>
+          </div>
+        </div>
+        <div class="hint">
+          <b>정한 시각에 알려만 줘요. 기한은 그날 하루예요.</b><br />
+          2시로 해둬도 4시에 하면 그만이고, 늦었다고 적히지 않아요.
+        </div>
+        <!-- ▲ 새로 드는 줄 ▲ -->
+
+        <div class="field">
+          <label for="f-rep">반복 주기</label>
+          <div class="rowline">
+            <input id="f-rep" class="field-input" type="text" value="1일마다" readonly />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>우선순위</label>
+          <div class="star-row" id="stars"></div>
+        </div>
+
+        <div class="field">
+          <label for="f-memo">메모</label>
+          <textarea id="f-memo" class="field-input" rows="2" placeholder="적어둘 것이 있으면"></textarea>
+        </div>
+
+        <button class="go" type="button">저장</button>
+      </div>
+    </div>
+
+    <div class="preview">
+      <p class="cap">일 화면에서는 이렇게 보여요</p>
+      <div class="prow">
+        <span class="tick">✓</span>
+        <span class="mid">
+          <span class="t">스트레칭</span>
+          <span class="meta" id="pmeta"></span>
+        </span>
+      </div>
+    </div>
+
+    <div class="notif" id="notif">
+      <span class="ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.6a6 6 0 1 0-12 0c0 5-2 6.4-2 6.4h16s-2-1.4-2-6.4z"/><path d="M10.3 18.6a2 2 0 0 0 3.4 0"/></svg>
+      </span>
+      <span class="tx">
+        <b id="ntitle">dododu</b>
+        <span id="nbody">스트레칭 — 오늘 할 일이에요</span>
+      </span>
+      <span class="tm" id="ntime">오후 2:00</span>
+    </div>
+  </div>
+
+  <div class="note">
+    <h2>드는 것은 줄 하나</h2>
+    <p><code>TaskFormFields.tsx</code>에 <code>Field label="알림"</code> 하나와
+       그 아래 <code>Hint</code> 한 줄. 나머지 칸은 손대지 않는다.</p>
+
+    <h3>칩 넷 — 기본은 `안 함`</h3>
+    <table>
+      <tr><th>고르는 것</th><th>무슨 일이 일어나나</th></tr>
+      <tr><td><b>안 함</b> (기본)</td><td>지금처럼 <b>아침·저녁 묶음 알림</b>에 담긴다</td></tr>
+      <tr><td>아침 8:00</td><td>그 시각에 이 할 일로 알림</td></tr>
+      <tr><td>저녁 8:00</td><td>〃</td></tr>
+      <tr><td>직접</td><td>시각을 고른다</td></tr>
+    </table>
+    <p>아침·저녁 칩은 <b>사람이 정한 알림 시각</b>(<code>Settings.notifyTodo</code>·<code>notifyLeft</code>)을
+       그대로 따라간다. 설정에서 9시로 바꿨으면 칩도 <code>아침 9:00</code>이 된다.
+       <b>앱 안에 시각이 두 벌이면 안 된다.</b></p>
+
+    <h3>Hint 한 줄이 규칙을 말한다</h3>
+    <div class="warn">
+      <b>정한 시각에 알려만 줘요. 기한은 그날 하루예요.</b><br />
+      2시로 해둬도 4시에 하면 그만이고, 늦었다고 적히지 않아요.
+    </div>
+    <p>이 문장이 없으면 사람은 시각을 <b>기한으로 읽는다.</b>
+       다른 앱이 다 그러니까. <b>다르게 굴 거면 그 자리에서 말해야 한다.</b></p>
+
+    <h3>미리보기를 붙인 까닭</h3>
+    <p>시트에서 고른 것이 <b>목록에서 어떻게 보일지</b>를 그 자리에서 보여준다.
+       종 아이콘과 <b>회색</b>이라는 것이 여기서 한 번 더 말해진다 —
+       <b>빨간 글씨가 아니라는 게 곧 기한이 아니라는 뜻</b>이다.</p>
+
+    <h3>알림 문구</h3>
+    <p><code>스트레칭 — 오늘 할 일이에요</code>.
+       <b><code>지금 할 시간이에요</code>라고 쓰면 안 된다</b> — 그 순간 기한이 된다.
+       같은 시각에 여럿이면 묶는다: <code>오후 2:00 — 3개</code>.</p>
+
+    <h3>붙일 때</h3>
+    <ul>
+      <li><code>types.ts</code>의 <code>Task</code>에 <b><code>remindAt: string | null</code></b> 한 칸.
+          <b><code>dueAt</code>이라고 적으면 안 된다</b> — 다음 사람이 그 이름 보고 기한 로직을 짠다</li>
+      <li><code>lib/notify.ts</code> — 시각이 있는 것만 따로 예약하고 <b>같은 시각끼리 묶는다</b></li>
+      <li><b>정확 알람 권한은 안 쓴다.</b> 2시 3분에 떠도 아무 문제가 없다</li>
+      <li>반복 회차로 <b>승계한다</b> — 메모가 승계되는 것과 같은 결</li>
+      <li>방에서는 <b>담당자에게만</b>, 담당자가 없으면 <b>정한 사람에게만</b> 간다.
+          내가 정한 2시가 상대 폰을 울리면 그건 재촉이다</li>
+    </ul>
+
+    <h3>안 만든 것</h3>
+    <p><b>시각으로 거르기·정렬하기.</b> 목록은 지금처럼
+       <b>안 한 것이 위, 완료한 것이 아래</b>다.
+       시각 순으로 줄을 세우면 그게 곧 시간표가 되고, 시간표에는 지각이 따라온다.</p>
+  </div>
+
+</div>
+
+<script>
+var BELL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" ' +
+  'stroke-linecap="round" stroke-linejoin="round">' +
+  '<path d="M18 8.6a6 6 0 1 0-12 0c0 5-2 6.4-2 6.4h16s-2-1.4-2-6.4z"/>' +
+  '<path d="M10.3 18.6a2 2 0 0 0 3.4 0"/></svg>';
+
+var $ = function (id) { return document.getElementById(id); };
+var at = '';        /* 'HH:MM' 또는 빈 값 */
+var custom = false;
+
+function label(hhmm) {
+  if (!hhmm) return '';
+  var h = Number(hhmm.slice(0, 2));
+  var m = hhmm.slice(3, 5);
+  var ap = h < 12 ? '오전' : '오후';
+  var h12 = h % 12 === 0 ? 12 : h % 12;
+  return ap + ' ' + h12 + ':' + m;
+}
+
+function draw() {
+  $('timeBox').hidden = !custom;
+
+  /* 목록 줄 미리보기 — 시각은 종과 함께 회색이다 */
+  var bits =
+    '<span class="cat"><i style="background:var(--c-body)"></i>건강</span>' +
+    '<span class="pill">매일</span>';
+  if (at) bits += '<span class="at">' + BELL + label(at) + '</span>';
+  $('pmeta').innerHTML = bits;
+
+  /* 알림 미리보기 */
+  var n = $('notif');
+  n.style.opacity = at ? '1' : '.32';
+  $('nbody').textContent = at ? '스트레칭 — 오늘 할 일이에요' : '시각을 정하면 여기 떠요';
+  $('ntime').textContent = at ? label(at) : '—';
+}
+
+function pick(v) {
+  if (v === 'custom') { custom = true; at = $('timeIn').value; }
+  else { custom = false; at = v; }
+  draw();
+}
+
+document.querySelectorAll('#whenChips .chip').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.querySelectorAll('#whenChips .chip').forEach(function (o) {
+      o.setAttribute('aria-pressed', String(o === b));
+    });
+    pick(b.dataset.at);
+  });
+});
+
+$('timeIn').addEventListener('input', function () { at = $('timeIn').value; draw(); });
+$('clearAt').addEventListener('click', function () {
+  custom = false; at = '';
+  document.querySelectorAll('#whenChips .chip').forEach(function (o) {
+    o.setAttribute('aria-pressed', String(o.dataset.at === ''));
+  });
+  draw();
+});
+
+/* 우선순위 — form.tsx의 PriorityStars 그대로. 3이면 목록에 별이 뜬다. */
+var pri = 2;
+function stars() {
+  $('stars').innerHTML = [1, 2, 3].map(function (p) {
+    return '<button type="button" aria-label="' + p + '">' +
+      (p <= pri
+        ? '<svg viewBox="0 0 24 24" fill="#f0c58a"><path d="M12 3.4l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.9l6.1-.9z"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="#d8d3ce" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3.4l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.9l6.1-.9z"/></svg>') +
+      '</button>';
+  }).join('');
+  Array.prototype.forEach.call($('stars').children, function (b, i) {
+    b.addEventListener('click', function () { pri = i + 1; stars(); });
+  });
+}
+
+stars();
+draw();
+</script>
+</body>
+</html>
