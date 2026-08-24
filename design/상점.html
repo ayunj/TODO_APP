@@ -313,25 +313,32 @@ body{
 .pcard .go.now{background:var(--accent-tint); color:var(--accent); cursor:default}
 .pcard .go.short{background:var(--sunk); color:var(--ink3); cursor:default; font-size:11px; font-weight:400}
 
-/* 소품 줄 — 파는 것이 아니라 **딸려오는 것**이라 값이 없다 */
+/* 보상 줄 — 파는 것이 아니라 **다 모으면 오는 것**이라 값이 없다 */
 .gift{
-  display:flex; align-items:center; gap:11px; border-radius:16px; padding:12px 14px;
+  display:flex; align-items:center; gap:11px; border-radius:16px; padding:12px 13px;
   background:var(--sunk); margin-bottom:16px;
 }
 .gift .art{
-  width:44px; height:44px; flex:none; border-radius:12px; background:var(--card);
-  display:grid; place-items:center; color:var(--cycle);
+  width:52px; height:52px; flex:none; border-radius:13px; background:var(--card);
+  display:grid; place-items:center; color:var(--cycle); overflow:hidden;
 }
-.gift .art svg{width:22px; height:22px}
+.gift .art svg{width:24px; height:24px}
+.gift .art img{max-width:88%; max-height:88%; width:auto; height:auto}
 .gift .tx{flex:1; min-width:0}
-.gift .tx b{display:block; font-size:12.5px; font-weight:500; color:var(--ink)}
-.gift .tx span{font-size:11px; color:var(--ink3)}
-.gift .mark{
-  flex:none; border-radius:999px; padding:4px 10px; font-size:10.5px; font-weight:500;
-  background:var(--card); color:var(--ink3); box-shadow:0 0 0 1.2px var(--line);
+.gift .lbl{
+  display:inline-flex; align-items:center; gap:4px; font-size:10px; font-weight:500; color:var(--cycle);
 }
+.gift .lbl svg{width:11px; height:11px}
+.gift .tx b{display:block; margin:1px 0; font-size:13px; font-weight:500; color:var(--ink)}
+.gift .tx > span:last-child{display:block; font-size:10.5px; line-height:1.45; color:var(--ink3)}
+.gift .mark{
+  flex:none; border:0; border-radius:999px; padding:6px 13px; font-family:inherit;
+  font-size:11.5px; font-weight:500; background:var(--accent); color:#fff; cursor:pointer;
+}
+.gift .mark.on{background:var(--accent-tint); color:var(--accent); cursor:default}
 .gift.done{background:var(--accent-tint)}
-.gift.done .mark{background:var(--accent); color:#fff; box-shadow:none}
+/* 보상으로 받은 것에는 자물쇠 대신 **선물 표**가 붙는다 */
+.item .lockmark.gift{color:var(--cycle)}
 
 /* 세트 카드 아래 — 값이 아니라 **몇 개 모았나**다 */
 .item .foot.step{font-family:'IBM Plex Mono',monospace; padding:4px 10px; background:var(--sunk); color:var(--ink2)}
@@ -395,7 +402,8 @@ body{
      <b>밀고 들어온 화면이라 탭바도 + 버튼도 없다</b>. 폰은 <code>360 × 800</code>.</p>
   <p><b>카드는 고르는 자리, 위 칸은 하는 자리.</b> 카드를 누르면 위 칸이 그걸로 바뀌고 —
      <b>방을 고르면 배경이, 곰을 고르면 곰이</b> 갈린다.
-     <b>시즌 세트는 묶어 팔지 않는다</b> — 곰과 방을 따로 사고, 둘을 다 모으면 소품이 딸려온다.</p>
+     <b>시즌 세트는 묶어 팔지 않는다</b> — 곰과 방을 따로 사고,
+     둘을 다 모으면 <b>포즈</b>를 받는다(적용하면 자세가 바뀐다).</p>
 </div>
 
 <div class="knobs">
@@ -467,36 +475,63 @@ body{
     <p>그래서 <b>세트 카드에도 값이 없다.</b> 파는 물건이 아니라 <b>모으는 자리</b>라
        카드가 말할 것은 <code>1/3</code> — 셋 중 몇 개 모았나다.</p>
 
-    <h3>소품은 어디에 얹히나</h3>
-    <p>이건 아직 안 정했다. <a href="g/그릴-것.md">발주서</a>의 조각 규칙을 그대로 따르면
-       <b>곰돌이 옆 바닥</b>이 안전하다 — <code>sprout</code>이 그 자리인 이유가
-       <b>손 위치는 옷마다 달라지지만 옆 바닥은 안 달라져서</b>다.
-       튜브를 손에 들리면 <b>옷 열 벌마다 손 위치를 맞춰야 한다.</b></p>
+    <h3>보상은 소품이 아니라 <b>포즈</b>다</h3>
+    <p>옷 위에 얹는 조각이 아니라 <b>그 옷을 입고 소품까지 든 곰돌이 한 장</b>이다.
+       적용하면 <b>자세가 통째로 바뀐다.</b></p>
+    <table>
+      <tr><td>곰</td><td>물놀이 옷을 입고 <b>서 있는</b> 곰</td></tr>
+      <tr><td><b>포즈</b></td><td>물놀이 옷을 입고 <b>튜브를 낀</b> 곰</td></tr>
+    </table>
+    <div class="pick">
+      <b>얹는 조각이 아니라 한 장을 갈아 끼우는 것</b>이라 자리를 맞출 일이 없다.
+      조각이면 <code>튜브를 손에 들리면 옷마다 손 위치가 다르다</code>는 문제가 그대로 남는데,
+      통째로 그리면 그 문제가 <b>아예 안 생긴다.</b>
+    </div>
+    <p>포즈는 <b>곰 스타일 옷장에 같이 선다</b> — 그림 쪽에서 곰돌이 한 장이라
+       따로 칸을 만들 까닭이 없다.</p>
+
+    <h3>자는 곰을 뺐다</h3>
+    <p>옷 한 벌이 <b>두 장에서 한 장</b>이 된다. 일곱 벌이면 14장이 <b>7장</b>이다.</p>
+    <div class="warn">
+      대신 <b>할 일이 없는 날</b> 그림이 없어진다. 그 날도 <b>같은 서 있는 곰</b>이 뜨고,
+      <code>zzz</code> 조각을 머리 위에 얹어 <b>졸고 있는 것</b>으로 읽히게 뒀다 —
+      조각은 옷을 안 타니 옷이 열 벌이 돼도 <code>zzz</code>는 한 장 그대로다.
+    </div>
 
     <h3>시즌 세트 카드는 눌러 들어간다</h3>
     <p>낱개는 카드를 누르면 <b>위 칸에 걸쳐만</b> 보는데, 세트는 <b>화면을 하나 더 연다</b>.
        안에 곰·방·소품 셋이 있어서 <b>103px 칸으로는 못 담는다.</b></p>
 
-    <h3>방에는 <code>입기</code>를 안 쓴다</h3>
+    <h3>옷은 입고, 방과 포즈는 적용한다</h3>
     <table>
       <tr><th></th><th>지금</th><th>바꿀 때</th></tr>
       <tr><td>곰 스타일</td><td><b>입는 중</b></td><td><b>입기</b></td></tr>
-      <tr><td>방 테마</td><td><b>쓰는 중</b></td><td><b>쓰기</b></td></tr>
+      <tr><td>방 테마 · 포즈</td><td><b>적용 중</b></td><td><b>적용</b></td></tr>
     </table>
-    <p>시안은 방에도 <code>입기</code>가 붙어 있는데 <b>방은 입는 것이 아니다.</b>
-       시안이 방 상태를 <code>사용 중</code>이라 적은 것과도 짝이 안 맞았다.</p>
+    <p><b>방은 입는 것이 아니고</b>, 포즈도 걸치는 것이 아니라 자세를 바꾸는 것이다.</p>
+
+    <h3>같은 것을 한 번 더 누르면 그대로 쓴다</h3>
+    <p>카드를 누르면 위 칸에 걸쳐 보고, <b>보고 있던 것을 한 번 더 누르면</b> 입거나 적용된다 —
+       탭바에서 <b>보던 탭을 한 번 더 눌러 오늘로 돌아오는</b> 손짓과 같다.
+       <b>가진 것에만 걸린다.</b> 안 산 것은 몇 번을 눌러도 미리보기다.</p>
+
+    <h3>걸쳐본 상태는 <code>미리보기</code> 하나로</h3>
+    <p>옷·방·포즈가 같은 칸을 나눠 쓰는데 저마다 다른 말을 달면
+       (<code>입어보는 중</code> · <code>깔아보는 중</code> · …) <b>한 자리가 세 낱말</b>이 된다.</p>
+
+    <h3>옷장 곰 스타일에는 안내 줄이 없다</h3>
+    <p><b>할 말이 없는 자리에 말을 만들지 않는다.</b> 방 테마 칸에만 남겼다 —
+       <b>방은 홈에서만 보이니</b> 어디서 보게 되는지를 알려줄 값이 있다.</p>
 
     <h2 style="margin-top:24px">그림이 얼마나 느나</h2>
     <table>
       <tr><th>무엇</th><th>몇</th><th>장수</th></tr>
-      <tr><td>곰 스타일</td><td>9벌</td><td>18</td></tr>
-      <tr><td><b>방 테마</b></td><td><b>5개</b></td><td><b>5</b></td></tr>
-      <tr><td>시즌 세트</td><td>5벌</td><td><b>15</b> — 곰 2 + 방 1</td></tr>
-      <tr><td>소품</td><td>5개</td><td>5</td></tr>
+      <tr><td>곰 스타일</td><td>9벌</td><td><b>9</b> — 자는 모습을 빼서 반이 됐다</td></tr>
+      <tr><td>방 테마</td><td>5개</td><td><b>5</b></td></tr>
+      <tr><td>시즌 세트</td><td>5벌</td><td><b>15</b> — 곰 1 + 방 1 + 포즈 1</td></tr>
     </table>
-    <p>다 하면 <b>마흔세 장</b>이다. 발주서는 지금 <b>스물두 장</b>으로 잡혀 있다.
-       <b>방 셋은 이미 있다</b> — <code>main_room.png</code>과 시안 둘.
-       목록이 굳으면 발주서를 맞춰 고치겠다.</p>
+    <p>다 하면 <b>스물아홉 장</b>이다. 자는 모습을 빼기 전에는 마흔세 장이었다.
+       그중 <b>다섯은 이미 있다</b> — 곰 둘, 방 셋.</p>
 
     <h3>지금 뜨는 그림</h3>
     <p>방 셋(<code>main_room</code>·<code>_2</code>·<code>_3</code>)과 곰 둘만 진짜 그림이고,
@@ -570,16 +605,20 @@ var ROOMS = [
 ];
 
 /*
-  소품은 **파는 물건이 아니다.** 그 세트의 곰과 방을 둘 다 모으면 딸려온다.
-  그래서 값이 없다 — 값이 붙는 순간 안 산 사람에게 `못 산 것`이 된다.
+  ── 포즈 ──
+  세트 완성 보상. **파는 물건이 아니라서 값이 없다** —
+  값이 붙는 순간 안 산 사람에게 `못 산 것`이 된다.
+
+  포즈는 **곰돌이 그림 한 장**이다. 소품을 든 자세라 옷 위에 얹는 조각이 아니라
+  그 옷을 입고 소품까지 든 **다른 한 장**이다. 그래서 적용하면 자세가 통째로 바뀐다.
 */
-var PROPS = {
-  'p-tube':   { n: '튜브 소품',   gift: true },
-  'p-pump':   { n: '호박 소품',   gift: true },
-  'p-tree':   { n: '트리 소품',   gift: true },
-  'p-petal':  { n: '꽃잎 소품',   gift: true },
-  'p-parcel': { n: '파라솔 소품', gift: true }
-};
+var POSES = [
+  { k: 'pose-tube',   n: '튜브 포즈',   pose: true },
+  { k: 'pose-pump',   n: '호박 포즈',   pose: true },
+  { k: 'pose-tree',   n: '트리 포즈',   pose: true },
+  { k: 'pose-petal',  n: '꽃잎 포즈',   pose: true },
+  { k: 'pose-parcel', n: '파라솔 포즈', pose: true }
+];
 
 /*
   ── 시즌 세트 ──
@@ -589,11 +628,11 @@ var PROPS = {
   세트에 값이 없는 건 그래서다 — 이건 **파는 물건이 아니라 모으는 자리**다.
 */
 var SETS = [
-  { k: 's-swim',  n: '물놀이 세트',   sub: '여름 바다에서 신나게!', has: ['b-swim', 'r-sea', 'p-tube'] },
-  { k: 's-hall',  n: '할로윈 세트',   sub: '한 밤의 사탕 사냥',     has: ['b-hall', 'r-hall', 'p-pump'] },
-  { k: 's-xmas',  n: '크리스마스 세트', sub: '눈 오는 밤의 곰돌이',  has: ['b-xmas', 'r-xmas', 'p-tree'] },
-  { k: 's-bloom', n: '봄꽃 세트',     sub: '꽃잎이 날리는 날',       has: ['b-bloom', 'r-bloom', 'p-petal'] },
-  { k: 's-vac',   n: '여름휴가 세트', sub: '느긋한 바닷가 하루',     has: ['b-vac', 'r-beach', 'p-parcel'] }
+  { k: 's-swim',  n: '물놀이 세트',   sub: '여름 바다에서 신나게!', has: ['b-swim', 'r-sea', 'pose-tube'] },
+  { k: 's-hall',  n: '할로윈 세트',   sub: '한 밤의 사탕 사냥',     has: ['b-hall', 'r-hall', 'pose-pump'] },
+  { k: 's-xmas',  n: '크리스마스 세트', sub: '눈 오는 밤의 곰돌이',  has: ['b-xmas', 'r-xmas', 'pose-tree'] },
+  { k: 's-bloom', n: '봄꽃 세트',     sub: '꽃잎이 날리는 날',       has: ['b-bloom', 'r-bloom', 'pose-petal'] },
+  { k: 's-vac',   n: '여름휴가 세트', sub: '느긋한 바닷가 하루',     has: ['b-vac', 'r-beach', 'pose-parcel'] }
 ];
 
 var pt = 800;
@@ -601,11 +640,19 @@ var wornBear = 'base';
 var wornRoom = 'r-base';
 var owned = { base: true, 'r-base': true, hat: true, scarf: true, 'r-cafe': true, 'r-bloom': true };
 
-var ALL = BEARS.concat(ROOMS);
+var ALL = BEARS.concat(ROOMS, POSES);
 var isRoom = function (k) { return k.indexOf('r-') === 0; };
+var isPose = function (k) { return k.indexOf('pose-') === 0; };
+/*
+  **옷은 입고, 방과 포즈는 적용한다.** 방을 입는다고 하면 말이 안 되고,
+  포즈도 걸치는 것이 아니라 자세를 바꾸는 것이다.
+*/
+var verbOf = function (k) {
+  return isRoom(k) || isPose(k) ? ['적용', '적용 중'] : ['입기', '입는 중'];
+};
 var find = function (k) {
   var hit = ALL.filter(function (i) { return i.k === k; })[0];
-  return hit || PROPS[k] || SETS.filter(function (s) { return s.k === k; })[0];
+  return hit || SETS.filter(function (s) { return s.k === k; })[0];
 };
 var artOf = function (it) {
   return it && it.img ? '<img src="' + it.img + '" alt="" onerror="this.outerHTML=SHADE" />' : SHADE;
@@ -615,17 +662,19 @@ var got = function (set) {
   return set.has.filter(function (k) { return owned[k]; }).length;
 };
 /*
-  곰과 방을 둘 다 모으면 소품이 들어온다.
+  곰과 방을 둘 다 모으면 포즈가 들어온다.
   **살 때마다 확인한다** — 어느 쪽을 나중에 샀든 그 순간 채워져야 한다.
 */
 var grant = function () {
   var given = null;
   SETS.forEach(function (s) {
-    var bear = s.has[0], room = s.has[1], prop = s.has[2];
-    if (owned[bear] && owned[room] && !owned[prop]) { owned[prop] = true; given = PROPS[prop]; }
+    var bear = s.has[0], room = s.has[1], pose = s.has[2];
+    if (owned[bear] && owned[room] && !owned[pose]) { owned[pose] = true; given = find(pose); }
   });
   return given;
 };
+/* 걸쳐본 것을 진짜로 쓴다. 방은 방 자리에, 곰과 포즈는 곰 자리에 앉는다. */
+var apply = function (k) { if (isRoom(k)) wornRoom = k; else wornBear = k; };
 
 function header(title, backTo) {
   return '<div class="pbar">' +
@@ -645,20 +694,24 @@ function preview(trying) {
   var it = find(trying);
   var own = Boolean(owned[trying]);
   var here = trying === (isRoom(trying) ? wornRoom : wornBear);
-  var roomly = isRoom(trying);
+  var v = verbOf(trying);
 
   var right = here
-    ? '<span class="now">' + (roomly ? '쓰는 중' : '입는 중') + '</span>'
+    ? '<span class="now">' + v[1] + '</span>'
     : own
-      ? '<button class="use" type="button" data-use="' + trying + '">' + (roomly ? '쓰기' : '입기') + '</button>'
+      ? '<button class="use" type="button" data-use="' + trying + '">' + v[0] + '</button>'
       : '<span class="p"><i class="coin">P</i>' + it.p + '</span>';
 
-  var buy = own ? ''
+  var buy = own || !it.p ? ''
     : it.p <= pt
       ? '<button class="buy" type="button" data-buy="' + trying + '">구매하기</button>'
       : '<div class="short">' + (it.p - pt) + 'P 더 모으면 살 수 있어요</div>';
 
-  var flag = here ? (roomly ? '쓰는 중' : '입는 중') : (roomly ? '깔아보는 중' : '입어보는 중');
+  /*
+    지금 쓰는 것이 아니면 **미리보기**다. 옷·방·포즈가 다 이 한 칸을 나눠 쓰는데
+    저마다 다른 말을 달면(입어보는 중 / 깔아보는 중 / …) 같은 자리가 세 낱말이 된다.
+  */
+  var flag = here ? v[1] : '미리보기';
 
   return '<div class="screen"><section class="preview">' +
     '<div class="stage">' +
@@ -687,15 +740,16 @@ function card(it, trying) {
   var lock = !own && it.p > pt;
   var roomly = isRoom(it.k);
   var here = it.k === (roomly ? wornRoom : wornBear);
+  var v = verbOf(it.k);
 
   var foot = own
-    ? (here ? '<span class="foot on">' + (roomly ? '쓰는 중' : '입는 중') + '</span>'
-      : '<span class="foot use">' + (roomly ? '쓰기' : '입기') + '</span>')
+    ? '<span class="foot ' + (here ? 'on' : 'use') + '">' + (here ? v[1] : v[0]) + '</span>'
     : '<span class="foot price"><i class="coin">P</i>' + it.p + '</span>';
 
   return '<button class="item' + (trying === it.k ? ' try' : '') + '" type="button" data-try="' + it.k + '">' +
     '<span class="nm">' + it.n + '</span>' +
     '<span class="art' + (roomly ? ' scene' : '') + '">' + artOf(it) +
+      (isPose(it.k) ? '<span class="lockmark gift">' + I_GIFT + '</span>' : '') +
       (lock ? '<span class="lockmark">' + I_LOCK + '</span>' : '') +
     '</span>' + foot +
   '</button>';
@@ -729,10 +783,10 @@ function tip(cat, tab) {
     */
     ? [I_GIFT, '곰과 방을 다 모으면 소품이 딸려와요']
     : cat === 'mine'
-      ? (tab === 'room'
-        ? [I_ROOM, '테마를 바꾸면 홈 배경이 바뀌어요']
-        : [I_STAR, '가진 옷을 마음껏 갈아입혀 보세요'])
+      /* 곰 스타일 칸에는 아무 줄도 안 둔다 — 할 말이 없는 자리에 말을 만들지 않는다 */
+      ? (tab === 'room' ? [I_ROOM, '테마를 바꾸면 홈 배경이 바뀌어요'] : null)
       : [I_STAR, '포인트는 할 일을 끝내면 모을 수 있어요'];
+  if (!t) return '';
   return '<div class="screen"><div class="tip">' + t[0] + '<span>' + t[1] + '</span></div></div>';
 }
 
@@ -749,7 +803,8 @@ function grid(cat, tab, trying) {
   };
 
   if (cat === 'mine') {
-    var mine = (tab === 'room' ? ROOMS : BEARS).filter(function (i) { return owned[i.k]; });
+    /* 포즈는 곰돌이 그림 한 장이라 **곰 스타일 칸**에 같이 선다 */
+    var mine = (tab === 'room' ? ROOMS : BEARS.concat(POSES)).filter(function (i) { return owned[i.k]; });
     if (!mine.length) {
       return '<div class="screen">' + g('<div class="empty">' +
         '<b>옷장이 아직 비어 있어요</b>할 일을 끝내면 포인트가 쌓여요.<br />' +
@@ -794,17 +849,18 @@ function grid(cat, tab, trying) {
 function detail(key) {
   var s = find(key);
   var room = find(s.has[1]);
-  var prop = PROPS[s.has[2]];
+  var pose = find(s.has[2]);
   var full = owned[s.has[0]] && owned[s.has[1]];
 
   var one = function (k, kind) {
     var it = find(k);
     var roomly = isRoom(k);
     var here = k === (roomly ? wornRoom : wornBear);
+    var v = verbOf(k);
     var act = owned[k]
       ? (here
-        ? '<span class="go now">' + (roomly ? '쓰는 중' : '입는 중') + '</span>'
-        : '<button class="go have" type="button" data-use="' + k + '">' + (roomly ? '쓰기' : '입기') + '</button>')
+        ? '<span class="go now">' + v[1] + '</span>'
+        : '<button class="go have" type="button" data-use="' + k + '">' + v[0] + '</button>')
       : it.p <= pt
         ? '<button class="go" type="button" data-buy="' + k + '"><i class="coin">P</i>' + it.p + '</button>'
         : '<span class="go short">' + (it.p - pt) + 'P 더 모으면</span>';
@@ -820,11 +876,24 @@ function detail(key) {
     '<div class="dart">' + artOf(room) + '</div>' +
     '<p class="dlead">곰과 방을 따로 살 수 있어요</p>' +
     '<div class="pair">' + one(s.has[0], '곰 스타일') + one(s.has[1], '방 테마') + '</div>' +
+    /*
+      **보상은 포즈다.** 적용하면 자세가 바뀐다 — 옷 위에 얹는 조각이 아니라
+      그 옷을 입고 소품까지 든 곰돌이 그림 한 장이다.
+    */
     '<div class="gift' + (full ? ' done' : '') + '">' +
-      '<span class="art">' + I_GIFT + '</span>' +
-      '<span class="tx"><b>' + prop.n + '</b>' +
-        '<span>' + (full ? '둘을 다 모아서 드렸어요' : '둘을 다 모으면 드려요') + '</span></span>' +
-      '<span class="mark">' + (full ? '받음' : '덤') + '</span>' +
+      '<span class="art">' + (full ? artOf(pose) : I_GIFT) + '</span>' +
+      '<span class="tx">' +
+        '<span class="lbl">' + I_GIFT + '세트 완성 보상</span>' +
+        '<b>' + pose.n + '</b>' +
+        '<span>' + (full
+          ? s.n + '를 모두 모아서 받았어요'
+          : s.n + '를 모두 모으면 받을 수 있어요') + '</span>' +
+      '</span>' +
+      (full
+        ? (wornBear === pose.k
+          ? '<span class="mark on">적용 중</span>'
+          : '<button class="mark go" type="button" data-use="' + pose.k + '">적용</button>')
+        : '') +
     '</div>' +
     '<div style="height:26px"></div>' +
   '</div>';
@@ -886,17 +955,22 @@ document.addEventListener('click', function (e) {
   var sub = e.target.closest('.subtab button[data-tab]');
   if (sub) { ph.dataset.tab = sub.dataset.tab; render(ph); return; }
 
-  /* 카드를 누르면 걸쳐보기만 한다. 여기서는 아무것도 안 사고 안 입는다. */
+  /*
+    카드를 누르면 걸쳐보기만 한다. 다만 **보고 있던 것을 한 번 더 누르면 그대로 쓴다** —
+    탭바에서 보던 탭을 한 번 더 눌러 오늘로 돌아오는 손짓과 같다.
+    가진 것에만 걸린다. 안 산 것은 몇 번을 눌러도 미리보기다.
+  */
   var pick = e.target.closest('.item[data-try]');
-  if (pick) { ph.dataset.try = pick.dataset.try; render(ph); return; }
-
-  var use = e.target.closest('[data-use]');
-  if (use) {
-    var k = use.dataset.use;
-    if (isRoom(k)) wornRoom = k; else wornBear = k;
-    drawAll();
+  if (pick) {
+    var pk = pick.dataset.try;
+    if ((ph.dataset.try || wornBear) === pk && owned[pk]) { apply(pk); drawAll(); return; }
+    ph.dataset.try = pk;
+    render(ph);
     return;
   }
+
+  var use = e.target.closest('[data-use]');
+  if (use) { apply(use.dataset.use); drawAll(); return; }
 
   var buy = e.target.closest('[data-buy]');
   if (!buy) return;
