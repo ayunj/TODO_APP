@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>메인 화면 시안 — 곰돌이</title>
+<title>메인 화면 시안 — Dodo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Gowun+Dodum&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -13,14 +13,15 @@
   색은 앱과 같은 토큰을 쓴다(src/app/globals.css). 여기서 새로 만들지 않는다.
 */
 :root{
-  --bg:#faf6f0; --card:#fff; --sunk:#f5f0e9; --memo:#fbf6ee;
-  --ink:#615953; --ink2:#8c8078; --ink3:#a59a92;
-  --line:#efe8df; --line2:#f5efe7;
-  --accent:#d97a5e; --accent-soft:#f4d7cc; --accent-tint:#fcf2ed;
-  --ok:#73b79f; --cycle:#c9a068; --done:#d9d2cb;
-  --track:#f2ece6; --star:#f0c58a; --edge:#d8d3ce; --faint:#d9d2cb;
+  --bg:#fdf6ec; --card:#fffdf9; --sunk:#f7efe4;
+  --ink:#5c534c; --ink2:#8c8078; --ink3:#a89c92;
+  --line:#efe4d4; --line2:#f5ece0;
+  --accent:#f08a8a; --accent-soft:#fbd9d5; --accent-tint:#fdeeea;
+  --ok:#73b79f; --cycle:#8fc79f; --cycle-bg:#e9f5ec; --done:#d9d2cb;
+  --track:#f5e6e0; --star:#f5c451; --edge:#ddd2c6; --faint:#d9d2cb;
   --paper:#f2ece4;
   --c-home:#8EC9B5; --c-body:#A8D8F0; --c-shop:#F0C58A;
+  --room:#faf0e2;
 }
 *{box-sizing:border-box}
 body{
@@ -32,13 +33,12 @@ body{
 
 .head{max-width:900px; margin:0 auto 22px}
 .head h1{font-size:19px; margin:0 0 6px; font-weight:700}
-.head p{color:var(--ink2); font-size:13px; margin:0 0 4px; max-width:64ch}
+.head p{color:var(--ink2); font-size:13px; margin:0 0 4px; max-width:66ch}
 .head b{color:var(--accent); font-weight:500}
 .head code{background:#fff; padding:1px 6px; border-radius:6px; font-size:12px}
 
 .deck{display:flex; flex-wrap:wrap; gap:30px; justify-content:center; align-items:flex-start}
 
-/* 상태 고르는 줄 */
 .states{display:flex; gap:6px; justify-content:center; margin:0 0 18px; flex-wrap:wrap}
 .states button{
   border:1px solid var(--line); background:#fff; font:inherit; font-size:12px;
@@ -46,50 +46,86 @@ body{
 }
 .states button[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
 
-/* 폰 */
+/* ── 폰 ── */
 .phone{
-  width:344px; flex:none; background:var(--bg); border-radius:26px;
-  box-shadow:0 10px 34px rgba(97,89,83,.13); overflow:hidden;
-  display:flex; flex-direction:column; min-height:706px;
+  width:352px; flex:none; background:var(--bg); border-radius:28px;
+  box-shadow:0 10px 34px rgba(97,89,83,.14); overflow:hidden;
+  display:flex; flex-direction:column;
 }
-.appbar{display:flex; align-items:center; gap:10px; padding:16px 16px 4px}
-.date{font-size:13px; color:var(--ink2)}
-.date b{color:var(--ink); font-weight:500}
-.pt{
-  margin-left:auto; display:inline-flex; align-items:center; gap:6px;
-  background:#fff; border-radius:999px; padding:5px 12px 5px 6px;
-  box-shadow:0 4px 14px rgba(0,0,0,.05); font-size:12.5px; font-weight:500;
-  font-variant-numeric:tabular-nums;
+.appbar{display:flex; align-items:center; gap:8px; padding:16px 18px 10px}
+.logo{
+  font-family:'Gowun Dodum',sans-serif; font-size:24px; margin:0; font-weight:400;
+  color:#6b4f3f; letter-spacing:.02em;
 }
-.coin{
-  width:19px; height:19px; border-radius:999px; display:grid; place-items:center;
-  background:var(--star); color:#fff; font-size:11px; font-weight:700; flex:none;
+.logo span{color:var(--accent); font-size:15px; vertical-align:super; margin-left:1px}
+.tools{margin-left:auto; display:flex; align-items:center; gap:8px}
+.ptchip{
+  display:inline-flex; align-items:center; gap:5px; background:#fff;
+  border:1.5px solid var(--star); border-radius:999px; padding:4px 11px 4px 5px;
+  font-size:12.5px; font-weight:500; font-variant-numeric:tabular-nums;
+  cursor:pointer; font-family:inherit; color:var(--ink);
 }
-.screen{padding:0 16px 16px; flex:1}
+.ptchip .coin{
+  width:18px; height:18px; border-radius:999px; display:grid; place-items:center;
+  background:var(--star); color:#fff; font-size:10px; flex:none;
+}
+.iconbtn{
+  border:0; background:transparent; padding:3px; cursor:pointer; color:#6b4f3f;
+  display:grid; place-items:center; border-radius:10px;
+}
+.iconbtn svg{width:23px; height:23px}
+.iconbtn:hover{color:var(--accent)}
 
-/* 곰돌이 무대 — 정사각. 곰돌이는 높이의 72%까지, 나머지가 조각 자리다. */
-.stage{
-  position:relative; width:100%; max-width:250px; aspect-ratio:1/1; margin:0 auto;
-  display:grid; place-items:end center;
+.screen{padding:0 16px 14px}
+
+/* ── 오늘 할 일 카드 ── */
+.top{
+  background:var(--card); border:1.5px solid var(--line); border-radius:22px;
+  padding:15px 17px 16px; margin-bottom:12px;
 }
-.stage img{width:auto; height:72%; object-fit:contain; display:block}
-.stage.lie img{height:auto; width:88%; margin-bottom:6%}
-.bits{position:absolute; inset:0; pointer-events:none}
+.top-head{display:flex; align-items:center; gap:8px; margin-bottom:9px}
+.top-head h2{font-size:15px; font-weight:700; margin:0}
+.badge{
+  background:var(--accent); color:#fff; border-radius:999px; min-width:21px; height:21px;
+  display:inline-grid; place-items:center; font-size:11.5px; font-weight:700; padding:0 6px;
+}
+.day{margin-left:auto; display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink2); font-variant-numeric:tabular-nums}
+.day svg{width:16px; height:16px}
+.top-body{display:flex; align-items:flex-end; gap:12px}
+.numbox{flex:1; min-width:0}
+.big{font-size:34px; font-weight:700; color:var(--accent); line-height:1; font-variant-numeric:tabular-nums}
+.big em{font-style:normal; font-size:17px; font-weight:500; color:var(--ink3)}
+.track{display:block; height:11px; border-radius:999px; background:var(--track); overflow:hidden; margin-top:11px}
+.track i{display:block; height:100%; border-radius:999px; background:var(--accent); transition:width .35s ease}
+.bubble{
+  flex:none; max-width:150px; background:var(--accent-tint); border-radius:16px;
+  padding:9px 13px; font-family:'Gowun Dodum',sans-serif; font-size:12.5px;
+  color:var(--ink2); text-align:center; position:relative; line-height:1.5;
+}
+.bubble::after{
+  content:""; position:absolute; left:16px; bottom:-6px; width:12px; height:12px;
+  background:var(--accent-tint); border-radius:2px; transform:rotate(45deg);
+}
+
+/* ── 곰돌이 방 ── */
+.room{
+  position:relative; width:100%; aspect-ratio:1/.86; margin:0 0 12px;
+  display:grid; place-items:end center; overflow:hidden;
+}
+.props{position:absolute; inset:0; width:100%; height:100%}
+/*
+  곰돌이는 가로·세로를 **둘 다** 묶는다.
+  한쪽만 묶으면 그림 비율이 바뀔 때 무대를 뚫고 나간다.
+*/
+.room img{
+  position:relative; z-index:1; max-height:76%; max-width:52%;
+  width:auto; height:auto; object-fit:contain; display:block; margin-bottom:4%;
+}
+.room.lie img{max-height:46%; max-width:74%; margin-bottom:7%}
+.bits{position:absolute; inset:0; pointer-events:none; z-index:2}
 .bits svg{position:absolute}
-.hint{position:absolute; inset:0; border:1px dashed var(--accent-soft); border-radius:14px; display:none}
-.hint::before{
-  content:"무대 — 곰돌이는 높이의 72%"; position:absolute; top:-8px; left:10px;
-  font-size:10px; color:var(--accent); background:var(--bg); padding:0 5px;
-}
-.hint::after{
-  content:""; position:absolute; left:0; right:0; top:28%;
-  border-top:1px dashed var(--accent-soft);
-}
-.stage.show-hint .hint{display:block}
-
-/* 체크할 때 곰돌이 위에 뜨는 것 */
 .plus{
-  position:absolute; left:50%; top:6%; transform:translateX(-50%);
+  position:absolute; left:50%; top:6%; transform:translateX(-50%); z-index:3;
   font-family:'IBM Plex Mono',monospace; font-size:16px; font-weight:500; color:var(--ok);
   opacity:0; pointer-events:none;
 }
@@ -100,76 +136,92 @@ body{
   100%{opacity:0; transform:translate(-50%,-26px)}
 }
 
-.say{
-  text-align:center; font-family:'Gowun Dodum',sans-serif; font-size:14.5px;
-  color:var(--ink2); margin:4px 0 14px; min-height:22px;
+/* ── 새로운 할 일 추가 ── */
+.add{
+  width:100%; border:1.5px solid var(--accent-soft); background:var(--accent-tint);
+  color:#c96a6a; font-family:'Gowun Dodum',sans-serif; font-size:16px; letter-spacing:.06em;
+  padding:14px; border-radius:18px; cursor:pointer; margin-bottom:12px;
+  display:flex; align-items:center; justify-content:center; gap:9px;
 }
-.say b{color:var(--accent); font-weight:400}
+.add:hover{background:#fce6e1}
+.add svg{width:17px; height:17px}
 
-/* 카드 */
-.card{background:var(--card); border-radius:20px; box-shadow:0 8px 24px rgba(0,0,0,.05); margin-bottom:11px}
-.card-head{display:flex; align-items:center; gap:8px; padding:15px 17px 10px}
-.card-title{font-size:14px; font-weight:700; margin:0}
-.count{margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink2); font-variant-numeric:tabular-nums}
-.count b{color:var(--accent); font-weight:500; font-size:14px}
-.track{display:block; height:8px; border-radius:999px; background:var(--track); overflow:hidden; margin:0 17px}
-.track i{display:block; height:100%; border-radius:999px; background:var(--accent); transition:width .35s ease}
-.track.pt-bar i{background:var(--star)}
-.foot{display:flex; align-items:baseline; gap:8px; padding:11px 17px 7px; font-size:11.5px; color:var(--ink3)}
-.foot .goal{margin-left:auto; font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums; color:var(--ink2)}
-.pad{height:15px}
+/*
+  바로가기 — **탭에 없는 것만** 둔다.
+  탭이 일·월·홈·기록·설정 다섯이라, 여기 남는 건 장보기와 메모뿐이다.
+*/
+.quick{display:grid; grid-template-columns:repeat(2,1fr); gap:9px; margin-bottom:16px}
+.quick button{
+  border:1.5px solid var(--line); background:var(--card); border-radius:16px;
+  padding:12px 10px; cursor:pointer; font:inherit; font-size:13px; color:var(--ink2);
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.quick button:hover{border-color:var(--accent-soft); color:var(--accent)}
+.quick svg{width:21px; height:21px; color:#6b4f3f; flex:none}
+.quick button:hover svg{color:var(--accent)}
+.quick b{color:var(--ink3); font-weight:500; font-variant-numeric:tabular-nums}
+.dot{width:6px; height:6px; border-radius:999px; background:var(--accent); display:inline-block}
 
-/* 할 일 한 줄 */
-.more{
+/* ── 오늘 할 일 목록 ── */
+.sec{display:flex; align-items:baseline; margin:0 2px 9px}
+.sec h2{font-size:14.5px; font-weight:700; margin:0}
+.sec button{
   margin-left:auto; border:0; background:transparent; font:inherit; font-size:12px;
-  color:var(--ink3); cursor:pointer; padding:3px 4px; border-radius:8px;
+  color:var(--ink3); cursor:pointer; padding:2px 4px; border-radius:8px;
 }
-.more:hover{color:var(--accent)}
-ul.list{list-style:none; margin:0; padding:0 17px 8px}
-ul.list li{display:flex; align-items:flex-start; gap:11px; padding:11px 0; border-top:1px solid var(--line)}
+.sec button:hover{color:var(--accent)}
+.listbox{background:var(--card); border:1.5px solid var(--line); border-radius:20px; overflow:hidden}
+ul.list{list-style:none; margin:0; padding:0}
+ul.list li{display:flex; align-items:center; gap:11px; padding:13px 15px; border-top:1px solid var(--line2)}
 ul.list li:first-child{border-top:0}
 .tick{
-  flex:none; width:24px; height:24px; margin-top:1px; border-radius:999px;
-  border:1.8px solid var(--edge); background:transparent; display:grid; place-items:center;
-  font-size:11px; font-weight:700; color:transparent; cursor:pointer; padding:0;
+  flex:none; width:26px; height:26px; border-radius:999px;
+  border:2px solid var(--edge); background:transparent; display:grid; place-items:center;
+  font-size:13px; font-weight:700; color:transparent; cursor:pointer; padding:0;
   transition:transform .12s ease, background-color .12s ease, border-color .12s ease;
 }
 .tick:active{transform:scale(.9)}
-.tick[aria-pressed="true"]{background:var(--ok); border-color:var(--ok); color:#fff}
-.mid{min-width:0; flex:1}
-.t{display:block; font-size:14.5px; font-weight:500; line-height:1.45}
+.tick[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:#fff}
+.t{font-size:14.5px; font-weight:500; flex:none}
 li.done .t{color:var(--done); text-decoration:line-through; text-decoration-thickness:1px}
-.meta{display:flex; align-items:center; gap:6px; margin-top:4px; font-size:11px; color:var(--ink3)}
-.cat{display:inline-flex; align-items:center; gap:5px}
-.cat i{width:7px; height:7px; border-radius:999px; display:block}
-li.done .meta{color:var(--done)}
-li.done .cat i{opacity:.4}
-.empty{padding:18px 17px 22px; text-align:center; font-size:12.5px; color:var(--ink3); margin:0}
-
-/* 지름길 */
-.jump{display:flex; gap:9px}
-.jump button{
-  flex:1; border:0; background:var(--card); font:inherit; font-size:12.5px; color:var(--ink2);
-  padding:13px 10px; border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,.05); cursor:pointer;
-  display:flex; align-items:center; justify-content:center; gap:7px;
+.tag{
+  font-size:10.5px; font-weight:500; padding:2px 8px; border-radius:999px;
+  background:var(--cycle-bg); color:var(--cycle); flex:none;
 }
-.jump button:hover{color:var(--accent)}
-.dot{width:6px; height:6px; border-radius:999px; background:var(--accent); display:inline-block}
+.when{margin-left:auto; font-size:11.5px; color:var(--accent); font-variant-numeric:tabular-nums; flex:none}
+.when.soft{color:var(--ink3)}
+.when.blue{color:#7aa8d0}
+li.done .tag{background:var(--sunk); color:var(--ink3)}
+.star{border:0; background:transparent; padding:0 0 0 2px; cursor:pointer; flex:none; line-height:0}
+.star svg{width:19px; height:19px}
+.empty{padding:26px 16px 28px; text-align:center; font-size:12.5px; color:var(--ink3); margin:0; line-height:1.75}
 
-/* 하단 네비 */
+/*
+  하단 탭 — 홈이 **정중앙**이다. 그래서 다섯 칸이어야 한다.
+  넷이면 가운데가 없고, 셋이면 앱이 가진 화면을 다 못 담는다.
+*/
 .tabbar{
-  display:flex; border-top:1px solid var(--line2); background:var(--card);
-  padding:8px 8px 12px; box-shadow:0 -2px 12px rgba(0,0,0,.03);
+  margin:14px 12px 12px; display:flex; align-items:flex-end; background:var(--sunk);
+  border:1.5px solid var(--line); border-radius:22px; padding:9px 6px;
 }
 .tabbar button{
   flex:1; border:0; background:transparent; font:inherit; cursor:pointer;
   display:flex; flex-direction:column; align-items:center; gap:3px;
-  font-size:10.5px; font-weight:500; color:var(--ink3); padding:4px 0; border-radius:14px;
+  font-size:10.5px; font-weight:500; color:#9c8f84; padding:3px 0; border-radius:14px;
 }
 .tabbar button[aria-selected="true"]{color:var(--accent)}
 .tabbar svg{width:23px; height:23px}
 
-/* 옆에 붙는 설명 */
+/* 가운데 홈만 한 단 올라와 앉는다 — 눌러야 할 자리가 눈에 먼저 든다 */
+.tabbar .home{position:relative; top:-13px; gap:5px; font-size:11px; color:var(--accent)}
+.tabbar .home .bump{
+  width:46px; height:46px; border-radius:999px; display:grid; place-items:center;
+  background:var(--accent); color:#fff; box-shadow:0 6px 16px rgba(240,138,138,.4);
+  border:3px solid var(--bg);
+}
+.tabbar .home svg{width:24px; height:24px}
+
+/* ── 옆에 붙는 설명 ── */
 .note{width:340px; flex:none}
 .note h2{font-size:15px; margin:0 0 10px; font-weight:700}
 .note h3{font-size:13px; margin:20px 0 7px; font-weight:700; color:var(--accent)}
@@ -187,12 +239,11 @@ li.done .cat i{opacity:.4}
 <body>
 
 <div class="head">
-  <h1>메인 화면 시안 — 곰돌이가 서는 자리</h1>
-  <p>지금은 앱을 열면 <b>일</b> 화면이 뜬다(<code>src/lib/ui.tsx</code>의 <code>useState&lt;Tab&gt;('day')</code>).
-     여기 시안은 그 앞에 <b>홈</b>을 세우고 하단 네비게이션으로 오가는 모양이다.</p>
-  <p>단추로 상태를 바꾸면 <b>조각이 어디에 앉는지</b> 보인다.
-     조각은 아직 그림이 없어서 <b>임시로 그린 것</b>이다 — 자리만 본다.
-     할 일 줄은 <b>정말 눌린다</b>.</p>
+  <h1>메인 화면 시안 — Dodo</h1>
+  <p>보내준 시안을 그대로 옮기고, <b>앱 색 토큰</b>(<code>src/app/globals.css</code>)에 맞췄다.
+     단추로 상태를 바꾸면 <b>곰돌이와 말풍선이 따라 바뀐다.</b>
+     할 일 줄은 <b>정말 눌리고</b>, 체크하면 곰돌이 위에 <code>+10P</code>가 뜬다.</p>
+  <p>방 소품과 조각은 아직 그림이 없어서 <b>임시로 그린 것</b>이다 — 자리만 본다.</p>
 </div>
 
 <div class="states">
@@ -200,181 +251,241 @@ li.done .cat i{opacity:.4}
   <button type="button" data-state="many">할 일 많음</button>
   <button type="button" data-state="all">다 끝냄</button>
   <button type="button" data-state="none">할 일 없음</button>
-  <button type="button" id="hintBtn" aria-pressed="false">무대 보기</button>
 </div>
 
 <div class="deck">
 
   <div class="phone">
     <div class="appbar">
-      <span class="date"><b>8월 24일</b> 일요일</span>
-      <span class="pt"><i class="coin">P</i><span id="ptTotal">350</span></span>
+      <h1 class="logo">Dodo<span>♥</span></h1>
+      <div class="tools">
+        <button class="ptchip" type="button" title="옷장·상점으로"><i class="coin">★</i><span id="ptTotal">120</span></button>
+        <button class="iconbtn" type="button" title="상점">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h16l-1.2 11.2a2 2 0 0 1-2 1.8H7.2a2 2 0 0 1-2-1.8z"/><path d="M8.5 8V6a3.5 3.5 0 0 1 7 0v2"/></svg>
+        </button>
+      </div>
     </div>
 
     <div class="screen">
-      <div class="stage" id="stage">
-        <div class="hint"></div>
+
+      <section class="top">
+        <div class="top-head">
+          <h2>오늘 할 일</h2>
+          <span class="badge" id="leftN">3</span>
+          <span class="day">2026.08.20 (목)
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3.2v3.4M16 3.2v3.4"/></svg>
+          </span>
+        </div>
+        <div class="top-body">
+          <div class="numbox">
+            <div class="big"><span id="doneN">2</span> <em>/ <span id="totalN">5</span></em></div>
+            <span class="track"><i id="bar" style="width:40%"></i></span>
+          </div>
+          <p class="bubble" id="bubble">오늘도 조금씩<br />함께해요! ♥</p>
+        </div>
+      </section>
+
+      <div class="room" id="room">
+        <svg class="props" viewBox="0 0 300 258" fill="none" aria-hidden="true">
+          <!-- 임시 소품. 실제로는 그림 한 장(room.png)으로 들어간다 -->
+          <g opacity=".9">
+            <!-- 액자 -->
+            <rect x="18" y="34" width="52" height="52" rx="4" fill="#fdf7ee" stroke="#e6d8c6" stroke-width="2" transform="rotate(-6 44 60)"/>
+            <path d="M44 74c-9-7-13-11-13-16a6.5 6.5 0 0 1 13-3 6.5 6.5 0 0 1 13 3c0 5-4 9-13 16z" fill="#f8d3d3" transform="rotate(-6 44 60)"/>
+            <rect x="36" y="26" width="16" height="9" rx="2" fill="#f0e2cd" transform="rotate(-12 44 30)"/>
+            <!-- 화분 -->
+            <path d="M34 200h40l-5 40a6 6 0 0 1-6 5H45a6 6 0 0 1-6-5z" fill="#d9bfa3"/>
+            <rect x="30" y="192" width="48" height="12" rx="4" fill="#e3caae"/>
+            <path d="M54 192v-40" stroke="#8fae7c" stroke-width="3.4" stroke-linecap="round"/>
+            <ellipse cx="34" cy="158" rx="19" ry="12" fill="#a8c98f" transform="rotate(-22 34 158)"/>
+            <ellipse cx="74" cy="150" rx="18" ry="11" fill="#93bd7c" transform="rotate(20 74 150)"/>
+            <ellipse cx="52" cy="128" rx="16" ry="10" fill="#a8c98f" transform="rotate(-8 52 128)"/>
+            <!-- 선반과 책 -->
+            <rect x="212" y="96" width="80" height="8" rx="3" fill="#d9bfa3"/>
+            <rect x="222" y="52" width="17" height="44" rx="3" fill="#f2a9a9"/>
+            <rect x="243" y="44" width="17" height="52" rx="3" fill="#9fc79f"/>
+            <rect x="264" y="58" width="14" height="38" rx="3" fill="#f0cf9a"/>
+            <!-- 상자 -->
+            <rect x="226" y="196" width="64" height="46" rx="6" fill="#f0e2cd" stroke="#e0cdb2" stroke-width="2"/>
+            <rect x="220" y="186" width="76" height="16" rx="5" fill="#e6d3ba"/>
+            <rect x="248" y="208" width="20" height="8" rx="3" fill="#dcc6a8"/>
+            <!-- 오른쪽 아래 작은 액자 -->
+            <rect x="214" y="128" width="46" height="46" rx="4" fill="#fdf7ee" stroke="#e6d8c6" stroke-width="2" transform="rotate(5 237 151)"/>
+            <circle cx="237" cy="146" r="7" fill="#f7d6a8" transform="rotate(5 237 151)"/>
+            <path d="M237 154v9" stroke="#9fc79f" stroke-width="2.4" stroke-linecap="round" transform="rotate(5 237 151)"/>
+            <rect x="230" y="120" width="15" height="9" rx="2" fill="#f0e2cd" transform="rotate(9 237 124)"/>
+          </g>
+          <!-- 바닥 그림자 -->
+          <ellipse cx="150" cy="242" rx="62" ry="9" fill="#eadfd0"/>
+        </svg>
+
         <img id="bear" src="g/main.png" alt="" />
         <div class="bits" id="bits"></div>
         <span class="plus" id="plus">+10P</span>
       </div>
 
-      <p class="say" id="say">오늘 <b>3개</b> 남았어요</p>
+      <button class="add" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        새로운 할 일 추가
+      </button>
 
-      <section class="card">
-        <div class="card-head">
-          <h2 class="card-title">오늘</h2>
-          <span class="count"><b id="doneN">2</b> / <span id="totalN">5</span></span>
-        </div>
-        <span class="track"><i id="bar" style="width:40%"></i></span>
-        <div class="foot">
-          <span>곰토끼까지</span>
-          <span class="goal"><span id="need">150</span>P</span>
-        </div>
-        <span class="track pt-bar"><i id="ptBar" style="width:70%"></i></span>
-        <div class="pad"></div>
-      </section>
+      <div class="quick">
+        <button type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5h17l-1.6 10a2 2 0 0 1-2 1.7H7.1a2 2 0 0 1-2-1.7z"/><path d="M8 8.5 10 4M16 8.5 14 4"/></svg>
+          장보기 <b>3</b>
+        </button>
+        <button type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h9.5L19 9v10.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1z"/><path d="M14 4.5V9h5M7.5 13h8M7.5 16.5h5"/></svg>
+          메모 <i class="dot"></i>
+        </button>
+      </div>
 
-      <section class="card" id="taskCard">
-        <div class="card-head">
-          <h2 class="card-title">할 일</h2>
-          <button class="more" type="button">전체 보기 ›</button>
-        </div>
+      <div class="sec">
+        <h2>오늘 할 일 목록</h2>
+        <button type="button">전체보기 ›</button>
+      </div>
+      <div class="listbox">
         <ul class="list" id="list"></ul>
-        <p class="empty" id="emptyMsg" hidden>오늘은 비어 있어요</p>
-      </section>
-
-      <div class="jump">
-        <button type="button">장보기 <span style="color:var(--ink3)">3</span></button>
-        <button type="button">메모 <span class="dot"></span></button>
+        <p class="empty" id="emptyMsg" hidden>오늘은 비어 있어요<br />위 <b>새로운 할 일 추가</b>로 담을 수 있어요</p>
       </div>
     </div>
 
     <nav class="tabbar">
-      <button type="button" aria-selected="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M9.5 20v-5.5h5V20"/></svg>
-        홈
-      </button>
       <button type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3.2v3.4M16 3.2v3.4"/><path d="M8 14.5h5"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3.2v3.4M16 3.2v3.4"/><path d="M8 14.5h5"/></svg>
         일
       </button>
       <button type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3.2v3.4M16 3.2v3.4"/><circle cx="8.5" cy="14" r="1"/><circle cx="12" cy="14" r="1"/><circle cx="15.5" cy="14" r="1"/><circle cx="8.5" cy="17.5" r="1"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3.2v3.4M16 3.2v3.4"/><circle cx="8.5" cy="14" r=".9"/><circle cx="12" cy="14" r=".9"/><circle cx="15.5" cy="14" r=".9"/><circle cx="8.5" cy="17.5" r=".9"/></svg>
         월
       </button>
+
+      <button class="home" type="button" aria-selected="true">
+        <span class="bump">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M6 9.5V20h12V9.5"/><path d="M10 20v-5h4v5"/></svg>
+        </span>
+        홈
+      </button>
+
       <button type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V13M9.3 19.5V8M14.7 19.5v-9M20 19.5V4.5"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V13M9.3 19.5V8M14.7 19.5v-9M20 19.5V4.5"/></svg>
         기록
+      </button>
+      <button type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.6l1.5 2.2 2.6-.5.5 2.6 2.3 1.4-1.4 2.3 1.4 2.3-2.3 1.4-.5 2.6-2.6-.5L12 21.4l-1.5-2.2-2.6.5-.5-2.6-2.3-1.4 1.4-2.3-1.4-2.3 2.3-1.4.5-2.6 2.6.5z"/></svg>
+        설정
       </button>
     </nav>
   </div>
 
   <div class="note">
-    <h2>이렇게 짰다</h2>
-
-    <h3>홈이 앞에 서면 오늘이 한 칸 멀어진다</h3>
-    <p>매일 여는 앱이라 그 한 칸이 비싸다. 그래서 홈이 <b>오늘을 품는다</b> —
-       진행 막대와 할 일 세 줄이 홈에 있고 <b>거기서 바로 체크된다.</b>
-       홈이 구경만 하는 자리면 이틀 만에 안 온다.</p>
-    <p>체크하면 곰돌이 위에 <code>+10P</code>가 뜬다.
-       <b>이게 홈이 있는 이유다</b> — 일 화면에서는 이 그림이 안 보인다.</p>
-
-    <h3>탭이 넷이 된다</h3>
-    <table>
-      <tr><th>지금</th><th>이 시안</th></tr>
-      <tr><td>일 · 월 · 기록</td><td><b>홈</b> · 일 · 월 · 기록</td></tr>
-    </table>
-    <p>장보기·메모는 지금처럼 <b>탭이 아니라 지름길</b>이다.
-       탭에 넣으면 여섯 개가 되어 손가락이 헷갈린다.
-       대신 홈 아래에 큰 버튼 둘로 뒀다 — 헤더 아이콘보다 누르기 쉽다.</p>
-
-    <h3>곰돌이가 상태를 말한다</h3>
-    <table>
-      <tr><th>언제</th><th>몸 + 조각</th></tr>
-      <tr><td>하는 중</td><td><code>front</code> + <code>spark</code></td></tr>
-      <tr><td>할 일 많음</td><td><code>front</code> + <code>sweat</code></td></tr>
-      <tr><td>다 끝냄</td><td><code>front</code> + <code>bloom</code></td></tr>
-      <tr><td>할 일 없음</td><td><code>sleep</code> + <code>zzz</code></td></tr>
-    </table>
-    <p>말풍선 글씨는 그림과 <b>같은 뜻을 한 번 더</b> 말한다.
-       그림이 안 뜨거나 못 읽는 사람에게도 화면이 온전해야 해서다.</p>
-
-    <h3>무대가 정사각인 까닭</h3>
-    <div class="warn">
-      곰돌이를 <b>무대 높이의 72%</b>까지만 키우고 바닥에 붙였다.
-      위에 남은 28%가 <b>조각이 앉을 자리</b>다.<br /><br />
-      그런데 지금 <code>main.png</code>는 곰돌이가 캔버스의 <b>89%</b>를 차지해서
-      머리 위에 <b>5.6%</b>밖에 안 남는다. 이대로 넣으면 반짝도 Zzz도 앉을 데가 없다.
-    </div>
-    <p>다시 그릴 필요는 없다. 배경이 투명하니 <b>줄여서 정사각에 다시 앉히면</b> 된다.
-       <code>scripts/fit-gomdori.mjs</code>로 만들어두면 앞으로 받는 옷이
-       어떤 크기로 와도 늘 같은 자리에 선다.</p>
-
-    <h3>막대가 둘인 까닭</h3>
-    <p>위는 <b>오늘 얼마나 했나</b>, 아래는 <b>찜한 옷까지 얼마나 남았나</b>다.
-       둘이 나란히 있어야 <b>오늘 체크가 옷으로 이어지는 게</b> 보인다.
-       위 칩의 <code>P 350</code>은 가진 전부.</p>
-
-    <h3>안 넣은 것</h3>
+    <h2>시안대로 옮긴 것</h2>
     <ul>
-      <li><b>남의 포인트·옷 개수</b> — 점수는 등수가 된다. 방을 같이 써도 상대는 <b>입은 옷만</b> 보인다</li>
-      <li><b>연속 며칠</b> — 끊기는 순간 앱을 미워하게 된다</li>
-      <li><b>밀린 일 배지</b> — 홈까지 빨개지면 여는 게 무서워진다.
-          밀린 것은 일 화면에서 <code>3일 지남</code>으로만</li>
+      <li><b>Dodo♥ 로고</b>와 상단 상점</li>
+      <li><b>오늘 할 일 카드</b> — 남은 개수 배지, 큰 <code>2 / 5</code>, 막대, 말풍선</li>
+      <li><b>곰돌이 방</b> — 화분·액자·선반·상자</li>
+      <li><b>새로운 할 일 추가</b> 큰 버튼</li>
+      <li>할 일 줄의 <b><code>반복</code>·<code>8일 주기</code> 배지, 시각, 별</b></li>
     </ul>
+    <p>포인트 칩 <code>★ 120</code>은 폰 시안에는 없고 와이드 시안에만 있었는데,
+       <b>포인트가 이 앱의 축</b>이라 폰에도 올렸다. 누르면 옷장·상점으로 간다.</p>
 
-    <h3>아직 없는 것</h3>
-    <p><b>자는 곰돌이 파일</b>(<code>g/base-sleep.png</code>)이 아직 저장소에 없다.
-       <code>할 일 없음</code>을 누르면 지금은 서 있는 그림이 대신 나온다.
-       정면으로 엎드린 쪽을 그 이름으로 넣으면 바로 붙는다.</p>
+    <h2 style="margin-top:26px">하단 탭 — 홈이 가운데</h2>
+
+    <h3>다섯 칸이어야 가운데가 생긴다</h3>
+    <table>
+      <tr><th>지금 앱</th><th>이 시안</th></tr>
+      <tr><td>일 · 월 · 기록</td><td>일 · 월 · <b>홈</b> · 기록 · 설정</td></tr>
+    </table>
+    <p><b>넷이면 가운데가 없다.</b> 그래서 다섯으로 두고, 앱이 이미 가진 것으로 채웠다 —
+       일·월·기록은 그대로고 <b>설정이 헤더에서 내려왔다.</b>
+       홈이 생기면서 헤더가 로고·포인트·상점으로 짧아져서 톱니가 갈 데가 마땅치 않았다.</p>
+    <p>가운데 홈만 <b>한 단 올라와 앉는다.</b> 다섯 칸은 눈이 훑기에 많은데,
+       가장 자주 누를 자리가 튀어나와 있으면 <b>고르지 않고 눌린다.</b></p>
+
+    <h3>바로가기는 탭에 없는 것만</h3>
+    <p>시안의 바로가기 넷(전체·일정·장보기·메모) 중 <b>전체는 일, 일정은 월</b>이라
+       탭과 겹친다. 같은 화면으로 가는 문이 한 화면에 둘이면 어느 쪽이 맞는지 헷갈린다.</p>
+    <p>그래서 <b>장보기·메모 둘만</b> 남기고 칸을 넓혔다.
+       개수(<code>3</code>)와 안 읽은 점은 그대로 붙는다.</p>
+
+    <h2 style="margin-top:26px">짚어둘 것 둘</h2>
+
+    <h3>1. 방 소품은 그림 한 장으로</h3>
+    <p>여기서는 SVG로 임시로 그렸다. 실제로는 <code>room.png</code> 한 장이면 된다.
+       <b>배경은 옷과 안 곱해져서</b> 옷이 스무 벌이 돼도 그대로 쓴다 — 조각과 같은 자리다.</p>
+    <p>다만 <b>곰돌이보다 연하게.</b> 소품이 진하면 눈이 곰돌이를 못 찾는다.
+       지금 시안도 소품을 한 톤 죽여뒀다.</p>
+
+    <h3>2. 연속 완료는 안 넣었다</h3>
+    <p>와이드 시안의 <code>연속 완료 5일</code>은 폰에서 뺐다.
+       <b>끊기는 순간 앱을 미워하게 된다</b> — 열심히 한 사람일수록 세게 미워한다.
+       넣고 싶으면 <b>기록</b> 탭 안쪽이 낫다. 홈에서 매일 보면 압박이 된다.</p>
+
+    <h2 style="margin-top:26px">아직 없는 그림</h2>
+    <table>
+      <tr><th>무엇</th><th>쓰는 곳</th></tr>
+      <tr><td><code>base-sleep.png</code></td><td>할 일 없는 날</td></tr>
+      <tr><td>조각 여섯</td><td>Zzz · 땀 · 반짝 · 꽃가루 · 새싹 · 하트</td></tr>
+      <tr><td><code>room.png</code></td><td>곰돌이 뒤 방 <b>(새로 는 것)</b></td></tr>
+    </table>
+    <p><code>main.png</code>는 곰돌이가 캔버스의 <b>89%</b>라 머리 위에 <b>5.6%</b>밖에 없다.
+       여기서는 CSS로 줄여 앉혔지만, 파일 자체는 <code>scripts/fit-gomdori.mjs</code>로 다시 앉혀야
+       조각이 늘 같은 자리에 온다.</p>
   </div>
 
 </div>
 
 <script>
 /* 조각 — 그림이 나오기 전까지 자리만 보는 임시 그림이다. */
-const BITS = {
-  spark: '<svg width="46" height="46" viewBox="0 0 46 46" style="left:64%;top:2%">' +
-    '<path d="M23 6l2.6 7.4L33 16l-7.4 2.6L23 26l-2.6-7.4L13 16l7.4-2.6z" fill="#f0c58a"/>' +
-    '<path d="M37 24l1.4 3.9 3.9 1.4-3.9 1.4L37 34.6l-1.4-3.9-3.9-1.4 3.9-1.4z" fill="#f0c58a" opacity=".75"/></svg>',
-  sweat: '<svg width="30" height="42" viewBox="0 0 30 42" style="left:74%;top:13%">' +
+var BITS = {
+  spark: '<svg width="40" height="40" viewBox="0 0 46 46" style="left:60%;top:8%">' +
+    '<path d="M23 6l2.6 7.4L33 16l-7.4 2.6L23 26l-2.6-7.4L13 16l7.4-2.6z" fill="#f5c451"/>' +
+    '<path d="M37 24l1.4 3.9 3.9 1.4-3.9 1.4L37 34.6l-1.4-3.9-3.9-1.4 3.9-1.4z" fill="#f5c451" opacity=".75"/></svg>',
+  sweat: '<svg width="24" height="34" viewBox="0 0 30 42" style="left:66%;top:18%">' +
     '<path d="M15 6c4 6 7 10 7 14a7 7 0 0 1-14 0c0-4 3-8 7-14z" fill="#a8d8f0" stroke="#8cc3de" stroke-width="1.4"/></svg>',
-  bloom: '<svg width="240" height="240" viewBox="0 0 240 240" style="left:50%;top:50%;transform:translate(-50%,-50%)">' +
-    '<g fill="#f4d7cc"><circle cx="26" cy="56" r="7"/><circle cx="214" cy="70" r="6"/><circle cx="48" cy="158" r="5"/><circle cx="196" cy="168" r="7"/></g>' +
-    '<g fill="#8ec9b5" opacity=".8"><circle cx="64" cy="28" r="5"/><circle cx="180" cy="36" r="6"/><circle cx="15" cy="118" r="5"/></g>' +
-    '<g fill="#f0c58a"><circle cx="118" cy="13" r="6"/><circle cx="224" cy="126" r="5"/><circle cx="32" cy="206" r="6"/><circle cx="204" cy="214" r="5"/></g></svg>',
-  zzz: '<svg width="72" height="62" viewBox="0 0 72 62" style="left:60%;top:0%">' +
+  bloom: '<svg width="200" height="200" viewBox="0 0 240 240" style="left:50%;top:52%;transform:translate(-50%,-50%)">' +
+    '<g fill="#fbd9d5"><circle cx="26" cy="56" r="7"/><circle cx="214" cy="70" r="6"/><circle cx="48" cy="158" r="5"/><circle cx="196" cy="168" r="7"/></g>' +
+    '<g fill="#9fc79f" opacity=".85"><circle cx="64" cy="28" r="5"/><circle cx="180" cy="36" r="6"/><circle cx="15" cy="118" r="5"/></g>' +
+    '<g fill="#f5c451"><circle cx="118" cy="13" r="6"/><circle cx="224" cy="126" r="5"/><circle cx="32" cy="206" r="6"/><circle cx="204" cy="214" r="5"/></g></svg>',
+  zzz: '<svg width="56" height="48" viewBox="0 0 72 62" style="left:58%;top:6%">' +
     '<g fill="#7eb0dd" font-family="Noto Sans KR, sans-serif" font-weight="700">' +
     '<text x="2" y="54" font-size="17" opacity=".75">z</text>' +
     '<text x="20" y="40" font-size="24" opacity=".9">Z</text>' +
     '<text x="45" y="24" font-size="31">Z</text></g></svg>'
 };
 
-const TASKS = [
-  { t: '분리수거', cat: '집안일', color: 'var(--c-home)' },
-  { t: '화장실 청소', cat: '집안일', color: 'var(--c-home)' },
-  { t: '스트레칭', cat: '건강', color: 'var(--c-body)' }
+var TASKS = [
+  { t: '운동하기',      tag: '반복',      when: '오후 7:00',    tone: '',     star: false },
+  { t: '방 청소하기',   tag: '8일 주기',  when: '다음: 8.28 (금)', tone: 'soft', star: true  },
+  { t: '책 읽기',       tag: '',          when: '오후 9:00',    tone: 'blue', star: false },
+  { t: '비타민 챙겨먹기', tag: '',        when: '오후 12:00',   tone: 'soft', star: false },
+  { t: '물 2L 마시기',  tag: '',          when: '1.6L / 2L',    tone: 'blue', star: true  },
+  { t: '분리수거',      tag: '반복',      when: '오후 8:00',    tone: '',     star: false },
+  { t: '세탁기 돌리기', tag: '',          when: '오후 6:00',    tone: 'soft', star: false },
+  { t: '스트레칭',      tag: '반복',      when: '오후 10:00',   tone: 'blue', star: false }
 ];
 
-const STATES = {
-  some: { total: 5, done: 2, bit: 'spark', lie: false },
-  many: { total: 8, done: 0, bit: 'sweat', lie: false },
-  all:  { total: 5, done: 5, bit: 'bloom', lie: false },
-  none: { total: 0, done: 0, bit: 'zzz',   lie: true }
+/* 목록에 몇 줄까지 보이나 — 넘치면 `전체보기` */
+var CAP = 5;
+
+var STATES = {
+  some: { total: 5, done: 2 },
+  many: { total: 8, done: 0 },
+  all:  { total: 5, done: 5 },
+  none: { total: 0, done: 0 }
 };
 
-const GOAL = 500;
-const $ = function (id) { return document.getElementById(id); };
-let now = 'some';
-let pt = 350;
+var $ = function (id) { return document.getElementById(id); };
+var now = 'some';
+var pt = 120;
 
-function sayFor(s) {
-  if (s.total === 0) return '오늘은 <b>비어 있어요</b>';
-  const left = s.total - s.done;
-  if (left === 0) return '오늘 걸 <b>다 끝냈어요</b>';
-  if (s.total >= 5 && s.done === 0) return '오늘 <b>' + s.total + '개</b>… 하나씩 해요';
-  return '오늘 <b>' + left + '개</b> 남았어요';
+function bubbleFor(s) {
+  if (s.total === 0) return '오늘은 푹<br />쉬어요! ♥';
+  var left = s.total - s.done;
+  if (left === 0) return '오늘 걸 다 했어요<br />대단해요! ♥';
+  if (s.done === 0 && s.total >= 5) return '오늘도 조금씩<br />함께해요! ♥';
+  return '오늘도 조금씩<br />해나가요! ♥';
 }
 
 function bitFor(s) {
@@ -384,49 +495,65 @@ function bitFor(s) {
   return s.total >= 5 ? 'sweat' : '';
 }
 
+function starSvg(on) {
+  return on
+    ? '<svg viewBox="0 0 24 24" fill="#f5c451"><path d="M12 3.4l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.9l6.1-.9z"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="#d9cec2" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3.4l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.9l6.1-.9z"/></svg>';
+}
+
+function row(i, done) {
+  var d = TASKS[i % TASKS.length];
+  var li = document.createElement('li');
+  if (done) li.className = 'done';
+  li.innerHTML =
+    '<button class="tick" type="button" aria-pressed="' + done + '" aria-label="' + d.t + '">✓</button>' +
+    '<span class="t">' + d.t + '</span>' +
+    (d.tag ? '<span class="tag">' + d.tag + '</span>' : '') +
+    '<span class="when ' + d.tone + '">' + d.when + '</span>' +
+    '<button class="star" type="button" aria-label="즐겨찾기">' + starSvg(d.star) + '</button>';
+  li.querySelector('.tick').addEventListener('click', function () { tick(i); });
+  return li;
+}
+
 function draw() {
-  const s = STATES[now];
+  var s = STATES[now];
+  var lying = s.total === 0;
+  var left = s.total - s.done;
 
-  $('stage').classList.toggle('lie', s.total === 0);
-  $('bear').src = s.total === 0 ? 'g/base-sleep.png' : 'g/main.png';
+  $('room').classList.toggle('lie', lying);
+  $('bear').src = lying ? 'g/base-sleep.png' : 'g/main.png';
   $('bits').innerHTML = BITS[bitFor(s)] || '';
-  $('say').innerHTML = sayFor(s);
+  $('bubble').innerHTML = bubbleFor(s);
 
+  $('leftN').textContent = left;
+  $('leftN').style.display = left ? '' : 'none';
   $('doneN').textContent = s.done;
   $('totalN').textContent = s.total;
   $('bar').style.width = (s.total ? (s.done / s.total) * 100 : 0) + '%';
-
   $('ptTotal').textContent = pt;
-  $('need').textContent = Math.max(0, GOAL - pt);
-  $('ptBar').style.width = Math.min(100, (pt / GOAL) * 100) + '%';
 
-  const list = $('list');
+  var list = $('list');
   list.innerHTML = '';
-  const rows = s.total === 0 ? [] : TASKS;
-  rows.forEach(function (row, i) {
-    const done = s.done > i;
-    const li = document.createElement('li');
-    if (done) li.className = 'done';
-    li.innerHTML =
-      '<button class="tick" type="button" aria-pressed="' + done + '" aria-label="' + row.t + '">✓</button>' +
-      '<span class="mid"><span class="t">' + row.t + '</span>' +
-      '<span class="meta"><span class="cat"><i style="background:' + row.color + '"></i>' + row.cat + '</span></span></span>';
-    li.querySelector('.tick').addEventListener('click', function () { tick(i); });
-    list.appendChild(li);
-  });
+  /* 안 한 것이 위, 완료한 것은 아래로 — 숨기지 않고 취소선만 긋는다 */
+  var order = [];
+  for (var i = s.done; i < s.total; i++) order.push([i, false]);
+  for (var j = 0; j < s.done; j++) order.push([j, true]);
+  order.slice(0, CAP).forEach(function (p) { list.appendChild(row(p[0], p[1])); });
+
   $('emptyMsg').hidden = s.total !== 0;
-  $('taskCard').querySelector('.more').hidden = s.total === 0;
 }
 
 /* 체크하면 곰돌이 위에 +10P가 뜬다 — 홈이 있는 이유다 */
 function tick(i) {
-  const s = STATES[now];
-  const wasDone = s.done > i;
-  s.done = wasDone ? i : i + 1;
+  var s = STATES[now];
+  var wasDone = i < s.done;
+  s.done = wasDone ? s.done - 1 : s.done + 1;
+  if (s.done < 0) s.done = 0;
+  if (s.done > s.total) s.done = s.total;
   pt = Math.max(0, pt + (wasDone ? -10 : 10));
   draw();
   if (!wasDone) {
-    const p = $('plus');
+    var p = $('plus');
     p.classList.remove('go');
     void p.offsetWidth;
     p.classList.add('go');
@@ -443,14 +570,10 @@ document.querySelectorAll('.states button[data-state]').forEach(function (b) {
   });
 });
 
-$('hintBtn').addEventListener('click', function () {
-  const on = $('hintBtn').getAttribute('aria-pressed') === 'true';
-  $('hintBtn').setAttribute('aria-pressed', String(!on));
-  $('stage').classList.toggle('show-hint', !on);
-});
-
 /* 자는 그림이 아직 없으면 서 있는 것으로 대신한다 — 깨진 그림이 뜨면 안 된다 */
-$('bear').addEventListener('error', function () { $('bear').src = 'g/main.png'; });
+$('bear').addEventListener('error', function () {
+  if ($('bear').src.indexOf('main.png') < 0) $('bear').src = 'g/main.png';
+});
 
 draw();
 </script>
