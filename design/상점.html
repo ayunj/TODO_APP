@@ -93,9 +93,10 @@ body{
   flex:none; display:inline-flex; align-items:center; gap:6px; border-radius:999px;
   background:var(--card); box-shadow:0 8px 24px rgba(0,0,0,.05); padding:7px 13px 7px 8px;
 }
+/* P는 그림 안에 이미 새겨져 있어 글자를 얹지 않는다 */
 .coin{
-  width:19px; height:19px; border-radius:999px; background:var(--star); color:#fff; flex:none;
-  display:grid; place-items:center; font-size:11px; font-weight:700; line-height:1;
+  width:19px; height:19px; flex:none; display:block;
+  background:url(g/ic-coin.png) center/contain no-repeat;
 }
 .wallet b{font-family:'IBM Plex Mono',monospace; font-size:13.5px; font-weight:500; color:var(--ink)}
 
@@ -136,7 +137,7 @@ body{
   background:var(--card); box-shadow:0 0 0 1.4px var(--line); padding:5px 12px 5px 5px;
   font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:500; color:var(--ink2);
 }
-.name .p .coin{width:18px; height:18px; font-size:10px}
+.name .p .coin{width:18px; height:18px}
 /* 입기·쓰기 — 돈이 안 드는 일이라 **테두리 알약 하나**로 끝낸다 */
 .name .use{
   flex:none; border:0; cursor:pointer; border-radius:999px; background:var(--card);
@@ -227,13 +228,14 @@ body{
   background:rgba(255,255,255,.92); display:grid; place-items:center; color:var(--ink3);
 }
 .item .lockmark svg{width:12px; height:12px}
+.item .lockmark img{width:13px; height:13px; display:block}
 .item .foot{
   display:inline-flex; align-items:center; justify-content:center; gap:4px;
   border-radius:999px; padding:4px 10px 4px 5px; font-size:10.5px; font-weight:500;
   font-family:'IBM Plex Mono',monospace;
 }
 .item .foot.price{background:var(--card); box-shadow:0 0 0 1.2px var(--line); color:var(--ink2)}
-.item .foot .coin{width:14px; height:14px; font-size:8.5px}
+.item .foot .coin{width:14px; height:14px}
 .item .foot.use{
   font-family:inherit; padding:4px 12px; background:var(--card);
   box-shadow:0 0 0 1.3px var(--accent-soft); color:var(--accent);
@@ -271,6 +273,7 @@ body{
   display:grid; place-items:center; overflow:hidden; margin-bottom:16px;
 }
 .dart img{width:100%; height:100%; object-fit:cover}
+.dart img.shade{width:auto; height:auto; max-width:56%; max-height:76%; object-fit:contain}
 .dart > svg{height:62%; width:auto}
 .dlead{text-align:center; font-size:12.5px; color:var(--ink2); margin:0 0 10px}
 .incl{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-bottom:18px}
@@ -281,6 +284,7 @@ body{
 .incl .art{width:100%; aspect-ratio:1/1; border-radius:10px; background:var(--sunk); display:grid; place-items:center; overflow:hidden; margin-bottom:6px}
 .incl .art svg{width:64%; height:64%}
 .incl .art img{width:100%; height:100%; object-fit:cover}
+.incl .art img.shade{width:auto; height:auto; max-width:64%; max-height:78%; object-fit:contain}
 .incl span{display:block; font-size:10.5px; color:var(--ink2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 /*
   ── 세트 안의 둘 ──
@@ -307,7 +311,7 @@ body{
   background:var(--accent); color:#fff; font-family:inherit; font-size:12.5px; font-weight:500;
   display:flex; align-items:center; justify-content:center; gap:5px;
 }
-.pcard .go .coin{width:16px; height:16px; font-size:9px; background:rgba(255,255,255,.35)}
+.pcard .go .coin{width:16px; height:16px}
 .pcard .go:active{transform:scale(.98)}
 .pcard .go.have{background:var(--card); box-shadow:0 0 0 1.4px var(--accent); color:var(--accent)}
 .pcard .go.now{background:var(--accent-tint); color:var(--accent); cursor:default}
@@ -554,12 +558,9 @@ var I_GIFT = SV('<rect x="4" y="10" width="16" height="10" rx="2"/><path d="M3.5
   '<path d="M12 6.5S10.8 3.5 9 3.5a1.8 1.8 0 0 0 0 3.6zM12 6.5s1.2-3 3-3a1.8 1.8 0 0 1 0 3.6z"/>');
 
 /* 옷 그림이 아직 없는 자리에 서는 곰돌이 그림자. 귀 둘이 보이는 쪽이 이 캐릭터다. */
-var SHADE = '<svg viewBox="0 0 100 100" aria-hidden="true">' +
-  '<g fill="#8c8078" opacity=".5">' +
-  '<circle cx="30" cy="27" r="12.5"/><circle cx="70" cy="27" r="12.5"/>' +
-  '<ellipse cx="50" cy="44" rx="27" ry="23"/>' +
-  '<path d="M25 62c16-6 34-6 50 0 7 12 5 26-3 30H28c-8-4-10-18-3-30z"/>' +
-  '</g></svg>';
+var SHADE = '<img class="bear shade" src="g/ic-bear.png" alt="" />';
+var I_LOCK_IMG = '<img src="g/ic-lock.png" alt="" />';
+var I_GIFT_IMG = '<img src="g/ic-gift.png" alt="" />';
 var OUTLINE = '<svg viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="4">' +
   '<circle cx="30" cy="27" r="12.5"/><circle cx="70" cy="27" r="12.5"/>' +
   '<ellipse cx="50" cy="44" rx="27" ry="23"/>' +
@@ -680,7 +681,7 @@ function header(title, backTo) {
   return '<div class="pbar">' +
     '<button class="back" type="button" aria-label="돌아가기"' + (backTo ? ' data-back="1"' : '') + '>' + I_BACK + '</button>' +
     '<h1>' + title + '</h1>' +
-    '<span class="wallet"><i class="coin">P</i><b>' + pt + '</b></span>' +
+    '<span class="wallet"><i class="coin"></i><b>' + pt + '</b></span>' +
   '</div>';
 }
 
@@ -700,7 +701,7 @@ function preview(trying) {
     ? '<span class="now">' + v[1] + '</span>'
     : own
       ? '<button class="use" type="button" data-use="' + trying + '">' + v[0] + '</button>'
-      : '<span class="p"><i class="coin">P</i>' + it.p + '</span>';
+      : '<span class="p"><i class="coin"></i>' + it.p + '</span>';
 
   var buy = own || !it.p ? ''
     : it.p <= pt
@@ -744,13 +745,13 @@ function card(it, trying) {
 
   var foot = own
     ? '<span class="foot ' + (here ? 'on' : 'use') + '">' + (here ? v[1] : v[0]) + '</span>'
-    : '<span class="foot price"><i class="coin">P</i>' + it.p + '</span>';
+    : '<span class="foot price"><i class="coin"></i>' + it.p + '</span>';
 
   return '<button class="item' + (trying === it.k ? ' try' : '') + '" type="button" data-try="' + it.k + '">' +
     '<span class="nm">' + it.n + '</span>' +
     '<span class="art' + (roomly ? ' scene' : '') + '">' + artOf(it) +
       (isPose(it.k) ? '<span class="lockmark gift">' + I_GIFT + '</span>' : '') +
-      (lock ? '<span class="lockmark">' + I_LOCK + '</span>' : '') +
+      (lock ? '<span class="lockmark">' + I_LOCK_IMG + '</span>' : '') +
     '</span>' + foot +
   '</button>';
 }
@@ -862,7 +863,7 @@ function detail(key) {
         ? '<span class="go now">' + v[1] + '</span>'
         : '<button class="go have" type="button" data-use="' + k + '">' + v[0] + '</button>')
       : it.p <= pt
-        ? '<button class="go" type="button" data-buy="' + k + '"><i class="coin">P</i>' + it.p + '</button>'
+        ? '<button class="go" type="button" data-buy="' + k + '"><i class="coin"></i>' + it.p + '</button>'
         : '<span class="go short">' + (it.p - pt) + 'P 더 모으면</span>';
     return '<div class="pcard">' +
       '<span class="art' + (roomly ? ' scene' : '') + '">' + artOf(it) +
@@ -881,7 +882,7 @@ function detail(key) {
       그 옷을 입고 소품까지 든 곰돌이 그림 한 장이다.
     */
     '<div class="gift' + (full ? ' done' : '') + '">' +
-      '<span class="art">' + (full ? artOf(pose) : I_GIFT) + '</span>' +
+      '<span class="art">' + (full ? artOf(pose) : I_GIFT_IMG) + '</span>' +
       '<span class="tx">' +
         '<span class="lbl">' + I_GIFT + '세트 완성 보상</span>' +
         '<b>' + pose.n + '</b>' +
