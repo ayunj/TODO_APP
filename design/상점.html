@@ -148,7 +148,7 @@ body{
 
 /*
   ── 갈래 칩 ──
-  **전체 · 늘 있는 옷 · 시즌 옷**, 그리고 줄 하나 건너 **내 옷장**.
+  **전체 · 스타일 · 시즌 세트**, 그리고 줄 하나 건너 **내 옷장**.
   부위(머리·몸·악세사리)로는 안 가른다 — 부위를 나누는 순간 사람들은 겹쳐 입기를 기대한다.
 */
 .chipbar{
@@ -263,7 +263,7 @@ body{
      폰은 <b>안드로이드 실기기 크기 그대로</b> <code>360 × 800</code>.</p>
   <p>뼈대는 한 줄이다 — <b>카드는 고르는 자리, 위 칸은 하는 자리.</b>
      카드를 누르면 곰돌이가 <b>걸쳐만 보고</b>, 사는 것도 입는 것도 위 칸의 단추 하나로 한다.
-     갈래는 <b>늘 있는 옷</b>과 <b>시즌 옷</b>, 그리고 <b>내 옷장</b>이다.
+     갈래는 <b>스타일</b>과 <b>시즌 세트</b>, 그리고 <b>내 옷장</b>이다.
      아래 손잡이로 포인트를 바꿔가며 눌러보면 된다.</p>
 </div>
 
@@ -275,8 +275,8 @@ body{
 </div>
 
 <div class="deck">
-  <div><p class="devname"><b>상점</b><span>늘 있는 옷 · 시즌 옷</span></p><div class="phone" data-cat="all" data-try="base"></div></div>
-  <div><p class="devname"><b>시즌 옷</b><span>걸쳐보는 중</span></p><div class="phone" data-cat="season" data-try="xmas"></div></div>
+  <div><p class="devname"><b>상점</b><span>스타일 · 시즌 세트</span></p><div class="phone" data-cat="all" data-try="base"></div></div>
+  <div><p class="devname"><b>시즌 세트</b><span>걸쳐보는 중</span></p><div class="phone" data-cat="season" data-try="xmas"></div></div>
   <div><p class="devname"><b>내 옷장</b><span>가진 것</span></p><div class="phone" data-cat="mine" data-try="hat"></div></div>
 
   <div class="note">
@@ -291,32 +291,37 @@ body{
       <li>이건 <b>꾸미기 게임이 아니라 집안일 앱의 덤</b>이다. 조합의 재미를 파고들 자리가 아니다</li>
     </ul>
 
-    <h3>그래서 갈래 이름이 <code>세트</code>가 아니다</h3>
-    <p>부위별을 접은 뒤로는 <b>파는 것이 전부 세트다.</b> 전부가 세트인데
-       한 갈래만 <code>세트</code>라고 부르면 아무것도 안 가른다 —
-       옆의 <code>전체</code>와도 뜻이 겹쳐 읽힌다.</p>
-    <p>가르는 것은 <b>때가 있느냐 없느냐</b> 하나뿐이다. 그러면 이름도 그렇게 붙는 게 맞다 —
-       <code>늘 있는 옷</code>과 <code>시즌 옷</code>.</p>
+    <h3>짝 이름을 찾기가 어려웠다</h3>
+    <p>파는 것을 가르는 잣대는 <b>때가 있느냐 없느냐</b> 하나뿐이다.
+       <code>시즌</code>은 쉽게 정해지는데 <b>그 짝을 뭐라 부를지가 계속 걸렸다</b> —
+       이름 없이 그냥 있어 온 것들이라 그렇다.</p>
     <table>
-      <tr><th>안 쓴 말</th><th>왜</th></tr>
-      <tr><td><code>세트</code> / <code>시즌 세트</code></td>
-        <td>전부가 세트라 <b>가르는 말이 못 된다</b></td></tr>
-      <tr><td><code>기본</code> / <code>시즌</code></td>
-        <td><code>기본 곰돌이</code>가 이미 있어 <b>그 옷 하나를 가리키는 말로 읽힌다</b></td></tr>
-      <tr><td><code>상시</code> / <code>한정</code></td>
-        <td><code>한정</code>은 <b>없어진다는 뜻</b>이다. 안 없어지기로 해놓고 쓰면 거짓말이 된다</td></tr>
+      <tr><th>거쳐온 말</th><th>왜 물렀나</th></tr>
+      <tr><td><code>세트</code></td>
+        <td>부위별을 접은 뒤로 <b>파는 것이 전부 세트</b>다. 가르는 말이 못 되고
+            <code>전체</code>와도 겹쳐 읽힌다</td></tr>
+      <tr><td><code>늘 있는 옷</code></td>
+        <td>뜻은 맞는데 <b>설명문이지 이름이 아니다.</b> 칩에 문장이 앉은 꼴</td></tr>
+      <tr><td><code>기본</code></td>
+        <td><code>기본 곰돌이</code>가 이미 있어 <b>그 옷 하나를 가리키는 말</b>로 읽힌다</td></tr>
+      <tr><td><code>한정</code></td>
+        <td><b>없어진다는 뜻</b>이다. 안 없어지기로 해놓고 쓰면 거짓말이 된다</td></tr>
+      <tr><td><b>스타일</b></td>
+        <td><b>정했다.</b> 짧고, 옷을 고르는 자리에 앉기에 어색하지 않다</td></tr>
     </table>
     <div class="warn">
-      가운데 칩은 <b>없애도 된다.</b> <code>전체</code>가 이미 다 보여주니
-      <code>늘 있는 옷</code>은 <b>시즌 것만 빼고 보는 자리</b>인데, 그걸 굳이 볼 일이 흔치 않다.
-      <code>전체 · 시즌 옷 · 내 옷장</code> 셋으로 줄여도 화면은 그대로 돈다.
+      <b>남는 문제 하나 —</b> <code>스타일</code>은 <b>무엇</b>이고 <code>시즌</code>은 <b>언제</b>라
+      두 말의 결이 다르다. 시즌 세트도 스타일이긴 하니까.
+      이게 나중에 또 걸리면 답은 <b>이름을 또 바꾸는 게 아니라 가운데 칩을 없애는 것</b>이다 —
+      <code>전체</code>가 이미 다 보여주니 <code>전체 · 시즌 세트 · 내 옷장</code> 셋으로
+      줄여도 화면은 그대로 돈다.
     </div>
 
     <h3>봄·여름·가을·겨울로도 안 가른다</h3>
     <p>철 이름을 달면 <b>넉 자리가 생기고</b>, 그러면 대부분의 날에 그중 셋이
        <b>지금이 아닌 것</b>으로 읽힌다. 크리스마스 옷 옆에 <code>겨울</code>이라 적혀 있으면
        8월에는 <b>안 사도 되는 것</b>이 된다 — 팔 생각이 없는 물건을 진열한 꼴이다.</p>
-    <p><code>시즌 옷</code> 한 낱말이면 <b>때가 있는 옷</b>이라는 말은 이미 다 한 것이고,
+    <p><code>시즌 세트</code> 한 낱말이면 <b>때가 있는 옷</b>이라는 말은 이미 다 한 것이고,
        무슨 때인지는 <b>크리스마스</b>·<b>설빔</b>이라는 이름이 말한다.</p>
     <div class="pick">
       지금 시기 것은 <b>이름표 대신 순서로</b> 말한다 —
@@ -335,11 +340,11 @@ body{
       <b>못 산 사람을 아쉽게 만드는 것</b>으로 만든 재미다. 이 앱이 그걸로 벌 것이 없다.
     </div>
 
-    <h3>시즌 옷 넷이면 여덟 장</h3>
+    <h3>시즌 세트 넷이면 여덟 장</h3>
     <p>한 벌에 <code>front</code>·<code>sleep</code> 두 장이다.
-       지금 발주서의 일곱 벌은 <b>전부 늘 있는 옷</b>으로 두고 그 위에 얹는다.</p>
+       지금 발주서의 일곱 벌은 <b>전부 스타일 쪽</b>에 두고 그 위에 얹는다.</p>
     <table>
-      <tr><th>시즌 옷</th><th>값</th></tr>
+      <tr><th>시즌 세트</th><th>값</th></tr>
       <tr><td>물놀이</td><td>300</td></tr>
       <tr><td>핼러윈</td><td>350</td></tr>
       <tr><td>크리스마스</td><td>400</td></tr>
@@ -428,7 +433,7 @@ var SHADE = '<svg viewBox="0 0 100 100" aria-hidden="true">' +
 
   `season`이 붙은 것은 **때가 있는 옷**이다. 갈래는 그것 하나뿐이다 —
   봄·여름·가을·겨울로 이름표를 달면 넉 자리가 생기고, 그러면 대부분의 날에
-  그중 셋이 `지금이 아닌 것`이 된다. **`늘 있는 옷`과 `시즌 옷` 둘이면 된다.**
+  그중 셋이 `지금이 아닌 것`이 된다. **`스타일`과 `시즌 세트` 둘이면 된다.**
 
   `img`가 없는 것은 아직 안 그린 옷이라 그림자가 대신 선다.
 */
@@ -509,7 +514,7 @@ function chipbar(cat) {
       (cat === k ? ' aria-pressed="true"' : '') + '>' + label + '</button>';
   };
   return '<div class="chipbar">' +
-    one('all', '전체') + one('set', '늘 있는 옷') + one('season', '시즌 옷') +
+    one('all', '전체') + one('set', '스타일') + one('season', '시즌 세트') +
     '<span class="vline"></span>' +
     one('mine', '내 옷장<em>' + mineCount() + '</em>') +
   '</div>';
@@ -543,7 +548,7 @@ function section(title, list, trying) {
 }
 
 /*
-  **묶음 둘 — `늘 있는 옷`과 `시즌 옷`.** 시즌 것도 그 자리에 그대로 있고,
+  **묶음 둘 — `스타일`과 `시즌 세트`.** 시즌 것도 그 자리에 그대로 있고,
   지금 시기 것이 그 묶음 안에서 앞에 설 뿐이다.
   `지금 아니면 못 산다`는 조르는 구조라 이 앱에 안 맞고,
   3월에 앱을 깐 사람이 12월까지 볼 것이 없어도 안 된다.
@@ -567,8 +572,8 @@ function grid(cat, trying) {
 
   /* 전체에서만 제목을 단다 — 칩으로 걸러 들어오면 그 칩이 곧 제목이다 */
   return '<div class="screen list">' +
-    section('늘 있는 옷', ITEMS.filter(function (i) { return !i.season; }), trying) +
-    section('시즌 옷', ITEMS.filter(function (i) { return i.season; }), trying) +
+    section('스타일', ITEMS.filter(function (i) { return !i.season; }), trying) +
+    section('시즌 세트', ITEMS.filter(function (i) { return i.season; }), trying) +
   '</div>';
 }
 
