@@ -162,7 +162,6 @@ body{
   font-family:inherit; font-size:12.5px; font-weight:500;
 }
 .chipbar button[aria-pressed="true"]{background:var(--accent); color:#fff}
-.chipbar button em{font-family:'IBM Plex Mono',monospace; font-style:normal; opacity:.75; margin-left:4px}
 
 /*
   ── 묶음 제목 ──
@@ -468,7 +467,6 @@ var find = function (k) { return ITEMS.filter(function (i) { return i.k === k; }
 var artOf = function (it) {
   return it.img ? '<img src="' + it.img + '" alt="" onerror="this.outerHTML=SHADE" />' : SHADE;
 };
-var mineCount = function () { return ITEMS.filter(function (i) { return owned[i.k]; }).length; };
 
 function header() {
   return '<div class="pbar">' +
@@ -523,7 +521,7 @@ function chipbar(cat) {
   return '<div class="chipbar">' +
     one('all', '전체') + one('set', '꾸미기') + one('season', '시즌') +
     '<span class="vline"></span>' +
-    one('mine', '내 옷장<em>' + mineCount() + '</em>') +
+    one('mine', '내 옷장') +
   '</div>';
 }
 
