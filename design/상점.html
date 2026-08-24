@@ -162,8 +162,18 @@ body{
 .chipbar button[aria-pressed="true"]{background:var(--accent); color:#fff}
 .chipbar button em{font-family:'IBM Plex Mono',monospace; font-style:normal; opacity:.75; margin-left:4px}
 
+/*
+  ── 묶음 제목 ──
+  칩을 더 늘리는 대신 **한 화면 안에서 가른다.** 칩이 넷 다섯이 되면
+  고르기 전에 고르는 짐이 먼저 생긴다 — 부위로 안 나눈 것과 같은 이유다.
+*/
+.gh{display:flex; align-items:baseline; gap:8px; margin:4px 0 9px}
+.gh b{font-size:12.5px; font-weight:500; color:var(--ink2)}
+.gh span{font-size:11px; color:var(--ink3); margin-left:auto; text-align:right}
+
 /* ── 격자 — 세 칸 ── */
-.grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; padding-bottom:26px}
+.grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; padding-bottom:18px}
+.list{padding-bottom:26px}
 .item{
   position:relative; border:0; padding:9px 7px 10px; cursor:pointer; text-align:center;
   border-radius:16px; background:var(--card); box-shadow:0 8px 24px rgba(0,0,0,.05);
@@ -196,6 +206,12 @@ body{
 /* 값은 지우지 않는다 — 얼마를 모아야 하는지까지 가리면 모을 이유가 사라진다 */
 .item.lock .price{background:var(--sunk); color:var(--ink3)}
 .item.lock .price .coin{background:var(--faint)}
+/* 철 배지 — 왜 이 옷이 여기 있는지 한 낱말로 말한다. 자물쇠는 오른쪽이라 안 부딪힌다. */
+.item .season{
+  position:absolute; left:5px; top:5px; border-radius:999px; padding:2px 7px;
+  background:rgba(255,255,255,.9); color:var(--ink3); font-size:9px; font-weight:500;
+}
+.item.here .season{background:var(--accent); color:#fff}
 .item .tag{border-radius:999px; padding:3px 10px; font-size:10.5px; font-weight:500; background:var(--accent-tint); color:var(--accent)}
 .item.on .tag{background:var(--accent); color:#fff}
 /* 지금 걸쳐보고 있는 칸 — 위 칸이 무엇을 보여주는 중인지 격자에서도 짚어준다 */
@@ -255,34 +271,71 @@ body{
   <button type="button" data-pt="120">120</button>
   <button type="button" data-pt="350" aria-pressed="true">350</button>
   <button type="button" data-pt="1000">1000</button>
+  <span style="width:20px"></span>
+  <b>지금 철</b>
+  <button type="button" data-season="봄">봄</button>
+  <button type="button" data-season="여름" aria-pressed="true">여름</button>
+  <button type="button" data-season="가을">가을</button>
+  <button type="button" data-season="겨울">겨울</button>
 </div>
 
 <div class="deck">
-  <div><p class="devname"><b>상점</b><span>고르는 중</span></p><div class="phone" data-cat="all" data-try="base"></div></div>
-  <div><p class="devname"><b>걸쳐보기</b><span>아직 못 사는 것</span></p><div class="phone" data-cat="all" data-try="lion"></div></div>
+  <div><p class="devname"><b>상점</b><span>지금 철이 위로</span></p><div class="phone" data-cat="all" data-try="base"></div></div>
+  <div><p class="devname"><b>걸쳐보기</b><span>아직 못 사는 것</span></p><div class="phone" data-cat="all" data-try="xmas"></div></div>
   <div><p class="devname"><b>내 코스튬</b><span>가진 것</span></p><div class="phone" data-cat="mine" data-try="hat"></div></div>
 
   <div class="note">
-    <h2>부위별로 코디할까, 세트로 갈까</h2>
-    <div class="pick"><b>세트로 가는 쪽을 권한다.</b> 토끼 세트 · 공룡 세트 · 걸스카우트 세트처럼
-      <b>한 벌이 곧 한 모습</b>이고, 누르면 그 세트로 갈아입는다.</div>
+    <h2>세트로 · 철마다</h2>
+    <div class="pick"><b>정했다 — 한 벌이 곧 한 모습이다.</b> 부위로 쪼개지 않고,
+      크리스마스 세트 · 설빔 세트처럼 <b>철마다 한 벌씩</b> 는다.
+      위 손잡이로 <b>철을 바꿔보면</b> 상점이 어떻게 다시 놓이는지 보인다.</div>
     <ul>
-      <li><b>그림이 곱으로 늘지 않는다.</b> 세트는 옷 한 벌에 두 장(<code>front</code>·<code>sleep</code>)이면 끝난다.
+      <li><b>그림이 곱으로 안 는다.</b> 세트는 한 벌에 두 장(<code>front</code>·<code>sleep</code>)이면 끝이다.
           부위별은 <b>조합마다</b> 어긋나는 데가 없는지 봐야 한다 — 머리 5 × 몸 5면 볼 것이 25가지다</li>
       <li><b>겹쳐 입기는 이미 막혀 있다.</b> 곰사자 갈기 위에 모자를 얹으면 겹친다.
           <a href="g/그릴-것.md">발주서</a>가 <code>모자는 귀를 안 덮는 것으로</code>라고 적어둔 이유가 그거다</li>
-      <li><b>모으는 목표가 뚜렷하다.</b> 300P 모아 <code>곰토끼</code>를 얻는 편이
-          100P짜리 부품 셋을 모으는 것보다 할 말이 분명하다</li>
       <li>이건 <b>꾸미기 게임이 아니라 집안일 앱의 덤</b>이다. 조합의 재미를 파고들 자리가 아니다</li>
     </ul>
-    <p><b>그래서 갈래 칩을 둘로 줄였다</b> — <code>전체</code>와 <code>내 코스튬</code>.
-       머리·몸·악세사리로 가르는 순간 사람들은 <b>겹쳐 입기를 기대한다.</b>
-       칩을 안 나누면 그 기대가 아예 안 생긴다.</p>
+
+    <h3>철이 지나도 안 없앤다</h3>
+    <div class="pick"><b>사라지는 게 아니라 자리만 바뀐다.</b> 지금 철이 맨 위로 오고,
+      지난 철은 <code>다른 철 옷</code>에 그대로 남는다.</div>
+    <ul>
+      <li><b>“지금 아니면 못 사요”는 이 앱이 안 하는 말이다.</b>
+          밀린 일을 빨갛게 안 칠하기로 해놓고 옷은 조르면 앞뒤가 안 맞는다</li>
+      <li><b>3월에 앱을 깐 사람이 12월까지 볼 것이 없으면 안 된다.</b>
+          한 철 것만 팔면 상점이 대부분의 날에 카드 한두 장짜리가 된다</li>
+      <li>8월에 크리스마스 옷을 입고 싶으면 입으면 된다. <b>귀여우면 그만이다</b></li>
+    </ul>
     <div class="warn">
-      옷이 열 벌을 넘어 갈래가 필요해지면 그때는 <b>부위가 아니라 결</b>로 가른다 —
-      <code>동물</code> · <code>계절</code> · <code>일하는 옷</code>처럼.
-      같은 세트끼리 묶는 말이라 <b>겹쳐 입기를 약속하지 않는다.</b>
+      한정 판매로 가면 <b>사람은 확실히 더 산다.</b> 대신 그 재미는
+      <b>못 산 사람을 아쉽게 만드는 것</b>으로 만든 재미다. 이 앱이 그걸로 벌 것이 없다.
     </div>
+
+    <h3>철마다 한 벌이면 1년에 넉 장</h3>
+    <p>세트 하나에 <code>front</code>·<code>sleep</code> 두 장이니
+       <b>한 철에 한 벌이면 1년에 여덟 장</b>이다. 지금 발주서의 일곱 벌은
+       <b>전부 늘 있는 옷</b>으로 두고, 철 옷은 그 위에 얹는다.</p>
+    <table>
+      <tr><th>철</th><th>세트</th><th>그림</th></tr>
+      <tr><td><b>봄</b></td><td>곰토끼</td><td><b>이미 있다</b></td></tr>
+      <tr><td><b>여름</b></td><td>물놀이</td><td>그려야 한다</td></tr>
+      <tr><td><b>가을</b></td><td>핼러윈</td><td>그려야 한다</td></tr>
+      <tr><td><b>겨울</b></td><td>크리스마스 · 설빔</td><td>그려야 한다</td></tr>
+    </table>
+    <div class="pick">
+      <b>이미 그린 것에 철만 달아도 시즌이 된다.</b> 곰토끼가 그렇다 —
+      부활절 자리를 <b>새로 그리지 않고</b> 채웠다.
+    </div>
+    <div class="warn">
+      <b>100P 셋(모자·리본·목도리)은 철을 안 탄다.</b> 발주서에 이미 있는 규칙이다 —
+      들어오자마자 살 수 있는 것이 죄다 철 옷이면 <b>8월에 가입한 사람이 어색하다.</b>
+    </div>
+
+    <h3>갈래 칩은 여전히 둘이다</h3>
+    <p>철이 생겼다고 <code>봄 · 여름 · 가을 · 겨울</code> 칩을 세우지 않았다.
+       <b>고르기 전에 고르는 짐이 먼저 생긴다.</b> 대신 한 화면 안에서
+       <b>묶음 제목</b>으로 가른다 — 내려가면 다 보인다.</p>
     <p>목도리·모자·리본도 <a href="g/그릴-것.md">발주서</a>에서는 이미
        <b>곰돌이가 그걸 걸친 그림 한 장</b>이다. 부품이 아니라 <b>작은 세트</b>라
        세트로 가도 목록은 그대로다.</p>
@@ -353,19 +406,29 @@ var SHADE = '<svg viewBox="0 0 100 100" aria-hidden="true">' +
   ── 파는 것 ──
   값은 발주서(g/그릴-것.md)를 그대로 옮긴 것이다.
   **한 줄이 한 세트다.** 머리·몸으로 쪼개지 않는다 — 쪼개면 조합마다 그림을 맞춰야 한다.
+
+  `season`이 있으면 그 철에 맨 위로 올라온다. **철이 지나도 사라지지는 않는다.**
+  `season`이 없는 것은 늘 있는 옷이다 — 발주서의 `100P 셋은 철을 안 타야 한다`가 이 줄들이다.
   `img`가 없는 것은 아직 안 그린 옷이라 그림자가 대신 선다.
 */
 var ITEMS = [
-  { k: 'base',   n: '기본 곰돌이', p: 0,   img: 'g/base-front.png', own: true },
-  { k: 'hat',    n: '모자',        p: 100 },
-  { k: 'ribbon', n: '리본',        p: 100 },
-  { k: 'scarf',  n: '목도리',      p: 100 },
-  { k: 'apron',  n: '앞치마',      p: 200 },
-  { k: 'rabbit', n: '곰토끼',      p: 300, img: 'g/rabbit-front-mock.png' },
-  { k: 'dino',   n: '곰공룡',      p: 350 },
-  { k: 'lion',   n: '곰사자',      p: 400 }
+  { k: 'base',   n: '기본 곰돌이',   p: 0,   img: 'g/base-front.png', own: true },
+  { k: 'hat',    n: '모자',          p: 100 },
+  { k: 'ribbon', n: '리본',          p: 100 },
+  { k: 'scarf',  n: '목도리',        p: 100 },
+  { k: 'apron',  n: '앞치마',        p: 200 },
+  { k: 'dino',   n: '곰공룡',        p: 350 },
+  { k: 'lion',   n: '곰사자',        p: 400 },
+  /* 곰토끼는 이미 그려둔 그림이다 — **철만 달아서** 봄 자리를 채웠다 */
+  { k: 'rabbit', n: '곰토끼',        p: 300, img: 'g/rabbit-front-mock.png', season: '봄' },
+  { k: 'swim',   n: '물놀이 세트',   p: 300, season: '여름' },
+  { k: 'hallow', n: '핼러윈 세트',   p: 350, season: '가을' },
+  { k: 'xmas',   n: '크리스마스 세트', p: 400, season: '겨울' },
+  { k: 'hanbok', n: '설빔 세트',     p: 400, season: '겨울' }
 ];
+var SEASONS = ['봄', '여름', '가을', '겨울'];
 
+var now = '여름';  /* 지금 철 — 시안에서 손잡이로 바꿔볼 수 있다 */
 var pt = 350;      /* 내 포인트 */
 var worn = 'base'; /* 정말 입고 있는 옷 */
 var owned = { base: true, hat: true };
@@ -426,7 +489,8 @@ function chipbar(cat) {
 function card(it, trying) {
   var own = Boolean(owned[it.k]);
   var lock = !own && it.p > pt;
-  var cls = 'item' + (worn === it.k ? ' on' : '') + (lock ? ' lock' : '') + (trying === it.k ? ' try' : '');
+  var cls = 'item' + (worn === it.k ? ' on' : '') + (lock ? ' lock' : '') +
+    (trying === it.k ? ' try' : '') + (it.season === now ? ' here' : '');
 
   var foot = own
     ? '<span class="tag">' + (worn === it.k ? '입는 중' : '가짐') + '</span>'
@@ -435,23 +499,47 @@ function card(it, trying) {
   return '<button class="' + cls + '" type="button" data-try="' + it.k + '">' +
     '<span class="nm">' + it.n + '</span>' +
     '<span class="art">' + artOf(it) +
+      (it.season ? '<span class="season">' + it.season + '</span>' : '') +
       (lock ? '<span class="lockmark">' + I_LOCK + '</span>' : '') +
     '</span>' + foot +
   '</button>';
 }
 
-function grid(cat, trying) {
-  var list = cat === 'mine' ? ITEMS.filter(function (i) { return owned[i.k]; }) : ITEMS;
+function section(title, aside, list, trying) {
+  if (!list.length) return '';
+  return '<div class="gh"><b>' + title + '</b>' + (aside ? '<span>' + aside + '</span>' : '') + '</div>' +
+    '<div class="grid">' + list.map(function (i) { return card(i, trying); }).join('') + '</div>';
+}
 
-  /* 비었다고 문장만 두지 않는다 — 어디로 가면 되는지까지 적는다 */
-  if (!list.length) {
-    return '<div class="screen"><div class="grid"><div class="empty">' +
-      '<b>아직 가진 옷이 없어요</b>할 일을 끝내면 포인트가 쌓여요.<br />' +
-      '<b style="display:inline; font-size:12.5px; color:var(--accent)">전체</b>에서 살 수 있는 것을 볼 수 있어요.' +
-      '</div></div></div>';
+/*
+  **묶음 셋으로 가른다.** 지금 철이 맨 위고, 늘 있는 옷이 가운데,
+  다른 철 옷은 아래에 그대로 남는다 — 사라지지 않는다.
+  `지금 아니면 못 산다`는 조르는 구조라 이 앱에 안 맞고,
+  3월에 앱을 깐 사람이 12월까지 볼 것이 없어도 안 된다.
+*/
+function grid(cat, trying) {
+  if (cat === 'mine') {
+    var mine = ITEMS.filter(function (i) { return owned[i.k]; });
+    /* 비었다고 문장만 두지 않는다 — 어디로 가면 되는지까지 적는다 */
+    if (!mine.length) {
+      return '<div class="screen list"><div class="grid"><div class="empty">' +
+        '<b>아직 가진 옷이 없어요</b>할 일을 끝내면 포인트가 쌓여요.<br />' +
+        '<b style="display:inline; font-size:12.5px; color:var(--accent)">전체</b>에서 살 수 있는 것을 볼 수 있어요.' +
+        '</div></div></div>';
+    }
+    return '<div class="screen list"><div class="grid">' +
+      mine.map(function (i) { return card(i, trying); }).join('') + '</div></div>';
   }
-  return '<div class="screen"><div class="grid">' +
-    list.map(function (i) { return card(i, trying); }).join('') + '</div></div>';
+
+  var here = ITEMS.filter(function (i) { return i.season === now; });
+  var ever = ITEMS.filter(function (i) { return !i.season; });
+  var away = ITEMS.filter(function (i) { return i.season && i.season !== now; });
+
+  return '<div class="screen list">' +
+    section('지금 — ' + now, '이 철에 어울리는 옷', here, trying) +
+    section('늘 있는 옷', '', ever, trying) +
+    section('다른 철 옷', '지금 사도 괜찮아요', away, trying) +
+  '</div>';
 }
 
 function render(ph) {
@@ -480,6 +568,16 @@ document.addEventListener('click', function (e) {
     pt = Number(knob.dataset.pt);
     document.querySelectorAll('.knobs button[data-pt]').forEach(function (b) {
       b.setAttribute('aria-pressed', String(b === knob));
+    });
+    drawAll();
+    return;
+  }
+
+  var season = e.target.closest('.knobs button[data-season]');
+  if (season) {
+    now = season.dataset.season;
+    document.querySelectorAll('.knobs button[data-season]').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b === season));
     });
     drawAll();
     return;
