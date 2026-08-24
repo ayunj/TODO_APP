@@ -282,14 +282,62 @@ body{
 .incl .art svg{width:64%; height:64%}
 .incl .art img{width:100%; height:100%; object-fit:cover}
 .incl span{display:block; font-size:10.5px; color:var(--ink2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.dprice{
-  display:flex; align-items:center; justify-content:center; gap:7px; margin-bottom:12px;
-  font-family:'IBM Plex Mono',monospace; font-size:19px; font-weight:500; color:var(--ink);
+/*
+  ── 세트 안의 둘 ──
+  **곰과 방은 따로 산다.** 묶어 팔면서 값을 깎으면 낱개 값과 묶음 값 둘을 관리해야 하고,
+  크리스마스 방만 갖고 싶은 사람이 곰까지 사게 된다.
+  **깎아주는 대신 하나 더 준다** — 둘을 다 모으면 소품이 딸려온다.
+*/
+.pair{display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:10px}
+.pcard{
+  border-radius:16px; background:var(--card); box-shadow:0 0 0 1.4px var(--line);
+  padding:9px 9px 10px; text-align:center; display:flex; flex-direction:column; gap:7px;
 }
-.dprice .coin{width:22px; height:22px; font-size:12px}
-/* 낱개로 사면 얼마인지 옆에 적는다 — 묶음이 싼 게 아니면 묶을 까닭이 없다 */
-.dsave{text-align:center; font-size:11.5px; color:var(--ink3); margin:-6px 0 14px}
-.dsave s{color:var(--faint)}
+.pcard .art{
+  position:relative; width:100%; aspect-ratio:1/1; border-radius:12px; background:var(--sunk);
+  display:grid; place-items:center; overflow:hidden;
+}
+.pcard .art img{max-width:88%; max-height:88%; width:auto; height:auto}
+.pcard .art.scene img{width:100%; height:100%; max-width:none; max-height:none; object-fit:cover}
+.pcard .art > svg{width:64%; height:64%}
+.pcard .kind{font-size:9.5px; color:var(--ink3)}
+.pcard b{font-size:12.5px; font-weight:500; color:var(--ink)}
+.pcard .go{
+  margin-top:auto; border:0; cursor:pointer; border-radius:11px; padding:9px 0;
+  background:var(--accent); color:#fff; font-family:inherit; font-size:12.5px; font-weight:500;
+  display:flex; align-items:center; justify-content:center; gap:5px;
+}
+.pcard .go .coin{width:16px; height:16px; font-size:9px; background:rgba(255,255,255,.35)}
+.pcard .go:active{transform:scale(.98)}
+.pcard .go.have{background:var(--card); box-shadow:0 0 0 1.4px var(--accent); color:var(--accent)}
+.pcard .go.now{background:var(--accent-tint); color:var(--accent); cursor:default}
+.pcard .go.short{background:var(--sunk); color:var(--ink3); cursor:default; font-size:11px; font-weight:400}
+
+/* 소품 줄 — 파는 것이 아니라 **딸려오는 것**이라 값이 없다 */
+.gift{
+  display:flex; align-items:center; gap:11px; border-radius:16px; padding:12px 14px;
+  background:var(--sunk); margin-bottom:16px;
+}
+.gift .art{
+  width:44px; height:44px; flex:none; border-radius:12px; background:var(--card);
+  display:grid; place-items:center; color:var(--cycle);
+}
+.gift .art svg{width:22px; height:22px}
+.gift .tx{flex:1; min-width:0}
+.gift .tx b{display:block; font-size:12.5px; font-weight:500; color:var(--ink)}
+.gift .tx span{font-size:11px; color:var(--ink3)}
+.gift .mark{
+  flex:none; border-radius:999px; padding:4px 10px; font-size:10.5px; font-weight:500;
+  background:var(--card); color:var(--ink3); box-shadow:0 0 0 1.2px var(--line);
+}
+.gift.done{background:var(--accent-tint)}
+.gift.done .mark{background:var(--accent); color:#fff; box-shadow:none}
+
+/* 세트 카드 아래 — 값이 아니라 **몇 개 모았나**다 */
+.item .foot.step{font-family:'IBM Plex Mono',monospace; padding:4px 10px; background:var(--sunk); color:var(--ink2)}
+.item .foot.step svg{width:11px; height:11px; color:var(--cycle)}
+.item .foot.step.done{background:var(--accent); color:#fff}
+.item .foot.step.done svg{color:#fff}
 
 .empty{
   grid-column:1 / -1; border-radius:20px; background:var(--card); box-shadow:0 8px 24px rgba(0,0,0,.05);
@@ -347,7 +395,7 @@ body{
      <b>밀고 들어온 화면이라 탭바도 + 버튼도 없다</b>. 폰은 <code>360 × 800</code>.</p>
   <p><b>카드는 고르는 자리, 위 칸은 하는 자리.</b> 카드를 누르면 위 칸이 그걸로 바뀌고 —
      <b>방을 고르면 배경이, 곰을 고르면 곰이</b> 갈린다.
-     <b>시즌 세트 카드는 눌러 들어간다</b>(세 개가 한 번에 사지는 일이라 안에 뭐가 들었는지 먼저 보여준다).</p>
+     <b>시즌 세트는 묶어 팔지 않는다</b> — 곰과 방을 따로 사고, 둘을 다 모으면 소품이 딸려온다.</p>
 </div>
 
 <div class="knobs">
@@ -400,20 +448,34 @@ body{
        옷장 맨 아래에 <code>테마를 바꾸면 홈 배경이 바뀌어요</code>를 적어둔 게 그래서다 —
        <b>어디서 보게 되는지를 사기 전에 알려준다.</b></p>
 
-    <h2 style="margin-top:24px">세트 값을 정해야 한다</h2>
+    <h2 style="margin-top:24px">세트를 묶어 팔지 않는다</h2>
+    <div class="pick"><b>곰과 방은 따로 산다. 둘을 다 모으면 소품이 딸려온다.</b>
+      깎아주는 대신 <b>하나 더 주는</b> 쪽이다.</div>
+    <table>
+      <tr><th></th><th>묶어 팔면</th><th>따로 팔면</th></tr>
+      <tr><td><b>값</b></td><td>낱개 값과 묶음 값 <b>둘</b>을 관리한다</td><td><b>하나</b>뿐이다</td></tr>
+      <tr><td><b>고르기</b></td><td>크리스마스 방만 갖고 싶어도 <b>곰까지 산다</b></td>
+        <td>원하는 쪽만 산다</td></tr>
+      <tr><td><b>재미</b></td><td>싸게 샀다</td><td><b>다 모으니 하나 더 왔다</b></td></tr>
+    </table>
+    <p>깎아주기는 <b>산 다음에 남는 것이 없다.</b> 소품은 남는다 —
+       그리고 그게 <b>왜 둘을 다 모으는지</b>에 대한 답이 된다.</p>
     <div class="warn">
-      시안의 <b>물놀이 세트 700P</b>인데 안에 셋이 들었다.
-      <b>낱개로도 판다면 합보다 싸야</b> 세트다. 안 그러면 묶을 까닭이 없다.
+      <b>소품에는 값을 안 붙인다.</b> 값이 붙는 순간 <b>못 산 것</b>이 되고,
+      그러면 딸려오는 것이 아니라 <b>안 사면 못 갖는 것</b>으로 읽힌다.
     </div>
-    <p>여기서는 <b>낱개 합의 8할</b>로 잡아뒀다 — 물놀이 곰 300 + 여름 바다 400 + 튜브 소품 150 =
-       <b>850 → 700</b>. 상세 화면에 <b>낱개로 사면 얼마인지</b> 같이 적어서
-       왜 묶음인지 눈으로 보이게 했다.</p>
-    <p>낱개로 안 팔 거면 그 줄만 지우면 된다. 대신 그때는
-       <b>시즌 방을 따로 살 길이 없어진다</b> — 크리스마스 방만 갖고 싶은 사람이 곰까지 사야 한다.</p>
+    <p>그래서 <b>세트 카드에도 값이 없다.</b> 파는 물건이 아니라 <b>모으는 자리</b>라
+       카드가 말할 것은 <code>1/3</code> — 셋 중 몇 개 모았나다.</p>
+
+    <h3>소품은 어디에 얹히나</h3>
+    <p>이건 아직 안 정했다. <a href="g/그릴-것.md">발주서</a>의 조각 규칙을 그대로 따르면
+       <b>곰돌이 옆 바닥</b>이 안전하다 — <code>sprout</code>이 그 자리인 이유가
+       <b>손 위치는 옷마다 달라지지만 옆 바닥은 안 달라져서</b>다.
+       튜브를 손에 들리면 <b>옷 열 벌마다 손 위치를 맞춰야 한다.</b></p>
 
     <h3>시즌 세트 카드는 눌러 들어간다</h3>
     <p>낱개는 카드를 누르면 <b>위 칸에 걸쳐만</b> 보는데, 세트는 <b>화면을 하나 더 연다</b>.
-       셋을 한 번에 사는 일이라 <b>무엇이 들었는지</b>가 값보다 먼저 나와야 한다.</p>
+       안에 곰·방·소품 셋이 있어서 <b>103px 칸으로는 못 담는다.</b></p>
 
     <h3>방에는 <code>입기</code>를 안 쓴다</h3>
     <table>
@@ -453,6 +515,8 @@ var I_HEART = SV('<path d="M12 20s-7-4.6-7-9.4A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 
 var I_STAR = SV('<path d="M12 4l2.4 5 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4L4.2 9.8 9.6 9z"/>');
 var I_ROOM = SV('<path d="M3.5 10.6 12 4l8.5 6.6"/><path d="M6 9.6V20h12V9.6"/>');
 var I_BOX = SV('<path d="M4 8.5 12 5l8 3.5v7L12 19l-8-3.5z"/><path d="M4 8.5 12 12l8-3.5M12 12v7"/>');
+var I_GIFT = SV('<rect x="4" y="10" width="16" height="10" rx="2"/><path d="M3.5 6.5h17V10h-17zM12 6.5V20"/>' +
+  '<path d="M12 6.5S10.8 3.5 9 3.5a1.8 1.8 0 0 0 0 3.6zM12 6.5s1.2-3 3-3a1.8 1.8 0 0 1 0 3.6z"/>');
 
 /* 옷 그림이 아직 없는 자리에 서는 곰돌이 그림자. 귀 둘이 보이는 쪽이 이 캐릭터다. */
 var SHADE = '<svg viewBox="0 0 100 100" aria-hidden="true">' +
@@ -505,21 +569,31 @@ var ROOMS = [
   { k: 'r-beach',  n: '해변 룸',     p: 450, season: true }
 ];
 
-/* 소품은 따로 안 판다 — 세트에만 들어 있다. 값은 묶음 값을 셈할 때만 쓴다. */
+/*
+  소품은 **파는 물건이 아니다.** 그 세트의 곰과 방을 둘 다 모으면 딸려온다.
+  그래서 값이 없다 — 값이 붙는 순간 안 산 사람에게 `못 산 것`이 된다.
+*/
 var PROPS = {
-  'p-tube':   { n: '튜브 소품',   p: 150 },
-  'p-pump':   { n: '호박 소품',   p: 150 },
-  'p-tree':   { n: '트리 소품',   p: 150 },
-  'p-petal':  { n: '꽃잎 소품',   p: 150 },
-  'p-parcel': { n: '파라솔 소품', p: 150 }
+  'p-tube':   { n: '튜브 소품',   gift: true },
+  'p-pump':   { n: '호박 소품',   gift: true },
+  'p-tree':   { n: '트리 소품',   gift: true },
+  'p-petal':  { n: '꽃잎 소품',   gift: true },
+  'p-parcel': { n: '파라솔 소품', gift: true }
 };
 
+/*
+  ── 시즌 세트 ──
+  **묶어서 팔지 않는다.** 곰과 방을 따로 사고, **둘 다 모으면 소품을 얹어준다.**
+  묶어 팔면 낱개 값과 묶음 값 둘을 관리해야 하고,
+  크리스마스 방만 갖고 싶은 사람이 곰까지 사게 된다.
+  세트에 값이 없는 건 그래서다 — 이건 **파는 물건이 아니라 모으는 자리**다.
+*/
 var SETS = [
-  { k: 's-swim',  n: '물놀이 세트',   sub: '여름 바다에서 신나게!', p: 700, has: ['b-swim', 'r-sea', 'p-tube'] },
-  { k: 's-hall',  n: '할로윈 세트',   sub: '한 밤의 사탕 사냥',     p: 700, has: ['b-hall', 'r-hall', 'p-pump'] },
-  { k: 's-xmas',  n: '크리스마스 세트', sub: '눈 오는 밤의 곰돌이',  p: 800, has: ['b-xmas', 'r-xmas', 'p-tree'] },
-  { k: 's-bloom', n: '봄꽃 세트',     sub: '꽃잎이 날리는 날',       p: 700, has: ['b-bloom', 'r-bloom', 'p-petal'] },
-  { k: 's-vac',   n: '여름휴가 세트', sub: '느긋한 바닷가 하루',     p: 800, has: ['b-vac', 'r-beach', 'p-parcel'] }
+  { k: 's-swim',  n: '물놀이 세트',   sub: '여름 바다에서 신나게!', has: ['b-swim', 'r-sea', 'p-tube'] },
+  { k: 's-hall',  n: '할로윈 세트',   sub: '한 밤의 사탕 사냥',     has: ['b-hall', 'r-hall', 'p-pump'] },
+  { k: 's-xmas',  n: '크리스마스 세트', sub: '눈 오는 밤의 곰돌이',  has: ['b-xmas', 'r-xmas', 'p-tree'] },
+  { k: 's-bloom', n: '봄꽃 세트',     sub: '꽃잎이 날리는 날',       has: ['b-bloom', 'r-bloom', 'p-petal'] },
+  { k: 's-vac',   n: '여름휴가 세트', sub: '느긋한 바닷가 하루',     has: ['b-vac', 'r-beach', 'p-parcel'] }
 ];
 
 var pt = 800;
@@ -536,9 +610,21 @@ var find = function (k) {
 var artOf = function (it) {
   return it && it.img ? '<img src="' + it.img + '" alt="" onerror="this.outerHTML=SHADE" />' : SHADE;
 };
-/* 낱개로 사면 얼마인가 — 묶음이 싼 게 아니면 묶을 까닭이 없다 */
-var sumOf = function (set) {
-  return set.has.reduce(function (a, k) { return a + find(k).p; }, 0);
+/* 몇 개 모았나 — 소품까지 셋이다 */
+var got = function (set) {
+  return set.has.filter(function (k) { return owned[k]; }).length;
+};
+/*
+  곰과 방을 둘 다 모으면 소품이 들어온다.
+  **살 때마다 확인한다** — 어느 쪽을 나중에 샀든 그 순간 채워져야 한다.
+*/
+var grant = function () {
+  var given = null;
+  SETS.forEach(function (s) {
+    var bear = s.has[0], room = s.has[1], prop = s.has[2];
+    if (owned[bear] && owned[room] && !owned[prop]) { owned[prop] = true; given = PROPS[prop]; }
+  });
+  return given;
 };
 
 function header(title, backTo) {
@@ -615,16 +701,17 @@ function card(it, trying) {
   '</button>';
 }
 
-/* 세트 카드는 눌러 **들어간다** — 셋이 한 번에 사지는 일이라 값보다 속이 먼저다 */
+/*
+  세트 카드는 눌러 **들어간다.** 값을 안 적는 건 **파는 물건이 아니라서**다 —
+  안에 든 곰과 방을 따로 사는 자리이고, 카드가 말할 것은 **몇 개 모았나**다.
+*/
 function setCard(s) {
-  var own = s.has.every(function (k) { return owned[k] || PROPS[k]; });
+  var n = got(s);
   var room = find(s.has[1]);
   return '<button class="item" type="button" data-open="' + s.k + '">' +
     '<span class="nm">' + s.n + '</span>' +
-    '<span class="art scene">' + artOf(room) +
-      (own ? '' : '<span class="lockmark">' + I_LOCK + '</span>') +
-    '</span>' +
-    '<span class="foot price"><i class="coin">P</i>' + s.p + '</span>' +
+    '<span class="art scene">' + artOf(room) + '</span>' +
+    '<span class="foot step' + (n === 3 ? ' done' : '') + '">' + I_GIFT + n + '/3</span>' +
   '</button>';
 }
 
@@ -640,7 +727,7 @@ function tip(cat, tab) {
       시안은 `특별한 때에만 만날 수 있어요`인데, 그러면 **그 때가 아니면 못 산다**는 말이 된다.
       발주서에 `때가 지나도 안 없앤다`고 적어둔 것과 부딪혀서 이렇게 뒀다.
     */
-    ? [I_HEART, '시즌 세트는 그 때가 오면 맨 앞에 나와요']
+    ? [I_GIFT, '곰과 방을 다 모으면 소품이 딸려와요']
     : cat === 'mine'
       ? (tab === 'room'
         ? [I_ROOM, '테마를 바꾸면 홈 배경이 바뀌어요']
@@ -699,31 +786,46 @@ function grid(cat, tab, trying) {
   '</div>';
 }
 
-/* 세트 상세 — 무엇이 들었는지 먼저, 값은 그 다음 */
+/*
+  세트 상세 — **곰과 방을 각각 산다.** 소품은 그 둘을 다 모으면 딸려온다.
+  값이 하나로 합쳐지지 않으니 `깎아준다`는 말이 안 나오고,
+  대신 **하나 더 준다**는 말이 남는다.
+*/
 function detail(key) {
   var s = find(key);
-  var own = s.has.every(function (k) { return owned[k] || PROPS[k]; });
-  var sum = sumOf(s);
   var room = find(s.has[1]);
+  var prop = PROPS[s.has[2]];
+  var full = owned[s.has[0]] && owned[s.has[1]];
 
-  var act = own
-    ? '<div class="short">이미 가지고 있어요</div>'
-    : s.p <= pt
-      ? '<button class="buy" type="button" data-buy="' + s.k + '">구매하기</button>'
-      : '<div class="short">' + (s.p - pt) + 'P 더 모으면 살 수 있어요</div>';
+  var one = function (k, kind) {
+    var it = find(k);
+    var roomly = isRoom(k);
+    var here = k === (roomly ? wornRoom : wornBear);
+    var act = owned[k]
+      ? (here
+        ? '<span class="go now">' + (roomly ? '쓰는 중' : '입는 중') + '</span>'
+        : '<button class="go have" type="button" data-use="' + k + '">' + (roomly ? '쓰기' : '입기') + '</button>')
+      : it.p <= pt
+        ? '<button class="go" type="button" data-buy="' + k + '"><i class="coin">P</i>' + it.p + '</button>'
+        : '<span class="go short">' + (it.p - pt) + 'P 더 모으면</span>';
+    return '<div class="pcard">' +
+      '<span class="art' + (roomly ? ' scene' : '') + '">' + artOf(it) +
+        (owned[k] ? '' : '') + '</span>' +
+      '<span class="kind">' + kind + '</span><b>' + it.n + '</b>' + act +
+    '</div>';
+  };
 
   return '<div class="screen">' +
     '<div class="dtitle"><b>' + s.n + '</b><span>' + s.sub + '</span></div>' +
     '<div class="dart">' + artOf(room) + '</div>' +
-    '<p class="dlead">이 세트에는 아래 셋이 들어 있어요</p>' +
-    '<div class="incl">' + s.has.map(function (k) {
-      var it = find(k);
-      return '<div><span class="art">' + (it.img ? artOf(it) : (PROPS[k] ? I_BOX : SHADE)) + '</span>' +
-        '<span>' + it.n + '</span></div>';
-    }).join('') + '</div>' +
-    '<div class="dprice"><i class="coin">P</i>' + s.p + '</div>' +
-    '<p class="dsave">따로 사면 <s>' + sum + 'P</s> — ' + (sum - s.p) + 'P 아껴요</p>' +
-    act +
+    '<p class="dlead">곰과 방을 따로 살 수 있어요</p>' +
+    '<div class="pair">' + one(s.has[0], '곰 스타일') + one(s.has[1], '방 테마') + '</div>' +
+    '<div class="gift' + (full ? ' done' : '') + '">' +
+      '<span class="art">' + I_GIFT + '</span>' +
+      '<span class="tx"><b>' + prop.n + '</b>' +
+        '<span>' + (full ? '둘을 다 모아서 드렸어요' : '둘을 다 모으면 드려요') + '</span></span>' +
+      '<span class="mark">' + (full ? '받음' : '덤') + '</span>' +
+    '</div>' +
     '<div style="height:26px"></div>' +
   '</div>';
 }
@@ -802,19 +904,16 @@ document.addEventListener('click', function (e) {
   if (x.p > pt) return;
   pt -= x.p;
 
-  if (x.has) {
-    /* 세트는 안에 든 것이 통째로 들어온다 — 곰과 방은 바로 입고 깐다 */
-    x.has.forEach(function (k) { owned[k] = true; });
-    wornBear = x.has[0];
-    wornRoom = x.has[1];
-    delete ph.dataset.detail;
-  } else {
-    owned[x.k] = true;
-    if (isRoom(x.k)) wornRoom = x.k; else wornBear = x.k;
-  }
+  owned[x.k] = true;
+  if (isRoom(x.k)) wornRoom = x.k; else wornBear = x.k;
+
+  /* 이걸로 세트가 채워졌으면 소품이 딸려온다 */
+  var given = grant();
   drawAll();
   /* 조사를 안 붙인다 — `곰토끼를`은 되는데 받침 없는 이름이 오면 어색해진다 (lib/ko.ts) */
-  flash(ph, x.n + ' — 샀어요 · 남은 ' + pt + 'P');
+  flash(ph, given
+    ? given.n + ' — 다 모아서 받았어요'
+    : x.n + ' — 샀어요 · 남은 ' + pt + 'P');
 }, false);
 
 drawAll();
