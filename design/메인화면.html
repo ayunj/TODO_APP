@@ -600,6 +600,11 @@ document.querySelectorAll('.shop .bg').forEach(function (img) {
   img.addEventListener('error', function () { img.style.display = 'none'; });
 });
 
+/* 띠를 누르면 상점 시안으로 — 홈에서 상점으로 가는 길은 이 띠 하나뿐이다 */
+document.querySelectorAll('.shop').forEach(function (b) {
+  b.addEventListener('click', function () { location.href = '코스튬.html'; });
+});
+
 document.querySelectorAll('.states button[data-state]').forEach(function (b) {
   b.addEventListener('click', function () {
     now = b.dataset.state;
