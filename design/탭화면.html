@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>일 · 월 · 기록 · 설정 시안 — dododu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Gowun+Dodum&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/*
+  일 · 월 · 기록 · 설정 — 메인화면.html과 한 벌이다.
+  곰돌이가 사는 **홈**은 거기 있고, 여기는 **나머지 네 탭**이다.
+
+  색·글씨·카드 모양은 앱 토큰 그대로(src/app/globals.css)고,
+  줄 하나하나는 지금 앱 코드(src/screens/**)를 옮긴 것이다.
+  폰은 **안드로이드 실기기 크기 그대로** 360 × 800.
+*/
+:root{
+  --bg:#faf6f0; --card:#ffffff; --sunk:#f5f0e9; --memo:#fbf6ee;
+  --ink:#615953; --ink2:#8c8078; --ink3:#a59a92;
+  --line:#efe8df; --line2:#f5efe7;
+  --accent:#d97a5e; --accent-soft:#f4d7cc; --accent-tint:#fcf2ed;
+  --ok:#73b79f; --cycle:#c9a068; --high:#d98b7a; --done:#d9d2cb;
+  --track:#f2ece6; --star:#f0c58a; --edge:#d8d3ce; --faint:#d9d2cb;
+  --paper:#f2ece4;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; padding:34px 20px 80px; background:var(--paper);
+  font-family:'Noto Sans KR',system-ui,-apple-system,sans-serif;
+  color:var(--ink); line-height:1.55; letter-spacing:-.01em; font-size:14px;
+}
+:focus-visible{outline:2px solid var(--accent); outline-offset:-2px; border-radius:8px}
+
+.head{max-width:1000px; margin:0 auto 22px}
+.head h1{font-size:19px; margin:0 0 6px; font-weight:700}
+.head p{color:var(--ink2); font-size:13px; margin:0 0 4px; max-width:78ch}
+.head b{color:var(--accent); font-weight:500}
+.head a{color:var(--accent)}
+.head code{background:#fff; padding:1px 6px; border-radius:6px; font-size:12px}
+
+.deck{display:flex; flex-wrap:wrap; gap:26px; justify-content:center; align-items:flex-start}
+.devname{text-align:center; margin:0 0 9px}
+.devname b{font-size:13.5px}
+.devname span{display:block; font-size:11px; color:var(--ink3); margin-top:1px; font-family:'IBM Plex Mono',monospace}
+
+/* ── 폰 ── */
+.phone{
+  position:relative; flex:none; width:360px; height:800px;
+  background:var(--bg); border-radius:30px; overflow:hidden;
+  box-shadow:0 10px 34px rgba(97,89,83,.14); display:flex; flex-direction:column;
+}
+.scrollarea{flex:1; overflow-y:auto; overscroll-behavior:contain}
+.scrollarea::-webkit-scrollbar{width:0}
+
+/*
+  헤더는 앱과 같이 **붙어 있다**(sticky). 목록을 내려도 날짜와 필터가 따라온다 —
+  달력이나 격자를 훑다 보면 어느 달을 보고 있는지 알 길이 없어진다.
+*/
+.headwrap{position:sticky; top:0; z-index:15; background:var(--bg)}
+.appbar{display:flex; align-items:center; gap:8px; padding:12px 16px 0}
+.logo{height:20px; width:auto; display:block; flex:none}
+.tools{margin-left:auto; display:flex; align-items:center; gap:7px}
+.iconbtn{
+  position:relative; border:0; background:var(--card); box-shadow:0 8px 24px rgba(0,0,0,.05);
+  width:38px; height:38px; border-radius:999px; cursor:pointer; color:var(--ink2);
+  display:grid; place-items:center;
+}
+.iconbtn svg{width:19px; height:19px}
+.iconbtn .num{
+  position:absolute; right:-2px; top:-2px; min-width:18px; height:18px; padding:0 4px;
+  border-radius:999px; background:var(--accent); color:#fff; font-style:normal;
+  font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:500;
+  display:grid; place-items:center;
+}
+.iconbtn .dot{
+  position:absolute; right:0; top:0; width:10px; height:10px; border-radius:999px;
+  background:var(--accent); border:2px solid var(--card);
+}
+
+.titlerow{display:flex; align-items:flex-end; gap:8px; padding:6px 16px 12px}
+.titlerow h1{
+  flex:1; min-width:0; margin:0; font-family:'Gowun Dodum',sans-serif; font-weight:400;
+  font-size:22px; line-height:1.2; letter-spacing:-.02em;
+}
+.titlerow h1 span{color:var(--ink3)}
+.nav{display:flex; align-items:center; gap:1px; flex:none; padding-bottom:2px}
+.nav button{
+  width:30px; height:30px; border:0; background:transparent; border-radius:10px;
+  font:inherit; font-size:16px; color:var(--ink3); cursor:pointer; display:grid; place-items:center;
+}
+.nav button:active{background:var(--sunk)}
+
+/* 카테고리 줄 — 일·월·기록 세 화면이 같은 줄을 쓴다 */
+.filters{display:flex; align-items:stretch; gap:8px; overflow-x:auto; padding:0 16px 14px; scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.chip{
+  flex:none; display:inline-flex; align-items:center; gap:6px; border:0; cursor:pointer;
+  border-radius:999px; padding:7px 15px; font-family:inherit; font-size:12.5px; font-weight:500;
+}
+.chip i{width:7px; height:7px; border-radius:999px; display:block}
+.chip svg{width:13px; height:13px; opacity:.75}
+.vline{width:1px; flex:none; background:var(--line); margin:5px 3px}
+
+/* 앱의 .wrap과 같은 여백 — max-width 520, padding 0 16 */
+.screen{padding:0 16px 96px}
+
+/* ── 일 ── */
+/*
+  **여기엔 곰돌이가 없다.** 홈이 방 한 칸을 통째로 쓰며 오늘을 말하고 있어서
+  같은 그림을 두 탭에 두면 어느 쪽이 오늘인지 헷갈린다.
+  이 자리는 문구·숫자·막대 셋으로만 말한다.
+*/
+.prog{
+  display:flex; flex-direction:column; border-radius:20px; background:var(--card);
+  padding:16px 17px 17px; margin-bottom:11px; box-shadow:0 8px 24px rgba(0,0,0,.05);
+}
+.prog .line{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:11px}
+.prog .say{font-family:'Gowun Dodum',sans-serif; font-size:14px; color:var(--accent)}
+.prog .cnt{font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:500; color:var(--ink2)}
+.prog .cnt b{font-size:15px; font-weight:500; color:var(--accent)}
+.track{display:block; height:9px; border-radius:999px; background:var(--track); overflow:hidden}
+.track i{display:block; height:100%; border-radius:999px; background:var(--accent); transition:width .3s ease}
+
+.presets{display:flex; gap:8px; overflow-x:auto; padding:0 0 14px; scrollbar-width:none}
+.presets::-webkit-scrollbar{display:none}
+.preset{
+  flex:none; display:inline-flex; align-items:center; gap:6px; border:0; cursor:pointer;
+  background:var(--card); box-shadow:0 8px 24px rgba(0,0,0,.05); color:var(--ink2);
+  border-radius:999px; padding:9px 15px; font-family:inherit; font-size:13px; font-weight:500;
+}
+.preset:active{transform:scale(.95)}
+.preset i{width:7px; height:7px; border-radius:999px; display:block}
+.preset em{font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:500; color:var(--cycle); font-style:normal}
+
+/* 할 일 줄 — 앱에서는 줄 하나가 카드 한 장이다 */
+ul.tasks{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px}
+ul.tasks li{
+  display:flex; align-items:flex-start; gap:12px; border-radius:20px;
+  background:var(--card); padding:15px; box-shadow:0 8px 24px rgba(0,0,0,.05);
+}
+ul.tasks li.done{background:var(--sunk); padding:13px 15px; box-shadow:none}
+.tick{
+  flex:none; width:25px; height:25px; margin-top:1px; border-radius:999px;
+  border:1.8px solid var(--edge); background:transparent; display:grid; place-items:center;
+  font-size:12px; font-weight:700; color:transparent; cursor:pointer; padding:0;
+  transition:transform .12s ease, background-color .12s ease, border-color .12s ease;
+}
+.tick:active{transform:scale(.9)}
+.tick[aria-pressed="true"]{background:var(--ok); border-color:var(--ok); color:#fff}
+.body{
+  min-width:0; flex:1; background:transparent; border:0; padding:0; text-align:left;
+  font:inherit; color:inherit; cursor:pointer;
+}
+.t{display:block; font-size:15px; font-weight:500; line-height:1.45; word-break:break-word}
+li.done .t{color:var(--done); text-decoration:line-through; text-decoration-thickness:1px}
+.t .star{color:var(--star); font-size:13px; margin-left:6px}
+/* 메모는 일별 화면에서만 보인다 — 줄 안에 붙어 있는 종이 한 장이다 */
+.memo{
+  display:block; margin-top:8px; background:var(--memo); color:var(--ink2);
+  border-radius:12px; padding:10px 12px; font-size:12.5px; line-height:1.55; white-space:pre-wrap;
+}
+li.done .memo{background:transparent; padding:2px 0 0; color:var(--done)}
+.meta{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:6px; font-size:11.5px; color:var(--ink3)}
+.meta .sep{color:var(--faint)}
+.meta .cat{display:inline-flex; align-items:center; gap:5px}
+.meta .cat i{width:7px; height:7px; border-radius:999px; display:block}
+.meta .mono{font-family:'IBM Plex Mono',monospace}
+.turn{
+  border-radius:999px; background:var(--accent-tint); color:var(--accent);
+  padding:2px 9px; font-size:10.5px; font-weight:500;
+}
+li.done .meta,li.done .meta .cat{color:var(--done)}
+li.done .meta .cat i{opacity:.4}
+/* 누가 했는지 — 테두리 한 겹으로 **눌러서 바꾸는 자리**라고 알린다. 배지는 대개 안 눌리는 것이다. */
+.by{
+  flex:none; margin-top:2px; border:0; cursor:pointer; border-radius:999px;
+  background:var(--accent-soft); color:var(--accent); padding:2px 9px;
+  font-family:inherit; font-size:10.5px; font-weight:500; box-shadow:0 0 0 1.5px var(--accent);
+}
+.side{display:flex; flex-direction:column; align-items:center; gap:2px; flex:none}
+.side button{
+  width:28px; height:28px; border:0; background:transparent; border-radius:10px;
+  color:var(--faint); cursor:pointer; display:grid; place-items:center; font-size:16px;
+}
+.side button svg{width:16px; height:16px}
+.side button:active{background:var(--sunk)}
+.donehead{margin:22px 0 10px; font-size:12px; font-weight:500; color:var(--ink3)}
+
+.postpone{display:flex; align-items:stretch; gap:8px; margin-top:11px}
+.postpone .main{
+  flex:1; border:0; cursor:pointer; border-radius:20px; background:var(--card);
+  box-shadow:0 8px 24px rgba(0,0,0,.05); padding:15px;
+  font-family:inherit; font-size:13.5px; font-weight:500; color:var(--ink2);
+}
+.postpone .pick{
+  width:52px; flex:none; border:0; cursor:pointer; border-radius:20px; background:var(--card);
+  box-shadow:0 8px 24px rgba(0,0,0,.05); color:var(--ink2); display:grid; place-items:center;
+}
+.postpone .pick svg{width:19px; height:19px}
+.addnew{
+  width:100%; margin-top:11px; border:1.5px dashed var(--edge); background:transparent;
+  border-radius:20px; padding:15px; cursor:pointer;
+  font-family:inherit; font-size:13.5px; font-weight:500; color:var(--accent);
+}
+.addnew:active{background:var(--accent-soft)}
+details.stale{margin-top:24px}
+details.stale summary{
+  list-style:none; cursor:pointer; border-top:1px solid var(--line);
+  padding:12px 0; font-size:12px; color:var(--ink3);
+}
+details.stale summary::-webkit-details-marker{display:none}
+details.stale ul{margin-top:10px}
+
+/* ── 월 ── */
+.stats{display:flex; gap:9px; margin-bottom:14px}
+.stats div{flex:1; border-radius:16px; background:var(--card); padding:12px 13px; box-shadow:0 8px 24px rgba(0,0,0,.05)}
+.stats span{display:block; font-size:10.5px; color:var(--ink3)}
+.stats b{display:block; margin-top:2px; font-family:'Gowun Dodum',sans-serif; font-weight:400; font-size:20px}
+.stats b em{font-family:'IBM Plex Mono',monospace; font-style:normal}
+.stats b small{font-size:12px; color:var(--ink3)}
+
+.cal{
+  display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:3px;
+  border-radius:20px; background:var(--card); padding:12px 8px; box-shadow:0 8px 24px rgba(0,0,0,.05);
+}
+.cal .dw{padding-bottom:7px; text-align:center; font-size:11px; color:var(--ink3)}
+.cal .dw.sun{color:var(--high)}
+.cal .cell{
+  display:flex; flex-direction:column; align-items:stretch; gap:2px; min-height:64px;
+  overflow:hidden; border-radius:12px; border:0; background:transparent; padding:5px 2px; cursor:pointer;
+}
+.cal .cell:active{background:var(--sunk)}
+.cal .cell .d{
+  margin:0 auto; width:22px; height:22px; display:grid; place-items:center; border-radius:999px;
+  font-family:'IBM Plex Mono',monospace; font-size:12.5px; line-height:1.3; color:var(--ink2);
+}
+.cal .cell.sun .d{color:var(--high)}
+.cal .cell.today .d{background:var(--accent); color:#fff}
+/*
+  카테고리를 옆의 점이 아니라 **글씨 바탕**으로 말한다.
+  칸 하나가 폰에서 46px인데 점 4px + 간격 3px이 글자 자리를 7px 먹었다.
+*/
+.cal .cell b{
+  display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  border-radius:4px; padding:1px 2px; font-size:9px; font-weight:400; line-height:1.35; color:var(--ink2);
+}
+.cal .cell b.off{color:var(--ink3); text-decoration:line-through}
+.cal .cell .more{text-align:center; font-family:'IBM Plex Mono',monospace; font-size:8.5px; color:var(--ink3)}
+
+/* ── 기록 ── */
+.seg{display:flex; gap:4px; border-radius:16px; background:var(--sunk); padding:4px; margin-bottom:10px}
+.seg button{
+  flex:1; border:0; cursor:pointer; border-radius:14px; padding:8px 0; background:transparent;
+  font-family:inherit; font-size:12.5px; font-weight:500; color:var(--ink3);
+}
+.seg button[aria-pressed="true"]{background:var(--card); color:var(--ink); box-shadow:0 8px 24px rgba(0,0,0,.05)}
+.rate{border-radius:20px; background:var(--card); padding:18px 18px 16px; box-shadow:0 8px 24px rgba(0,0,0,.05); margin-bottom:8px}
+.rate .k{font-size:12px; color:var(--ink3)}
+.rate .big{display:block; margin:2px 0 12px; font-family:'Gowun Dodum',sans-serif; font-size:38px; line-height:1.1}
+.rate .big small{font-size:16px; color:var(--ink3); margin-left:2px}
+.bars{border-radius:20px; background:var(--card); padding:16px 15px; box-shadow:0 8px 24px rgba(0,0,0,.05); margin-top:10px}
+.bars .h{margin-bottom:12px; font-size:12.5px; font-weight:500; color:var(--ink2)}
+.bars .r{display:grid; grid-template-columns:78px 1fr 34px; align-items:center; gap:10px; padding:7px 0}
+.bars .r .nm{display:flex; align-items:center; gap:7px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12.5px; color:var(--ink2)}
+.bars .r .nm i{width:9px; height:9px; border-radius:999px; flex:none}
+.bars .r .bar{height:9px; border-radius:999px; background:var(--sunk); overflow:hidden}
+.bars .r .bar i{display:block; height:100%; border-radius:999px}
+.bars .r .n{text-align:right; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink3)}
+
+.grid{border-radius:20px; background:var(--card); padding:16px 12px; box-shadow:0 8px 24px rgba(0,0,0,.05); margin-top:10px; overflow:hidden}
+.grid .h{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px}
+.grid .h b{font-size:12.5px; font-weight:500; color:var(--ink2)}
+.grid .legend{display:flex; align-items:center; gap:9px; font-size:10.5px; color:var(--ink3)}
+.grid .legend span{display:inline-flex; align-items:center; gap:4px}
+.grid .legend i{width:9px; height:9px; border-radius:3px; display:block}
+.grid .row{padding:8px 0}
+.grid .row + .row{border-top:1px solid var(--line2)}
+.grid .rh{display:flex; align-items:baseline; gap:8px; margin-bottom:7px}
+.grid .rh span{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12.5px; color:var(--ink2)}
+.grid .rh em{flex:none; font-family:'IBM Plex Mono',monospace; font-style:normal; font-size:11.5px; color:var(--ink3)}
+/* 칸에 최소 높이를 주면 최소 너비로 번져서 좁은 화면에서 격자가 밖으로 밀린다 — minmax(0,1fr)로 둔다 */
+.cells{display:grid}
+.cells i{aspect-ratio:1/1; background:var(--sunk); display:block}
+.cells.m i{border-radius:2px}
+.cells.w i{border-radius:7px}
+.cells i.now{box-shadow:0 0 0 1.5px var(--ink2)}
+.dowrow{display:grid; margin-bottom:6px; font-size:10px}
+.dowrow span{text-align:center; color:var(--ink3)}
+.dowrow span.sun{color:var(--high)}
+
+/* ── 설정 ── */
+.glabel{margin:18px 0 8px 4px; font-size:12px; color:var(--ink2)}
+.rows{display:flex; flex-direction:column; gap:9px}
+.row{
+  display:flex; width:100%; align-items:center; gap:10px; border:0; cursor:pointer;
+  border-radius:16px; background:var(--card); padding:16px 15px; box-shadow:0 8px 24px rgba(0,0,0,.05);
+  font-family:inherit; font-size:14.5px; color:var(--ink); text-align:left;
+}
+.row:active{background:var(--sunk)}
+.row .k{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.row .v{margin-left:auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--ink3)}
+.row .go{font-size:15px; color:var(--ink3)}
+.row.danger{color:var(--high)}
+.gap{height:16px}
+.hint{margin:8px 0 0 4px; font-size:11.5px; line-height:1.6; color:var(--ink3)}
+
+/* ── FAB · 탭바 ── */
+.fab{
+  position:absolute; right:18px; bottom:86px; z-index:26; width:56px; height:56px; border:0;
+  border-radius:999px; background:var(--accent); color:#fff; cursor:pointer;
+  font-size:27px; font-weight:300; line-height:1; display:grid; place-items:center;
+  box-shadow:0 8px 24px rgba(217,122,94,.18);
+}
+.fab:active{transform:scale(.95)}
+.tabbar{
+  flex:none; display:flex; border-top:1px solid var(--line2); background:var(--card);
+  padding:8px 6px 12px; box-shadow:0 -4px 18px rgba(97,89,83,.05);
+}
+.tabbar button{
+  flex:1; border:0; background:transparent; font:inherit; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  font-size:10.5px; font-weight:500; color:var(--ink3); padding:5px 0; border-radius:14px;
+}
+.tabbar button[aria-selected="true"]{color:var(--accent)}
+.tabbar svg{width:23px; height:23px}
+
+/* ── 설명 ── */
+.note{width:330px; flex:none}
+.note h2{font-size:15px; margin:0 0 10px; font-weight:700}
+.note h3{font-size:13px; margin:19px 0 7px; font-weight:700; color:var(--accent)}
+.note p{font-size:12.5px; color:var(--ink2); margin:0 0 9px; line-height:1.65}
+.note b{color:var(--ink); font-weight:500}
+.note code{background:#fff; padding:1px 5px; border-radius:5px; font-size:11.5px}
+.note ul{margin:0 0 9px; padding-left:17px; font-size:12.5px; color:var(--ink2); line-height:1.65}
+.note li{margin-bottom:5px}
+.warn{background:#fff; border-left:3px solid var(--star); border-radius:0 10px 10px 0; padding:11px 13px; font-size:12px; color:var(--ink2); margin:0 0 10px; line-height:1.6}
+.note a{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<div class="head">
+  <h1>일 · 월 · 기록 · 설정 시안 — dododu</h1>
+  <p><a href="메인화면.html">메인화면.html</a>과 한 벌이다. 곰돌이가 사는 <b>홈</b>은 거기 있고,
+     여기는 <b>나머지 네 탭</b>이다. 폰은 <b>안드로이드 실기기 크기 그대로</b> <code>360 × 800</code>.</p>
+  <p>네 대 모두 <b>탭바가 진짜로 눌린다</b> — 아무 폰에서나 탭을 옮겨 보면 된다.
+     <b>홈</b>을 누르면 메인 화면 시안으로 넘어간다.
+     일별에서는 <b>체크가 눌리고</b>, 기록에서는 <b>주간·월간이 바뀐다</b>.</p>
+</div>
+
+<div class="deck">
+  <div><p class="devname"><b>일</b><span>DayScreen</span></p><div class="phone" data-tab="day"></div></div>
+  <div><p class="devname"><b>월</b><span>MonthScreen</span></p><div class="phone" data-tab="month"></div></div>
+  <div><p class="devname"><b>기록</b><span>LogScreen</span></p><div class="phone" data-tab="log"></div></div>
+  <div><p class="devname"><b>설정</b><span>SettingsScreen</span></p><div class="phone" data-tab="set"></div></div>
+
+  <div class="note">
+    <h2>메인 화면에서 달라진 것</h2>
+
+    <h3>설정이 탭이 됐다</h3>
+    <p>지금 앱은 헤더 오른쪽 <b>톱니</b>로 들어간다. 메인 화면 시안이 탭을 다섯으로 잡으면서
+       설정이 그 한 자리를 가져갔고, 그래서 <b>헤더에서 톱니가 빠졌다.</b>
+       남은 둘(장보기·메모)은 그대로다.</p>
+    <div class="warn">
+      설정 탭에는 <b>+ 버튼을 안 띄운다.</b> 설정을 보다가 할 일을 적는 일은 없다.
+      일·월·기록 셋에만 뜬다.
+    </div>
+
+    <h3>일별에 곰돌이를 두 번 두지 않는다</h3>
+    <p>홈이 방 한 칸을 통째로 쓰면서 <code>오늘 3/6</code>을 말하고 있다.
+       일별 맨 위 진행 줄에까지 캐릭터를 두면 <b>어느 쪽이 오늘인지 헷갈린다.</b>
+       여기서는 <b>문구·숫자·막대</b> 셋으로만 말한다.</p>
+    <p>지금 앱은 이 자리에 토마토가 있다. 곰돌이로 갈아타면
+       <b>토마토가 사라질 자리가 바로 여기다.</b></p>
+
+    <h3>같은 헤더를 셋이 나눠 쓴다</h3>
+    <p>일·월·기록은 <b>날짜 줄과 카테고리 줄</b>이 같다. 제목만 달라진다 —
+       <code>8월 24일 월요일</code> · <code>8월</code> · <code>8월 기록</code>.
+       설정만 날짜도 필터도 없다.</p>
+
+    <h2 style="margin-top:24px">화면마다 짚어둘 것</h2>
+
+    <h3>일 — 완료한 것을 숨기지 않는다</h3>
+    <ul>
+      <li>아래로 내리고 <b>취소선만</b> 긋는다. 바탕이 눌린 색이 된다</li>
+      <li><b>밀린 일을 빨갛게 칠하지 않는다</b> — <code>3일 지남</code>이라고만 적는다</li>
+      <li>완료한 줄의 <b>이름 배지</b>는 눌러서 바꾼다. 남편이 해놓고 안 눌러
+          내가 대신 누르는 일이 잦은데, 지우고 다시 체크하면 회차가 하나 더 생긴다</li>
+      <li>지난 미완료는 <b>맨 아래 접어둔다</b></li>
+    </ul>
+
+    <h3>월 — 무엇을 하는 날인지 보여준다</h3>
+    <ul>
+      <li>막대 그래프로 바꾸지 않는다. <b>제목 세 개</b>까지, 넘치면 <code>+N</code></li>
+      <li>카테고리는 점이 아니라 <b>글씨 바탕</b>이다 — 칸이 46px이라 점 하나가 글자 자리를 먹는다</li>
+      <li>일요일은 첫 칸이 아니라 <b>진짜 일요일</b>에 붉다 (주가 월요일에 시작해도)</li>
+    </ul>
+
+    <h3>기록 — 세는 화면이 아니다</h3>
+    <ul>
+      <li><b>1~31 눈금을 안 그린다.</b> 흐름이 보이면 된다. 오늘 칸만 테두리로 짚는다</li>
+      <li><b>주간에는 카테고리 막대를 안 그린다</b> — 한 주치는 <code>2/3</code>이 아무 말도 안 한다</li>
+      <li>주간은 칸이 커서 <b>요일이 들어간다</b>. 월간은 좁아 못 넣는다</li>
+    </ul>
+
+    <h3>설정 — 값을 만지는 자리가 아니다</h3>
+    <p>줄마다 <b>들어가는 곳</b>만 늘어놓는다. 여기에 값이 하나라도 보이면
+       나머지 줄도 만져야 할 것처럼 읽힌다. 그래서 주 시작·알림은 <code>앱 설정</code> 안에 있다.</p>
+    <div class="warn">
+      <b>곰돌이 묶음 두 줄은 앱에 아직 없다.</b> 홈에 포인트와 코스튬이 생기면
+      <b>모아 보는 자리</b>가 있어야 해서 얹어봤다 — 상점은 홈의 띠로 들어가고,
+      여기서는 <b>얼마 모았고 몇 벌 가졌나</b>만 본다.
+    </div>
+    <p>맨 아래 <b>전체 초기화</b>는 한 칸 떼어 둔다.
+       나머지 줄과 같은 무게로 읽히면 안 되는 것이다.</p>
+
+    <h2 style="margin-top:24px">그릴 것은 없다</h2>
+    <p>네 화면 모두 <b>그림이 안 들어간다.</b> 아이콘은
+       <a href="../src/components/Icons.tsx">Icons.tsx</a>에 이미 SVG로 있다.
+       그림 발주는 홈 몫이다 — <a href="g/그릴-것.md">g/그릴-것.md</a>.</p>
+  </div>
+</div>
+
+<script>
+/* ── 아이콘 — 전부 앱 Icons.tsx의 것이다 ── */
+var SV = function (d, w) {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (w || 1.5) +
+    '" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>';
+};
+var I_SHOP = SV('<path d="M5.5 8h13l-1.1 10.2a2 2 0 0 1-2 1.8H8.6a2 2 0 0 1-2-1.8z"/><path d="M9 8V6.2a3 3 0 0 1 6 0V8"/>');
+var I_MEMO = SV('<path d="M5 4.5h14v15H5z"/><path d="M8.5 9h7M8.5 12.5h7M8.5 16h4"/>');
+var I_PEOPLE = SV('<circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.5a3 3 0 0 1 0 5"/><path d="M17.5 14.2a5.5 5.5 0 0 1 3 4.8"/>', 1.6);
+var I_CAL = SV('<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>', 1.6);
+var I_POSTPONE = SV('<path d="M4 12a8 8 0 1 1 2.3 5.6"/><path d="M4 20v-5h5"/><path d="M12 8v4.5l3 1.8"/>', 1.6);
+
+var TABS = [
+  { k: 'day',   label: '일',   d: '<rect x="4" y="4" width="16" height="16" rx="4.5"/><path d="M8.5 12.3l2.4 2.4 4.6-4.9"/>' },
+  { k: 'month', label: '월',   d: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4M8 14h2M14 14h2M8 17.5h2M14 17.5h2"/>' },
+  { k: 'home',  label: '홈',   d: '<path d="M3.5 10.6 12 3.8l8.5 6.8"/><path d="M6 9.6V20h12V9.6"/><path d="M10 20v-5h4v5"/>' },
+  { k: 'log',   label: '기록', d: '<path d="M5 20V12M12 20V5M19 20v-5"/>' },
+  { k: 'set',   label: '설정', d: '<circle cx="12" cy="12" r="3"/><path d="M19.2 14.6a1.5 1.5 0 0 0 .3 1.7l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.5 1.5 0 0 0-1.7-.3 1.5 1.5 0 0 0-.9 1.4v.3a1.9 1.9 0 1 1-3.8 0v-.2a1.5 1.5 0 0 0-1-1.4 1.5 1.5 0 0 0-1.7.3l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.5 1.5 0 0 0 .3-1.7 1.5 1.5 0 0 0-1.4-.9h-.3a1.9 1.9 0 1 1 0-3.8h.2a1.5 1.5 0 0 0 1.4-1 1.5 1.5 0 0 0-.3-1.7l-.1-.1a1.9 1.9 0 1 1 2.7-2.7l.1.1a1.5 1.5 0 0 0 1.7.3h.1a1.5 1.5 0 0 0 .9-1.4v-.3a1.9 1.9 0 1 1 3.8 0v.2a1.5 1.5 0 0 0 .9 1.4 1.5 1.5 0 0 0 1.7-.3l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.5 1.5 0 0 0-.3 1.7v.1a1.5 1.5 0 0 0 1.4.9h.3a1.9 1.9 0 1 1 0 3.8h-.2a1.5 1.5 0 0 0-1.4.9z"/>' }
+];
+
+/* 색은 앱 팔레트(constants.ts)에서 그대로 가져온 것이다 */
+var CATS = {
+  home:  { n: '집안일', c: '#8EC9B5' },
+  body:  { n: '건강',   c: '#A8D8F0' },
+  shop:  { n: '장보기', c: '#F0C58A' },
+  study: { n: '공부',   c: '#A9B8F4' }
+};
+/* 달력 칸처럼 **글자를 얹을** 바탕. 필터 칩보다 진하다. */
+var band = function (c) { return 'color-mix(in srgb, ' + c + ' 34%, #fff)'; };
+var tint = function (c) { return 'color-mix(in srgb, ' + c + ' 14%, #fff)'; };
+
+var DOW = ['일', '월', '화', '수', '목', '금', '토'];
+var KO = ['', '한', '두', '세', '네', '다섯', '여섯', '일곱', '여덟', '아홉', '열'];
+var num = function (n) { return n <= 10 ? KO[n] : String(n); };
+var saying = function (done, total) {
+  return done === 0 ? num(total) + ' 가지가 기다리고 있어요'
+    : done === total ? num(total) + ' 가지 모두 했어요'
+      : num(total) + ' 가지 중에 ' + num(done) + ' 가지 했어요';
+};
+
+/* 오늘은 2026년 8월 24일. 주는 월요일에 시작한다(앱 설정 · 주 시작). */
+var Y = 2026, M = 8, TODAY = 24, LAST = 31;
+var dowOf = function (d) { return new Date(Y, M - 1, d).getDay(); };
+
+/*
+  ── 일별의 오늘 ──
+  체크가 눌리는 건 이 여섯 줄이다. 달력·기록의 24일 칸도 여기서 읽어간다 —
+  한 화면에서 체크한 것이 다른 화면에서 안 바뀌면 시안을 믿을 수가 없다.
+*/
+var DAY = [
+  { t: '화장실 청소',   cat: 'home',  done: false, turn: '내 차례' },
+  { t: '스트레칭',      cat: 'body',  done: false, cyc: '매일', pri: true, memo: '자기 전에 10분만. 무릎 조심' },
+  { t: '세탁기 돌리기', cat: 'home',  done: false, cyc: '3일마다', until: '8/31' },
+  { t: '분리수거',      cat: 'home',  done: true,  cyc: '8일마다', by: '남편' },
+  { t: '영양제 챙기기', cat: 'body',  done: true,  cyc: '매일' },
+  { t: '장 본 것 정리', cat: 'shop',  done: true,  by: '나' }
+];
+
+/* 지난 미완료 — 오늘 화면 맨 아래 접혀 있다. 빨갛게 칠하지 않는다. */
+var STALE = [
+  { t: '수건 삶기', cat: 'home', done: false, at: '8/20' },
+  { t: '책 반납',   cat: 'study', done: false, at: '8/12' }
+];
+
+/*
+  ── 한 달치 ──
+  주기 있는 것은 규칙으로 깔고, 한 번짜리는 손으로 얹는다.
+  24일은 규칙에서 빼고 위 DAY를 그대로 쓴다.
+*/
+var REPEATS = [
+  { t: '스트레칭',      cat: 'body', every: 1, from: 1 },
+  { t: '영양제 챙기기', cat: 'body', every: 1, from: 1 },
+  { t: '세탁기 돌리기', cat: 'home', every: 3, from: 3 },
+  { t: '분리수거',      cat: 'home', every: 8, from: 8 }
+];
+var ONCE = [
+  { d: 6,  t: '화장실 청소',   cat: 'home' },
+  { d: 17, t: '화장실 청소',   cat: 'home' },
+  { d: 9,  t: '장 본 것 정리', cat: 'shop' },
+  { d: 12, t: '책 반납',       cat: 'study' },
+  { d: 13, t: '수건 삶기',     cat: 'home' },
+  { d: 20, t: '수건 삶기',     cat: 'home' },
+  { d: 26, t: '시험 접수',     cat: 'study' },
+  { d: 28, t: '이불 빨래',     cat: 'home' }
+];
+
+/* 지난 날은 대개 했고 가끔 안 했다 — 격자에 빈 칸이 있어야 흐름이 보인다 */
+var didIt = function (d, t) { return (d * 3 + t.length) % 8 !== 0; };
+
+function month() {
+  var out = [];
+  for (var d = 1; d <= LAST; d++) {
+    if (d === TODAY) {
+      DAY.forEach(function (x) { out.push({ d: TODAY, t: x.t, cat: x.cat, done: x.done }); });
+      continue;
+    }
+    REPEATS.forEach(function (r) {
+      if (d >= r.from && (d - r.from) % r.every === 0) {
+        out.push({ d: d, t: r.t, cat: r.cat, done: d < TODAY && didIt(d, r.t) });
+      }
+    });
+    ONCE.forEach(function (o) {
+      if (o.d === d) out.push({ d: d, t: o.t, cat: o.cat, done: d < TODAY && didIt(d, o.t) });
+    });
+  }
+  return out;
+}
+
+/* ── 공통 껍데기 ── */
+function appbar() {
+  return '<div class="appbar">' +
+    '<img class="logo" src="../public/logo.png" alt="dododu" />' +
+    '<div class="tools">' +
+      '<button class="iconbtn" type="button" title="장보기">' + I_SHOP + '<i class="num">3</i></button>' +
+      '<button class="iconbtn" type="button" title="메모">' + I_MEMO + '<i class="dot"></i></button>' +
+    '</div></div>';
+}
+
+function titlerow(tab, weekly) {
+  var h = tab === 'day' ? '8월 24일 <span>월요일</span>'
+    : tab === 'month' ? '8월'
+      : tab === 'log' ? (weekly ? '8월 24일 주' : '8월 기록')
+        : '설정';
+  /* 설정에는 날짜가 없다 — 넘길 것이 없는 화면이다 */
+  var nav = tab === 'set' ? '' :
+    '<div class="nav"><button type="button" aria-label="이전">&lsaquo;</button>' +
+    '<button type="button" aria-label="오늘로">·</button>' +
+    '<button type="button" aria-label="다음">&rsaquo;</button></div>';
+  return '<div class="titlerow"><h1>' + h + '</h1>' + nav + '</div>';
+}
+
+/*
+  카테고리 줄 — 내 것은 접지 않고 그대로 편다.
+  나눈 것은 **방 이름**으로 선다. 무슨 일인지는 할 일 줄이 이미 말한다.
+*/
+function filters() {
+  return '<div class="filters">' +
+    '<button class="chip" type="button" aria-pressed="true" style="background:var(--accent); color:#fff">전체</button>' +
+    '<button class="chip" type="button" style="background:' + tint(CATS.home.c) + '; color:' + CATS.home.c + '">' +
+      '<i style="background:' + CATS.home.c + '"></i>집안일</button>' +
+    '<button class="chip" type="button" style="background:' + tint(CATS.body.c) + '; color:' + CATS.body.c + '">' +
+      '<i style="background:' + CATS.body.c + '"></i>건강</button>' +
+    '<button class="chip" type="button" style="background:' + tint(CATS.study.c) + '; color:' + CATS.study.c + '">' +
+      '<i style="background:' + CATS.study.c + '"></i>공부</button>' +
+    '<span class="vline"></span>' +
+    '<button class="chip" type="button" style="background:' + tint('#F3A8A8') + '; color:#F3A8A8">우리집' + I_PEOPLE + '</button>' +
+    '</div>';
+}
+
+function tabbar(tab) {
+  return '<nav class="tabbar">' + TABS.map(function (t) {
+    return '<button type="button" data-tab="' + t.k + '"' + (t.k === tab ? ' aria-selected="true"' : '') + '>' +
+      SV(t.d) + t.label + '</button>';
+  }).join('') + '</nav>';
+}
+
+/* ── 일 ── */
+function taskRow(x, i, showDate) {
+  var c = CATS[x.cat];
+  var bits = ['<span class="cat"><i style="background:' + c.c + '"></i>' + c.n + '</span>'];
+  if (x.cyc) bits.push('<span class="sep">·</span><span>' + x.cyc + '</span>');
+  if (!x.done && x.until) bits.push('<span class="sep">·</span><span class="mono">~' + x.until + '까지</span>');
+  if (showDate) bits.push('<span class="sep">·</span><span class="mono">' + x.at + '</span>');
+  /* 차례 칩은 **콕 찌르기 지름길**이기도 하다. 끝나면 이 자리를 이름 배지가 가져간다. */
+  if (!x.done && x.turn) bits.push('<span class="turn">' + x.turn + '</span>');
+
+  return '<li class="' + (x.done ? 'done' : '') + '">' +
+    '<button class="tick" type="button" aria-pressed="' + x.done + '" aria-label="완료 표시"' +
+      (i === undefined ? '' : ' data-i="' + i + '"') + '>&#10003;</button>' +
+    '<button class="body" type="button" aria-label="수정">' +
+      '<span class="t">' + x.t + (x.pri ? '<span class="star">&#9733;</span>' : '') + '</span>' +
+      (x.memo ? '<span class="memo">' + x.memo + '</span>' : '') +
+      '<span class="meta">' + bits.join('') + '</span>' +
+    '</button>' +
+    (x.done && x.by ? '<button class="by" type="button" aria-label="' + x.by + '가 했어요 — 바꾸기">' + x.by + '</button>' : '') +
+    '<span class="side">' +
+      (x.done ? '' : '<button type="button" aria-label="내일로 미루기">' + I_POSTPONE + '</button>') +
+      '<button type="button" aria-label="삭제">&times;</button>' +
+    '</span></li>';
+}
+
+function dayBody() {
+  var open = [], shut = [];
+  DAY.forEach(function (x, i) { (x.done ? shut : open).push([x, i]); });
+  var total = DAY.length, done = shut.length;
+  var pct = total ? Math.round((done / total) * 100) : 0;
+
+  var presets = [
+    { t: '분리수거', cat: 'home', d: 8 },
+    { t: '스트레칭', cat: 'body', d: 1 },
+    { t: '영양제 챙기기', cat: 'body', d: 1 },
+    { t: '화장실 청소', cat: 'home', d: 0 }
+  ];
+
+  return '<div class="screen">' +
+    '<div class="prog">' +
+      '<div class="line"><span class="say">' + saying(done, total) + '</span>' +
+      '<span class="cnt"><b>' + done + '</b> / ' + total + '</span></div>' +
+      '<span class="track"><i style="width:' + pct + '%"></i></span>' +
+    '</div>' +
+
+    /* 한 번 눌러 그날 목록에 바로 담는 줄. 담을 게 없으면 여기 `＋ 즐겨찾기`가 선다. */
+    '<div class="presets">' + presets.map(function (p) {
+      return '<button class="preset" type="button"><i style="background:' + CATS[p.cat].c + '"></i>' + p.t +
+        (p.d ? '<em>' + p.d + 'd</em>' : '') + '</button>';
+    }).join('') + '</div>' +
+
+    '<ul class="tasks">' + open.map(function (p) { return taskRow(p[0], p[1]); }).join('') + '</ul>' +
+
+    (shut.length ? '<div class="donehead">완료 ' + shut.length + '</div>' +
+      '<ul class="tasks">' + shut.map(function (p) { return taskRow(p[0], p[1]); }).join('') + '</ul>' : '') +
+
+    /* 하루를 닫는 동작이라 오늘·어제 화면에서만 뜬다. 남은 게 없으면 접힌다. */
+    (open.length ? '<div class="postpone">' +
+      '<button class="main" type="button">남은 ' + open.length + '개 내일로 미루기</button>' +
+      '<button class="pick" type="button" aria-label="날짜 골라서 미루기">' + I_CAL + '</button></div>' : '') +
+
+    '<button class="addnew" type="button">+ 새 할 일 추가하기</button>' +
+
+    '<details class="stale"><summary>지난 미완료 ' + STALE.length + '개 보기</summary>' +
+      '<ul class="tasks">' + STALE.map(function (x) { return taskRow(x, undefined, true); }).join('') + '</ul>' +
+    '</details>' +
+  '</div>';
+}
+
+/* ── 월 ── */
+function monthBody() {
+  var rows = month();
+  var doneN = rows.filter(function (r) { return r.done; }).length;
+  var rate = rows.length ? Math.round((doneN / rows.length) * 100) : 0;
+
+  var stats = [['할 일', rows.length, ''], ['완료', doneN, ''], ['달성률', rate, '%']];
+  var out = '<div class="screen"><div class="stats">' + stats.map(function (s) {
+    return '<div><span>' + s[0] + '</span><b><em>' + s[1] + '</em>' +
+      (s[2] ? '<small>' + s[2] + '</small>' : '') + '</b></div>';
+  }).join('') + '</div>';
+
+  /* 주가 월요일에 시작한다 — 앞을 몇 칸 비울지가 여기서 정해진다 */
+  var weekStart = 1;
+  var order = [1, 2, 3, 4, 5, 6, 0];
+  var pad = (dowOf(1) - weekStart + 7) % 7;
+
+  out += '<div class="cal">' +
+    order.map(function (w) { return '<span class="dw' + (w === 0 ? ' sun' : '') + '">' + DOW[w] + '</span>'; }).join('');
+  for (var i = 0; i < pad; i++) out += '<span></span>';
+
+  for (var d = 1; d <= LAST; d++) {
+    var mine = rows.filter(function (r) { return r.d === d; });
+    /* 안 한 것이 먼저 — 세 줄까지만 보여서 완료한 게 위에 있으면 남은 일이 숨는다 */
+    mine.sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0); });
+    var shown = mine.slice(0, 3), rest = mine.length - shown.length;
+    out += '<button class="cell' + (d === TODAY ? ' today' : '') + (dowOf(d) === 0 ? ' sun' : '') + '" type="button">' +
+      '<span class="d">' + d + '</span>' +
+      shown.map(function (r) {
+        return '<b class="' + (r.done ? 'off' : '') + '" style="background:' + band(CATS[r.cat].c) + '">' + r.t + '</b>';
+      }).join('') +
+      (rest > 0 ? '<span class="more">+' + rest + '</span>' : '') +
+      '</button>';
+  }
+  return out + '</div></div>';
+}
+
+/* ── 기록 ── */
+function logBody(weekly) {
+  var rows = month();
+  /* 주간은 오늘이 든 주 — 월요일에 시작한다 */
+  var from = TODAY - ((dowOf(TODAY) + 6) % 7);
+  var days = [];
+  if (weekly) { for (var i = 0; i < 7; i++) days.push(from + i); }
+  else { for (var d = 1; d <= LAST; d++) days.push(d); }
+
+  var span = rows.filter(function (r) { return days.indexOf(r.d) >= 0; });
+  var doneN = span.filter(function (r) { return r.done; }).length;
+  var rate = span.length ? Math.round((doneN / span.length) * 100) : 0;
+
+  var out = '<div class="screen">' +
+    '<div class="seg">' +
+      '<button type="button" data-span="week"' + (weekly ? ' aria-pressed="true"' : '') + '>주간</button>' +
+      '<button type="button" data-span="month"' + (weekly ? '' : ' aria-pressed="true"') + '>월간</button>' +
+    '</div>' +
+    '<div class="rate"><span class="k">' + (weekly ? '이번 주' : '이번 달') + ' 완료율</span>' +
+      '<span class="big">' + rate + '<small>%</small>' +
+      (rate === 100 && span.length ? '<span style="float:right; font-size:30px">&#127942;</span>' : '') + '</span>' +
+      '<span class="track"><i style="width:' + rate + '%"></i></span></div>';
+
+  /*
+    주간에는 카테고리 막대를 안 그린다.
+    한 주치는 표본이 적어 `2/3` 같은 숫자가 아무 말도 안 한다.
+  */
+  if (!weekly) {
+    var byCat = Object.keys(CATS).map(function (k) {
+      var g = span.filter(function (r) { return r.cat === k; });
+      return { k: k, total: g.length, done: g.filter(function (r) { return r.done; }).length };
+    }).filter(function (r) { return r.total > 0; }).sort(function (a, b) { return b.total - a.total; });
+
+    out += '<div class="bars"><div class="h">카테고리별 완료</div>' + byCat.map(function (r) {
+      var c = CATS[r.k];
+      return '<div class="r"><span class="nm"><i style="background:' + c.c + '"></i>' + c.n + '</span>' +
+        '<span class="bar"><i style="width:' + Math.round((r.done / r.total) * 100) + '%; background:' + c.c + '"></i></span>' +
+        '<span class="n">' + r.done + '/' + r.total + '</span></div>';
+    }).join('') + '</div>';
+  }
+
+  /*
+    행은 **월간이 되풀이하는 일만**, **주간은 그 주에 있던 일 전부**다 —
+    열이 일곱뿐이라 자리가 넉넉하고, 한 주는 그만큼 훑는 자리다.
+  */
+  var byTitle = {};
+  span.forEach(function (r) {
+    var row = byTitle[r.t] || (byTitle[r.t] = { t: r.t, cat: r.cat, mark: {}, count: 0 });
+    row.mark[r.d] = r.done ? 'done' : 'todo';
+    if (r.done) row.count++;
+  });
+  var list = Object.keys(byTitle).map(function (k) { return byTitle[k]; })
+    .filter(function (r) { return weekly || Object.keys(r.mark).length >= 3; })
+    .sort(function (a, b) { return Object.keys(b.mark).length - Object.keys(a.mark).length; });
+
+  /*
+    월간은 칸을 폭에 나눠 담지만, 주간은 일곱뿐이라 그대로 나누면 한 칸이 60px 가까이 된다.
+    칸 크기를 묶어두고 남는 폭은 그냥 비워둔다 — 격자는 크게 그린다고 더 읽히는 그림이 아니다.
+  */
+  var cols = weekly
+    ? 'grid-template-columns:repeat(7,minmax(0,34px)); gap:5px'
+    : 'grid-template-columns:repeat(' + days.length + ',minmax(0,1fr)); gap:2px';
+
+  out += '<div class="grid"><div class="h"><b>' + (weekly ? '한 주 기록' : '반복 기록') + '</b>' +
+    '<span class="legend">' +
+      '<span><i style="background:var(--ok)"></i>했음</span>' +
+      '<span><i style="background:var(--ink3); opacity:.28"></i>예정</span>' +
+      '<span><i style="background:var(--sunk)"></i>없음</span>' +
+    '</span></div>';
+
+  /* 주간에만 요일을 단다. 월간은 칸이 좁아 글자가 안 들어간다. */
+  if (weekly) {
+    out += '<span class="dowrow" style="' + cols + '">' + days.map(function (d) {
+      var w = dowOf(d);
+      return '<span class="' + (w === 0 ? 'sun' : '') + '">' + DOW[w] + '</span>';
+    }).join('') + '</span>';
+  }
+
+  out += list.map(function (r) {
+    var c = CATS[r.cat].c;
+    return '<div class="row"><div class="rh"><span>' + r.t + '</span><em>' + r.count + '</em></div>' +
+      '<span class="cells ' + (weekly ? 'w' : 'm') + '" style="' + cols + '">' + days.map(function (d) {
+        var st = r.mark[d];
+        var style = st === 'done' ? ' style="background:' + c + '"'
+          : st === 'todo' ? ' style="background:' + c + '; opacity:.26"' : '';
+        return '<i class="' + (d === TODAY ? 'now' : '') + '"' + style + '></i>';
+      }).join('') + '</span></div>';
+  }).join('');
+
+  return out + '</div></div>';
+}
+
+/* ── 설정 ── */
+function setBody() {
+  var row = function (k, v, cls) {
+    return '<button class="row ' + (cls || '') + '" type="button"><span class="k">' + k + '</span>' +
+      (v ? '<span class="v">' + v + '</span>' : '') +
+      (cls === 'danger' ? '' : '<span class="go">&rsaquo;</span>') + '</button>';
+  };
+
+  return '<div class="screen">' +
+    '<div class="rows">' +
+      /* 누구로 들어와 있는지가 맨 먼저다 — 나머지 줄이 다 이 계정에 딸린 것이다 */
+      row('계정', 'sweety00a@gmail.com') +
+      row('즐겨찾기', '8개') +
+      row('카테고리', '5개') +
+      row('앱 설정', '주 시작 · 알림') +
+      row('같이 쓰기', '방 2개') +
+    '</div>' +
+
+    /* 홈에 포인트와 코스튬이 생기면 **모아 보는 자리**가 있어야 한다 — 아직 앱에 없는 줄이다 */
+    '<p class="glabel">곰돌이</p>' +
+    '<div class="rows">' +
+      row('내 포인트', '120P') +
+      row('코스튬', '2벌 가짐') +
+    '</div>' +
+
+    /* 한 칸 떼어 둔다 — 나머지 줄과 같은 무게로 읽히면 안 되는 것이다 */
+    '<div class="gap"></div>' +
+    '<div class="rows">' + row('전체 초기화', '', 'danger') + '</div>' +
+    '<p class="hint">할 일과 즐겨찾기를 모두 지웁니다. 되돌릴 수 없어요.</p>' +
+  '</div>';
+}
+
+/* ── 그리기 ── */
+function render(ph) {
+  var tab = ph.dataset.tab;
+  var weekly = ph.dataset.span === 'week';
+  var body = tab === 'day' ? dayBody()
+    : tab === 'month' ? monthBody()
+      : tab === 'log' ? logBody(weekly)
+        : setBody();
+
+  ph.innerHTML =
+    '<div class="scrollarea">' +
+      '<div class="headwrap">' + appbar() + titlerow(tab, weekly) + (tab === 'set' ? '' : filters()) + '</div>' +
+      body +
+    '</div>' +
+    /* + 버튼은 일·월·기록에만. 설정을 보다가 할 일을 적는 일은 없다. */
+    (tab === 'set' ? '' : '<button class="fab" type="button" aria-label="할 일 추가">+</button>') +
+    tabbar(tab);
+
+  var logo = ph.querySelector('.logo');
+  if (logo) logo.addEventListener('error', function () { logo.style.display = 'none'; });
+}
+
+var phones = Array.prototype.slice.call(document.querySelectorAll('.phone'));
+var drawAll = function () { phones.forEach(render); };
+
+document.addEventListener('click', function (e) {
+  var ph = e.target.closest ? e.target.closest('.phone') : null;
+  if (!ph) return;
+
+  var tabBtn = e.target.closest('.tabbar button[data-tab]');
+  if (tabBtn) {
+    /* 홈은 여기 없다 — 메인 화면 시안으로 넘어간다 */
+    if (tabBtn.dataset.tab === 'home') { location.href = '메인화면.html'; return; }
+    ph.dataset.tab = tabBtn.dataset.tab;
+    render(ph);
+    return;
+  }
+
+  var seg = e.target.closest('.seg button[data-span]');
+  if (seg) { ph.dataset.span = seg.dataset.span; render(ph); return; }
+
+  /* 체크는 모든 폰에 같이 반영한다 — 달력과 격자의 24일 칸도 이걸 읽어간다 */
+  var tick = e.target.closest('.tick[data-i]');
+  if (tick) {
+    var x = DAY[Number(tick.dataset.i)];
+    x.done = !x.done;
+    if (x.done && !x.by) x.by = '나';
+    drawAll();
+  }
+});
+
+drawAll();
+</script>
+</body>
+</html>
