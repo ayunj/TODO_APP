@@ -146,10 +146,16 @@ on conflict (item_key) do update
       active = costume_catalog.active or costume_catalog.name is null;
 
 /*
- * 시즌 세트의 이름표.
+ * 시즌 세트 — **관리자가 짓고 이름 붙인다.**
  *
- * 값표는 `season`에 `s-swim` 같은 열쇠만 들고 있다. **사람이 읽는 이름은 앱에만 있었다** —
- * 관리자가 세트를 새로 만들려면 앱을 고쳐 다시 내야 한다는 뜻이라 여기로 옮긴다.
+ * 시즌 밑은 층이 하나 더 있다.
+ *
+ *   시즌 ─ 계절 ─ 봄꽃 세트 · 물놀이 세트 · 여름휴가 세트
+ *        └ 기념일 ─ 할로윈 세트 · 크리스마스 세트
+ *
+ * **중분류도 세트도 늘어난다.** 중분류는 [[shop_family]]에, 세트는 여기에 한 줄씩.
+ * 물건은 세트를 고르고, 중분류는 그 세트를 따라간다(아래 `catalog_family` 트리거) —
+ * 물건마다 중분류를 고르게 두면 할로윈 곰은 기념일인데 할로윈 방은 계절인 일이 생긴다.
  *
  * 세트가 **열리는 조건은 여기 안 적는다.** 곰 하나·방 하나·소품 하나가 값표에 다 차면
  * 열린 것이고, 그건 값표를 세면 나온다. 적어두면 값표와 어긋날 자리가 하나 더 생긴다.
@@ -336,6 +342,76 @@ begin
   grant usage, select on sequence costume_code_seq to authenticated;
 exception when undefined_object or insufficient_privilege then
   raise notice 'authenticated 역할이 없어 번호표 권한은 건너뛴다';
+end $$;
+
+/*
+ * 세트 열쇠도 손으로 안 적는다. `s000001`부터 하나씩 올라간다.
+ *
+ * 물건 코드와 **번호표를 따로 쓴다.** 한 통에서 뽑으면 물건 스물아홉 개를 넣은 뒤
+ * 만든 세트가 `0000030`이 되어 물건 코드처럼 읽힌다. 앞에 `s`를 붙이는 것도 같은 까닭이다.
+ *
+ * **이미 있는 `s-swim`·`s-hall`은 안 바꾼다** — 값표의 `season`이 그걸 가리키고 있다.
+ */
+create sequence if not exists costume_season_seq start 1;
+
+create or replace function next_season_code()
+returns text language sql set search_path = public as $fn$
+  select 's' || lpad(nextval('costume_season_seq')::text, 6, '0');
+$fn$;
+
+alter table costume_season alter column season_key set default next_season_code();
+
+do $$
+begin
+  grant usage, select on sequence costume_season_seq to authenticated;
+exception when undefined_object or insufficient_privilege then
+  raise notice 'authenticated 역할이 없어 세트 번호표 권한은 건너뛴다';
+end $$;
+
+/*
+ * 세트의 중분류는 **시즌 밑에 있는 것이어야 한다.**
+ *
+ * 꾸미기 밑의 중분류를 세트에 달면 그 세트의 물건들이 트리거를 타고
+ * `꾸미기 > 일상`으로 끌려간다 — 시즌 물건인데 시즌 칩에서 사라진다.
+ * 상점에서 물건이 통째로 없어지는 꼴이라 여기서 막는다.
+ */
+create or replace function season_family_guard()
+returns trigger language plpgsql set search_path = public as $fn$
+declare g text;
+begin
+  if new.family_key is null then return new; end if;
+  select group_key into g from shop_family where family_key = new.family_key;
+  if g is distinct from 'season' then
+    raise exception '세트의 중분류는 시즌 밑에 있어야 합니다 (%)', new.family_key;
+  end if;
+  return new;
+end $fn$;
+
+drop trigger if exists season_family on costume_season;
+create trigger season_family before insert or update on costume_season
+  for each row execute function season_family_guard();
+
+/*
+ * 값표의 `season`은 **있는 세트를 가리켜야 한다.** 없는 세트를 가리키면
+ * 트리거가 중분류를 못 찾아 비워버리고, 그 물건은 어느 칩에도 안 선다.
+ *
+ * 이미 어긋난 줄이 있는 DB에서는 걸지 않고 넘어간다 — 여기서 멈추면
+ * 나머지가 다 안 들어간다. 그때는 `notice`가 무엇을 봐야 하는지 알려준다.
+ */
+do $$
+begin
+  if exists (
+    select 1 from costume_catalog c
+     where c.season is not null
+       and not exists (select 1 from costume_season s where s.season_key = c.season)
+  ) then
+    raise notice '없는 세트를 가리키는 물건이 있어 이음줄을 안 걸었다';
+  else
+    alter table costume_catalog
+      add constraint costume_catalog_season_fk
+      foreign key (season) references costume_season (season_key) on update cascade;
+  end if;
+exception when duplicate_object or duplicate_table then null;
 end $$;
 
 -- ─── 그림이 쌓이는 자리 ─────────────────────────────────────────
@@ -689,7 +765,11 @@ create policy "관리자가 고친다" on shop_family for update using (is_shop_
  * 중분류도 **지우는 정책은 없다.** 든 물건이 가리킬 데를 잃는다 — `active`를 끈다.
  */
 
--- 세트 이름표 — 누구나 읽는다. 이름과 차례뿐이라 숨길 것이 없다.
+/*
+ * 세트 — 누구나 읽고 **관리자가 짓는다.** 이름도 차례도 여기서 바꾼다.
+ * 지우는 정책은 없다. 값표의 `season`이 가리키고 있어서,
+ * 빼면 그 물건들이 어느 칩에도 안 선다.
+ */
 drop policy if exists "누구나 본다"   on costume_season;
 drop policy if exists "관리자가 짓는다" on costume_season;
 drop policy if exists "관리자가 고친다" on costume_season;

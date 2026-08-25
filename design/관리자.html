@@ -221,13 +221,6 @@ select.t:disabled{background-color:var(--sunk); color:var(--ink3); cursor:not-al
 }
 .noprice img{width:22px; height:22px; flex:none}
 
-/* 중분류가 잠긴 자리 — 세트를 고르면 거기서 따라온다 */
-.locked{
-  display:flex; align-items:center; gap:8px; border-radius:12px; background:var(--sunk);
-  padding:11px 13px; font-size:13px; color:var(--ink2);
-}
-.locked b{font-weight:500; color:var(--ink)}
-.locked i{margin-left:auto; font-style:normal; font-size:11px; color:var(--ink3)}
 
 /*
   ── 중분류 늘리기 ──
@@ -447,6 +440,9 @@ table.list tr:last-child td{border-bottom:0}
   <b style="margin-left:12px">대분류</b>
   <button type="button" data-group="deco">꾸미기</button>
   <button type="button" data-group="season">시즌</button>
+  <b style="margin-left:12px">시즌 중분류</b>
+  <button type="button" data-fam="seasonal">계절</button>
+  <button type="button" data-fam="holiday">기념일</button>
   <b style="margin-left:12px">그림</b>
   <button type="button" data-img="0">올리기 전</button>
   <button type="button" data-img="1">올린 뒤</button>
@@ -532,7 +528,6 @@ table.list tr:last-child td{border-bottom:0}
           <div class="row" style="margin-bottom:0">
             <label>중분류 <button class="addfam js-addfam" type="button">+ 새로 만들기</button></label>
             <select class="t js-famSel"></select>
-            <div class="locked off js-famLocked"></div>
           </div>
         </div>
         <p class="hint js-groupHint" style="margin:8px 0 0"></p>
@@ -575,9 +570,17 @@ table.list tr:last-child td{border-bottom:0}
 
         <!-- 시즌을 골랐을 때만 열리는 줄. 세트 없는 시즌 물건은 상점에서 갈 곳이 없다. -->
         <div class="row off js-rowSet">
-          <label>어느 세트</label>
+          <label>어느 세트 <button class="addfam js-addset" type="button">+ 새로 만들기</button></label>
           <select class="t js-setSel"></select>
-          <div class="hint">곰 하나 · 방 하나 · 소품 하나가 <b>다 차야</b> 세트가 열린다.</div>
+          <div class="newfam off js-newset">
+            <label>이름</label>
+            <input class="t" type="text" placeholder="장마 세트" />
+            <button class="mk" type="button">만들기</button>
+            <p class="say">고른 <b class="js-famName">중분류</b> 밑에 선다.
+               열쇠는 <code>s000006</code>처럼 저절로 붙는다.</p>
+          </div>
+          <div class="hint">곰 하나 · 방 하나 · 소품 하나가 <b>다 차야</b> 세트가 열린다.
+             <b>이름은 언제든 고칠 수 있다.</b></div>
         </div>
 
         <div class="acts">
@@ -671,8 +674,7 @@ table.list tr:last-child td{border-bottom:0}
             <div class="row">
               <label>중분류 <button class="addfam js-addfam" type="button">+ 새로 만들기</button></label>
               <select class="t js-famSel"></select>
-              <div class="locked off js-famLocked"></div>
-              <div class="newfam off js-newfam">
+                <div class="newfam off js-newfam">
                 <div class="two">
                   <div><label>이름</label><input class="t" type="text" placeholder="기념일" /></div>
                   <div><label>폴더</label><input class="t" type="text" placeholder="holiday" /></div>
@@ -746,8 +748,14 @@ table.list tr:last-child td{border-bottom:0}
           <p class="hint" style="margin:8px 0 16px">코드는 <b>저장할 때 다음 번호가 붙는다.</b></p>
 
           <div class="row off js-rowSet" style="margin-bottom:4px">
-            <label>어느 세트</label>
+            <label>어느 세트 <button class="addfam js-addset" type="button">+ 새로 만들기</button></label>
             <select class="t js-setSel"></select>
+            <div class="newfam off js-newset">
+              <label>이름</label>
+              <input class="t" type="text" placeholder="장마 세트" />
+              <button class="mk" type="button">만들기</button>
+              <p class="say">고른 <b class="js-famName">중분류</b> 밑에 선다.</p>
+            </div>
             <div class="hint">곰 하나 · 방 하나 · 소품 하나가 <b>다 차야</b> 세트가 열린다.</div>
           </div>
 
@@ -807,10 +815,19 @@ table.list tr:last-child td{border-bottom:0}
      이름을 고칠 때 폴더가 따라 움직여야 하나가 매번 물음이 된다.
      폴더는 한 번 정하면 안 바뀐다 — 이미 쌓인 그림이 그 이름 밑에 있다.</blockquote>
 
-  <h3>시즌이면 중분류를 안 묻는다</h3>
-  <p>시즌 물건의 중분류는 <b>세트가 정한다.</b> 물건마다 따로 고르게 두면
-     할로윈 곰은 기념일인데 할로윈 방은 계절인 일이 생긴다.
-     그래서 대분류가 시즌이면 중분류 칸이 <b>잠기고</b>, 고른 세트를 따라 바뀐다.</p>
+  <h3>시즌은 한 층 더 파고든다</h3>
+  <p>시즌 밑은 <b>중분류 → 세트 → 물건</b> 셋이다.</p>
+  <pre style="margin:0 0 10px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink2); line-height:1.7">시즌 ─ 계절  ─ 봄꽃 세트 · 물놀이 세트 · 여름휴가 세트
+     └ 기념일 ─ 할로윈 세트 · 크리스마스 세트
+     └ 장마  ─ 장마 세트                       ← 관리자가 만든 것</pre>
+  <p><b>중분류도 세트도 는다.</b> 그래서 세트 목록은 <b>고른 중분류에 든 것만</b> 보여준다 —
+     세트가 열 몇 개로 늘어나면 한 줄로 늘어놓은 목록에서 못 찾는다.</p>
+  <p>물건은 <b>세트만 고르면 된다.</b> 중분류는 그 세트를 따라간다(<code>catalog_family</code> 트리거) —
+     물건마다 고르게 두면 할로윈 곰은 기념일인데 할로윈 방은 계절인 일이 생긴다.
+     여기서 중분류를 먼저 묻는 건 <b>세트를 좁히기 위해서</b>지 물건에 붙이려는 게 아니다.</p>
+  <blockquote><b>세트 이름은 언제든 고칠 수 있다.</b> 열쇠가 <code>s000006</code>처럼
+     이름과 상관없는 숫자라서다. <code>s-swim</code>처럼 이름에서 지었으면
+     이름을 고칠 때마다 그 세트에 딸린 물건들이 가리킬 데를 잃는다.</blockquote>
 
   <h3>코드는 숫자다</h3>
   <p>전에는 이름에서 지었다(<code>모자 곰</code> → <code>b-hat</code>). 그러면
@@ -897,15 +914,20 @@ var FAMS = [
   { key: 'costume',  group: 'deco',   name: '코스튬' },
   { key: 'room',     group: 'deco',   name: '룸' },
   { key: 'seasonal', group: 'season', name: '계절' },
-  { key: 'holiday',  group: 'season', name: '기념일' }
+  { key: 'holiday',  group: 'season', name: '기념일' },
+  { key: 'rainy',    group: 'season', name: '장마' }
 ];
-/* 세트가 제 중분류를 들고 있다 — 시즌 물건은 여기서 중분류가 따라온다 */
+/*
+  세트가 제 중분류를 들고 있다 — **시즌 물건의 중분류는 세트를 따라간다.**
+  `장마`와 `장마 세트`는 관리자가 만든 것이다. 중분류도 세트도 이렇게 는다.
+*/
 var SETS = [
   { key: 's-swim',  name: '물놀이 세트',   fam: 'seasonal', c: 2 },
+  { key: 's-bloom', name: '봄꽃 세트',     fam: 'seasonal', c: 1 },
+  { key: 's-vac',   name: '여름휴가 세트',  fam: 'seasonal', c: 0 },
   { key: 's-hall',  name: '할로윈 세트',   fam: 'holiday',  c: 3 },
   { key: 's-xmas',  name: '크리스마스 세트', fam: 'holiday', c: 1 },
-  { key: 's-bloom', name: '봄꽃 세트',     fam: 'seasonal', c: 1 },
-  { key: 's-vac',   name: '여름휴가 세트',  fam: 'seasonal', c: 0 }
+  { key: 's000001', name: '장마 세트',     fam: 'rainy',    c: 0 }
 ];
 
 var KIND_FOLDER = { bear: 'gomdori', room: 'background', pose: 'prop' };
@@ -921,7 +943,7 @@ var KIND_HINT = {
 };
 var GROUP_HINT = {
   deco:   '늘 파는 것. 중분류가 상점 <b>꾸미기</b> 칩 아래 칩으로 선다.',
-  season: '철 따라 여는 것. <b>중분류는 세트가 정한다</b> — 여기서 안 고른다.',
+  season: '철 따라 여는 것. 중분류를 고르고 <b>그 안에서 세트</b>를 고른다.',
   locked: '소품 든 캐릭터는 <b>세트 완성 보상</b>이라 시즌 말고 갈 곳이 없다.'
 };
 var CROP = {
@@ -954,6 +976,7 @@ function press(key, val){
 }
 function esc(s){ return String(s).replace(/[&<>]/g, function (m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]; }); }
 function imgTag(src, fill){ return '<img src="' + src + '" alt="" class="' + (fill ? 'fill' : '') + '" />'; }
+function inGroup(f){ return f.group === group; }
 function famOf(key){
   for (var i = 0; i < FAMS.length; i++) if (FAMS[i].key === key) return FAMS[i];
   return FAMS[0];
@@ -970,11 +993,26 @@ function draw(){
 
   /* 소품은 보상이라 시즌 말고 갈 곳이 없다 */
   if (isPose) { group = 'season'; isSeason = true; }
-  /* 시즌이면 중분류는 세트가 정한다 */
-  if (isSeason) fam = setOf(season).fam;
+
+  /*
+    고른 대분류에 없는 중분류가 눌린 채로 남으면 안 된다 —
+    대분류를 바꾸면 그 밑 첫 중분류로 내려앉는다.
+  */
+  if (famOf(fam).group !== group) fam = FAMS.filter(inGroup)[0].key;
+
+  /*
+    **시즌은 한 층 더 파고든다** — 중분류를 고르고 그 안에서 세트를 고른다.
+    세트가 열 몇 개로 늘어나면 한 줄로 늘어놓은 목록에서 못 찾는다.
+    고른 중분류에 없는 세트가 남아 있으면 그 중분류의 첫 세트로 옮긴다.
+  */
+  if (isSeason && setOf(season).fam !== fam) {
+    var here = SETS.filter(function (x) { return x.fam === fam; });
+    season = here.length ? here[0].key : season;
+  }
 
   press('kind', kind);
   press('group', group);
+  press('fam', fam);
   press('img', hasImg ? '1' : '0');
   all('.js-kindSel').forEach(function (n) { n.value = kind; });
 
@@ -983,21 +1021,18 @@ function draw(){
   setHTML('.js-kindHint', KIND_HINT[kind]);
   setHTML('.js-groupHint', isPose ? GROUP_HINT.locked : GROUP_HINT[group]);
 
-  /* 중분류 — 꾸미기면 고르고, 시즌이면 잠긴다 */
-  cls('.js-famSel', 'off', isSeason);
-  cls('.js-famLocked', 'off', !isSeason);
-  cls('.js-addfam', 'off', isSeason);
-  setHTML('.js-famSel', FAMS.filter(function (f) { return f.group === group; })
-    .map(function (f) {
-      return '<option value="' + f.key + '"' + (f.key === fam ? ' selected' : '') + '>' + f.name + '</option>';
-    }).join(''));
-  setHTML('.js-famLocked',
-    '<b>' + famOf(fam).name + '</b><i>세트를 따라간다</i>');
-
-  setHTML('.js-setSel', SETS.map(function (s) {
-    return '<option value="' + s.key + '"' + (s.key === season ? ' selected' : '') +
-      '>' + s.name + ' — ' + s.c + '/3</option>';
+  /* 중분류 — 대분류가 무엇이든 여기서 고른다. 늘어나는 것은 이 줄이다. */
+  setHTML('.js-famSel', FAMS.filter(inGroup).map(function (f) {
+    return '<option value="' + f.key + '"' + (f.key === fam ? ' selected' : '') + '>' + f.name + '</option>';
   }).join(''));
+  setText('.js-famName', famOf(fam).name);
+
+  /* 세트 — **고른 중분류에 든 것만** 보인다 */
+  setHTML('.js-setSel', SETS.filter(function (x) { return x.fam === fam; })
+    .map(function (x) {
+      return '<option value="' + x.key + '"' + (x.key === season ? ' selected' : '') +
+        '>' + x.name + ' — ' + x.c + '/3</option>';
+    }).join('') || '<option>아직 세트가 없어요 — 새로 만드세요</option>');
 
   cls('.js-rowPrice', 'off', isPose);
   cls('.js-rowFree', 'off', !isPose);
@@ -1100,8 +1135,12 @@ document.addEventListener('click', function (e) {
   if (g && !g.disabled) { group = g.getAttribute('data-group'); return draw(); }
   var i2 = e.target.closest('[data-img]');
   if (i2) { hasImg = i2.getAttribute('data-img') === '1'; return draw(); }
+  var fk = e.target.closest('[data-fam]');
+  if (fk) { group = 'season'; fam = fk.getAttribute('data-fam'); return draw(); }
   var af = e.target.closest('.js-addfam');
   if (af) { cls('.js-newfam', 'off', !document.querySelector('.js-newfam').classList.contains('off')); return; }
+  var as = e.target.closest('.js-addset');
+  if (as) { cls('.js-newset', 'off', !document.querySelector('.js-newset').classList.contains('off')); return; }
   var s = e.target.closest('[data-on]');
   if (s) {
     var n = +s.getAttribute('data-on');
