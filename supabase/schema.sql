@@ -160,9 +160,8 @@ alter table tasks add column if not exists assignee_id uuid references auth.user
  * 다음 회차는 — once(이번만) · same(같은 사람) · rotate(번갈아).
  * 한 번 정한 사람이 다음 회차까지 계속 따라붙는 건 놀라운 일이라 **고를 때만 그렇게 된다.**
  */
-alter table tasks   add column if not exists rotate text not null default 'once';
-alter table presets add column if not exists assignee_id uuid references auth.users;
-alter table presets add column if not exists rotate text not null default 'once';
+alter table tasks add column if not exists rotate text not null default 'once';
+-- presets에도 같은 칸이 붙는다. 그건 표를 만든 뒤에 — 아래에 있다.
 
 /*
  * 차례가 **언제 · 누구 손에서** 넘어왔나. `앱을 열었을 때 뜨는 띠`가 이 둘로 선다.
@@ -197,6 +196,16 @@ create table if not exists presets (
   deleted_at   timestamptz,
   deleted_by   uuid references auth.users
 );
+
+/*
+ * 즐겨찾기에도 배정이 붙는다 — 위 tasks와 같은 두 칸이다.
+ *
+ * **여기 있는 까닭은 순서 때문이다.** 위에 뒀더니 빈 DB에서 표가 생기기도 전에
+ * `alter table presets`가 돌아 `relation "presets" does not exist`로 멈췄다.
+ * 이미 도는 DB에서는 표가 있으니 안 걸렸고, 그래서 오래 안 보였다.
+ */
+alter table presets add column if not exists assignee_id uuid references auth.users;
+alter table presets add column if not exists rotate text not null default 'once';
 
 -- 장보기 — 날짜도 주기도 없다. bought_on 하나로 목록과 기록이 갈린다.
 create table if not exists shop_items (
@@ -1039,7 +1048,7 @@ create table if not exists costume_owned (
 
 -- ─── 값표의 씨앗 ────────────────────────────────────────────────
 /*
- * 앱의 costumes.ts에 있던 서른 줄. **여기서 심고, 다시는 안 덮는다.**
+ * 앱의 costumes.ts에 있던 스물아홉 줄. **여기서 심고, 다시는 안 덮는다.**
  *
  * 전에는 두 번 돌려도 되게 `do update`로 값을 다시 밀어 넣었다. 지금은 안 된다 —
  * **값표의 주인이 이 파일에서 [상점 채우기](../design/관리자.html)로 넘어갔다.**
@@ -1088,6 +1097,32 @@ on conflict (item_key) do update
   -- **덮지 않는다.** 이름이 비어 있는 줄(칸이 생기기 전에 심긴 줄)만 채워 켠다.
   set name   = coalesce(costume_catalog.name, excluded.name),
       active = costume_catalog.active or costume_catalog.name is null;
+
+/*
+ * 시즌 세트의 이름표.
+ *
+ * 값표는 `season`에 `s-swim` 같은 열쇠만 들고 있다. **사람이 읽는 이름은 앱에만 있었다** —
+ * 관리자가 세트를 새로 만들려면 앱을 고쳐 다시 내야 한다는 뜻이라 여기로 옮긴다.
+ *
+ * 세트가 **열리는 조건은 여기 안 적는다.** 곰 하나·방 하나·소품 하나가 값표에 다 차면
+ * 열린 것이고, 그건 값표를 세면 나온다. 적어두면 값표와 어긋날 자리가 하나 더 생긴다.
+ */
+create table if not exists costume_season (
+  season_key text primary key,
+  name       text not null,
+  -- 상점 칩이 서는 차례
+  ord        int  not null default 0,
+  note       text,
+  created_at timestamptz not null default now()
+);
+
+insert into costume_season (season_key, name, ord, note) values
+  ('s-swim',  '물놀이 세트',   1, '여름 바다에서 신나게!'),
+  ('s-hall',  '할로윈 세트',   2, '한 밤의 사탕 사냥'),
+  ('s-xmas',  '크리스마스 세트', 3, '눈 오는 밤의 곰돌이'),
+  ('s-bloom', '봄꽃 세트',     4, '꽃잎이 날리는 날'),
+  ('s-vac',   '여름휴가 세트',  5, '느긋한 바닷가 하루')
+on conflict (season_key) do nothing;   -- 값표와 같은 까닭 — 고쳐놓은 이름을 안 덮는다
 
 -- ─── 얼마나 벌었나 ──────────────────────────────────────────────
 /*
@@ -1197,6 +1232,11 @@ create or replace function my_points()
 returns int language plpgsql security definer set search_path = public as $fn$
 begin
   perform stamp_points();
+  /*
+   * 세트도 여기서 본다. 전에는 **살 때만** 봤는데, 그러면 소품이 숨김인 채로 세트를
+   * 다 모은 사람은 관리자가 켜준 뒤에도 **뭔가 하나 더 사기 전까지** 못 받는다.
+   */
+  perform grant_poses();
   return 100
     + coalesce((select sum(amount)::int from point_log     where user_id = auth.uid()), 0)
     - coalesce((select sum(price)::int  from costume_owned where user_id = auth.uid()), 0);
@@ -1214,6 +1254,18 @@ returns void language sql security definer set search_path = public as $fn$
     from costume_catalog p
    where p.kind = 'pose'
      and p.season is not null
+     -- 숨김인 소품은 아직 안 준다. 켜지면 다음에 잔액을 볼 때 들어온다.
+     and p.active
+     /*
+      * **살 것이 하나라도 있는 세트여야 한다.** 이 줄이 없으면 소품만 덜렁 올려둔
+      * 새 세트가 `다 모았다`로 읽혀서 모두에게 그냥 들어간다 —
+      * 관리자가 곰을 올리기 전에 소품부터 올리면 바로 그 꼴이 된다.
+      */
+     and exists (
+       select 1 from costume_catalog n2
+        where n2.season = p.season and n2.kind <> 'pose'
+     )
+     -- 숨김이 된 곰·방도 그대로 센다. 빼면 하나 숨기는 순간 세트가 거저 열린다.
      and not exists (
        select 1 from costume_catalog n
         where n.season = p.season
@@ -1234,14 +1286,20 @@ returns int language plpgsql security definer set search_path = public as $fn$
 declare
   cost  int;
   sort  text;
+  live  boolean;
   purse int;
 begin
-  select price, kind into cost, sort from costume_catalog where item_key = item;
+  select price, kind, active into cost, sort, live
+    from costume_catalog where item_key = item;
   if cost is null then
     raise exception '없는 코스튬입니다';
   end if;
   if sort = 'pose' then
     raise exception '포즈는 세트를 다 모으면 드립니다';
+  end if;
+  -- 숨김으로 둔 것은 상점에 안 뜨지만, **열쇠만 알면 부를 수 있는 자리**라 여기서도 막는다
+  if not live then
+    raise exception '아직 파는 물건이 아닙니다';
   end if;
 
   select my_points() into purse;
@@ -1257,11 +1315,71 @@ begin
   return my_points();
 end $fn$;
 
+-- ─── 누가 채우나 ────────────────────────────────────────────────
+/*
+ * **상점을 채우는 사람.** 시안의 `아직 안 정한 것` 첫 줄에 있던 물음의 답이다.
+ *
+ * 역할 칸을 어딘가에 하나 더 다는 대신 표를 따로 뒀다. `auth.users`에 칸을 붙이면
+ * Supabase가 관리하는 표를 우리가 건드리는 것이 되고, `room_members.role`에 얹으면
+ * **방 안의 역할과 상점의 역할이 한 칸에 섞인다** — 방 주인은 상점과 아무 상관이 없다.
+ *
+ * **이 표에 넣는 길은 앱에 없다.** 여기 SQL Editor에서 손으로 넣는다 —
+ * 관리자를 앱에서 늘릴 수 있게 하면 관리자 하나가 새면 상점 전체가 샌다.
+ *
+ *   insert into shop_admins (user_id)
+ *   select id from auth.users where email = '내메일@example.com'
+ *   on conflict do nothing;
+ */
+create table if not exists shop_admins (
+  user_id  uuid primary key references auth.users on delete cascade,
+  added_at timestamptz not null default now()
+);
+
+/*
+ * 정책 안에서 `shop_admins`를 그냥 조회하면 그 표의 정책이 다시 불린다.
+ * `is_member`와 같은 까닭으로 `security definer`로 감싼다.
+ */
+create or replace function is_shop_admin()
+returns boolean language sql stable security definer set search_path = public as $fn$
+  select exists (select 1 from shop_admins where user_id = auth.uid());
+$fn$;
+
+/*
+ * 그림 두는 곳 — 통 하나, 파일 이름은 코드 그대로 `shop/<코드>.png`.
+ * **표의 열쇠와 파일 이름이 같아야** 어느 그림이 어느 물건인지 대조할 일이 없다.
+ *
+ * 통은 열어둔다(public). 상점 그림은 숨길 것이 아니고, 닫아두면 앱이 볼 때마다
+ * 서명한 주소를 받아와야 해서 상점 격자 스물아홉 칸에 요청이 스물아홉 번 붙는다.
+ *
+ * Storage는 우리 표가 아니라 **Supabase 것**이라 권한이 모자랄 수 있다.
+ * 막히면 멈추지 않고 넘어간다 — 대시보드에서 손으로 만들면 되는 일이다.
+ */
+do $$
+begin
+  insert into storage.buckets (id, name, public) values ('shop', 'shop', true)
+  on conflict (id) do nothing;
+
+  drop policy if exists "상점 그림은 누구나 본다"   on storage.objects;
+  drop policy if exists "상점 그림은 관리자가 올린다" on storage.objects;
+  drop policy if exists "상점 그림은 관리자가 바꾼다" on storage.objects;
+
+  create policy "상점 그림은 누구나 본다" on storage.objects
+    for select using (bucket_id = 'shop');
+  create policy "상점 그림은 관리자가 올린다" on storage.objects
+    for insert with check (bucket_id = 'shop' and is_shop_admin());
+  create policy "상점 그림은 관리자가 바꾼다" on storage.objects
+    for update using (bucket_id = 'shop' and is_shop_admin());
+exception when insufficient_privilege then
+  raise notice 'shop 통은 대시보드 Storage에서 만들어 주세요 — public, 관리자만 쓰기';
+end $$;
+
 -- ─── RLS ────────────────────────────────────────────────────────
 alter table point_log       enable row level security;
 alter table gomdori         enable row level security;
 alter table costume_owned   enable row level security;
 alter table costume_catalog enable row level security;
+alter table costume_season  enable row level security;
+alter table shop_admins     enable row level security;
 
 drop policy if exists "내 것만"     on gomdori;
 drop policy if exists "내가 넣는다" on gomdori;
@@ -1284,6 +1402,39 @@ create policy "내 것만" on costume_owned for select using (user_id = auth.uid
 drop policy if exists "내 것만" on point_log;
 create policy "내 것만" on point_log for select using (user_id = auth.uid());
 
--- 값표는 누구나 읽는다. 파는 물건 목록이라 숨길 것이 없다.
-drop policy if exists "누구나 본다" on costume_catalog;
-create policy "누구나 본다" on costume_catalog for select using (true);
+/*
+ * 값표 — **파는 것만 보인다.** 숨김으로 둔 것은 관리자에게만 보인다.
+ * 전에는 누구나 다 봤다. 그때는 값표가 앱과 같은 목록이라 새로 들어올 것이 없었고,
+ * 지금은 **아직 안 그린 것이 여기 쌓인다** — 크리스마스 옷이 시월에 목록으로 새면
+ * 시즌을 여는 재미가 그날로 없어진다.
+ */
+drop policy if exists "누구나 본다"     on costume_catalog;
+drop policy if exists "파는 것만 보인다" on costume_catalog;
+drop policy if exists "관리자가 올린다"  on costume_catalog;
+drop policy if exists "관리자가 고친다"  on costume_catalog;
+create policy "파는 것만 보인다" on costume_catalog
+  for select using (active or is_shop_admin());
+create policy "관리자가 올린다" on costume_catalog
+  for insert with check (is_shop_admin());
+create policy "관리자가 고친다" on costume_catalog
+  for update using (is_shop_admin());
+/*
+ * **지우는 정책은 일부러 없다.** 산 사람의 `costume_owned`에 열쇠가 남아 있어서,
+ * 값표에서 줄을 빼면 그 사람의 옷이 이름 없는 것이 된다.
+ * 그만 파는 길은 `active`를 끄는 것 하나다.
+ */
+
+-- 세트 이름표 — 누구나 읽는다. 이름과 차례뿐이라 숨길 것이 없다.
+drop policy if exists "누구나 본다"   on costume_season;
+drop policy if exists "관리자가 짓는다" on costume_season;
+drop policy if exists "관리자가 고친다" on costume_season;
+create policy "누구나 본다"   on costume_season for select using (true);
+create policy "관리자가 짓는다" on costume_season for insert with check (is_shop_admin());
+create policy "관리자가 고친다" on costume_season for update using (is_shop_admin());
+
+/*
+ * 관리자 명단은 **자기 줄만** 보인다 — 앱이 `나는 관리자인가`를 물어볼 자리다.
+ * 넣고 빼는 정책은 없다. 그건 SQL Editor에서 손으로 하는 일이다.
+ */
+drop policy if exists "나인지만 본다" on shop_admins;
+create policy "나인지만 본다" on shop_admins for select using (user_id = auth.uid());
