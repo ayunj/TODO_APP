@@ -246,6 +246,121 @@ table.list tr:last-child td{border-bottom:0}
 .rowact{border:0; background:transparent; cursor:pointer; color:var(--ink3); font:inherit; font-size:11.5px; white-space:nowrap}
 .rowact:hover{color:var(--accent)}
 
+/*
+  ══ 앱 판 ══
+  같은 일을 폰에서도 한다. **넓은 판을 줄인 게 아니라 다시 그린 것이다.**
+  1040px 판을 360px 웹뷰에 그대로 띄우면 34%로 눌려 14px 글씨가 5px이 된다 —
+  그 꼴은 아래 `그대로 띄우면` 칸에 실제로 눌러 놓았다.
+
+  폰에서 달라지는 것은 셋이다.
+  1) **두 칸이 한 줄로 선다.** 미리보기가 위, 적는 칸이 아래.
+  2) **표가 카드가 된다.** 일곱 열은 360px에 안 들어간다.
+  3) **화면이 둘로 갈린다.** 목록과 만들기를 한 화면에 같이 두지 않는다.
+*/
+.deckname{max-width:1040px; margin:38px auto 13px; display:flex; align-items:baseline; gap:9px; flex-wrap:wrap}
+.deckname b{font-size:15.5px; font-weight:700}
+.deckname span{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink3)}
+.deckname em{font-style:normal; font-size:12.5px; color:var(--ink2)}
+
+.deck{display:flex; flex-wrap:wrap; gap:26px; justify-content:center; align-items:flex-start; max-width:1560px; margin:0 auto}
+.devname{text-align:center; margin:0 0 9px}
+.devname b{font-size:13.5px}
+.devname span{display:block; font-size:11px; color:var(--ink3); margin-top:1px; font-family:'IBM Plex Mono',monospace}
+.devname.bad b{color:var(--accent)}
+
+.phone{
+  position:relative; flex:none; width:360px; height:800px;
+  background:var(--bg); border-radius:30px; overflow:hidden;
+  box-shadow:0 10px 34px rgba(97,89,83,.14); display:flex; flex-direction:column;
+}
+.scrollarea{flex:1; overflow-y:auto; overscroll-behavior:contain}
+.scrollarea::-webkit-scrollbar{width:0}
+
+.pbar{
+  display:flex; align-items:center; gap:9px; flex:none;
+  padding:14px 16px; background:var(--card); border-bottom:1px solid var(--line);
+}
+.pbar b{font-family:'Gowun Dodum',sans-serif; font-weight:400; font-size:17px; letter-spacing:-.02em}
+.pbar .crumb{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink3)}
+.pbar .who{margin-left:auto}
+.pbar .who i{
+  width:26px; height:26px; border-radius:999px; background:var(--accent-tint); color:var(--accent);
+  display:grid; place-items:center; font-style:normal; font-size:11px; font-weight:700;
+}
+.pback{
+  border:0; background:transparent; cursor:pointer; font:inherit; font-size:21px;
+  color:var(--ink2); padding:0; width:22px; line-height:1; margin-left:-4px;
+}
+
+.pbody{padding:16px}
+.phone .drop{aspect-ratio:5/4}
+.phone .pv.grow{flex:1; min-width:0}
+.phone .stage{width:100%}
+.phone .two{gap:10px}
+.phone .prev{margin-top:16px}
+
+/*
+  종류 — 폰에서는 가로 세그먼트가 안 된다. `소품 든 캐릭터` 여섯 자가
+  110px 칸에 안 들어가 두 줄로 접히고, 접히면 셋의 높이가 서로 달라진다.
+  세로로 세우면 규격 한 줄까지 같이 보여줄 자리가 생긴다 — 넓은 판에서
+  안내문 한 줄이 하던 일을 여기서는 목록이 대신한다.
+*/
+.klist{display:flex; flex-direction:column; gap:6px}
+.klist button{
+  display:flex; flex-direction:column; align-items:flex-start; gap:2px; text-align:left;
+  border:0; cursor:pointer; font:inherit; border-radius:13px; padding:10px 13px;
+  background:var(--sunk); color:var(--ink2);
+}
+.klist button b{font-size:13px; font-weight:500}
+.klist button span{font-size:11px; color:var(--ink3)}
+.klist button[aria-pressed="true"]{background:var(--card); box-shadow:0 0 0 1.5px var(--accent-soft)}
+.klist button[aria-pressed="true"] b{color:var(--accent)}
+.klist button[disabled]{opacity:.45; cursor:not-allowed}
+
+/* 저장은 **바닥에 붙는다.** 폼이 스크롤이라 끝까지 내려야 나오면 안 된다 */
+.pacts{
+  flex:none; display:flex; gap:8px; padding:12px 16px 16px;
+  background:var(--card); border-top:1px solid var(--line);
+}
+.pacts button{flex:1; border:0; cursor:pointer; border-radius:14px; padding:13px 10px; font:inherit; font-size:13.5px; font-weight:500}
+.pacts .save{flex:2; background:var(--accent); color:#fff}
+.pacts .draft{background:var(--sunk); color:var(--ink2)}
+
+.chiprow{flex-wrap:nowrap; overflow-x:auto; margin:13px 0 3px; padding:0 16px 3px}
+.chiprow::-webkit-scrollbar{height:0}
+.chiprow span{flex:none}
+
+/* 표는 카드가 된다 — 일곱 열을 두 줄로 접는다 */
+.cards{padding:9px 16px 88px; display:flex; flex-direction:column; gap:8px}
+.card{
+  display:flex; align-items:center; gap:11px; background:var(--card);
+  border-radius:16px; padding:10px 12px; box-shadow:0 0 0 1.2px var(--line);
+}
+.card .thumb{width:44px; height:44px; flex:none}
+.card .mid{flex:1; min-width:0}
+.card .mid b{
+  display:block; font-size:13px; font-weight:500; color:var(--ink);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.card .meta{
+  display:flex; align-items:center; gap:6px; margin-top:4px;
+  font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink3);
+}
+.card .meta .tag{font-family:'Noto Sans KR',sans-serif; padding:2px 8px}
+.card .sw{flex:none}
+
+.fab{
+  position:absolute; right:16px; bottom:18px; border:0; cursor:pointer; font:inherit;
+  font-size:13.5px; font-weight:500; color:#fff; background:var(--accent);
+  border-radius:999px; padding:14px 20px; box-shadow:0 9px 24px rgba(217,122,94,.38);
+}
+
+/* ── 안 되는 쪽 — 넓은 판을 폰에 그대로 밀어 넣은 것 ── */
+.phone.squish{display:block; background:#e6ded4}
+.squishinner{width:1040px; transform:scale(.3462); transform-origin:0 0; pointer-events:none; padding:10px 0 0}
+.squishnote{max-width:360px; margin:11px auto 0; font-size:11.5px; line-height:1.55; color:var(--ink2); text-align:center}
+.squishnote b{color:var(--accent); font-weight:500}
+
 /* ── 설명 ── */
 .doc{max-width:1040px; margin:30px auto 0; background:#fff; border-radius:20px; padding:24px 26px 28px}
 .doc h2{font-size:15.5px; margin:0 0 10px}
@@ -271,8 +386,9 @@ table.list tr:last-child td{border-bottom:0}
   <p>그림 한 장 올리고, <b>이름 적고, 무엇인지 고르면 끝</b>이다.
      무엇인지는 두 갈래로 갈린다 — <b>종류</b>(캐릭터 · 배경 · 소품 든 캐릭터)와
      <b>갈래</b>(꾸미기 · 시즌).</p>
-  <p>폰이 아니라 <b>넓은 판</b>이다. 올릴 그림이 컴퓨터에 있고, 값 매기고 순서 보는 데 표가 필요하다.
-     색·글씨·모서리는 앱 토큰 그대로 쓰되 360px 틀에 우겨넣지 않았다.</p>
+  <p><b>판이 둘이다.</b> 그림이 컴퓨터에 있을 때 쓰는 <b>브라우저 판</b>과,
+     폰에서 앨범 열고 올릴 때 쓰는 <b>앱 판</b>. 색·글씨·모서리는 같은 토큰이지만
+     <b>넓은 판을 줄인 게 아니라 다시 그렸다</b> — 줄이면 14px 글씨가 5px이 된다.</p>
   <p>파는 것의 갈래는 <code>상점.html</code>의 <code>BEARS</code> · <code>ROOMS</code> · <code>POSES</code>와 같다.</p>
 </div>
 
@@ -286,12 +402,14 @@ table.list tr:last-child td{border-bottom:0}
   <button type="button" data-img="1">올린 뒤</button>
 </div>
 
+<p class="deckname"><b>브라우저 판</b><span>1040px</span><em>그림이 컴퓨터에 있을 때 — 두 칸이 나란히, 목록은 표</em></p>
+
 <div class="wrap">
-  <div class="admin">
+  <div class="admin" id="adminPanel">
 
     <div class="abar">
       <b>상점 채우기</b>
-      <span class="crumb" id="crumb">올린 것 29 · 파는 중 12</span>
+      <span class="crumb js-crumb">올린 것 29 · 파는 중 12</span>
       <span class="who"><i>윤</i>윤정</span>
     </div>
 
@@ -300,17 +418,17 @@ table.list tr:last-child td{border-bottom:0}
       <!-- 왼쪽 — 그림이 상점에서 어떻게 보이나 -->
       <div class="left">
         <p class="sect">그림</p>
-        <div class="drop" id="drop">
-          <div id="dropEmpty">
+        <div class="drop js-drop">
+          <div class="js-dropEmpty">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
                  stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 16V4m0 0L8 8m4-4 4 4"/>
               <path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/>
             </svg>
             <div class="t1">그림을 끌어다 놓거나 눌러서 고르세요</div>
-            <div class="t2" id="dropSpec">PNG · 배경 투명 · 세로로 긴 한 장</div>
+            <div class="t2 js-dropSpec">PNG · 배경 투명 · 세로로 긴 한 장</div>
           </div>
-          <img id="dropImg" alt="" style="display:none" />
+          <img class="js-dropImg" alt="" style="display:none" />
           <button class="swap" type="button">바꾸기</button>
         </div>
 
@@ -320,17 +438,17 @@ table.list tr:last-child td{border-bottom:0}
             <div class="pv">
               <div class="cap">격자 칸</div>
               <div class="mini">
-                <span class="nm" id="mnm">이름 없음</span>
-                <span class="art" id="mart"></span>
-                <span class="foot" id="mfoot"></span>
+                <span class="nm js-mnm">이름 없음</span>
+                <span class="art js-mart"></span>
+                <span class="foot js-mfoot"></span>
               </div>
             </div>
             <div class="pv">
               <div class="cap">홈 칸</div>
-              <div class="stage" id="stage"></div>
+              <div class="stage js-stage"></div>
             </div>
           </div>
-          <p class="croph" id="cropHint"></p>
+          <p class="croph js-cropHint"></p>
         </div>
       </div>
 
@@ -344,17 +462,17 @@ table.list tr:last-child td{border-bottom:0}
         -->
         <div class="row">
           <label>종류</label>
-          <div class="seg" id="segKind">
+          <div class="seg js-segKind">
             <button type="button" data-kind="bear" aria-pressed="true">캐릭터</button>
             <button type="button" data-kind="room" aria-pressed="false">배경</button>
             <button type="button" data-kind="pose" aria-pressed="false">소품 든 캐릭터</button>
           </div>
-          <div class="hint" id="kindHint"></div>
+          <div class="hint js-kindHint"></div>
         </div>
 
         <div class="row">
-          <label for="nm">이름</label>
-          <input class="t" id="nm" type="text" placeholder="모자 곰" />
+          <label>이름</label>
+          <input class="t js-nm" type="text" placeholder="모자 곰" />
           <div class="hint">상점 카드에 그대로 뜬다. <b>여덟 자를 넘기면</b> 103px 칸에서 잘린다.</div>
         </div>
 
@@ -364,23 +482,23 @@ table.list tr:last-child td{border-bottom:0}
         -->
         <div class="row">
           <label>코드</label>
-          <div class="code"><span id="codeVal">b-hat</span><button type="button">고치기</button></div>
+          <div class="code"><span class="js-codeVal">b-hat</span><button type="button">고치기</button></div>
           <div class="hint">이름에서 자동으로 짓는다. 세트가 이 코드로 물건을 찾는다.</div>
         </div>
 
         <div class="two">
           <div class="row" style="margin-bottom:0">
             <label>갈래</label>
-            <div class="seg" id="segCat">
+            <div class="seg js-segCat">
               <button type="button" data-cat="deco" aria-pressed="true">꾸미기</button>
               <button type="button" data-cat="season" aria-pressed="false">시즌</button>
             </div>
           </div>
-          <div class="row" id="rowPrice" style="margin-bottom:0">
-            <label for="pp">값</label>
-            <div class="pwrap"><i class="coin"></i><input class="t" id="pp" type="text" inputmode="numeric" placeholder="100" /></div>
+          <div class="row js-rowPrice" style="margin-bottom:0">
+            <label>값</label>
+            <div class="pwrap"><i class="coin"></i><input class="t js-pp" type="text" inputmode="numeric" placeholder="100" /></div>
           </div>
-          <div class="row off" id="rowFree" style="margin-bottom:0">
+          <div class="row off js-rowFree" style="margin-bottom:0">
             <label>값</label>
             <div class="noprice">
               <img src="g/ic-gift.png" alt="" />
@@ -388,12 +506,12 @@ table.list tr:last-child td{border-bottom:0}
             </div>
           </div>
         </div>
-        <p class="hint" id="catHint" style="margin:8px 0 17px"></p>
+        <p class="hint js-catHint" style="margin:8px 0 17px"></p>
 
         <!-- 시즌을 골랐을 때만 열리는 줄. 세트 없는 시즌 물건은 상점에서 갈 곳이 없다. -->
-        <div class="row off" id="rowSet">
-          <label for="st">어느 세트</label>
-          <select class="t" id="st">
+        <div class="row off js-rowSet">
+          <label>어느 세트</label>
+          <select class="t js-st">
             <option>물놀이 세트 — 곰 ○ · 방 ○ · 소품 ✕</option>
             <option>할로윈 세트 — 곰 ○ · 방 ○ · 소품 ○</option>
             <option>크리스마스 세트 — 곰 ✕ · 방 ○ · 소품 ✕</option>
@@ -415,8 +533,8 @@ table.list tr:last-child td{border-bottom:0}
 
     <!-- ── 올린 것 ── -->
     <div class="listwrap">
-      <div class="lhead"><b>올린 것</b><span id="lcount">29개 · 파는 중 12</span></div>
-      <div class="setbar" id="setbar"></div>
+      <div class="lhead"><b>올린 것</b><span class="js-lcount">29개 · 파는 중 12</span></div>
+      <div class="setbar js-setbar"></div>
       <table class="list">
         <thead>
           <tr>
@@ -425,11 +543,180 @@ table.list tr:last-child td{border-bottom:0}
             <th style="width:78px">파는 중</th><th style="width:64px"></th>
           </tr>
         </thead>
-        <tbody id="tb"></tbody>
+        <tbody class="js-tb"></tbody>
       </table>
     </div>
 
   </div>
+</div>
+
+<p class="deckname"><b>앱 판</b><span>360 × 800</span><em>폰에서 앨범 열고 올릴 때 — 한 줄로 서고, 화면이 둘로 갈린다</em></p>
+
+<div class="deck">
+
+  <!--
+    화면 하나 — 올린 것.
+    넓은 판에서는 폼 아래에 표가 붙어 있지만, 폰에서는 **목록이 먼저 열리는 화면**이다.
+    스물아홉 개를 훑고 켜고 끄는 일이 새로 올리는 일보다 잦다.
+  -->
+  <div>
+    <p class="devname"><b>올린 것</b><span>먼저 열리는 화면</span></p>
+    <div class="phone">
+      <div class="pbar">
+        <b>상점 채우기</b>
+        <span class="crumb js-crumb">올린 것 29 · 파는 중 12</span>
+        <span class="who"><i>윤</i></span>
+      </div>
+      <div class="scrollarea">
+        <div class="setbar chiprow js-setbar"></div>
+        <div class="cards js-cards"></div>
+      </div>
+      <button class="fab" type="button">＋ 채우기</button>
+    </div>
+  </div>
+
+  <!--
+    화면 둘 — 채우기.
+    위에서 아래로 한 줄이다. **미리보기가 폼 위에 있는 건 넓은 판과 같은 까닭이다** —
+    자르는 규칙이 종류마다 달라서, 올린 뒤에 알면 늦다.
+    다만 접어 두지 않고 그림 바로 아래 붙였다. 폰은 스크롤이 길어서
+    접어 두면 안 펴 보고 지나간다.
+  -->
+  <div>
+    <p class="devname"><b>채우기</b><span>＋ 를 누르면</span></p>
+    <div class="phone" id="phForm">
+      <div class="pbar">
+        <button class="pback" type="button" aria-label="뒤로">‹</button>
+        <b>채우기</b>
+        <span class="crumb">새 물건</span>
+      </div>
+
+      <div class="scrollarea">
+        <div class="pbody">
+
+          <p class="sect">그림</p>
+          <div class="drop js-drop">
+            <div class="js-dropEmpty">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 16V4m0 0L8 8m4-4 4 4"/>
+                <path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/>
+              </svg>
+              <div class="t1">앨범에서 고르기</div>
+              <div class="t2 js-dropSpec">PNG · 배경 투명 · 세로로 긴 한 장</div>
+            </div>
+            <img class="js-dropImg" alt="" style="display:none" />
+            <button class="swap" type="button">바꾸기</button>
+          </div>
+
+          <div class="prev">
+            <p class="sect" style="margin-top:16px">상점에서 이렇게 보여요</p>
+            <div class="prevrow">
+              <div class="pv">
+                <div class="cap">격자 칸</div>
+                <div class="mini">
+                  <span class="nm js-mnm">이름 없음</span>
+                  <span class="art js-mart"></span>
+                  <span class="foot js-mfoot"></span>
+                </div>
+              </div>
+              <div class="pv grow">
+                <div class="cap">홈 칸</div>
+                <div class="stage js-stage"></div>
+              </div>
+            </div>
+            <p class="croph js-cropHint"></p>
+          </div>
+
+          <div class="row" style="margin-top:18px">
+            <label>종류</label>
+            <div class="klist js-segKind">
+              <button type="button" data-kind="bear" aria-pressed="true">
+                <b>캐릭터</b><span>투명 PNG · 세로로 긴 한 장</span></button>
+              <button type="button" data-kind="room" aria-pressed="false">
+                <b>배경</b><span>정사각 · 배경까지 꽉 찬 한 장</span></button>
+              <button type="button" data-kind="pose" aria-pressed="false">
+                <b>소품 든 캐릭터</b><span>세트 완성 보상 · 값이 없다</span></button>
+            </div>
+          </div>
+
+          <div class="row">
+            <label>이름</label>
+            <input class="t js-nm" type="text" placeholder="모자 곰" />
+            <div class="hint">상점 카드에 그대로 뜬다. <b>여덟 자를 넘기면</b> 잘린다.</div>
+          </div>
+
+          <div class="row">
+            <label>코드</label>
+            <div class="code"><span class="js-codeVal">b-hat</span><button type="button">고치기</button></div>
+          </div>
+
+          <div class="two">
+            <div class="row" style="margin-bottom:0">
+              <label>갈래</label>
+              <div class="seg js-segCat">
+                <button type="button" data-cat="deco" aria-pressed="true">꾸미기</button>
+                <button type="button" data-cat="season" aria-pressed="false">시즌</button>
+              </div>
+            </div>
+            <div class="row js-rowPrice" style="margin-bottom:0">
+              <label>값</label>
+              <div class="pwrap"><i class="coin"></i><input class="t js-pp" type="text" inputmode="numeric" placeholder="100" /></div>
+            </div>
+            <div class="row off js-rowFree" style="margin-bottom:0">
+              <label>값</label>
+              <div class="noprice">
+                <img src="g/ic-gift.png" alt="" />
+                <span><b>세트 완성 보상</b>이라 값이 없어요</span>
+              </div>
+            </div>
+          </div>
+          <p class="hint js-catHint" style="margin:8px 0 16px"></p>
+
+          <div class="row off js-rowSet" style="margin-bottom:4px">
+            <label>어느 세트</label>
+            <select class="t js-st">
+              <option>물놀이 세트 — 곰 ○ · 방 ○ · 소품 ✕</option>
+              <option>할로윈 세트 — 곰 ○ · 방 ○ · 소품 ○</option>
+              <option>크리스마스 세트 — 곰 ✕ · 방 ○ · 소품 ✕</option>
+              <option>봄꽃 세트 — 곰 ○ · 방 ✕ · 소품 ✕</option>
+              <option>여름휴가 세트 — 곰 ✕ · 방 ✕ · 소품 ✕</option>
+              <option>+ 새 세트 만들기</option>
+            </select>
+            <div class="hint">곰 하나 · 방 하나 · 소품 하나가 <b>다 차야</b> 세트가 열린다.</div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="pacts">
+        <button class="save" type="button">저장하고 팔기</button>
+        <button class="draft" type="button">숨김</button>
+      </div>
+    </div>
+  </div>
+
+  <!--
+    같은 화면의 **아래쪽**. 폼이 한 화면에 안 들어가니 시안에서도 한 번 내려 보여준다 —
+    위 폰을 그대로 복제해 끝까지 내려둔 것이라 손잡이를 돌리면 같이 바뀐다.
+  -->
+  <div>
+    <p class="devname"><b>채우기 — 내려서</b><span>같은 화면의 아래쪽</span></p>
+    <div class="phone" id="phFormEnd"></div>
+  </div>
+
+  <!--
+    안 되는 쪽. 위의 넓은 판을 **그대로 복사해 폰 폭에 맞춰 눌러 넣은 것**이다 —
+    손으로 그린 그림이 아니라 진짜 그 판을 34.6%로 줄인 것이라 크기가 정직하다.
+  -->
+  <div>
+    <p class="devname bad"><b>그대로 띄우면</b><span>이렇게 된다</span></p>
+    <div class="phone squish" id="phSquish"></div>
+    <p class="squishnote">1040px 판이 360px 웹뷰에서 <b>34.6%</b>로 눌린다 —
+      본문 14px가 <b>4.8px</b>, 코드 글씨 10.5px가 <b>3.6px</b>.
+      눌러 넣지 않으면 대신 가로로 밀린다.</p>
+  </div>
+
 </div>
 
 <div class="doc">
@@ -475,11 +762,32 @@ table.list tr:last-child td{border-bottom:0}
   <p>이름에서 짓고 고칠 수만 있게 뒀다. 손으로 적게 하면 <code>b-swim</code>과 <code>bswim</code>이
      섞이고, 세트가 <code>has</code>로 물건을 못 찾는다.</p>
 
+  <h3>앱 판은 줄인 게 아니라 딴 판이다</h3>
+  <p>넓은 판을 웹뷰에 그대로 띄우면 <b>1040px가 360px 안에서 34.6%로 눌린다</b> —
+     본문 14px가 4.8px가 되고, 코드 글씨는 3.6px가 된다. 눌러 넣지 않으면 대신 가로로 밀려
+     오른쪽 절반을 손가락으로 끌어와야 한다. 둘 다 못 쓴다. 그래서 폰에서는 다섯을 바꿨다.</p>
+  <table>
+    <tr><th></th><th>브라우저 판</th><th>앱 판</th></tr>
+    <tr><td>뼈대</td><td>왼쪽 미리보기 · 오른쪽 폼</td><td><b>한 줄</b> — 그림 → 미리보기 → 폼</td></tr>
+    <tr><td>목록</td><td>폼 아래에 붙은 <b>표</b> 일곱 열</td><td><b>카드</b> — 두 줄로 접는다</td></tr>
+    <tr><td>화면</td><td>하나. 폼과 표가 같이 보인다</td><td><b>둘.</b> 목록이 먼저, <code>＋</code>로 채우기</td></tr>
+    <tr><td>종류 고르기</td><td>가로 세그먼트 셋</td><td>세로 목록 — 규격이 한 줄씩 붙는다</td></tr>
+    <tr><td>저장</td><td>폼 끝에 있다</td><td><b>바닥에 붙는다</b></td></tr>
+  </table>
+  <p><b>목록이 먼저 열리는 화면인 까닭</b>은 폰에서 하는 일이 달라서다.
+     넓은 판은 그림 스물아홉 장을 한자리에서 올리는 자리고,
+     폰은 <b>올려둔 것을 훑고 켜고 끄는</b> 자리다 — 새로 올리는 일보다 그쪽이 잦다.</p>
+  <blockquote><b>미리보기는 폰에서도 접지 않았다.</b> 자리를 아끼려고 접으면 안 펴 보고 지나가고,
+     안 펴 보면 방 그림 위아래가 잘린 걸 상점에 들어가서야 알게 된다 —
+     이 화면이 있는 까닭 자체가 그 왕복을 없애는 것이다.</blockquote>
+
   <h2 style="margin-top:24px">아직 안 정한 것</h2>
   <ul>
     <li><b>누가 들어오나</b> — 지금은 만든 사람 하나다. 로그인 위에 얹을지, 주소만 숨길지.</li>
     <li><b>그림을 어디에 두나</b> — Supabase Storage 한 통에 <code>shop/&lt;코드&gt;.png</code>로 두면 표와 이름이 맞는다.</li>
     <li><b>순서</b> — 지금은 올린 차례다. 상점에서 끌어 옮기고 싶어지면 그때 칸을 하나 더 만든다.</li>
+    <li><b>앱 판으로 그림도 올리나</b> — 폰 앨범에는 배경 투명 PNG가 잘 없다.
+        폰에서는 <b>고치고 켜고 끄는 것만</b> 하고 올리는 건 브라우저로 미룰 수도 있다.</li>
     <li><b>세트를 여기서 만드나</b> — 지금은 <code>+ 새 세트 만들기</code> 한 줄로만 뒀다. 세트가 다섯을 넘으면 따로 떼야 한다.</li>
   </ul>
 </div>
@@ -488,10 +796,15 @@ table.list tr:last-child td{border-bottom:0}
 /*
   손잡이 둘(종류 · 그림)로 화면이 바뀐다. 진짜 올리기는 없다 —
   **여기서 볼 것은 종류에 따라 칸이 어떻게 달라지나**지, 업로드 그 자체가 아니다.
+
+  판이 둘이라 그리는 자리도 둘이다. 그래서 `id` 대신 `js-` 클래스로 잡고
+  **같은 이름을 가진 것을 모두 함께 고친다** — 브라우저 판에서 종류를 바꾸면
+  앱 판도 같이 바뀐다. 하나만 손대면 둘이 어긋나고, 어긋난 시안은 볼 값이 없다.
 */
 var kind = 'bear';   /* bear | room | pose */
 var cat  = 'deco';   /* deco | season */
 var hasImg = true;
+var named = false;   /* 이름을 적었나 — 코드는 거기서 짓는다 */
 
 /* 종류마다 미리보기에 세울 대역 그림. 소품 든 캐릭터는 아직 안 그려서 곰토끼가 대신 선다. */
 var ART = {
@@ -529,88 +842,117 @@ var ROWS = [
   { nm: '튜브 포즈',   code: 'pose-tube', k: '소품 든 캐릭터', c: 'gift',   p: null, on: false }
 ];
 
-function q(s){ return document.querySelector(s); }
-function esc(s){ return String(s).replace(/[&<>]/g, function (m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]; }); }
-function press(box, key, val){
-  Array.prototype.forEach.call(box.querySelectorAll('[data-' + key + ']'), function (b) {
+/* ── 판 둘을 한꺼번에 고치는 손 ── */
+function all(sel){ return Array.prototype.slice.call(document.querySelectorAll(sel)); }
+function setText(sel, t){ all(sel).forEach(function (n) { n.textContent = t; }); }
+function setHTML(sel, h){ all(sel).forEach(function (n) { n.innerHTML = h; }); }
+function cls(sel, c, on){ all(sel).forEach(function (n) { n.classList.toggle(c, on); }); }
+function press(key, val){
+  all('[data-' + key + ']').forEach(function (b) {
     b.setAttribute('aria-pressed', String(b.getAttribute('data-' + key) === val));
   });
 }
+function esc(s){ return String(s).replace(/[&<>]/g, function (m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m]; }); }
 function imgTag(src, fill){ return '<img src="' + src + '" alt="" class="' + (fill ? 'fill' : '') + '" />'; }
 
 function draw(){
   var a = ART[kind];
   var isPose = kind === 'pose';
 
-  press(q('#segKind'), 'kind', kind);
-  press(q('#segCat'), 'cat', cat);
-  q('#segCat').classList.toggle('locked', isPose);
-  q('#segCat').querySelector('[data-cat="deco"]').disabled = isPose;
-  q('#kindHint').innerHTML = KIND_HINT[kind];
-  q('#catHint').innerHTML = isPose ? CAT_HINT.locked : CAT_HINT[cat];
+  press('kind', kind);
+  press('cat', cat);
+  press('img', hasImg ? '1' : '0');
 
-  q('#rowPrice').classList.toggle('off', isPose);
-  q('#rowFree').classList.toggle('off', !isPose);
-  q('#rowSet').classList.toggle('off', cat !== 'season');
+  cls('.js-segCat', 'locked', isPose);
+  all('[data-cat="deco"]').forEach(function (b) { b.disabled = isPose; });
+  setHTML('.js-kindHint', KIND_HINT[kind]);
+  setHTML('.js-catHint', isPose ? CAT_HINT.locked : CAT_HINT[cat]);
 
-  q('#nm').placeholder = a.nm;
-  if (!q('#nm').value) q('#codeVal').textContent = a.code;
+  cls('.js-rowPrice', 'off', isPose);
+  cls('.js-rowFree', 'off', !isPose);
+  cls('.js-rowSet', 'off', cat !== 'season');
+
+  all('.js-nm').forEach(function (n) { n.placeholder = a.nm; });
+  setText('.js-codeVal', named ? '(이름에서 지음)' : a.code);
 
   /* 그림 칸 */
-  q('#drop').classList.toggle('has', hasImg);
-  q('#dropEmpty').style.display = hasImg ? 'none' : '';
-  q('#dropSpec').textContent = a.spec;
-  var di = q('#dropImg');
-  di.style.display = hasImg ? '' : 'none';
-  di.src = a.src;
-  di.className = a.fill ? 'fill' : '';
+  cls('.js-drop', 'has', hasImg);
+  all('.js-dropEmpty').forEach(function (n) { n.style.display = hasImg ? 'none' : ''; });
+  setText('.js-dropSpec', a.spec);
+  all('.js-dropImg').forEach(function (n) {
+    n.style.display = hasImg ? '' : 'none';
+    n.src = a.src;
+    n.className = 'js-dropImg' + (a.fill ? ' fill' : '');
+  });
 
   /* 격자 칸 — 그림이 없으면 아직 안 그린 자리에 서는 그림자 곰이 선다 */
-  q('#mnm').textContent = a.nm;
-  q('#mart').innerHTML = hasImg ? imgTag(a.src, a.fill) : '<img src="g/ic-bear.png" alt="" />';
-  q('#mfoot').className = 'foot' + (isPose ? ' gift' : '');
-  q('#mfoot').innerHTML = isPose
+  setText('.js-mnm', a.nm);
+  setHTML('.js-mart', hasImg ? imgTag(a.src, a.fill) : '<img src="g/ic-bear.png" alt="" />');
+  all('.js-mfoot').forEach(function (n) { n.className = 'foot js-mfoot' + (isPose ? ' gift' : ''); });
+  setHTML('.js-mfoot', isPose
     ? '<img src="g/ic-gift.png" alt="" />세트 보상'
-    : '<i class="coin"></i>' + a.p;
+    : '<i class="coin"></i>' + a.p);
 
   /* 홈 칸 — 배경을 올리는 중이면 그 배경 위에 기본 곰을 세워 본다 */
   var room = (kind === 'room' && hasImg) ? a.src : 'g/main_room.png';
   var bear = (kind !== 'room' && hasImg) ? a.src : 'g/base-front.png';
-  q('#stage').innerHTML =
+  setHTML('.js-stage',
     '<img class="room" src="' + room + '" alt="" />' +
-    '<img class="bear" src="' + bear + '" alt="" />';
-  q('#cropHint').innerHTML = CROP[kind];
+    '<img class="bear" src="' + bear + '" alt="" />');
+  setHTML('.js-cropHint', CROP[kind]);
 
-  var kn = document.querySelector('.knobs');
-  press(kn, 'kind', kind);
-  press(kn, 'img', hasImg ? '1' : '0');
+  dropToEnd();
+}
+
+function tagOf(c){
+  return c === 'gift' ? '<span class="tag gift">보상</span>'
+    : c === 'season' ? '<span class="tag season">시즌</span>'
+    : '<span class="tag deco">꾸미기</span>';
+}
+function artOf(r){
+  return r.img ? imgTag(r.img, r.fill)
+    : '<img src="g/ic-bear.png" alt="" style="max-width:70%;max-height:70%" />';
+}
+function priceOf(r){
+  return r.p === null ? '값 없음' : r.p === 0 ? '기본' : r.p + 'P';
 }
 
 function drawList(){
-  q('#setbar').innerHTML = SETS.map(function (s) {
+  setHTML('.js-setbar', SETS.map(function (s) {
     var done = s.c === 3;
     return '<span class="' + (done ? 'done' : '') + '">' +
       (done ? '<img src="g/ic-gift.png" alt="" />' : '') +
       s.n + ' <b>' + s.c + '/3</b></span>';
-  }).join('');
+  }).join(''));
 
-  q('#tb').innerHTML = ROWS.map(function (r, i) {
-    var tag = r.c === 'gift' ? '<span class="tag gift">보상</span>'
-      : r.c === 'season' ? '<span class="tag season">시즌</span>'
-      : '<span class="tag deco">꾸미기</span>';
-    var art = r.img ? imgTag(r.img, r.fill)
-      : '<img src="g/ic-bear.png" alt="" style="max-width:70%;max-height:70%" />';
+  /* 넓은 판 — 표 */
+  setHTML('.js-tb', ROWS.map(function (r, i) {
     var price = r.p === null ? '<span class="pcell free">값 없음</span>'
       : r.p === 0 ? '<span class="pcell free">기본</span>'
       : '<span class="pcell">' + r.p + 'P</span>';
     return '<tr>' +
-      '<td><span class="thumb">' + art + '</span></td>' +
+      '<td><span class="thumb">' + artOf(r) + '</span></td>' +
       '<td class="nmcell"><b>' + esc(r.nm) + '</b><span>' + r.code + '</span></td>' +
-      '<td>' + r.k + '</td><td>' + tag + '</td><td>' + price + '</td>' +
+      '<td>' + r.k + '</td><td>' + tagOf(r.c) + '</td><td>' + price + '</td>' +
       '<td><button class="sw" type="button" aria-pressed="' + r.on + '" data-on="' + i + '" aria-label="파는 중"></button></td>' +
       '<td><button class="rowact" type="button">고치기</button></td>' +
     '</tr>';
-  }).join('');
+  }).join(''));
+
+  /*
+    앱 판 — 카드.
+    표의 일곱 열 가운데 폰에 남길 것은 **그림 · 이름 · 파는 중** 셋이다.
+    종류 · 갈래 · 값은 이름 밑 한 줄로 접었고, `고치기`는 카드를 누르는 것으로 갈음한다 —
+    줄마다 글자 버튼을 하나 더 두면 손가락으로 스위치를 잘못 누른다.
+  */
+  setHTML('.js-cards', ROWS.map(function (r, i) {
+    return '<div class="card">' +
+      '<span class="thumb">' + artOf(r) + '</span>' +
+      '<span class="mid"><b>' + esc(r.nm) + '</b>' +
+        '<span class="meta">' + tagOf(r.c) + r.code + ' · ' + priceOf(r) + '</span></span>' +
+      '<button class="sw" type="button" aria-pressed="' + r.on + '" data-on="' + i + '" aria-label="파는 중"></button>' +
+    '</div>';
+  }).join(''));
 }
 
 document.addEventListener('click', function (e) {
@@ -629,19 +971,65 @@ document.addEventListener('click', function (e) {
     var i = +s.getAttribute('data-on');
     ROWS[i].on = !ROWS[i].on;
     var n = 8 + ROWS.filter(function (r) { return r.on; }).length;
-    q('#crumb').textContent = '올린 것 29 · 파는 중 ' + n;
-    q('#lcount').textContent = '29개 · 파는 중 ' + n;
+    setText('.js-crumb', '올린 것 29 · 파는 중 ' + n);
+    setText('.js-lcount', '29개 · 파는 중 ' + n);
     return drawList();
   }
 });
 
 /* 이름을 적으면 코드는 거기서 짓는다 — 손으로 적게 두지 않는다 */
-q('#nm').addEventListener('input', function () {
-  q('#codeVal').textContent = this.value ? '(이름에서 지음)' : ART[kind].code;
+all('.js-nm').forEach(function (n) {
+  n.addEventListener('input', function () {
+    named = !!this.value;
+    all('.js-nm').forEach(function (m) { if (m !== n) m.value = n.value; });
+    setText('.js-codeVal', named ? '(이름에서 지음)' : ART[kind].code);
+  });
 });
 
 draw();
 drawList();
+
+/*
+  ── 채우기, 내려서 ──
+  폼이 800px에 안 들어간다. 시안은 굴려 볼 수 있지만 **그림으로 떠서 보는 사람은 못 굴린다.**
+  그래서 같은 폰을 복제해 끝까지 내려둔 짝을 하나 세운다. 복제본도 `js-` 클래스를 그대로
+  달고 있어서 종류를 바꾸면 둘이 같이 바뀐다 — 칸이 열리고 닫히며 높이가 달라지니
+  **그릴 때마다 다시 내린다.**
+*/
+var formEnd = null;
+function dropToEnd(){
+  if (!formEnd) return;
+  var sc = formEnd.querySelector('.scrollarea');
+  sc.scrollTop = sc.scrollHeight;
+}
+(function () {
+  var box = document.getElementById('phFormEnd');
+  if (!box) return;
+  var copy = document.getElementById('phForm').cloneNode(true);
+  copy.removeAttribute('id');
+  copy.removeAttribute('class');
+  while (copy.firstChild) box.appendChild(copy.firstChild);
+  formEnd = box;
+  dropToEnd();
+}());
+
+/*
+  ── 그대로 띄우면 ──
+  넓은 판을 **손으로 다시 그리지 않고 그대로 복제해** 폰 폭에 맞춰 눌러 넣는다.
+  34.6%는 360 ÷ 1040이다 — 눈대중이 아니라 진짜 그 비율이라 크기가 정직하다.
+  복제본도 `js-` 클래스를 그대로 달고 있어서 손잡이를 돌리면 같이 바뀐다.
+*/
+(function () {
+  var box = document.getElementById('phSquish');
+  if (!box) return;
+  var copy = document.getElementById('adminPanel').cloneNode(true);
+  copy.removeAttribute('id');
+  var inner = document.createElement('div');
+  inner.className = 'squishinner';
+  inner.setAttribute('aria-hidden', 'true');
+  inner.appendChild(copy);
+  box.appendChild(inner);
+}());
 </script>
 </body>
 </html>
