@@ -29,7 +29,11 @@ export default function RoomCard({ done, total }: { done: number; total: number 
 
   return (
     <section className="mb-[11px] overflow-hidden rounded-card bg-card shadow-card">
-      <div className="relative grid aspect-square w-full place-items-end justify-center overflow-hidden bg-sunk">
+      {/*
+        세로는 아래, 가로는 **가운데**다. `place-items-end` 한 낱말로 쓰면
+        가로까지 끝으로 밀려서 곰돌이가 오른쪽 벽에 붙는다 — 둘을 갈라 적는다.
+      */}
+      <div className="relative grid aspect-square w-full items-end justify-items-center overflow-hidden bg-sunk">
         <Art src="/gomdori/room.png" className="absolute inset-0 h-full w-full object-cover" />
         {/*
           가로·세로를 **둘 다** 묶는다. 한쪽만 묶으면 그림 비가 바뀔 때 칸을 뚫는다.
