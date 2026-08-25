@@ -9,6 +9,7 @@
 docs/
   tasks/      screens  repeat  postpone  categories  presets  assign
   shopping/   list  history
+  store/      points  items  admin
   memo/
   rooms/
   nudge/
@@ -36,6 +37,16 @@ docs/
 |---|---|
 | [list](shopping/list/기능.md) | 목록. 왜 할 일과 따로 뒀는지, 방과 나누기(한 곳만) |
 | [history](shopping/history/기능.md) | 구매 기록, 자주 사는 것 |
+
+## 상점 — [store/](store/)
+
+| 기능 | 무엇 |
+|---|---|
+| [points](store/points/기능.md) | ★ **포인트.** 어떻게 벌고, 왜 잔액 칸이 없는지 |
+| [items](store/items/기능.md) | 상점 — 곰·방·소품, 시즌 세트, 값을 서버가 정하는 까닭 |
+| [admin](store/admin/기능.md) | **상점 채우기.** 값표의 주인이 넘어온 자리 (시안까지) |
+
+[장보기](shopping/list/기능.md)와 다른 것이다 — 저쪽은 우유 사는 목록이고 이쪽은 곰돌이 옷이다.
 
 ## 메모 — [memo/](memo/)
 
