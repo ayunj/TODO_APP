@@ -143,6 +143,17 @@ export function StarIcon({ className }: Props) {
   );
 }
 
+/** 상점 — 차양 친 가게. 장보기(장바구니)와 안 헷갈리게 모양을 갈라뒀다. */
+export function StoreIcon({ className }: Props) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={1.5}>
+      <path d="M4 9.5 5.6 5h12.8L20 9.5" />
+      <path d="M4 9.5a2.2 2.2 0 0 0 4 1.4 2.2 2.2 0 0 0 4 0 2.2 2.2 0 0 0 4 0 2.2 2.2 0 0 0 4-1.4" />
+      <path d="M5.6 12.4V19h12.8v-6.6" />
+    </svg>
+  );
+}
+
 /** 홈 — 지붕과 문 하나. 곰돌이가 사는 자리다. */
 export function HomeIcon({ className }: Props) {
   return (

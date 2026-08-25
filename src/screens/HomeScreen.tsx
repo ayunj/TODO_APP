@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import MiniPair from './home/MiniPair';
 import RoomCard from './home/RoomCard';
 import TodayList from './home/TodayList';
@@ -43,8 +43,11 @@ export default function HomeScreen() {
       <MiniPair />
 
       {/*
-        상점으로 가는 길은 이 띠 하나뿐이다. 상단에 아이콘을 또 두지 않는다 —
-        장보기·메모는 하루에도 몇 번씩 열지만 상점은 포인트가 모였을 때 가끔 여는 자리다.
+        상점 띠 — **그림 한 장에 단추만 얹는다.** 비율 3:1이고 띠 안의 글씨는 그림에 들어 있다.
+
+        `main_costume.png`에서 비어 있는 칸이 가로 13~37%, 세로 50~78%다.
+        왼쪽 12.5%까지는 화분, 37.5%부터는 곰돌이 러그라 이 안을 벗어나면 겹친다.
+        글씨를 키우면 오른쪽으로 번져 러그를 먹으니 11px에 묶어둔다.
 
         **로그인해야 뜬다.** 포인트를 서버가 세서 로그인 안 하면 살 수가 없는데,
         못 누르는 줄을 흐리게 두면 계속 눌러보게 된다.
@@ -53,17 +56,44 @@ export default function HomeScreen() {
         <button
           type="button"
           onClick={() => pushView({ kind: 'store' })}
-          className="flex w-full items-center gap-3 rounded-card bg-accent-tint px-4 py-[15px] text-left active:opacity-80"
+          aria-label="상점 바로가기"
+          className="relative block aspect-[3/1] w-full overflow-hidden rounded-card bg-accent-tint shadow-card active:opacity-90"
         >
-          <span className="min-w-0 flex-1">
-            <b className="block text-[13.5px] font-bold text-ink">상점</b>
-            <span className="text-[11.5px] text-ink3">곰돌이에게 옷을 입혀보세요</span>
-          </span>
-          <span className="flex-none rounded-full bg-accent px-3 py-1.5 text-[11.5px] font-medium text-white">
+          <StoreBanner />
+          <span className="absolute bottom-[12%] left-[13%] inline-flex items-center gap-1 rounded-full bg-accent px-[11px] py-1.5 text-[11px] font-medium text-white">
             바로가기 ›
           </span>
         </button>
       )}
     </>
+  );
+}
+
+/**
+ * 띠 그림. 못 불러오면 **글자가 대신 선다** —
+ * 그림 안에 글씨가 들어 있어서 그림이 빠지면 무슨 자리인지 알 수가 없다.
+ */
+function StoreBanner() {
+  const [gone, setGone] = useState(false);
+
+  if (gone) {
+    return (
+      <span className="absolute left-[6%] right-[36%] top-[15%] text-left">
+        <b className="mb-0.5 block text-[14px] font-bold">상점</b>
+        <span className="text-[11px] leading-[1.4] text-ink3">
+          귀여운 옷으로 곰돌이를 꾸며보세요
+        </span>
+      </span>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/gomdori/store-banner.png"
+      alt=""
+      aria-hidden="true"
+      onError={() => setGone(true)}
+      className="absolute inset-0 h-full w-full select-none object-cover"
+    />
   );
 }

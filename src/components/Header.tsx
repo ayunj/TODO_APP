@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import CategoryFilter from './CategoryFilter';
-import { BackIcon, MemoIcon, ShopIcon } from './Icons';
+import { BackIcon, MemoIcon, ShopIcon, StoreIcon } from './Icons';
 import {
   DOW,
   addDays,
@@ -21,7 +21,8 @@ const round =
 
 /**
  * 상단 고정 헤더.
- * 윗줄에 드나드는 곳(장보기·메모), 아랫줄에 날짜와 이동 — 한 줄에 몰면 좁은 폰에서 빡빡하다.
+ * 윗줄에 드나드는 곳(장보기·메모·상점), 아랫줄에 날짜와 이동 —
+ * 한 줄에 몰면 좁은 폰에서 빡빡하다.
  *
  * **홈에는 아랫줄이 없다.** 넘길 날짜가 없고, 곰돌이 칸이 바로 와야 한다.
  * 설정은 이제 탭이라 여기 톱니를 두지 않는다.
@@ -128,6 +129,19 @@ export default function Header() {
           {unseenMemo && (
             <span className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full border-2 border-card bg-accent" />
           )}
+        </button>
+
+        {/*
+          상점. **알릴 것을 안 붙인다** — 장보기의 `3개 담아둠`이나 메모의 점과 달리
+          포인트가 늘 때마다 점을 찍으면 사라고 조르는 게 된다.
+        */}
+        <button
+          type="button"
+          aria-label="상점"
+          onClick={() => pushView({ kind: 'store' })}
+          className={round}
+        >
+          <StoreIcon className="h-[19px] w-[19px]" />
         </button>
 
       </div>

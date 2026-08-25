@@ -45,7 +45,7 @@ export const DAILY: Costume[] = [
  */
 export const COSTUMES: Costume[] = [
   { key: 'chef', name: '요리사 곰', price: 200, kind: 'bear', group: 'costume' },
-  { key: 'rabbit', name: '곰토끼', price: 300, kind: 'bear', group: 'costume' },
+  { key: 'rabbit', name: '곰토끼', price: 300, kind: 'bear', group: 'costume', img: '/gomdori/rabbit.png' },
   { key: 'detective', name: '탐정 곰', price: 350, kind: 'bear', group: 'costume' },
   { key: 'princess', name: '공주 곰', price: 400, kind: 'bear', group: 'costume' },
   { key: 'wizard', name: '마법사 곰', price: 400, kind: 'bear', group: 'costume' },
