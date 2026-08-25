@@ -158,7 +158,7 @@ function Art({ src, cover }: { src?: string; cover?: boolean }) {
       onError={() => setGone(true)}
       className={
         cover
-          ? 'h-full w-full select-none object-cover'
+          ? 'h-full w-full select-none object-cover object-bottom'
           : 'h-auto max-h-[88%] w-auto max-w-[88%] select-none'
       }
     />
