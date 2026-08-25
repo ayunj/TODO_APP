@@ -273,6 +273,56 @@ export type ViewKind =
   | 'handover'
   | 'join';
 
+/**
+ * 파는 것 하나 — 곰 스타일 · 방 테마 · 포즈.
+ *
+ * **값은 화면에 적는 값이다.** 진짜로 얼마를 치를지는 서버가 정한다
+ * (schema.sql의 `costume_catalog`와 `buy_costume`).
+ */
+export interface Costume {
+  key: string;
+  name: string;
+  price: number;
+  kind: 'bear' | 'room' | 'pose';
+  /** 어느 시즌 세트에 딸린 것인가. 없으면 늘 있는 것. */
+  season?: string;
+  /** 아직 안 그린 것에는 없다 */
+  img?: string;
+}
+
+/**
+ * 시즌 세트 — 곰과 방을 **따로 사고**, 둘을 다 모으면 포즈를 받는다.
+ * 묶어 파는 값이 따로 없어서 세트 자체에는 값이 없다.
+ */
+export interface CostumeSet {
+  key: string;
+  name: string;
+  /** 한 줄 설명 — `여름 바다에서 신나게!` */
+  note: string;
+  bear: Costume;
+  room: Costume;
+  pose: Costume;
+}
+
+/**
+ * 곰돌이 상태 — **로그인한 사람만 갖는다.**
+ * 포인트를 서버가 세기 때문이다. 로그인 안 하면 옷장이 비고 기본 곰돌이가 선다.
+ */
+export interface Gomdori {
+  /** 지금 입은 것. 포즈도 곰돌이 그림 한 장이라 여기 앉는다. */
+  wornBear: string;
+  /** 지금 깐 방 */
+  wornRoom: string;
+  /** 가진 것들의 열쇠 */
+  owned: string[];
+  /**
+   * 지금 얼마 있나 — **서버가 센 값.**
+   * 담아둔 잔액이 아니라 `가입 100P + 번 것 − 산 값의 합`이라
+   * 체크를 풀면 저절로 도로 빠진다.
+   */
+  points: number;
+}
+
 /** 할 일이 아니라 이 기기의 상태. 초기화해도 지워지지 않는다. */
 export interface Settings {
   /** 첫 화면을 지났는지 — 한 번 지나면 다시 보이지 않는다 */

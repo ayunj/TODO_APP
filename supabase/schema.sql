@@ -966,3 +966,228 @@ as $$
         where m.room_id = room and m.user_id = auth.uid()
      )
 $$;
+
+-- ─────────────────────── 곰돌이와 코스튬 ───────────────────────
+--
+-- 여기 **포인트 잔액 칸이 없다.** 일부러 없다.
+-- 담아두면 체크를 풀었을 때 되돌리는 코드를 따로 짜야 하고, 그 코드는 반드시 어딘가에서 틀어진다.
+-- tasks에서 파생시켜 그때그때 세면 체크를 풀면 저절로 도로 빠진다.
+--
+-- 담아두는 것은 둘뿐이다 — **가진 것**과 **지금 입은 것**.
+-- 잔액은 `가입 100P + 번 것 − 산 값의 합`이라 이 둘만 있으면 나온다.
+
+-- 누가 체크했나 — **계정으로**. done_by(표시 이름)는 화면에 적는 것이고 이건 세는 것이다.
+-- 이름으로 세면 상대가 별명을 바꾼 순간 옛 점수가 남의 것이 된다.
+alter table tasks add column if not exists done_by_id uuid references auth.users;
+
+-- 지금 입은 옷과 깐 방. 계정 하나에 한 줄.
+create table if not exists gomdori (
+  user_id    uuid primary key references auth.users on delete cascade,
+  worn_bear  text not null default 'base',
+  worn_room  text not null default 'room-base',
+  updated_at timestamptz not null default now()
+);
+
+/*
+ * 파는 것 — 값과 갈래.
+ *
+ * **앱 코드(src/lib/costumes.ts)에도 같은 목록이 있다.** 일부러 둘이다.
+ *   앱   — 이름·그림 파일. 그림이 앱과 같이 나가니 목록도 앱에 있어야 상점이 오프라인에서 뜬다
+ *   서버 — 값. 값을 앱만 알면 `이 옷 0원이요` 하고 사는 걸 막을 방법이 없다
+ *
+ * 값을 고칠 때는 **두 곳을 같이 고친다.** 이름과 그림은 앱만 고치면 된다.
+ */
+create table if not exists costume_catalog (
+  item_key text primary key,
+  -- 'bear' 곰 스타일 · 'room' 방 테마 · 'pose' 세트 완성 보상
+  kind     text not null,
+  price    int  not null default 0,
+  -- 어느 시즌 세트에 딸린 것인가. 비어 있으면 늘 있는 것.
+  season   text
+);
+
+-- 가진 것 — 산 것과 받은 것.
+-- **산 값을 같이 박아둔다.** 값이 나중에 바뀌어도 이미 산 것은 그때 값으로 남아야
+-- 잔액이 뒤늦게 흔들리지 않는다.
+create table if not exists costume_owned (
+  user_id  uuid not null references auth.users on delete cascade,
+  item_key text not null,
+  price    int  not null default 0,
+  got_at   timestamptz not null default now(),
+  primary key (user_id, item_key)
+);
+
+-- ─── 값표 ───────────────────────────────────────────────────────
+-- 앱의 costumes.ts와 **같은 값**이어야 한다. 두 번 돌려도 되게 upsert로 넣는다.
+insert into costume_catalog (item_key, kind, price, season) values
+  ('base',        'bear',   0, null),
+  ('hat',         'bear', 100, null),
+  ('ribbon',      'bear', 100, null),
+  ('scarf',       'bear', 100, null),
+  ('apron',       'bear', 150, null),
+  ('glasses',     'bear', 200, null),
+  ('overall',     'bear', 200, null),
+  ('chef',        'bear', 200, null),
+  ('rabbit',      'bear', 300, null),
+
+  ('room-base',   'room',   0, null),
+  ('room-picnic', 'room', 300, null),
+  ('room-cafe',   'room', 400, null),
+  ('room-plant',  'room', 400, null),
+  ('room-bed',    'room', 500, null),
+
+  ('b-swim',      'bear', 300, 's-swim'),
+  ('r-sea',       'room', 400, 's-swim'),
+  ('pose-tube',   'pose',   0, 's-swim'),
+
+  ('b-hall',      'bear', 300, 's-hall'),
+  ('r-hall',      'room', 400, 's-hall'),
+  ('pose-pump',   'pose',   0, 's-hall'),
+
+  ('b-xmas',      'bear', 350, 's-xmas'),
+  ('r-xmas',      'room', 450, 's-xmas'),
+  ('pose-tree',   'pose',   0, 's-xmas'),
+
+  ('b-bloom',     'bear', 300, 's-bloom'),
+  ('r-bloom',     'room', 400, 's-bloom'),
+  ('pose-petal',  'pose',   0, 's-bloom'),
+
+  ('b-vac',       'bear', 350, 's-vac'),
+  ('r-beach',     'room', 450, 's-vac'),
+  ('pose-parcel', 'pose',   0, 's-vac')
+on conflict (item_key) do update
+  set kind = excluded.kind, price = excluded.price, season = excluded.season;
+
+-- ─── 얼마나 벌었나 ──────────────────────────────────────────────
+/*
+ * 하루 다섯 개까지 10P씩, 그 날 내 몫을 다 비우면 10P 더 — **하루 최대 60P.**
+ *
+ * 0점인 것들이 여기 조건으로 그대로 들어 있다.
+ *   done_on <> date  — 지난 것을 오늘 체크해도, 앞날 것을 미리 체크해도 0.
+ *                      점수를 주면 일부러 미루거나 몰아서 찍는다
+ *   오늘 만들어 오늘 체크한 일회성 — 3초에 하나씩 찍어낼 수 있다
+ *
+ * RLS를 그대로 탄다(security definer가 아니다) — 부르는 사람 눈에 보이는 할 일만 센다.
+ */
+create or replace function earned_points(uid uuid)
+returns int language sql stable as $fn$
+  with mine as (
+    select t.done_on as d
+      from tasks t
+     where t.done
+       and t.deleted_at is null
+       and t.done_by_id = uid
+       and t.done_on = t.date
+       and not (t.repeat_days = 0
+                and (t.created_at at time zone 'Asia/Seoul')::date = t.date)
+  ),
+  counted as (
+    select d, least(count(*), 5) * 10 as base from mine group by d
+  ),
+  -- 그 날 내 몫이 하나도 안 남았으면 10P 더. `안 정함`은 먼저 보는 사람 몫이라 내 몫이기도 하다.
+  cleared as (
+    select c.d,
+           case when not exists (
+             select 1 from tasks t
+              where t.date = c.d
+                and not t.done
+                and t.deleted_at is null
+                and (t.assignee_id is null or t.assignee_id = uid)
+           ) then 10 else 0 end as bonus
+      from counted c
+  )
+  select coalesce(sum(c.base + cl.bonus), 0)::int
+    from counted c join cleared cl on cl.d = c.d;
+$fn$;
+
+/*
+ * 지금 얼마 있나 — **가입 100P + 번 것 − 산 값의 합.**
+ *
+ * 가입 100P를 어디에도 안 적어둔다. 계정이 있으면 받은 것이니 늘 더하면 된다.
+ * 적어두면 그 줄이 없는 옛 계정을 옮겨 담는 코드가 따로 필요해진다.
+ * **하루 상한 밖이다** — 가입한 날 60P에 걸려 40P가 깎이면 그건 사고다.
+ */
+create or replace function my_points()
+returns int language sql stable as $fn$
+  select 100
+       + earned_points(auth.uid())
+       - coalesce((select sum(price)::int from costume_owned where user_id = auth.uid()), 0);
+$fn$;
+
+-- ─── 사기 ───────────────────────────────────────────────────────
+/*
+ * 세트를 다 모으면 포즈가 들어온다.
+ * **살 때마다 확인한다** — 곰을 먼저 샀든 방을 먼저 샀든 그 순간 채워져야 한다.
+ */
+create or replace function grant_poses()
+returns void language sql security definer set search_path = public as $fn$
+  insert into costume_owned (user_id, item_key, price)
+  select auth.uid(), p.item_key, 0
+    from costume_catalog p
+   where p.kind = 'pose'
+     and p.season is not null
+     and not exists (
+       select 1 from costume_catalog n
+        where n.season = p.season
+          and n.kind <> 'pose'
+          and n.item_key not in (
+            select item_key from costume_owned where user_id = auth.uid()
+          )
+     )
+  on conflict (user_id, item_key) do nothing;
+$fn$;
+
+/*
+ * **값은 서버가 정한다.** 앱이 값을 같이 보내면 `이 옷 0원이요`를 막을 수가 없다.
+ * 포즈는 파는 물건이 아니라 여기서 못 산다 — 세트를 다 모으면 위에서 저절로 들어온다.
+ */
+create or replace function buy_costume(item text)
+returns int language plpgsql security definer set search_path = public as $fn$
+declare
+  cost  int;
+  sort  text;
+  purse int;
+begin
+  select price, kind into cost, sort from costume_catalog where item_key = item;
+  if cost is null then
+    raise exception '없는 코스튬입니다';
+  end if;
+  if sort = 'pose' then
+    raise exception '포즈는 세트를 다 모으면 드립니다';
+  end if;
+
+  select my_points() into purse;
+  if purse < cost then
+    raise exception '포인트가 모자랍니다';
+  end if;
+
+  insert into costume_owned (user_id, item_key, price)
+       values (auth.uid(), item, cost)
+  on conflict (user_id, item_key) do nothing;
+
+  perform grant_poses();
+  return my_points();
+end $fn$;
+
+-- ─── RLS ────────────────────────────────────────────────────────
+alter table gomdori         enable row level security;
+alter table costume_owned   enable row level security;
+alter table costume_catalog enable row level security;
+
+drop policy if exists "내 것만"     on gomdori;
+drop policy if exists "내가 넣는다" on gomdori;
+drop policy if exists "내가 고친다" on gomdori;
+create policy "내 것만"     on gomdori for select using (user_id = auth.uid());
+create policy "내가 넣는다" on gomdori for insert with check (user_id = auth.uid());
+create policy "내가 고친다" on gomdori for update using (user_id = auth.uid());
+
+/*
+ * 가진 것은 **읽기만** 열어둔다. 넣는 길은 위 buy_costume 하나뿐이다 —
+ * insert를 열면 잔액을 안 보고 그냥 넣을 수 있다.
+ */
+drop policy if exists "내 것만" on costume_owned;
+create policy "내 것만" on costume_owned for select using (user_id = auth.uid());
+
+-- 값표는 누구나 읽는다. 파는 물건 목록이라 숨길 것이 없다.
+drop policy if exists "누구나 본다" on costume_catalog;
+create policy "누구나 본다" on costume_catalog for select using (true);
