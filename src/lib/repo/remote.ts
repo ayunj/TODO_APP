@@ -1,8 +1,10 @@
-import { DEFAULT_BEAR, DEFAULT_ROOM } from '../costumes';
-import { supabase } from '../supabase';
+import { DEFAULT_BEAR, DEFAULT_ROOM, builtinImg } from '../costumes';
+import { shopImageUrl, supabase } from '../supabase';
 import type { Snapshot } from '../repository';
 import type {
   Category,
+  Costume,
+  CostumeSet,
   Gomdori,
   Memo,
   Nudge,
@@ -12,6 +14,7 @@ import type {
   RoomMember,
   RoomPeek,
   Rotate,
+  Shop,
   ShopItem,
   Task,
 } from '../types';
@@ -600,6 +603,88 @@ export async function pullGomdori(): Promise<Gomdori> {
     // 아직 한 번도 안 갈아입었으면 줄이 없다 — 그때는 기본 모습이다
     wornBear: row?.worn_bear ?? DEFAULT_BEAR,
     wornRoom: row?.worn_room ?? DEFAULT_ROOM,
+  };
+}
+
+/**
+ * 상점에 걸린 것 전부 — 대분류 · 중분류 · 세트 · 물건.
+ *
+ * **로그인 안 해도 읽힌다.** 값표는 누구나 보는 것이고(파는 중인 것만),
+ * 여기서 막으면 로그인 전 상점이 통째로 빈다.
+ *
+ * 넷을 한꺼번에 부른다. 넷 다 작고 서로를 기다릴 까닭이 없다 —
+ * 줄줄이 부르면 상점 열 때 왕복이 네 번 붙는다.
+ */
+export async function pullShop(): Promise<Shop> {
+  const client = await supabase();
+
+  const [g, f, s, c] = await Promise.all([
+    client.from('shop_group').select('group_key, name').order('ord'),
+    client.from('shop_family').select('family_key, group_key, name, active').order('ord'),
+    client.from('costume_season').select('season_key, name, note, family_key').order('ord'),
+    client
+      .from('costume_catalog')
+      .select('item_key, kind, price, season, name, img, family_key')
+      .order('created_at'),
+  ]);
+  for (const r of [g, f, s, c]) if (r.error) throw r.error;
+
+  /*
+    그림은 **올린 것이 이기고, 없으면 앱에 박혀 나온 것으로 선다.**
+    기본 곰돌이와 기본 룸이 그렇다 — 그 둘은 오프라인에서도 서야 해서
+    올릴 일이 없고, 그래서 값표의 `img`가 늘 비어 있다.
+  */
+  const items: Costume[] = ((c.data ?? []) as Row[]).map((r) => ({
+    key: String(r.item_key),
+    name: String(r.name ?? r.item_key),
+    price: Number(r.price ?? 0),
+    kind: (String(r.kind) as Costume['kind']) ?? 'bear',
+    family: r.family_key ? String(r.family_key) : undefined,
+    season: r.season ? String(r.season) : undefined,
+    img: r.img ? shopImageUrl(String(r.img)) : builtinImg(String(r.item_key)),
+  }));
+
+  const pick = (season: string, kind: Costume['kind']): Costume =>
+    items.find((i) => i.season === season && i.kind === kind) ?? {
+      key: `${season}-${kind}`,
+      name: '준비 중',
+      price: 0,
+      kind,
+      season,
+    };
+
+  /*
+    세트는 **곰 하나 · 방 하나 · 소품 하나가 다 찬 것만** 세운다.
+    덜 찬 세트를 세우면 상점에 `준비 중` 칸이 뜨고, 그건 파는 물건처럼 읽힌다.
+  */
+  const sets: CostumeSet[] = ((s.data ?? []) as Row[])
+    .map((r) => {
+      const key = String(r.season_key);
+      return {
+        key,
+        name: String(r.name),
+        note: String(r.note ?? ''),
+        family: r.family_key ? String(r.family_key) : undefined,
+        bear: pick(key, 'bear'),
+        room: pick(key, 'room'),
+        pose: pick(key, 'pose'),
+      };
+    })
+    .filter((set) => [set.bear, set.room, set.pose].every((i) => i.name !== '준비 중'));
+
+  return {
+    groups: ((g.data ?? []) as Row[]).map((r) => ({
+      key: String(r.group_key),
+      name: String(r.name),
+    })),
+    families: ((f.data ?? []) as Row[]).map((r) => ({
+      key: String(r.family_key),
+      group: String(r.group_key),
+      name: String(r.name),
+      active: Boolean(r.active),
+    })),
+    sets,
+    items,
   };
 }
 

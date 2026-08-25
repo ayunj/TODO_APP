@@ -292,22 +292,53 @@ export interface Costume {
   price: number;
   kind: 'bear' | 'room' | 'pose';
   /**
-   * 곰 옷을 셋으로 가른다.
-   *
-   * | 갈래 | 무엇 | 값 |
-   * |---|---|---|
-   * | `daily` **꾸미기** | 니트·셔츠·모자 — 곰돌이 그대로 옷만 | 100~200P |
-   * | `costume` **코스튬** | 공주·탐정·마법사 — **딴 사람이 된다** | 300~400P |
-   * | `season` **시즌** | 봄·장마·할로윈 — **때가 있다** | 세트로 |
-   *
-   * **겹치면 시즌이 이긴다.** 할로윈 마녀는 완전 변신이면서 기간 한정인데,
-   * `때가 있다`가 더 특별한 정보라 그쪽에 둔다.
+   * 어느 중분류인가 — `daily` · `costume` · `seasonal` · `holiday` …
+   * **정해진 목록이 아니다.** 관리자가 늘리는 것이라 그냥 글자다
+   * (`shop_family`). 어느 대분류에 드는지는 [[ShopFamily]]가 안다.
    */
-  group?: 'daily' | 'costume';
+  family?: string;
   /** 어느 시즌 세트에 딸린 것인가. 없으면 늘 있는 것. */
   season?: string;
   /** 아직 안 그린 것에는 없다 */
   img?: string;
+}
+
+/**
+ * 대분류 — 상점 맨 위 칩. **꾸미기와 시즌 둘뿐이다.**
+ *
+ * `방`과 `내 옷장`은 여기 없다. 그건 **대분류를 가로지르는 버튼**이라
+ * 종류(`kind === 'room'`)와 가진 것으로 고른다.
+ */
+export interface ShopGroup {
+  key: string;
+  name: string;
+}
+
+/**
+ * 중분류 — 대분류 아래 칩. **관리자가 늘린다**(`shop_family`).
+ *
+ * `key`가 곧 그림이 쌓이는 폴더 이름이다 —
+ * `shop/<대분류>/<이 값>/<종류>/<코드>.png`.
+ */
+export interface ShopFamily {
+  key: string;
+  group: string;
+  name: string;
+  /** 꺼두면 칩에서 빠진다. 그 안의 물건은 각자 제 `active`를 따른다. */
+  active: boolean;
+}
+
+/**
+ * 상점에 걸린 것 전부 — **서버에서 받아온다**(`costume_catalog` 외).
+ *
+ * 못 받아오면 앱에 박혀 나온 것으로 대신 선다([costumes.ts](costumes.ts)의 `BUILTIN`).
+ * **상점이 오프라인에서도 떠야 해서** 대비책을 들고 나간다.
+ */
+export interface Shop {
+  groups: ShopGroup[];
+  families: ShopFamily[];
+  sets: CostumeSet[];
+  items: Costume[];
 }
 
 /**
@@ -319,6 +350,8 @@ export interface CostumeSet {
   name: string;
   /** 한 줄 설명 — `여름 바다에서 신나게!` */
   note: string;
+  /** 어느 중분류인가 — 계절인지 기념일인지. **세트가 정하고 물건이 따라온다.** */
+  family?: string;
   bear: Costume;
   room: Costume;
   pose: Costume;

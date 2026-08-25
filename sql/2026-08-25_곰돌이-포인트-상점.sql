@@ -217,12 +217,17 @@ insert into shop_group (group_key, name, ord) values
   ('season', '시즌',   2)
 on conflict (group_key) do nothing;
 
-insert into shop_family (family_key, group_key, name, ord) values
-  ('daily',    'deco',   '일상',   1),
-  ('costume',  'deco',   '코스튬', 2),
-  ('room',     'deco',   '룸',     3),
-  ('seasonal', 'season', '계절',   1),
-  ('holiday',  'season', '기념일', 2)
+insert into shop_family (family_key, group_key, name, ord, active) values
+  ('daily',    'deco',   '일상',   1, true),
+  ('costume',  'deco',   '코스튬', 2, true),
+  /*
+   * 룸은 **꺼진 채로 심는다.** 그림이 쌓일 폴더는 있어야 하는데
+   * 상점에서는 `방` 버튼으로 따로 가니 중분류 칩으로 또 세우면 같은 것이 두 번 뜬다.
+   * 켜고 싶으면 관리자가 켠다.
+   */
+  ('room',     'deco',   '룸',     3, false),
+  ('seasonal', 'season', '계절',   1, true),
+  ('holiday',  'season', '기념일', 2, true)
 on conflict (family_key) do nothing;
 
 -- ─── 새로 파는 것 ──────────────────────────────────────────────

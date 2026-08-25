@@ -1,30 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Coin from './store/Coin';
 import SetDetail from './store/SetDetail';
 import StoreCard from './store/StoreCard';
 import Stage from './store/Stage';
-import { BEARS, COSTUMES, DAILY, ROOMS, SETS, costumeOf } from '@/lib/costumes';
+import { familiesOf } from '@/lib/costumes';
 import { useGomdori } from '@/lib/gomdori';
 import { useUi } from '@/lib/ui';
 import { BackIcon, GiftIcon, HomeIcon, StarIcon } from '@/components/Icons';
-import type { Costume } from '@/lib/types';
+import type { Costume, Shop } from '@/lib/types';
 
 /**
- * 파는 것을 **저마다 제 이름이 있는 갈래**로 가른다.
+ * 칩이 **두 층이다.**
  *
- * | 칩 | 무엇 |
- * |---|---|
- * | `daily` **꾸미기** | 니트·셔츠·모자 — 곰돌이 그대로 옷만 |
- * | `costume` **코스튬** | 공주·탐정·마법사 — 딴 사람이 된다 |
- * | `season` **시즌** | 봄꽃·할로윈 — 때가 있다 |
- * | `room` **방** | 곰이 아니라 배경이라 따로 선다 |
+ * ```
+ * 전체 | 꾸미기 | 시즌 | 방 | 내 옷장      ← 대분류와 가로지르는 버튼 둘
+ *        └ 전체 | 일상 | 코스튬            ← 중분류. 서버가 들고 있다
+ * ```
+ *
+ * 위층은 **꾸미기와 시즌 둘뿐**이고 아래층만 늘어난다
+ * ([상점 채우기](../../design/관리자.html)에서 관리자가 늘린다).
+ * 한 층으로 두면 `코스튬`이 `시즌`과 나란히 서는데, 코스튬은 꾸미기의 한 갈래지
+ * 시즌과 나란한 것이 아니다.
+ *
+ * **`방`과 `내 옷장`은 대분류가 아니다.** 대분류를 가로지르는 버튼이라
+ * 종류(`kind === 'room'`)와 가진 것으로 고른다 — 시즌 방도 `방`에서 보여야 한다.
  *
  * **겹치면 시즌이 이긴다.** 할로윈 마녀는 완전 변신이면서 기간 한정인데,
  * `때가 있다`가 더 특별한 정보라 그쪽에만 둔다 — 두 칸에 같은 것이 두 번 뜨면 안 된다.
  */
-type Chip = 'all' | 'daily' | 'costume' | 'season' | 'room' | 'mine';
+type Chip = string;
 
 /**
  * 상점 — [design/상점.html](../../design/상점.html) 그대로.
@@ -36,17 +42,28 @@ type Chip = 'all' | 'daily' | 'costume' | 'season' | 'room' | 'mine';
  * 부위를 나누는 순간 사람들은 겹쳐 입기를 기대한다.
  */
 export default function StoreScreen() {
-  const { enabled, points, has, wornBear, wornRoom, buy, wear } = useGomdori();
+  const { enabled, shop, item, points, has, wornBear, wornRoom, buy, wear } = useGomdori();
   const { popView } = useUi();
 
   const [chip, setChip] = useState<Chip>('all');
+  /** 아래층 칩. `all`이면 그 대분류를 통째로 본다. */
+  const [sub, setSub] = useState<string>('all');
   const [tab, setTab] = useState<'bear' | 'room'>('bear');
   const [trying, setTrying] = useState<string>(wornBear);
   const [open, setOpen] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const set = SETS.find((s) => s.key === open) ?? null;
-  const it = costumeOf(trying);
+  /* 방은 대분류를 가로지른다 — 시즌 방도 여기서 보여야 한다 */
+  const rooms = useMemo(() => shop.items.filter((c) => c.kind === 'room'), [shop]);
+  const decoRooms = useMemo(() => rooms.filter((c) => !c.season), [rooms]);
+  const decoFams = useMemo(() => familiesOf(shop, 'deco'), [shop]);
+  const seasonFams = useMemo(() => familiesOf(shop, 'season'), [shop]);
+  const decoOf = (fam: string) =>
+    shop.items.filter((c) => !c.season && c.kind !== 'room' && c.family === fam);
+  const sets = shop.sets.filter((x) => sub === 'all' || x.family === sub);
+
+  const set = shop.sets.find((x) => x.key === open) ?? null;
+  const it = item(trying);
   const roomly = it.kind === 'room';
   const worn = roomly ? wornRoom : wornBear;
 
@@ -70,6 +87,12 @@ export default function StoreScreen() {
   };
 
   const title = chip === 'mine' ? '내 옷장' : '상점';
+  /* 위층을 바꾸면 아래층은 늘 `전체`로 돌아간다 — 안 그러면 없는 칩이 눌린 채로 남는다 */
+  const goChip = (k: Chip) => {
+    setChip(k);
+    setSub('all');
+  };
+  const subs = chip === 'deco' ? decoFams : chip === 'season' ? seasonFams : [];
 
   return (
     <>
@@ -116,72 +139,85 @@ export default function StoreScreen() {
           />
 
           <div className="-mx-4 mb-3 flex gap-[7px] overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {(
-              [
-                ['all', '전체'],
-                ['daily', '꾸미기'],
-                ['costume', '코스튬'],
-                ['season', '시즌'],
-                ['room', '방'],
-                ['mine', '내 옷장'],
-              ] as [Chip, string][]
-            ).map(([k, label]) => (
+            {[
+              { key: 'all', name: '전체' },
+              ...shop.groups,
+              { key: 'room', name: '방' },
+              { key: 'mine', name: '내 옷장' },
+            ].map((g) => (
               <button
-                key={k}
+                key={g.key}
                 type="button"
-                aria-pressed={chip === k}
-                onClick={() => setChip(k)}
+                aria-pressed={chip === g.key}
+                onClick={() => goChip(g.key)}
                 className={`flex-none rounded-full px-4 py-2 text-[12.5px] font-medium ${
-                  chip === k
+                  chip === g.key
                     ? 'bg-accent text-white'
                     : 'bg-card text-ink2 shadow-[0_0_0_1.4px_var(--line)]'
                 }`}
               >
-                {label}
+                {g.name}
               </button>
             ))}
           </div>
 
+          {/*
+            아래층 — 고른 대분류에 중분류가 있을 때만 선다.
+            **위층과 생김새를 다르게 뒀다.** 같은 알약을 두 줄 세우면
+            어느 쪽이 위인지 눈으로 못 가린다.
+          */}
+          {subs.length > 0 && (
+            <div className="-mx-4 mb-3 flex gap-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {[{ key: 'all', name: '전체' }, ...subs].map((f) => (
+                <button
+                  key={f.key}
+                  type="button"
+                  aria-pressed={sub === f.key}
+                  onClick={() => setSub(f.key)}
+                  className={`flex-none border-b-2 pb-1.5 text-[12.5px] ${
+                    sub === f.key
+                      ? 'border-accent font-medium text-accent'
+                      : 'border-transparent text-ink3'
+                  }`}
+                >
+                  {f.name}
+                </button>
+              ))}
+            </div>
+          )}
+
           {chip === 'mine' ? (
-            <Wardrobe tab={tab} setTab={setTab} pick={pick} trying={trying} />
+            <Wardrobe shop={shop} tab={tab} setTab={setTab} pick={pick} trying={trying} />
+          ) : chip === 'room' ? (
+            <Group title="방 테마" aside="홈 배경이 바뀐다" list={rooms} pick={pick} trying={trying} />
           ) : chip === 'season' ? (
-            <>
-              <Head title="시즌 세트" />
-              <div className="mb-4 grid grid-cols-3 gap-[9px]">
-                {SETS.map((s) => (
-                  <StoreCard
-                    key={s.key}
-                    item={s.room}
-                    label={s.name}
-                    step={[s.bear, s.room, s.pose].filter((x) => has(x.key)).length}
-                    onPick={() => setOpen(s.key)}
+            <Sets list={sets} has={has} onOpen={setOpen} />
+          ) : chip === 'deco' ? (
+            /* 중분류를 고르면 그것만, `전체`면 중분류마다 한 무더기씩 */
+            sub === 'all' ? (
+              <>
+                {decoFams.map((f) => (
+                  <Group
+                    key={f.key}
+                    title={f.name}
+                    list={decoOf(f.key)}
+                    pick={pick}
+                    trying={trying}
                   />
                 ))}
-              </div>
-            </>
-          ) : chip === 'daily' ? (
-            <Group title="꾸미기" aside="곰돌이 그대로 옷만" list={DAILY} pick={pick} trying={trying} />
-          ) : chip === 'costume' ? (
-            <Group title="코스튬" aside="딴 사람이 된다" list={COSTUMES} pick={pick} trying={trying} />
-          ) : chip === 'room' ? (
-            <Group title="방 테마" aside="홈 배경이 바뀐다" list={ROOMS} pick={pick} trying={trying} />
+                <Group title="방 테마" list={decoRooms} pick={pick} trying={trying} />
+              </>
+            ) : (
+              <Group title={nameOf(subs, sub)} list={decoOf(sub)} pick={pick} trying={trying} />
+            )
           ) : (
             <>
               <Head title="시즌 세트" aside="때가 있는 것" />
-              <div className="mb-4 grid grid-cols-3 gap-[9px]">
-                {SETS.map((s) => (
-                  <StoreCard
-                    key={s.key}
-                    item={s.room}
-                    label={s.name}
-                    step={[s.bear, s.room, s.pose].filter((x) => has(x.key)).length}
-                    onPick={() => setOpen(s.key)}
-                  />
-                ))}
-              </div>
-              <Group title="코스튬" aside="딴 사람이 된다" list={COSTUMES} pick={pick} trying={trying} />
-              <Group title="꾸미기" aside="곰돌이 그대로 옷만" list={DAILY} pick={pick} trying={trying} />
-              <Group title="방 테마" list={ROOMS} pick={pick} trying={trying} />
+              <Sets list={shop.sets} has={has} onOpen={setOpen} bare />
+              {decoFams.map((f) => (
+                <Group key={f.key} title={f.name} list={decoOf(f.key)} pick={pick} trying={trying} />
+              ))}
+              <Group title="방 테마" list={decoRooms} pick={pick} trying={trying} />
             </>
           )}
 
@@ -276,20 +312,21 @@ function Preview({
 }
 
 function Wardrobe({
+  shop,
   tab,
   setTab,
   pick,
   trying,
 }: {
+  shop: Shop;
   tab: 'bear' | 'room';
   setTab: (t: 'bear' | 'room') => void;
   pick: (key: string) => void;
   trying: string;
 }) {
   const { has } = useGomdori();
-  const list = (tab === 'room' ? ROOMS : BEARS.concat(SETS.map((s) => s.pose))).filter((c) =>
-    has(c.key),
-  );
+  const all = shop.items.filter((c) => (tab === 'room' ? c.kind === 'room' : c.kind !== 'room'));
+  const list = all.filter((c) => has(c.key));
 
   return (
     <>
@@ -320,7 +357,7 @@ function Wardrobe({
           <StoreCard key={c.key} item={c} onPick={() => pick(c.key)} trying={trying === c.key} />
         ))}
         {/* 빈 옷걸이 한 칸 — 다 모으면 사라진다 */}
-        {list.length < (tab === 'room' ? ROOMS.length : BEARS.length) && (
+        {list.length < all.length && (
           <span className="flex flex-col items-center justify-center gap-2 rounded-2xl border-[1.5px] border-dashed border-edge p-3 text-center text-[10px] leading-[1.5] text-ink3">
             <HomeIcon className="h-8 w-8 text-line" />
             더 많은 {tab === 'room' ? '테마' : '옷'}을<br />
@@ -330,6 +367,41 @@ function Wardrobe({
       </div>
     </>
   );
+}
+
+/** 시즌 세트 격자 — 세트 하나가 칸 하나다. 방 그림을 얼굴로 세운다. */
+function Sets({
+  list,
+  has,
+  onOpen,
+  bare,
+}: {
+  list: Shop['sets'];
+  has: (key: string) => boolean;
+  onOpen: (key: string) => void;
+  bare?: boolean;
+}) {
+  return (
+    <>
+      {!bare && <Head title="시즌 세트" />}
+      <div className="mb-4 grid grid-cols-3 gap-[9px]">
+        {list.map((s) => (
+          <StoreCard
+            key={s.key}
+            item={s.room}
+            label={s.name}
+            step={[s.bear, s.room, s.pose].filter((x) => has(x.key)).length}
+            onPick={() => onOpen(s.key)}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
+
+/** 중분류 열쇠를 사람이 읽는 이름으로. 서버가 지은 이름이라 앱에 표가 없다. */
+function nameOf(list: { key: string; name: string }[], key: string): string {
+  return list.find((f) => f.key === key)?.name ?? key;
 }
 
 function Group({

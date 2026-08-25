@@ -1,22 +1,22 @@
-import type { Costume, CostumeSet } from './types';
+import type { Costume, CostumeSet, Shop, ShopFamily, ShopGroup } from './types';
 
 /**
  * 파는 것 — 이름과 그림과 값.
  *
- * **같은 목록이 [schema.sql](../../supabase/schema.sql)의 `costume_catalog`에도 있다.**
- * 일부러 둘이다.
+ * **주인은 서버다.** 앱이 켜지면 `costume_catalog`을 읽어 이 목록을 덮는다
+ * ([gomdori.tsx](gomdori.tsx)). 여기 있는 것은 **못 읽었을 때 대신 서는 것**이다 —
+ * 상점이 오프라인에서도 떠야 하고, 로그인 전에도 곰돌이는 서 있어야 한다.
+ *
+ * 그래서 아래 값들은 **화면에 적는 값**이지 치르는 값이 아니다.
+ * 진짜로 얼마인지도, 무엇이 파는 중인지도 늘 서버가 정한다.
  *
  * | 어디 | 무엇을 | 왜 |
  * |---|---|---|
- * | 여기 | 이름·그림·값 | 그림이 앱과 같이 나가니 목록도 앱에 있어야 **상점이 오프라인에서 뜬다** |
- * | 서버 | 값·갈래·시즌·이름·파는 중 | 값을 앱만 알면 `이 옷 0원이요` 하고 사는 걸 막을 수가 없다 |
+ * | 여기 | **그림**과 대비책 | 그림이 앱과 같이 나가니, 못 읽어도 기본 곰돌이는 서 있어야 한다 |
+ * | 서버 | 이름·값·분류·파는 중 | 값을 앱만 알면 `이 옷 0원이요` 하고 사는 걸 막을 수가 없다 |
  *
- * **값을 고칠 때는 두 곳을 같이 고친다.** 이름과 그림은 여기만 고치면 된다.
- * 진짜로 얼마를 치를지는 늘 서버가 정한다 — 여기 값은 화면에 적는 값이다.
- *
- * **서버 쪽 값표에 `name`·`img`·`active`가 붙었다**([상점 채우기](../../design/관리자.html)).
- * 아직 앱은 그걸 안 읽는다 — 여기 목록이 먼저고, 값표를 읽어 덮는 것은 다음 일이다.
- * 그때가 오면 이 표의 `여기`가 `그림과 대비책`으로 줄어든다.
+ * **여기 있는 것은 서버에 같은 열쇠가 있으면 진다.** 그림만 빼고 —
+ * 올린 그림이 없는 물건은 여기 `img`를 그대로 쓴다.
  *
  * `img`가 없는 것은 아직 안 그린 것이다. 그림이 오면 파일만 넣으면 뜬다.
  */
@@ -26,15 +26,15 @@ import type { Costume, CostumeSet } from './types';
  * 값이 싼 쪽이라 들어오자마자 하나는 살 수 있다.
  */
 export const DAILY: Costume[] = [
-  { key: 'base', name: '기본 곰돌이', price: 0, kind: 'bear', group: 'daily', img: '/gomdori/front.png' },
-  { key: 'hat', name: '모자 곰', price: 100, kind: 'bear', group: 'daily' },
-  { key: 'ribbon', name: '리본 곰', price: 100, kind: 'bear', group: 'daily' },
-  { key: 'scarf', name: '목도리 곰', price: 100, kind: 'bear', group: 'daily' },
-  { key: 'knit', name: '니트 곰', price: 150, kind: 'bear', group: 'daily' },
-  { key: 'shirt', name: '셔츠 곰', price: 150, kind: 'bear', group: 'daily' },
-  { key: 'apron', name: '앞치마 곰', price: 150, kind: 'bear', group: 'daily' },
-  { key: 'glasses', name: '안경 곰', price: 200, kind: 'bear', group: 'daily' },
-  { key: 'overall', name: '멜빵 곰', price: 200, kind: 'bear', group: 'daily' },
+  { key: 'base', name: '기본 곰돌이', price: 0, kind: 'bear', family: 'daily', img: '/gomdori/front.png' },
+  { key: 'hat', name: '모자 곰', price: 100, kind: 'bear', family: 'daily' },
+  { key: 'ribbon', name: '리본 곰', price: 100, kind: 'bear', family: 'daily' },
+  { key: 'scarf', name: '목도리 곰', price: 100, kind: 'bear', family: 'daily' },
+  { key: 'knit', name: '니트 곰', price: 150, kind: 'bear', family: 'daily' },
+  { key: 'shirt', name: '셔츠 곰', price: 150, kind: 'bear', family: 'daily' },
+  { key: 'apron', name: '앞치마 곰', price: 150, kind: 'bear', family: 'daily' },
+  { key: 'glasses', name: '안경 곰', price: 200, kind: 'bear', family: 'daily' },
+  { key: 'overall', name: '멜빵 곰', price: 200, kind: 'bear', family: 'daily' },
 ];
 
 /**
@@ -44,11 +44,11 @@ export const DAILY: Costume[] = [
  * **값은 안 건드렸다.** 값표의 주인은 [상점 채우기](../../design/관리자.html)다.
  */
 export const COSTUMES: Costume[] = [
-  { key: 'chef', name: '요리사 곰', price: 200, kind: 'bear', group: 'costume' },
-  { key: 'rabbit', name: '곰토끼', price: 300, kind: 'bear', group: 'costume', img: '/gomdori/rabbit.png' },
-  { key: 'detective', name: '탐정 곰', price: 350, kind: 'bear', group: 'costume' },
-  { key: 'princess', name: '공주 곰', price: 400, kind: 'bear', group: 'costume' },
-  { key: 'wizard', name: '마법사 곰', price: 400, kind: 'bear', group: 'costume' },
+  { key: 'chef', name: '요리사 곰', price: 200, kind: 'bear', family: 'costume' },
+  { key: 'rabbit', name: '곰토끼', price: 300, kind: 'bear', family: 'costume', img: '/gomdori/rabbit.png' },
+  { key: 'detective', name: '탐정 곰', price: 350, kind: 'bear', family: 'costume' },
+  { key: 'princess', name: '공주 곰', price: 400, kind: 'bear', family: 'costume' },
+  { key: 'wizard', name: '마법사 곰', price: 400, kind: 'bear', family: 'costume' },
 ];
 
 /** 곰 옷 전부 — 옷장에서 한 줄로 볼 때 쓴다 */
@@ -56,11 +56,11 @@ export const BEARS: Costume[] = [...DAILY, ...COSTUMES];
 
 /** 방 테마 — 곰이 아니라 배경이라 칩을 따로 쓴다. 한 장이면 끝이라 그리는 값이 싸다. */
 export const ROOMS: Costume[] = [
-  { key: 'room-base', name: '기본 룸', price: 0, kind: 'room', img: '/gomdori/room.png' },
-  { key: 'room-picnic', name: '피크닉 룸', price: 300, kind: 'room' },
-  { key: 'room-cafe', name: '카페 룸', price: 400, kind: 'room' },
-  { key: 'room-plant', name: '식물 가득 룸', price: 400, kind: 'room' },
-  { key: 'room-bed', name: '포근한 침실', price: 500, kind: 'room' },
+  { key: 'room-base', name: '기본 룸', price: 0, kind: 'room', family: 'room', img: '/gomdori/room.png' },
+  { key: 'room-picnic', name: '피크닉 룸', price: 300, kind: 'room', family: 'room' },
+  { key: 'room-cafe', name: '카페 룸', price: 400, kind: 'room', family: 'room' },
+  { key: 'room-plant', name: '식물 가득 룸', price: 400, kind: 'room', family: 'room' },
+  { key: 'room-bed', name: '포근한 침실', price: 500, kind: 'room', family: 'room' },
 ];
 
 /**
@@ -79,41 +79,46 @@ export const SETS: CostumeSet[] = [
     key: 's-bloom',
     name: '봄꽃 세트',
     note: '꽃잎이 날리는 날',
-    bear: { key: 'b-bloom', name: '봄꽃 곰', price: 300, kind: 'bear', season: 's-bloom' },
-    room: { key: 'r-bloom', name: '봄꽃 룸', price: 400, kind: 'room', season: 's-bloom' },
-    pose: { key: 'pose-petal', name: '꽃잎 포즈', price: 0, kind: 'pose', season: 's-bloom' },
+    family: 'seasonal',
+    bear: { key: 'b-bloom', name: '봄꽃 곰', price: 300, kind: 'bear', season: 's-bloom', family: 'seasonal' },
+    room: { key: 'r-bloom', name: '봄꽃 룸', price: 400, kind: 'room', season: 's-bloom', family: 'seasonal' },
+    pose: { key: 'pose-petal', name: '꽃잎 포즈', price: 0, kind: 'pose', season: 's-bloom', family: 'seasonal' },
   },
   {
     key: 's-swim',
     name: '물놀이 세트',
     note: '여름 바다에서 신나게!',
-    bear: { key: 'b-swim', name: '물놀이 곰', price: 300, kind: 'bear', season: 's-swim' },
-    room: { key: 'r-sea', name: '여름 바다', price: 400, kind: 'room', season: 's-swim' },
-    pose: { key: 'pose-tube', name: '튜브 포즈', price: 0, kind: 'pose', season: 's-swim' },
+    family: 'seasonal',
+    bear: { key: 'b-swim', name: '물놀이 곰', price: 300, kind: 'bear', season: 's-swim', family: 'seasonal' },
+    room: { key: 'r-sea', name: '여름 바다', price: 400, kind: 'room', season: 's-swim', family: 'seasonal' },
+    pose: { key: 'pose-tube', name: '튜브 포즈', price: 0, kind: 'pose', season: 's-swim', family: 'seasonal' },
   },
   {
     key: 's-vac',
     name: '여름휴가 세트',
     note: '느긋한 바닷가 하루',
-    bear: { key: 'b-vac', name: '여름휴가 곰', price: 350, kind: 'bear', season: 's-vac' },
-    room: { key: 'r-beach', name: '해변 룸', price: 450, kind: 'room', season: 's-vac' },
-    pose: { key: 'pose-parcel', name: '파라솔 포즈', price: 0, kind: 'pose', season: 's-vac' },
+    family: 'seasonal',
+    bear: { key: 'b-vac', name: '여름휴가 곰', price: 350, kind: 'bear', season: 's-vac', family: 'seasonal' },
+    room: { key: 'r-beach', name: '해변 룸', price: 450, kind: 'room', season: 's-vac', family: 'seasonal' },
+    pose: { key: 'pose-parcel', name: '파라솔 포즈', price: 0, kind: 'pose', season: 's-vac', family: 'seasonal' },
   },
   {
     key: 's-hall',
     name: '할로윈 세트',
     note: '한 밤의 사탕 사냥',
-    bear: { key: 'b-hall', name: '할로윈 곰', price: 300, kind: 'bear', season: 's-hall' },
-    room: { key: 'r-hall', name: '할로윈 룸', price: 400, kind: 'room', season: 's-hall' },
-    pose: { key: 'pose-pump', name: '호박 포즈', price: 0, kind: 'pose', season: 's-hall' },
+    family: 'holiday',
+    bear: { key: 'b-hall', name: '할로윈 곰', price: 300, kind: 'bear', season: 's-hall', family: 'holiday' },
+    room: { key: 'r-hall', name: '할로윈 룸', price: 400, kind: 'room', season: 's-hall', family: 'holiday' },
+    pose: { key: 'pose-pump', name: '호박 포즈', price: 0, kind: 'pose', season: 's-hall', family: 'holiday' },
   },
   {
     key: 's-xmas',
     name: '크리스마스 세트',
     note: '눈 오는 밤의 곰돌이',
-    bear: { key: 'b-xmas', name: '산타 곰', price: 350, kind: 'bear', season: 's-xmas' },
-    room: { key: 'r-xmas', name: '크리스마스 룸', price: 450, kind: 'room', season: 's-xmas' },
-    pose: { key: 'pose-tree', name: '트리 포즈', price: 0, kind: 'pose', season: 's-xmas' },
+    family: 'holiday',
+    bear: { key: 'b-xmas', name: '산타 곰', price: 350, kind: 'bear', season: 's-xmas', family: 'holiday' },
+    room: { key: 'r-xmas', name: '크리스마스 룸', price: 450, kind: 'room', season: 's-xmas', family: 'holiday' },
+    pose: { key: 'pose-tree', name: '트리 포즈', price: 0, kind: 'pose', season: 's-xmas', family: 'holiday' },
   },
 ];
 
@@ -124,14 +129,59 @@ export const CATALOG: Costume[] = [
   ...SETS.flatMap((s) => [s.bear, s.room, s.pose]),
 ];
 
-const BY_KEY = new Map(CATALOG.map((c) => [c.key, c]));
+/** 대분류 — 서버의 `shop_group`과 같다. 둘뿐이라 늘릴 자리를 안 뒀다. */
+export const GROUPS: ShopGroup[] = [
+  { key: 'deco', name: '꾸미기' },
+  { key: 'season', name: '시즌' },
+];
+
+/**
+ * 중분류 — 서버의 `shop_family`와 같다.
+ * **`room`은 꺼진 채로 둔다** — 상점에서는 `방` 버튼으로 따로 가니
+ * 중분류 칩으로 또 세우면 같은 것이 두 번 뜬다.
+ */
+export const FAMILIES: ShopFamily[] = [
+  { key: 'daily', group: 'deco', name: '일상', active: true },
+  { key: 'costume', group: 'deco', name: '코스튬', active: true },
+  { key: 'room', group: 'deco', name: '룸', active: false },
+  { key: 'seasonal', group: 'season', name: '계절', active: true },
+  { key: 'holiday', group: 'season', name: '기념일', active: true },
+];
+
+/** 서버를 못 읽었을 때 대신 서는 상점 */
+export const BUILTIN: Shop = {
+  groups: GROUPS,
+  families: FAMILIES,
+  sets: SETS,
+  items: CATALOG,
+};
+
+const BUILTIN_BY_KEY = new Map(CATALOG.map((c) => [c.key, c]));
+
+/** 앱에 박혀 나온 그림. 서버가 그림을 안 갖고 있을 때 이걸로 선다. */
+export const builtinImg = (key: string): string | undefined => BUILTIN_BY_KEY.get(key)?.img;
 
 /**
  * 없는 열쇠면 기본 곰돌이를 준다.
- * 서버 값표에만 있고 앱에는 아직 없는 옷이 내려올 수 있다 —
- * 그때 화면이 비는 대신 기본 모습으로 서게 한다.
+ * **어느 자리에 앉힐지(`kind`)를 여기서 정하기 때문에** 비어 돌려주면 안 된다 —
+ * 방인 줄 모르고 곰 자리에 앉히면 홈 화면에 방이 사람처럼 선다.
  */
-export const costumeOf = (key: string): Costume => BY_KEY.get(key) ?? BEARS[0];
+export function itemOf(shop: Shop, key: string): Costume {
+  for (let i = 0; i < shop.items.length; i += 1) if (shop.items[i].key === key) return shop.items[i];
+  return BUILTIN_BY_KEY.get(key) ?? BEARS[0];
+}
+
+/** 대분류 하나에 드는 중분류들 — 꺼둔 것은 뺀다 */
+export function familiesOf(shop: Shop, group: string): ShopFamily[] {
+  return shop.families.filter((f) => f.group === group && f.active);
+}
+
+/**
+ * 대분류를 가려낸다. **`season`이 있으면 시즌, 없으면 꾸미기다.**
+ * 물건에 대분류를 따로 안 적어두는 까닭이 여기 있다 — 적어두면
+ * `season`이 있는데 꾸미기라고 적힌 줄이 언젠가 생긴다.
+ */
+export const groupOf = (c: Costume): string => (c.season ? 'season' : 'deco');
 
 /** 기본으로 입고 있는 것. 아무것도 안 샀어도 곰돌이는 서 있다. */
 export const DEFAULT_BEAR = 'base';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { costumeOf } from '@/lib/costumes';
+import { useGomdori } from '@/lib/gomdori';
 
 /**
  * 곰돌이가 서는 칸 — **방과 곰이 따로 얹힌다.**
@@ -9,6 +9,9 @@ import { costumeOf } from '@/lib/costumes';
  *
  * 그림이 아직 없는 옷이 많다. 못 불러오면 조용히 사라진다 —
  * 깨진 그림이 뜨는 자리를 만들지 않는다.
+ *
+ * **그림은 상점에서 찾는다.** 앱에 박혀 나온 목록에서 찾으면
+ * 나중에 올린 옷이 여기서만 기본 곰돌이로 선다.
  */
 export default function Stage({
   bear,
@@ -19,11 +22,12 @@ export default function Stage({
   room: string;
   flag?: string;
 }) {
+  const { item } = useGomdori();
   return (
     <div className="relative grid h-[196px] w-full items-end justify-items-center overflow-hidden rounded-2xl bg-sunk">
-      <Art src={costumeOf(room).img} className="absolute inset-0 h-full w-full object-cover" />
+      <Art src={item(room).img} className="absolute inset-0 h-full w-full object-cover" />
       <Art
-        src={costumeOf(bear).img}
+        src={item(bear).img}
         className="relative z-[1] mb-[6%] block h-auto max-h-[74%] w-auto max-w-[46%]"
       />
       {flag && (

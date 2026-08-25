@@ -2,14 +2,16 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuth } from './auth';
-import { DEFAULT_BEAR, DEFAULT_ROOM, costumeOf } from './costumes';
+import { BUILTIN, DEFAULT_BEAR, DEFAULT_ROOM, itemOf } from './costumes';
 import {
   buyCostume as buyRemote,
   pullGomdori,
+  pullShop,
   wearCostume as wearRemote,
 } from './repo/remote';
+import { hasSupabase } from './supabase';
 import { toast } from './toast';
-import type { Gomdori } from './types';
+import type { Costume, Gomdori, Shop } from './types';
 
 /**
  * 곰돌이 — 지금 입은 것, 가진 것, 모은 포인트.
@@ -28,6 +30,13 @@ import type { Gomdori } from './types';
 interface GomdoriValue {
   /** 상점을 열 수 있는 상태인지 — 로그인해야 켜진다 */
   enabled: boolean;
+  /**
+   * 상점에 걸린 것 전부 — **서버가 주인이다.**
+   * 못 받아왔으면 앱에 박혀 나온 것(`BUILTIN`)이 대신 서 있다.
+   */
+  shop: Shop;
+  /** 열쇠 하나를 물건으로. **어느 자리에 앉힐지를 이걸로 정한다.** */
+  item: (key: string) => Costume;
   loading: boolean;
   /** 지금 얼마 있나. 로그인 안 했으면 0이다. */
   points: number;
@@ -60,7 +69,34 @@ export function GomdoriProvider({ children }: { children: React.ReactNode }) {
   const { account } = useAuth();
   const myId = account?.id ?? null;
   const [state, setState] = useState<Gomdori>(EMPTY);
+  const [shop, setShop] = useState<Shop>(BUILTIN);
   const [loading, setLoading] = useState(false);
+
+  /*
+    상점 목록은 **로그인과 상관없이** 받아온다. 값표는 누구나 읽는 것이고
+    (파는 중인 것만), 로그인 뒤로 미루면 로그인 전 홈에 선 곰돌이가
+    이미 산 옷을 못 찾아 기본 모습으로 바뀐다.
+
+    한 번만 받아온다. 값표는 관리자가 가끔 고치는 것이라
+    화면을 열 때마다 다시 물을 까닭이 없다 — 앱을 다시 켜면 새로 받는다.
+  */
+  useEffect(() => {
+    if (!hasSupabase) return;
+    let alive = true;
+    pullShop()
+      .then((next) => {
+        // 빈 상점이 내려오면 안 받은 것으로 친다 — 박아둔 목록이 낫다
+        if (alive && next.items.length) setShop(next);
+      })
+      .catch(() => {
+        /* 못 받아오면 박혀 나온 것으로 선다. 상점은 오프라인에서도 떠야 한다. */
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const item = useCallback((key: string) => itemOf(shop, key), [shop]);
 
   const refresh = useCallback(async () => {
     if (!myId) {
@@ -98,9 +134,9 @@ export function GomdoriProvider({ children }: { children: React.ReactNode }) {
   const wear = useCallback(
     async (key: string) => {
       if (!myId) return;
-      const item = costumeOf(key);
+      const worn = item(key);
       const next =
-        item.kind === 'room'
+        worn.kind === 'room'
           ? { ...state, wornRoom: key }
           : { ...state, wornBear: key };
       setState(next);
@@ -110,7 +146,7 @@ export function GomdoriProvider({ children }: { children: React.ReactNode }) {
         toast('저장하지 못했어요');
       }
     },
-    [myId, state],
+    [myId, state, item],
   );
 
   /*
@@ -122,26 +158,29 @@ export function GomdoriProvider({ children }: { children: React.ReactNode }) {
     async (key: string) => {
       if (!myId) return;
       const left = await buyRemote(key);
-      const item = costumeOf(key);
+      const bought = item(key);
+      const roomly = bought.kind === 'room';
       setState((s) => ({
         points: left,
         owned: s.owned.includes(key) ? s.owned : [...s.owned, key],
-        wornBear: item.kind === 'room' ? s.wornBear : key,
-        wornRoom: item.kind === 'room' ? key : s.wornRoom,
+        wornBear: roomly ? s.wornBear : key,
+        wornRoom: roomly ? key : s.wornRoom,
       }));
       // 세트를 채웠으면 포즈가 딸려 들어온다 — 그건 서버가 아니까 다시 받아온다
       await refresh().catch(() => {});
       await wearRemote(myId, {
-        bear: item.kind === 'room' ? state.wornBear : key,
-        room: item.kind === 'room' ? key : state.wornRoom,
+        bear: roomly ? state.wornBear : key,
+        room: roomly ? key : state.wornRoom,
       }).catch(() => {});
     },
-    [myId, refresh, state.wornBear, state.wornRoom],
+    [myId, refresh, state.wornBear, state.wornRoom, item],
   );
 
   const value = useMemo<GomdoriValue>(
     () => ({
       enabled: Boolean(myId),
+      shop,
+      item,
       loading,
       points: state.points,
       owned: state.owned,
@@ -152,7 +191,7 @@ export function GomdoriProvider({ children }: { children: React.ReactNode }) {
       wear,
       refresh,
     }),
-    [myId, loading, state, buy, wear, refresh],
+    [myId, shop, item, loading, state, buy, wear, refresh],
   );
 
   return <GomdoriContext.Provider value={value}>{children}</GomdoriContext.Provider>;
