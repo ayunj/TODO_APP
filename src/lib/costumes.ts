@@ -21,20 +21,40 @@ import type { Costume, CostumeSet } from './types';
  * `img`가 없는 것은 아직 안 그린 것이다. 그림이 오면 파일만 넣으면 뜬다.
  */
 
-/** 곰 스타일 — 늘 있는 것 */
-export const BEARS: Costume[] = [
-  { key: 'base', name: '기본 곰돌이', price: 0, kind: 'bear', img: '/gomdori/front.png' },
-  { key: 'hat', name: '모자 곰', price: 100, kind: 'bear' },
-  { key: 'ribbon', name: '리본 곰', price: 100, kind: 'bear' },
-  { key: 'scarf', name: '목도리 곰', price: 100, kind: 'bear' },
-  { key: 'apron', name: '앞치마 곰', price: 150, kind: 'bear' },
-  { key: 'glasses', name: '안경 곰', price: 200, kind: 'bear' },
-  { key: 'overall', name: '멜빵 곰', price: 200, kind: 'bear' },
-  { key: 'chef', name: '요리사 곰', price: 200, kind: 'bear' },
-  { key: 'rabbit', name: '곰토끼', price: 300, kind: 'bear' },
+/**
+ * 꾸미기 — **곰돌이 그대로 옷만 바뀐다.** 니트·셔츠·모자 같은 일상 옷.
+ * 값이 싼 쪽이라 들어오자마자 하나는 살 수 있다.
+ */
+export const DAILY: Costume[] = [
+  { key: 'base', name: '기본 곰돌이', price: 0, kind: 'bear', group: 'daily', img: '/gomdori/front.png' },
+  { key: 'hat', name: '모자 곰', price: 100, kind: 'bear', group: 'daily' },
+  { key: 'ribbon', name: '리본 곰', price: 100, kind: 'bear', group: 'daily' },
+  { key: 'scarf', name: '목도리 곰', price: 100, kind: 'bear', group: 'daily' },
+  { key: 'knit', name: '니트 곰', price: 150, kind: 'bear', group: 'daily' },
+  { key: 'shirt', name: '셔츠 곰', price: 150, kind: 'bear', group: 'daily' },
+  { key: 'apron', name: '앞치마 곰', price: 150, kind: 'bear', group: 'daily' },
+  { key: 'glasses', name: '안경 곰', price: 200, kind: 'bear', group: 'daily' },
+  { key: 'overall', name: '멜빵 곰', price: 200, kind: 'bear', group: 'daily' },
 ];
 
-/** 방 테마 — 늘 있는 것. 방은 한 장이면 끝이라 곰보다 그리는 값이 싸다. */
+/**
+ * 코스튬 — **딴 사람이 된다.** 공주·탐정·마법사처럼 통째로 변신하는 것.
+ *
+ * 요리사 곰과 곰토끼는 원래 꾸미기에 섞여 있던 것을 옮겨온 것이다 —
+ * **값은 안 건드렸다.** 값표의 주인은 [상점 채우기](../../design/관리자.html)다.
+ */
+export const COSTUMES: Costume[] = [
+  { key: 'chef', name: '요리사 곰', price: 200, kind: 'bear', group: 'costume' },
+  { key: 'rabbit', name: '곰토끼', price: 300, kind: 'bear', group: 'costume' },
+  { key: 'detective', name: '탐정 곰', price: 350, kind: 'bear', group: 'costume' },
+  { key: 'princess', name: '공주 곰', price: 400, kind: 'bear', group: 'costume' },
+  { key: 'wizard', name: '마법사 곰', price: 400, kind: 'bear', group: 'costume' },
+];
+
+/** 곰 옷 전부 — 옷장에서 한 줄로 볼 때 쓴다 */
+export const BEARS: Costume[] = [...DAILY, ...COSTUMES];
+
+/** 방 테마 — 곰이 아니라 배경이라 칩을 따로 쓴다. 한 장이면 끝이라 그리는 값이 싸다. */
 export const ROOMS: Costume[] = [
   { key: 'room-base', name: '기본 룸', price: 0, kind: 'room', img: '/gomdori/room.png' },
   { key: 'room-picnic', name: '피크닉 룸', price: 300, kind: 'room' },
@@ -56,12 +76,28 @@ export const ROOMS: Costume[] = [
  */
 export const SETS: CostumeSet[] = [
   {
+    key: 's-bloom',
+    name: '봄꽃 세트',
+    note: '꽃잎이 날리는 날',
+    bear: { key: 'b-bloom', name: '봄꽃 곰', price: 300, kind: 'bear', season: 's-bloom' },
+    room: { key: 'r-bloom', name: '봄꽃 룸', price: 400, kind: 'room', season: 's-bloom' },
+    pose: { key: 'pose-petal', name: '꽃잎 포즈', price: 0, kind: 'pose', season: 's-bloom' },
+  },
+  {
     key: 's-swim',
     name: '물놀이 세트',
     note: '여름 바다에서 신나게!',
     bear: { key: 'b-swim', name: '물놀이 곰', price: 300, kind: 'bear', season: 's-swim' },
     room: { key: 'r-sea', name: '여름 바다', price: 400, kind: 'room', season: 's-swim' },
     pose: { key: 'pose-tube', name: '튜브 포즈', price: 0, kind: 'pose', season: 's-swim' },
+  },
+  {
+    key: 's-vac',
+    name: '여름휴가 세트',
+    note: '느긋한 바닷가 하루',
+    bear: { key: 'b-vac', name: '여름휴가 곰', price: 350, kind: 'bear', season: 's-vac' },
+    room: { key: 'r-beach', name: '해변 룸', price: 450, kind: 'room', season: 's-vac' },
+    pose: { key: 'pose-parcel', name: '파라솔 포즈', price: 0, kind: 'pose', season: 's-vac' },
   },
   {
     key: 's-hall',
@@ -78,22 +114,6 @@ export const SETS: CostumeSet[] = [
     bear: { key: 'b-xmas', name: '산타 곰', price: 350, kind: 'bear', season: 's-xmas' },
     room: { key: 'r-xmas', name: '크리스마스 룸', price: 450, kind: 'room', season: 's-xmas' },
     pose: { key: 'pose-tree', name: '트리 포즈', price: 0, kind: 'pose', season: 's-xmas' },
-  },
-  {
-    key: 's-bloom',
-    name: '봄꽃 세트',
-    note: '꽃잎이 날리는 날',
-    bear: { key: 'b-bloom', name: '봄꽃 곰', price: 300, kind: 'bear', season: 's-bloom' },
-    room: { key: 'r-bloom', name: '봄꽃 룸', price: 400, kind: 'room', season: 's-bloom' },
-    pose: { key: 'pose-petal', name: '꽃잎 포즈', price: 0, kind: 'pose', season: 's-bloom' },
-  },
-  {
-    key: 's-vac',
-    name: '여름휴가 세트',
-    note: '느긋한 바닷가 하루',
-    bear: { key: 'b-vac', name: '여름휴가 곰', price: 350, kind: 'bear', season: 's-vac' },
-    room: { key: 'r-beach', name: '해변 룸', price: 450, kind: 'room', season: 's-vac' },
-    pose: { key: 'pose-parcel', name: '파라솔 포즈', price: 0, kind: 'pose', season: 's-vac' },
   },
 ];
 

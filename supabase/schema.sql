@@ -1124,6 +1124,47 @@ insert into costume_season (season_key, name, ord, note) values
   ('s-vac',   '여름휴가 세트',  5, '느긋한 바닷가 하루')
 on conflict (season_key) do nothing;   -- 값표와 같은 까닭 — 고쳐놓은 이름을 안 덮는다
 
+-- ─── 곰 옷을 셋으로 가른다 ──────────────────────────────────────
+/*
+ * 상점 칩이 갈래마다 하나씩 선다.
+ *
+ * | 갈래 | 무엇 | 값 |
+ * |---|---|---|
+ * | `daily` **꾸미기** | 니트·셔츠·모자 — 곰돌이 그대로 옷만 | 100~200P |
+ * | `costume` **코스튬** | 공주·탐정·마법사 — **딴 사람이 된다** | 300~400P |
+ * | **시즌** | 봄꽃·할로윈·크리스마스 — **때가 있다** | `season` 칸이 이미 말한다 |
+ *
+ * **겹치면 시즌이 이긴다.** 할로윈 마녀는 완전 변신이면서 기간 한정인데,
+ * `때가 있다`가 더 특별한 정보라 그쪽에 둔다. 그래서 `season`이 있는 줄에는
+ * `family`를 안 단다 — 두 갈래에 동시에 서면 상점에 두 번 뜬다.
+ *
+ * 방은 곰이 아니라 배경이라 여기 안 든다. 제 칩을 따로 쓴다.
+ */
+alter table costume_catalog add column if not exists family text;
+
+-- ─── 새로 파는 것 ──────────────────────────────────────────────
+-- 코스튬 갈래가 요리사·곰토끼 둘뿐이면 칩을 눌렀을 때 허전하다. 셋을 더 심는다.
+-- 위 씨앗과 같은 규칙이다 — **심고, 다시는 안 덮는다.**
+insert into costume_catalog (item_key, kind, price, season, name, active) values
+  ('knit',       'bear', 150, null, '니트 곰', false),
+  ('shirt',      'bear', 150, null, '셔츠 곰', false),
+  ('detective',  'bear', 350, null, '탐정 곰', false),
+  ('princess',   'bear', 400, null, '공주 곰', false),
+  ('wizard',     'bear', 400, null, '마법사 곰', false)
+on conflict (item_key) do nothing;
+
+/*
+ * 갈래는 **한 번만** 정해준다. 이미 값이 든 줄은 안 건드린다 —
+ * 관리자가 옮겨둔 것을 schema.sql이 되돌리면 안 된다.
+ */
+update costume_catalog set family = 'daily'
+ where kind = 'bear' and season is null and family is null
+   and item_key in ('base', 'hat', 'ribbon', 'scarf', 'knit', 'shirt', 'apron', 'glasses', 'overall');
+
+update costume_catalog set family = 'costume'
+ where kind = 'bear' and season is null and family is null
+   and item_key in ('chef', 'rabbit', 'detective', 'princess', 'wizard');
+
 -- ─── 얼마나 벌었나 ──────────────────────────────────────────────
 /*
  * | 조건 | 보상 |

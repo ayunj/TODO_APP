@@ -5,13 +5,26 @@ import Coin from './store/Coin';
 import SetDetail from './store/SetDetail';
 import StoreCard from './store/StoreCard';
 import Stage from './store/Stage';
-import { BEARS, ROOMS, SETS, costumeOf } from '@/lib/costumes';
+import { BEARS, COSTUMES, DAILY, ROOMS, SETS, costumeOf } from '@/lib/costumes';
 import { useGomdori } from '@/lib/gomdori';
 import { useUi } from '@/lib/ui';
 import { BackIcon, GiftIcon, HomeIcon, StarIcon } from '@/components/Icons';
 import type { Costume } from '@/lib/types';
 
-type Chip = 'all' | 'set' | 'season' | 'mine';
+/**
+ * 파는 것을 **저마다 제 이름이 있는 갈래**로 가른다.
+ *
+ * | 칩 | 무엇 |
+ * |---|---|
+ * | `daily` **꾸미기** | 니트·셔츠·모자 — 곰돌이 그대로 옷만 |
+ * | `costume` **코스튬** | 공주·탐정·마법사 — 딴 사람이 된다 |
+ * | `season` **시즌** | 봄꽃·할로윈 — 때가 있다 |
+ * | `room` **방** | 곰이 아니라 배경이라 따로 선다 |
+ *
+ * **겹치면 시즌이 이긴다.** 할로윈 마녀는 완전 변신이면서 기간 한정인데,
+ * `때가 있다`가 더 특별한 정보라 그쪽에만 둔다 — 두 칸에 같은 것이 두 번 뜨면 안 된다.
+ */
+type Chip = 'all' | 'daily' | 'costume' | 'season' | 'room' | 'mine';
 
 /**
  * 상점 — [design/상점.html](../../design/상점.html) 그대로.
@@ -19,8 +32,8 @@ type Chip = 'all' | 'set' | 'season' | 'mine';
  * 뼈대는 한 줄이다 — **카드는 고르는 자리, 위 칸은 하는 자리.**
  * 103px 카드 안에 사는 단추까지 넣으면 잘못 눌러 300P가 날아간다.
  *
- * 갈래는 넷이다. 방이 늘었어도 칩은 안 늘렸다 —
- * `꾸미기` 안에서 곰 스타일과 방 테마가 **묶음 제목으로** 갈린다.
+ * 갈래마다 칩이 하나씩 선다. 부위(머리·몸·악세사리)로는 안 가른다 —
+ * 부위를 나누는 순간 사람들은 겹쳐 입기를 기대한다.
  */
 export default function StoreScreen() {
   const { enabled, points, has, wornBear, wornRoom, buy, wear } = useGomdori();
@@ -106,8 +119,10 @@ export default function StoreScreen() {
             {(
               [
                 ['all', '전체'],
-                ['set', '꾸미기'],
+                ['daily', '꾸미기'],
+                ['costume', '코스튬'],
                 ['season', '시즌'],
+                ['room', '방'],
                 ['mine', '내 옷장'],
               ] as [Chip, string][]
             ).map(([k, label]) => (
@@ -144,14 +159,15 @@ export default function StoreScreen() {
                 ))}
               </div>
             </>
-          ) : chip === 'set' ? (
-            <>
-              <Group title="곰 스타일" aside="상시" list={BEARS} pick={pick} trying={trying} />
-              <Group title="방 테마" list={ROOMS} pick={pick} trying={trying} />
-            </>
+          ) : chip === 'daily' ? (
+            <Group title="꾸미기" aside="곰돌이 그대로 옷만" list={DAILY} pick={pick} trying={trying} />
+          ) : chip === 'costume' ? (
+            <Group title="코스튬" aside="딴 사람이 된다" list={COSTUMES} pick={pick} trying={trying} />
+          ) : chip === 'room' ? (
+            <Group title="방 테마" aside="홈 배경이 바뀐다" list={ROOMS} pick={pick} trying={trying} />
           ) : (
             <>
-              <Head title="시즌 세트" />
+              <Head title="시즌 세트" aside="때가 있는 것" />
               <div className="mb-4 grid grid-cols-3 gap-[9px]">
                 {SETS.map((s) => (
                   <StoreCard
@@ -163,7 +179,8 @@ export default function StoreScreen() {
                   />
                 ))}
               </div>
-              <Group title="곰 스타일" aside="상시" list={BEARS} pick={pick} trying={trying} />
+              <Group title="코스튬" aside="딴 사람이 된다" list={COSTUMES} pick={pick} trying={trying} />
+              <Group title="꾸미기" aside="곰돌이 그대로 옷만" list={DAILY} pick={pick} trying={trying} />
               <Group title="방 테마" list={ROOMS} pick={pick} trying={trying} />
             </>
           )}
@@ -356,7 +373,7 @@ function Tip({ chip, tab }: { chip: Chip; tab: 'bear' | 'room' }) {
   const [Icon, text] =
     chip === 'season'
       ? [GiftIcon, '곰과 방을 다 모으면 포즈가 딸려와요']
-      : chip === 'mine'
+      : chip === 'room' || chip === 'mine'
         ? [HomeIcon, '테마를 바꾸면 홈 배경이 바뀌어요']
         : [StarIcon, '포인트는 할 일을 끝내면 모을 수 있어요'];
 
