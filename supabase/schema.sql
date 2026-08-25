@@ -1017,7 +1017,11 @@ create table if not exists costume_catalog (
   season     text,
   -- 상점 카드에 그대로 뜨는 이름. 여덟 자를 넘기면 103px 칸에서 잘린다.
   name       text,
-  -- 올린 그림. Storage의 `shop/<코드>.png`. 비어 있으면 앱이 가진 그림으로 선다.
+  /*
+   * 올린 그림이 Storage 어디에 있나 — `<대분류>/<중분류>/<종류>/<코드>.png`.
+   * 통 이름(`shop`)은 안 적는다. 통을 옮기면 스물아홉 줄을 다 고쳐야 한다.
+   * **비어 있으면 앱이 가진 그림으로 선다.**
+   */
   img        text,
   /*
    * **올리자마자 팔지 않는다.** 새로 넣는 것은 숨김으로 들어오고,
@@ -1124,26 +1128,62 @@ insert into costume_season (season_key, name, ord, note) values
   ('s-vac',   '여름휴가 세트',  5, '느긋한 바닷가 하루')
 on conflict (season_key) do nothing;   -- 값표와 같은 까닭 — 고쳐놓은 이름을 안 덮는다
 
--- ─── 곰 옷을 셋으로 가른다 ──────────────────────────────────────
+-- ─── 대분류와 중분류 ────────────────────────────────────────────
 /*
- * 상점 칩이 갈래마다 하나씩 선다.
+ * 파는 것이 어느 칩 아래 서는가. **두 층이다.**
  *
- * | 갈래 | 무엇 | 값 |
- * |---|---|---|
- * | `daily` **꾸미기** | 니트·셔츠·모자 — 곰돌이 그대로 옷만 | 100~200P |
- * | `costume` **코스튬** | 공주·탐정·마법사 — **딴 사람이 된다** | 300~400P |
- * | **시즌** | 봄꽃·할로윈·크리스마스 — **때가 있다** | `season` 칸이 이미 말한다 |
+ *   대분류 ─ 꾸미기 · 시즌          상점 위 칩
+ *     중분류 ─ 일상 · 코스튬 …      그 아래 칩
  *
- * **겹치면 시즌이 이긴다.** 할로윈 마녀는 완전 변신이면서 기간 한정인데,
- * `때가 있다`가 더 특별한 정보라 그쪽에 둔다. 그래서 `season`이 있는 줄에는
- * `family`를 안 단다 — 두 갈래에 동시에 서면 상점에 두 번 뜬다.
+ * 전에는 `family text` 칸 하나에 `daily`/`costume`을 적어뒀다. 그걸 걷어낸다 —
+ * **중분류는 관리자가 늘리는 것**이라 칸에 적어두면 늘릴 때마다 이 파일을 고쳐야 한다.
  *
- * 방은 곰이 아니라 배경이라 여기 안 든다. 제 칩을 따로 쓴다.
+ * `방`과 `내 옷장`은 여기 안 든다. **가로지르는 버튼**이라서다 —
+ * 방은 `kind = 'room'`이고 내 옷장은 `costume_owned`다. 둘 다 대분류를 가로질러 고른다.
  */
-alter table costume_catalog add column if not exists family text;
+create table if not exists shop_group (
+  -- **열쇠가 곧 폴더 이름이다.** 그림이 `shop/<이 값>/…` 밑에 쌓인다.
+  group_key text primary key check (group_key ~ '^[a-z][a-z0-9-]{1,23}$'),
+  name      text not null,
+  ord       int  not null default 0
+);
+
+/*
+ * 중분류 — **관리자가 늘린다.**
+ *
+ * 이름과 **폴더를 같이 받는다.** 폴더를 따로 안 받으면 `기념일`을 무엇으로 적어
+ * 폴더를 만들지 정할 길이 없다. 그렇다고 이름과 폴더를 두 칸에 나눠 담으면
+ * 이름을 고칠 때 폴더가 따라 움직여야 하나 말아야 하나가 매번 물음이 된다.
+ *
+ * 그래서 **열쇠가 곧 폴더다.** 관리자는 `기념일`과 `holiday` 둘을 적고,
+ * 뒤엣것은 한 번 정하면 안 바뀐다 — 이미 쌓인 그림이 그 이름 밑에 있다.
+ */
+create table if not exists shop_family (
+  family_key text primary key check (family_key ~ '^[a-z][a-z0-9-]{1,23}$'),
+  group_key  text not null references shop_group on delete restrict,
+  name       text not null,
+  ord        int  not null default 0,
+  -- 끈 중분류는 상점 칩에서 빠진다. 그 안의 물건은 각자 `active`를 따른다.
+  active     boolean not null default true,
+  created_at timestamptz not null default now()
+);
+create index if not exists shop_family_group on shop_family (group_key, ord);
+
+insert into shop_group (group_key, name, ord) values
+  ('deco',   '꾸미기', 1),
+  ('season', '시즌',   2)
+on conflict (group_key) do nothing;
+
+insert into shop_family (family_key, group_key, name, ord) values
+  ('daily',    'deco',   '일상',   1),
+  ('costume',  'deco',   '코스튬', 2),
+  ('room',     'deco',   '룸',     3),
+  ('seasonal', 'season', '계절',   1),
+  ('holiday',  'season', '기념일', 2)
+on conflict (family_key) do nothing;
 
 -- ─── 새로 파는 것 ──────────────────────────────────────────────
--- 코스튬 갈래가 요리사·곰토끼 둘뿐이면 칩을 눌렀을 때 허전하다. 셋을 더 심는다.
+-- 코스튬 칩이 요리사·곰토끼 둘뿐이면 눌렀을 때 허전하다. 다섯을 더 심는다.
 -- 위 씨앗과 같은 규칙이다 — **심고, 다시는 안 덮는다.**
 insert into costume_catalog (item_key, kind, price, season, name, active) values
   ('knit',       'bear', 150, null, '니트 곰', false),
@@ -1153,17 +1193,128 @@ insert into costume_catalog (item_key, kind, price, season, name, active) values
   ('wizard',     'bear', 400, null, '마법사 곰', false)
 on conflict (item_key) do nothing;
 
+-- ─── 물건이 어느 중분류인가 ─────────────────────────────────────
+alter table costume_catalog add column if not exists family_key text references shop_family;
+
+-- 옛 `family` 칸에 있던 것을 옮긴다. 값이 같아서 그대로 들어간다.
+do $$
+begin
+  if exists (select 1 from information_schema.columns
+              where table_name = 'costume_catalog' and column_name = 'family') then
+    execute 'update costume_catalog set family_key = family where family_key is null and family is not null';
+    execute 'alter table costume_catalog drop column family';
+  end if;
+end $$;
+
 /*
- * 갈래는 **한 번만** 정해준다. 이미 값이 든 줄은 안 건드린다 —
+ * 시즌 물건의 중분류는 **세트가 정한다.** 물건마다 따로 적게 두면
+ * 할로윈 곰은 기념일인데 할로윈 방은 계절인 일이 생긴다.
+ */
+alter table costume_season add column if not exists family_key text references shop_family;
+
+update costume_season set family_key = v.f
+  from (values ('s-swim','seasonal'), ('s-bloom','seasonal'), ('s-vac','seasonal'),
+               ('s-hall','holiday'),  ('s-xmas','holiday')) as v(k, f)
+ where costume_season.season_key = v.k and costume_season.family_key is null;
+
+/*
+ * 중분류는 **한 번만** 정해준다. 이미 값이 든 줄은 안 건드린다 —
  * 관리자가 옮겨둔 것을 schema.sql이 되돌리면 안 된다.
  */
-update costume_catalog set family = 'daily'
- where kind = 'bear' and season is null and family is null
+update costume_catalog set family_key = 'daily'
+ where kind = 'bear' and season is null and family_key is null
    and item_key in ('base', 'hat', 'ribbon', 'scarf', 'knit', 'shirt', 'apron', 'glasses', 'overall');
 
-update costume_catalog set family = 'costume'
- where kind = 'bear' and season is null and family is null
+update costume_catalog set family_key = 'costume'
+ where kind = 'bear' and season is null and family_key is null
    and item_key in ('chef', 'rabbit', 'detective', 'princess', 'wizard');
+
+update costume_catalog set family_key = 'room'
+ where kind = 'room' and season is null and family_key is null;
+
+/*
+ * 시즌 물건은 제 세트를 따라간다. 넣을 때도 고칠 때도 여기서 맞춰주니
+ * **관리자가 세트만 고르면 중분류는 안 물어봐도 된다.**
+ */
+create or replace function sync_catalog_family()
+returns trigger language plpgsql set search_path = public as $fn$
+begin
+  if new.season is not null then
+    select family_key into new.family_key from costume_season where season_key = new.season;
+  end if;
+  new.updated_at = now();
+  return new;
+end $fn$;
+
+drop trigger if exists catalog_family on costume_catalog;
+create trigger catalog_family before insert or update on costume_catalog
+  for each row execute function sync_catalog_family();
+
+-- 이미 들어 있던 시즌 물건들도 한 번 맞춰준다
+update costume_catalog c set family_key = s.family_key
+  from costume_season s
+ where c.season = s.season_key and c.family_key is distinct from s.family_key;
+
+-- ─── 코드는 숫자로 딴다 ─────────────────────────────────────────
+/*
+ * 새로 올리는 것의 코드는 `0000001`부터 하나씩 올라간다.
+ *
+ * 전에는 이름에서 지었다(`모자 곰` → `b-hat`). 그러면 **이름을 고칠 때마다
+ * 코드를 고쳐야 하나**가 따라오고, 고치면 이미 산 사람의 줄이 가리킬 데를 잃는다.
+ * 숫자는 이름과 아무 상관이 없어서 그 물음이 아예 없다.
+ *
+ * **이미 있는 `hat` · `room-cafe`는 안 바꾼다.** 바꾸는 순간
+ * `costume_owned`와 `gomdori.worn_bear`가 없는 것을 가리킨다.
+ * 옛 이름과 새 숫자가 섞여 있는 건 보기 싫지만, 섞인 채로 도는 게 맞다.
+ */
+create sequence if not exists costume_code_seq start 1;
+
+create or replace function next_item_code()
+returns text language sql set search_path = public as $fn$
+  select lpad(nextval('costume_code_seq')::text, 7, '0');
+$fn$;
+
+alter table costume_catalog alter column item_key set default next_item_code();
+
+/*
+ * **번호표를 뽑을 수 있게 열어준다.** 이걸 빼먹으면 관리자가 코드를 손으로 적지 않는 한
+ * `permission denied for sequence`로 막힌다 — RLS가 아니라 권한에서 막히는 거라
+ * 화면에는 `왜 안 되는지 알 수 없는 오류`로 뜬다.
+ *
+ * Supabase 밖(내려받은 postgres 같은 데)에는 이 역할이 없어서 넘어가게 뒀다.
+ */
+do $$
+begin
+  grant usage, select on sequence costume_code_seq to authenticated;
+exception when undefined_object or insufficient_privilege then
+  raise notice 'authenticated 역할이 없어 번호표 권한은 건너뛴다';
+end $$;
+
+-- ─── 그림이 쌓이는 자리 ─────────────────────────────────────────
+/*
+ * `shop/<대분류>/<중분류>/<종류>/<코드>.png`
+ *
+ *   shop/deco/daily/gomdori/0000001.png
+ *   shop/deco/room/background/0000020.png
+ *   shop/season/holiday/prop/0000016.png
+ *
+ * **폴더가 셋인 까닭**은 그림이 오는 길이 셋이라서다 — 대분류로 시즌을 통째로 열고 닫고,
+ * 중분류로 한 칩을 채우고, 종류로 그리는 사람이 다르다(곰은 캐릭터, 방은 배경).
+ * 한 통에 다 부으면 스물아홉 장이 넘어가는 순간 무엇이 무엇인지 이름으로만 가려야 한다.
+ *
+ * 앱은 `img`에 적힌 것을 그대로 쓴다. 이 함수는 **관리자가 올릴 자리를 고를 때** 쓴다.
+ */
+create or replace function shop_folder(item text)
+returns text language sql stable set search_path = public as $fn$
+  select g.group_key || '/' || f.family_key || '/' ||
+         case c.kind when 'bear' then 'gomdori'
+                     when 'room' then 'background'
+                     else 'prop' end
+    from costume_catalog c
+    join shop_family f on f.family_key = c.family_key
+    join shop_group  g on g.group_key  = f.group_key
+   where c.item_key = item;
+$fn$;
 
 -- ─── 얼마나 벌었나 ──────────────────────────────────────────────
 /*
@@ -1421,6 +1572,8 @@ alter table costume_owned   enable row level security;
 alter table costume_catalog enable row level security;
 alter table costume_season  enable row level security;
 alter table shop_admins     enable row level security;
+alter table shop_group      enable row level security;
+alter table shop_family     enable row level security;
 
 drop policy if exists "내 것만"     on gomdori;
 drop policy if exists "내가 넣는다" on gomdori;
@@ -1463,6 +1616,29 @@ create policy "관리자가 고친다" on costume_catalog
  * **지우는 정책은 일부러 없다.** 산 사람의 `costume_owned`에 열쇠가 남아 있어서,
  * 값표에서 줄을 빼면 그 사람의 옷이 이름 없는 것이 된다.
  * 그만 파는 길은 `active`를 끄는 것 하나다.
+ */
+
+/*
+ * 대분류와 중분류 — 누구나 읽는다. 상점 칩이 이걸로 서니 안 보이면 화면이 빈다.
+ * **끈 중분류(`active = false`)까지 보인다** — 칩에서 뺄지는 앱이 정할 일이고,
+ * 여기서 감추면 이미 그 중분류에 든 물건이 어디 것인지 앱이 모르게 된다.
+ */
+drop policy if exists "누구나 본다"   on shop_group;
+drop policy if exists "관리자가 고친다" on shop_group;
+create policy "누구나 본다"   on shop_group for select using (true);
+create policy "관리자가 고친다" on shop_group for update using (is_shop_admin());
+
+drop policy if exists "누구나 본다"   on shop_family;
+drop policy if exists "관리자가 짓는다" on shop_family;
+drop policy if exists "관리자가 고친다" on shop_family;
+create policy "누구나 본다"   on shop_family for select using (true);
+create policy "관리자가 짓는다" on shop_family for insert with check (is_shop_admin());
+create policy "관리자가 고친다" on shop_family for update using (is_shop_admin());
+/*
+ * **대분류는 못 늘린다.** insert 정책이 없다 — 꾸미기와 시즌 둘이 상점 칩의 뼈대이고,
+ * 셋째가 생기면 화면부터 다시 그려야 한다. 늘릴 일이 생기면 그때 SQL로 넣는다.
+ *
+ * 중분류도 **지우는 정책은 없다.** 든 물건이 가리킬 데를 잃는다 — `active`를 끈다.
  */
 
 -- 세트 이름표 — 누구나 읽는다. 이름과 차례뿐이라 숨길 것이 없다.
