@@ -114,12 +114,27 @@ export const DEFAULT_BEAR = 'base';
 export const DEFAULT_ROOM = 'room-base';
 
 /**
- * 그 날 몫을 다 끝낸 날 받는 값. **하루에 한 번뿐이다.**
+ * 점수표 — **화면에 적는 값이다.** 진짜로 얼마가 붙을지는 늘 서버가 정한다
+ * (schema.sql의 `stamp_points`).
  *
- * 이 숫자는 **그림 그리는 속도**에 맞춘 것이다 —
- * 옷 한 벌이 300P면 한 달이고, 한 달에 한 벌 그리면 상점이 안 빈다.
- * 값을 올리면 사람이 그림보다 빨리 달려서 살 것이 없어진다.
+ * | 조건 | 보상 |
+ * |---|---|
+ * | 할 일 하나 **최초** 완료 | +5P |
+ * | 하루에 받는 끝 | 30P (여섯 개) |
+ * | 그 주에 10 · 20 · 30개 | +20 · +30 · +50P |
+ *
+ * `최초`가 중요하다 — 그 할 일 하나에 한 번이라 **잘못 눌러 풀었다 다시 해도 두 번 안 준다.**
  */
-export const PER_DAY = 10;
+export const PER_TASK = 5;
+export const DAILY_CAP = 30;
+/** 그 주에 몇 개를 넘길 때마다 얼마 — 누적이라 30개면 셋을 다 받는다 */
+export const WEEK_STEPS: { need: number; amount: number }[] = [
+  { need: 10, amount: 20 },
+  { need: 20, amount: 30 },
+  { need: 30, amount: 50 },
+];
+/** 첫 완료 같은 한 번뿐인 것 */
+export const FIRST_TASK_BONUS = 50;
+
 /** 가입하면 그 자리에서 받는 것. 100P짜리를 하나 살 수 있게 정한 값이다. */
 export const SIGNUP_BONUS = 100;

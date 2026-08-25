@@ -1060,71 +1060,114 @@ on conflict (item_key) do update
 
 -- ─── 얼마나 벌었나 ──────────────────────────────────────────────
 /*
- * **그 날 몫을 처음으로 다 비운 순간 도장을 찍고 10P.**
- * 도장은 **찍기만 하고 안 지운다.**
+ * | 조건 | 보상 |
+ * |---|---|
+ * | 할 일 하나 **최초** 완료 | +5P |
+ * | 하루에 받는 끝 | **30P** (여섯 개) |
+ * | 그 주에 10개 | +20P |
+ * | 그 주에 20개 | 추가 +30P |
+ * | 그 주에 30개 | 추가 +50P |
+ * | 첫 완료 같은 업적 | 한 번뿐인 별도 보상 |
  *
- * 안 지우는 것이 이 표의 전부다. 볼 때마다 다시 세면
- * **오후에 할 일 하나를 적었다고 아침에 본 포인트가 깎인다** —
- * 그 날이 `다 끝난 날`에서 빠지기 때문이다. 이미 옷을 샀으면 잔액이 음수까지 간다.
+ * **한 줄이 한 번이다.** 준 것을 여기 적어두고 **다시는 안 준다** —
+ * 그래서 체크를 풀었다 다시 눌러도 두 번 안 들어오고, 잘못 누른 것을 풀면
+ * 값은 남지만 **더 얻을 것도 없다.** 되돌리는 코드가 없어서 틀어질 데가 없다.
  *
- * `다 끝냄`은 되돌아갈 수 있는 상태라 그 위에 값을 얹으면 값도 같이 되돌아간다.
- * 그래서 **상태가 아니라 그때 있었던 일에 도장을 찍는다** —
- * `이 날을 한 번 비워봤다`는 사실은 뒤에 무엇을 더 적어도 안 바뀐다.
- * 나중에 더 해도 값이 같으니 손해도 아니다. 하루 한 번이 끝이다.
- *
- * 되돌리는 코드가 없어서 틀어질 데가 없다. 담아두는 것을 꺼렸던 까닭이
- * `체크를 풀면 도로 빼는 코드가 반드시 틀어진다`였는데, 뺄 일이 아예 없다.
+ * 볼 때마다 다시 세는 방식은 접었다. 그러면 오후에 할 일 하나를 적었다고
+ * 아침에 본 포인트가 깎인다 — 이미 옷을 샀으면 잔액이 음수까지 간다.
  */
-create table if not exists point_days (
+create table if not exists point_log (
   user_id uuid not null references auth.users on delete cascade,
+  -- 'task' 할 일 하나 · 'week10' 'week20' 'week30' 주간 · 'first' 업적
+  kind    text not null,
+  -- 무엇 때문인지. 할 일 id · 그 주 월요일 · 업적 열쇠. **같은 것으로 두 번 안 준다.**
+  ref     text not null,
+  amount  int  not null,
+  -- 어느 날 몫인가. 하루 상한을 이걸로 센다.
   on_date date not null,
-  amount  int  not null default 10,
   got_at  timestamptz not null default now(),
-  primary key (user_id, on_date)
+  primary key (user_id, kind, ref)
 );
 
 /*
- * 도장 찍기 — 조건을 만족한 날을 채워 넣는다. 이미 찍힌 날은 안 건드린다.
- * 며칠 만에 앱을 켜도 그 사이 비운 날들이 이때 한꺼번에 찍힌다.
+ * 아직 안 준 것을 채워 넣는다. 이미 준 줄은 안 건드린다.
+ * 며칠 만에 앱을 켜도 그 사이 것이 이때 한꺼번에 들어온다.
  *
  * security definer라 RLS를 안 타니 **볼 수 있는 할 일인지 여기서 직접 가린다.**
  */
-create or replace function stamp_days()
-returns void language sql security definer set search_path = public as $fn$
-  insert into point_days (user_id, on_date)
-  select auth.uid(), d.date
+create or replace function stamp_points()
+returns void language plpgsql security definer set search_path = public as $fn$
+declare me uuid := auth.uid();
+begin
+  if me is null then return; end if;
+
+  /*
+   * 1) 할 일 하나에 5P — **하루 30P까지.**
+   * 그 날 이미 준 것에 이번 순번을 더해 30을 넘지 않는 데까지만 넣는다.
+   * 순번은 고친 때 순이라 먼저 끝낸 것이 먼저 값을 받는다.
+   */
+  insert into point_log (user_id, kind, ref, amount, on_date)
+  select me, 'task', f.id::text, 5, f.done_on
     from (
-      select t.date
+      select t.id, t.done_on,
+             row_number() over (partition by t.done_on order by t.updated_at, t.id) as seq
         from tasks t
-       where t.deleted_at is null
-         and t.date <= (now() at time zone 'Asia/Seoul')::date
-         -- `안 정함`은 먼저 보는 사람 몫이라 내 몫이기도 하다
-         and (t.assignee_id is null or t.assignee_id = auth.uid())
-         and (t.owner_id = auth.uid() or is_member(t.room_id))
-       group by t.date
-      -- 그 날 내 몫이 다 끝났고, 그중 하나는 내가 했어야 한다.
-      -- 뒤엣것이 없으면 남편이 다 한 날에도 나에게 값이 붙는다.
-      having bool_and(t.done)
-         and bool_or(coalesce(t.done_by_id = auth.uid(), false))
-    ) d
-  on conflict (user_id, on_date) do nothing;
-$fn$;
+       where t.done
+         and t.deleted_at is null
+         and t.done_on is not null
+         and t.done_by_id = me
+         and (t.owner_id = me or is_member(t.room_id))
+         and not exists (
+           select 1 from point_log p
+            where p.user_id = me and p.kind = 'task' and p.ref = t.id::text
+         )
+    ) f
+    left join (
+      select on_date, sum(amount) as given
+        from point_log where user_id = me and kind = 'task' group by on_date
+    ) g on g.on_date = f.done_on
+   where coalesce(g.given, 0) + f.seq * 5 <= 30
+  on conflict do nothing;
+
+  /*
+   * 2) 주간 — 그 주에 값을 받은 할 일이 10·20·30개를 넘을 때마다 한 번씩.
+   * 주는 **월요일에 시작한다**(`date_trunc('week')`). 앱 설정의 주 시작과 따로다 —
+   * 화면을 어떻게 보든 한 주의 길이는 같아야 값이 흔들리지 않는다.
+   */
+  insert into point_log (user_id, kind, ref, amount, on_date)
+  select me, s.kind, w.wk::text, s.amount, w.wk
+    from (
+      select date_trunc('week', on_date)::date as wk, count(*) as n
+        from point_log where user_id = me and kind = 'task'
+       group by 1
+    ) w
+    cross join (values ('week10', 10, 20), ('week20', 20, 30), ('week30', 30, 50))
+              as s(kind, need, amount)
+   where w.n >= s.need
+  on conflict do nothing;
+
+  -- 3) 업적 — 첫 완료. 한 번뿐이라 ref가 열쇠 그 자체다.
+  insert into point_log (user_id, kind, ref, amount, on_date)
+  select me, 'first', 'first-task', 50, min(on_date)
+    from point_log where user_id = me and kind = 'task'
+   having count(*) > 0
+  on conflict do nothing;
+end $fn$;
 
 /*
- * 지금 얼마 있나 — **가입 100P + 도장 − 산 값의 합.**
+ * 지금 얼마 있나 — **가입 100P + 받은 것 − 산 값의 합.**
  *
- * 셈하기 전에 도장부터 찍는다. 앱이 따로 부를 자리를 안 만들어도
- * 잔액을 볼 때마다 그 사이 비운 날이 채워진다.
+ * 셈하기 전에 안 준 것부터 채운다. 앱이 따로 부를 자리를 안 만들어도
+ * 잔액을 볼 때마다 그 사이 것이 들어온다.
  *
  * 가입 100P를 어디에도 안 적어둔다. 계정이 있으면 받은 것이니 늘 더하면 된다.
- * 적어두면 그 줄이 없는 옛 계정을 옮겨 담는 코드가 따로 필요해진다.
  */
 create or replace function my_points()
 returns int language plpgsql security definer set search_path = public as $fn$
 begin
-  perform stamp_days();
+  perform stamp_points();
   return 100
-    + coalesce((select sum(amount)::int from point_days    where user_id = auth.uid()), 0)
+    + coalesce((select sum(amount)::int from point_log     where user_id = auth.uid()), 0)
     - coalesce((select sum(price)::int  from costume_owned where user_id = auth.uid()), 0);
 end $fn$;
 
@@ -1184,7 +1227,7 @@ begin
 end $fn$;
 
 -- ─── RLS ────────────────────────────────────────────────────────
-alter table point_days      enable row level security;
+alter table point_log       enable row level security;
 alter table gomdori         enable row level security;
 alter table costume_owned   enable row level security;
 alter table costume_catalog enable row level security;
@@ -1204,11 +1247,11 @@ drop policy if exists "내 것만" on costume_owned;
 create policy "내 것만" on costume_owned for select using (user_id = auth.uid());
 
 /*
- * 도장도 **읽기만** 열어둔다. 찍는 길은 stamp_days 하나뿐이다 —
- * insert를 열면 아무 날에나 도장을 찍을 수 있다.
+ * 받은 것도 **읽기만** 열어둔다. 넣는 길은 stamp_points 하나뿐이다 —
+ * insert를 열면 아무 값이나 적어 넣을 수 있다.
  */
-drop policy if exists "내 것만" on point_days;
-create policy "내 것만" on point_days for select using (user_id = auth.uid());
+drop policy if exists "내 것만" on point_log;
+create policy "내 것만" on point_log for select using (user_id = auth.uid());
 
 -- 값표는 누구나 읽는다. 파는 물건 목록이라 숨길 것이 없다.
 drop policy if exists "누구나 본다" on costume_catalog;
