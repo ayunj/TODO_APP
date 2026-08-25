@@ -1060,53 +1060,39 @@ on conflict (item_key) do update
 
 -- ─── 얼마나 벌었나 ──────────────────────────────────────────────
 /*
- * 하루 다섯 개까지 10P씩, 그 날 내 몫을 다 비우면 10P 더 — **하루 최대 60P.**
- * 다 비움은 **점수 받은 것이 둘 이상인 날**에만 붙는다 (아래에 왜 그런지 적어뒀다).
+ * **하루에 한 번 10P.** 그게 전부다.
  *
- * 0점인 것들이 여기 조건으로 그대로 들어 있다.
- *   done_on <> date  — 지난 것을 오늘 체크해도, 앞날 것을 미리 체크해도 0.
- *                      점수를 주면 일부러 미루거나 몰아서 찍는다
- *   오늘 만들어 오늘 체크한 일회성 — 3초에 하나씩 찍어낼 수 있다
+ * 개수를 안 센다. 개수는 사람이 얼마든지 만들 수 있어서, 그물을 칠 때마다
+ * 예외가 하나씩 늘었다 — 낱개 상한, 오늘 만들어 오늘 체크한 일회성 빼기,
+ * 다 비움은 둘 이상인 날만… 그러다 주기만 붙이면 다 빠져나갔다.
+ * **하루는 만들 수 없다.** 거기에 값을 붙이면 예외가 필요 없어진다.
  *
- * RLS를 그대로 탄다(security definer가 아니다) — 부르는 사람 눈에 보이는 할 일만 센다.
+ * 덤으로 **속일 이유가 없어진다.** 아침에 하나 만들어 체크해도 10P고
+ * 열 개를 끝내도 10P다. 조작해도 정직한 사람과 같은 값이라 할 까닭이 없다.
+ *
+ * 10이라는 숫자는 **그림 그리는 속도**다. 옷 한 벌이 300P면 한 달이고,
+ * 손그림을 한 달에 한 벌 그리면 상점이 안 빈다.
+ * **수입은 그림 속도에 맞춘다** — 이 숫자 하나가 그 손잡이다.
+ *
+ * 지난 날 것을 뒤늦게 끝내도 그 날 몫으로 쳐준다. 하루 10P가 끝이라
+ * 미뤄서 얻을 것이 없고, 밀린 것을 치우는 데 값이 붙는 쪽이 이 앱 결에 맞다.
+ * 앞날 것은 그 날이 와야 셈에 든다.
  */
 create or replace function earned_points(uid uuid)
 returns int language sql stable as $fn$
-  with mine as (
-    select t.done_on as d
+  select (count(*) * 10)::int from (
+    select t.date
       from tasks t
-     where t.done
-       and t.deleted_at is null
-       and t.done_by_id = uid
-       and t.done_on = t.date
-       and not (t.repeat_days = 0
-                and (t.created_at at time zone 'Asia/Seoul')::date = t.date)
-  ),
-  counted as (
-    select d, count(*) as n, least(count(*), 5) * 10 as base from mine group by d
-  ),
-  /*
-   * 그 날 내 몫이 하나도 안 남았으면 10P 더. `안 정함`은 먼저 보는 사람 몫이라 내 몫이기도 하다.
-   *
-   * **점수 받은 것이 둘 이상이어야 한다.** 하나로 `다 비웠다`고 하기엔 민망하고,
-   * 무엇보다 아침에 하나 만들어 그 자리에서 체크하면 낱개 10P에 보너스 10P가 얹혔다.
-   * 일회성은 위 `mine`에서 이미 걸러지는데 **주기만 붙이면 그 그물을 빠져나갔다.**
-   *
-   * 둘로 올려도 뜻은 안 바뀐다 — 두 개짜리 집도 다 비우면 30P라는 게 이 보너스를 둔 까닭이다.
-   */
-  cleared as (
-    select c.d,
-           case when c.n >= 2 and not exists (
-             select 1 from tasks t
-              where t.date = c.d
-                and not t.done
-                and t.deleted_at is null
-                and (t.assignee_id is null or t.assignee_id = uid)
-           ) then 10 else 0 end as bonus
-      from counted c
-  )
-  select coalesce(sum(c.base + cl.bonus), 0)::int
-    from counted c join cleared cl on cl.d = c.d;
+     where t.deleted_at is null
+       and t.date <= (now() at time zone 'Asia/Seoul')::date
+       -- `안 정함`은 먼저 보는 사람 몫이라 내 몫이기도 하다
+       and (t.assignee_id is null or t.assignee_id = uid)
+     group by t.date
+    -- 그 날 내 몫이 다 끝났고, 그중 하나는 내가 했어야 한다.
+    -- 뒤엣것이 없으면 남편이 다 한 날에도 나에게 값이 붙는다.
+    having bool_and(t.done)
+       and bool_or(coalesce(t.done_by_id = uid, false))
+  ) cleared;
 $fn$;
 
 /*

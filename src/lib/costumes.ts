@@ -113,9 +113,13 @@ export const costumeOf = (key: string): Costume => BY_KEY.get(key) ?? BEARS[0];
 export const DEFAULT_BEAR = 'base';
 export const DEFAULT_ROOM = 'room-base';
 
-/** 할 일 하나를 끝냈을 때 붙는 값. 화면에 뜨는 `+10P`가 이 숫자다. */
-export const PER_TASK = 10;
-/** 하루에 받을 수 있는 끝 — 낱개 다섯 개(50P)에 다 비움 한 번(10P) */
-export const DAILY_CAP = 60;
+/**
+ * 그 날 몫을 다 끝낸 날 받는 값. **하루에 한 번뿐이다.**
+ *
+ * 이 숫자는 **그림 그리는 속도**에 맞춘 것이다 —
+ * 옷 한 벌이 300P면 한 달이고, 한 달에 한 벌 그리면 상점이 안 빈다.
+ * 값을 올리면 사람이 그림보다 빨리 달려서 살 것이 없어진다.
+ */
+export const PER_DAY = 10;
 /** 가입하면 그 자리에서 받는 것. 100P짜리를 하나 살 수 있게 정한 값이다. */
 export const SIGNUP_BONUS = 100;
