@@ -1061,6 +1061,7 @@ on conflict (item_key) do update
 -- ─── 얼마나 벌었나 ──────────────────────────────────────────────
 /*
  * 하루 다섯 개까지 10P씩, 그 날 내 몫을 다 비우면 10P 더 — **하루 최대 60P.**
+ * 다 비움은 **점수 받은 것이 둘 이상인 날**에만 붙는다 (아래에 왜 그런지 적어뒀다).
  *
  * 0점인 것들이 여기 조건으로 그대로 들어 있다.
  *   done_on <> date  — 지난 것을 오늘 체크해도, 앞날 것을 미리 체크해도 0.
@@ -1082,12 +1083,20 @@ returns int language sql stable as $fn$
                 and (t.created_at at time zone 'Asia/Seoul')::date = t.date)
   ),
   counted as (
-    select d, least(count(*), 5) * 10 as base from mine group by d
+    select d, count(*) as n, least(count(*), 5) * 10 as base from mine group by d
   ),
-  -- 그 날 내 몫이 하나도 안 남았으면 10P 더. `안 정함`은 먼저 보는 사람 몫이라 내 몫이기도 하다.
+  /*
+   * 그 날 내 몫이 하나도 안 남았으면 10P 더. `안 정함`은 먼저 보는 사람 몫이라 내 몫이기도 하다.
+   *
+   * **점수 받은 것이 둘 이상이어야 한다.** 하나로 `다 비웠다`고 하기엔 민망하고,
+   * 무엇보다 아침에 하나 만들어 그 자리에서 체크하면 낱개 10P에 보너스 10P가 얹혔다.
+   * 일회성은 위 `mine`에서 이미 걸러지는데 **주기만 붙이면 그 그물을 빠져나갔다.**
+   *
+   * 둘로 올려도 뜻은 안 바뀐다 — 두 개짜리 집도 다 비우면 30P라는 게 이 보너스를 둔 까닭이다.
+   */
   cleared as (
     select c.d,
-           case when not exists (
+           case when c.n >= 2 and not exists (
              select 1 from tasks t
               where t.date = c.d
                 and not t.done
