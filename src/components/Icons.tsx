@@ -113,6 +113,36 @@ export function MemoIcon({ className }: Props) {
   );
 }
 
+/** 잠긴 것 — 아직 내 것이 아님만 말한다. 그림은 안 죽인다. */
+export function LockIcon({ className }: Props) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...stroke}>
+      <rect x="5" y="10.5" width="14" height="9.5" rx="2.5" />
+      <path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" />
+    </svg>
+  );
+}
+
+/** 세트 완성 보상 — 파는 것이 아니라 딸려오는 것 */
+export function GiftIcon({ className }: Props) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...stroke}>
+      <rect x="4" y="10" width="16" height="10" rx="2" />
+      <path d="M3.5 6.5h17V10h-17zM12 6.5V20" />
+      <path d="M12 6.5S10.8 3.5 9 3.5a1.8 1.8 0 0 0 0 3.6zM12 6.5s1.2-3 3-3a1.8 1.8 0 0 1 0 3.6z" />
+    </svg>
+  );
+}
+
+/** 포인트가 어디서 오는지 — 상점 아래 한 줄에 붙는다 */
+export function StarIcon({ className }: Props) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...stroke}>
+      <path d="M12 4l2.4 5 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4L4.2 9.8 9.6 9z" />
+    </svg>
+  );
+}
+
 /** 홈 — 지붕과 문 하나. 곰돌이가 사는 자리다. */
 export function HomeIcon({ className }: Props) {
   return (

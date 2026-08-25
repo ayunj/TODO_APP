@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { AuthProvider } from '@/lib/auth';
+import { GomdoriProvider } from '@/lib/gomdori';
 import { RoomsProvider } from '@/lib/rooms';
 import { StoreProvider } from '@/lib/store';
 import { UiProvider } from '@/lib/ui';
@@ -19,9 +20,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       <RoomsProvider>
-        <StoreProvider>
-          <UiProvider>{children}</UiProvider>
-        </StoreProvider>
+        <GomdoriProvider>
+          <StoreProvider>
+            <UiProvider>{children}</UiProvider>
+          </StoreProvider>
+        </GomdoriProvider>
       </RoomsProvider>
     </AuthProvider>
   );

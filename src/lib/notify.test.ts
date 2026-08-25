@@ -21,6 +21,7 @@ const task = (over: Partial<Task> & { id: string }): Task => ({
   done: false,
   doneOn: null,
   doneBy: null,
+    doneById: null,
   createdAt: '2026-08-01T00:00:00.000Z',
   updatedAt: '2026-08-01T00:00:00.000Z',
   deletedAt: null,

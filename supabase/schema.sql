@@ -989,22 +989,42 @@ create table if not exists gomdori (
 );
 
 /*
- * 파는 것 — 값과 갈래.
+ * 파는 것 — 무엇을 얼마에.
  *
  * **앱 코드(src/lib/costumes.ts)에도 같은 목록이 있다.** 일부러 둘이다.
- *   앱   — 이름·그림 파일. 그림이 앱과 같이 나가니 목록도 앱에 있어야 상점이 오프라인에서 뜬다
- *   서버 — 값. 값을 앱만 알면 `이 옷 0원이요` 하고 사는 걸 막을 방법이 없다
+ *   앱   — 앱과 같이 나가는 그림. 그림이 앱 안에 있어야 **상점이 오프라인에서 뜬다**
+ *   서버 — 값·이름·파는 중. 값을 앱만 알면 `이 옷 0원이요` 하고 사는 걸 막을 방법이 없다
  *
- * 값을 고칠 때는 **두 곳을 같이 고친다.** 이름과 그림은 앱만 고치면 된다.
+ * **이름과 파는 중이 여기로 왔다**([상점 채우기](../design/관리자.html)).
+ * 옷 한 벌 늘릴 때마다 이 파일을 고쳐 돌리는 건 파는 사람이 할 일이 아니다.
+ * 앱은 아직 costumes.ts를 본다 — 값표를 읽어 덮는 것은 앱 쪽 일이고 여기서는 자리만 만든다.
  */
 create table if not exists costume_catalog (
-  item_key text primary key,
+  item_key   text primary key,
   -- 'bear' 곰 스타일 · 'room' 방 테마 · 'pose' 세트 완성 보상
-  kind     text not null,
-  price    int  not null default 0,
+  kind       text not null,
+  price      int  not null default 0,
   -- 어느 시즌 세트에 딸린 것인가. 비어 있으면 늘 있는 것.
-  season   text
+  season     text,
+  -- 상점 카드에 그대로 뜨는 이름. 여덟 자를 넘기면 103px 칸에서 잘린다.
+  name       text,
+  -- 올린 그림. Storage의 `shop/<코드>.png`. 비어 있으면 앱이 가진 그림으로 선다.
+  img        text,
+  /*
+   * **올리자마자 팔지 않는다.** 새로 넣는 것은 숨김으로 들어오고,
+   * 관리자가 켜야 상점에 뜬다 — 반쯤 그린 것이 상점에 뜨는 사고를 막는다.
+   */
+  active     boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
+
+-- 이미 값표가 있는 DB에도 같은 칸을 단다
+alter table costume_catalog add column if not exists name       text;
+alter table costume_catalog add column if not exists img        text;
+alter table costume_catalog add column if not exists active     boolean not null default false;
+alter table costume_catalog add column if not exists created_at timestamptz not null default now();
+alter table costume_catalog add column if not exists updated_at timestamptz not null default now();
 
 -- 가진 것 — 산 것과 받은 것.
 -- **산 값을 같이 박아둔다.** 값이 나중에 바뀌어도 이미 산 것은 그때 값으로 남아야
@@ -1017,46 +1037,57 @@ create table if not exists costume_owned (
   primary key (user_id, item_key)
 );
 
--- ─── 값표 ───────────────────────────────────────────────────────
--- 앱의 costumes.ts와 **같은 값**이어야 한다. 두 번 돌려도 되게 upsert로 넣는다.
-insert into costume_catalog (item_key, kind, price, season) values
-  ('base',        'bear',   0, null),
-  ('hat',         'bear', 100, null),
-  ('ribbon',      'bear', 100, null),
-  ('scarf',       'bear', 100, null),
-  ('apron',       'bear', 150, null),
-  ('glasses',     'bear', 200, null),
-  ('overall',     'bear', 200, null),
-  ('chef',        'bear', 200, null),
-  ('rabbit',      'bear', 300, null),
+-- ─── 값표의 씨앗 ────────────────────────────────────────────────
+/*
+ * 앱의 costumes.ts에 있던 서른 줄. **여기서 심고, 다시는 안 덮는다.**
+ *
+ * 전에는 두 번 돌려도 되게 `do update`로 값을 다시 밀어 넣었다. 지금은 안 된다 —
+ * **값표의 주인이 이 파일에서 [상점 채우기](../design/관리자.html)로 넘어갔다.**
+ * 그대로 두면 관리자가 고쳐놓은 값과 이름이 schema.sql을 한 번 돌릴 때마다 되돌아간다.
+ *
+ * 그래서 부딪히면 **이름 칸이 비어 있는 줄만** 채운다. 이름 칸이 생기기 전에 심긴 줄이라는
+ * 뜻이고, 그런 줄은 이미 앱이 팔고 있던 것이니 파는 중으로 같이 켠다.
+ */
+insert into costume_catalog (item_key, kind, price, season, name, active) values
+  ('base',        'bear',   0, null, '기본 곰돌이', true),
+  ('hat',         'bear', 100, null, '모자 곰', true),
+  ('ribbon',      'bear', 100, null, '리본 곰', true),
+  ('scarf',       'bear', 100, null, '목도리 곰', true),
+  ('apron',       'bear', 150, null, '앞치마 곰', true),
+  ('glasses',     'bear', 200, null, '안경 곰', true),
+  ('overall',     'bear', 200, null, '멜빵 곰', true),
+  ('chef',        'bear', 200, null, '요리사 곰', true),
+  ('rabbit',      'bear', 300, null, '곰토끼', true),
 
-  ('room-base',   'room',   0, null),
-  ('room-picnic', 'room', 300, null),
-  ('room-cafe',   'room', 400, null),
-  ('room-plant',  'room', 400, null),
-  ('room-bed',    'room', 500, null),
+  ('room-base',   'room',   0, null, '기본 룸', true),
+  ('room-picnic', 'room', 300, null, '피크닉 룸', true),
+  ('room-cafe',   'room', 400, null, '카페 룸', true),
+  ('room-plant',  'room', 400, null, '식물 가득 룸', true),
+  ('room-bed',    'room', 500, null, '포근한 침실', true),
 
-  ('b-swim',      'bear', 300, 's-swim'),
-  ('r-sea',       'room', 400, 's-swim'),
-  ('pose-tube',   'pose',   0, 's-swim'),
+  ('b-swim',      'bear', 300, 's-swim', '물놀이 곰', true),
+  ('r-sea',       'room', 400, 's-swim', '여름 바다', true),
+  ('pose-tube',   'pose',   0, 's-swim', '튜브 포즈', true),
 
-  ('b-hall',      'bear', 300, 's-hall'),
-  ('r-hall',      'room', 400, 's-hall'),
-  ('pose-pump',   'pose',   0, 's-hall'),
+  ('b-hall',      'bear', 300, 's-hall', '할로윈 곰', true),
+  ('r-hall',      'room', 400, 's-hall', '할로윈 룸', true),
+  ('pose-pump',   'pose',   0, 's-hall', '호박 포즈', true),
 
-  ('b-xmas',      'bear', 350, 's-xmas'),
-  ('r-xmas',      'room', 450, 's-xmas'),
-  ('pose-tree',   'pose',   0, 's-xmas'),
+  ('b-xmas',      'bear', 350, 's-xmas', '산타 곰', true),
+  ('r-xmas',      'room', 450, 's-xmas', '크리스마스 룸', true),
+  ('pose-tree',   'pose',   0, 's-xmas', '트리 포즈', true),
 
-  ('b-bloom',     'bear', 300, 's-bloom'),
-  ('r-bloom',     'room', 400, 's-bloom'),
-  ('pose-petal',  'pose',   0, 's-bloom'),
+  ('b-bloom',     'bear', 300, 's-bloom', '봄꽃 곰', true),
+  ('r-bloom',     'room', 400, 's-bloom', '봄꽃 룸', true),
+  ('pose-petal',  'pose',   0, 's-bloom', '꽃잎 포즈', true),
 
-  ('b-vac',       'bear', 350, 's-vac'),
-  ('r-beach',     'room', 450, 's-vac'),
-  ('pose-parcel', 'pose',   0, 's-vac')
+  ('b-vac',       'bear', 350, 's-vac', '여름휴가 곰', true),
+  ('r-beach',     'room', 450, 's-vac', '해변 룸', true),
+  ('pose-parcel', 'pose',   0, 's-vac', '파라솔 포즈', true)
 on conflict (item_key) do update
-  set kind = excluded.kind, price = excluded.price, season = excluded.season;
+  -- **덮지 않는다.** 이름이 비어 있는 줄(칸이 생기기 전에 심긴 줄)만 채워 켠다.
+  set name   = coalesce(costume_catalog.name, excluded.name),
+      active = costume_catalog.active or costume_catalog.name is null;
 
 -- ─── 얼마나 벌었나 ──────────────────────────────────────────────
 /*

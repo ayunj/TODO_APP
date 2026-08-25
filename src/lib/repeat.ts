@@ -77,6 +77,7 @@ export function spawnNext(task: Task, heirs: string[] = [], by: string | null = 
     done: false,
     doneOn: null,
     doneBy: null,
+    doneById: null,
     createdAt: now,
     updatedAt: now,
     deletedAt: null,

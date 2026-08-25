@@ -17,6 +17,7 @@ import MemoScreen from '@/screens/MemoScreen';
 import NewPasswordScreen from '@/screens/NewPasswordScreen';
 import MonthScreen from '@/screens/MonthScreen';
 import ShopScreen from '@/screens/ShopScreen';
+import StoreScreen from '@/screens/StoreScreen';
 import AccountScreen from '@/screens/settings/AccountScreen';
 import CategoryListScreen from '@/screens/settings/CategoryListScreen';
 import CategoryScreen from '@/screens/settings/CategoryScreen';
@@ -143,6 +144,8 @@ export default function AppShell() {
           return <ShopScreen />;
         case 'memo':
           return <MemoScreen />;
+        case 'store':
+          return <StoreScreen />;
         case 'settings':
           return <SettingsScreen />;
         case 'prefs':

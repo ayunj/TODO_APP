@@ -355,6 +355,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         done: false,
         doneOn: null,
         doneBy: null,
+        doneById: null,
         createdAt: now,
         updatedAt: now,
         deletedAt: null,
@@ -520,6 +521,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           done: false,
           doneOn: null,
           doneBy: null,
+          doneById: null,
           updatedAt: stamp(),
         };
         const orphans = tasks
@@ -540,6 +542,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         doneOn: current.date < today ? current.date : today,
         // 남의 차례인 일을 내가 해도 막지 않는다. 대신 누가 했는지는 여기 남는다.
         doneBy: current.roomId ? myNameIn(current.roomId) || null : null,
+        // 포인트는 이 칸을 보고 붙는다. 이름과 달리 별명을 바꿔도 안 흔들린다.
+        doneById: owner,
         updatedAt: stamp(),
       };
 

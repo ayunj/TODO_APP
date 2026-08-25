@@ -1,7 +1,9 @@
+import { DEFAULT_BEAR, DEFAULT_ROOM } from '../costumes';
 import { supabase } from '../supabase';
 import type { Snapshot } from '../repository';
 import type {
   Category,
+  Gomdori,
   Memo,
   Nudge,
   Preset,
@@ -80,6 +82,7 @@ const out = {
     done: t.done,
     done_on: t.doneOn,
     done_by: t.doneBy,
+    done_by_id: t.doneById,
     created_at: t.createdAt,
     updated_at: t.updatedAt,
     deleted_at: t.deletedAt,
@@ -160,6 +163,7 @@ const back = {
     done: Boolean(r.done),
     doneOn: (r.done_on as string) ?? null,
     doneBy: (r.done_by as string) ?? null,
+    doneById: (r.done_by_id as string) ?? null,
     createdAt: String(r.created_at ?? ''),
     updatedAt: String(r.updated_at ?? ''),
     deletedAt: (r.deleted_at as string) ?? null,
@@ -563,4 +567,68 @@ export async function saveDeviceToken(token: string, me: string): Promise<void> 
 export async function pushNudge(roomId: string, taskId: string): Promise<void> {
   const client = await supabase();
   await client.functions.invoke('push-nudge', { body: { room: roomId, task: taskId } });
+}
+
+/* ─────────────────────── 곰돌이와 코스튬 ─────────────────────── */
+
+/**
+ * 지금 얼마 있나 · 무엇을 가졌나 · 무엇을 입고 있나.
+ *
+ * **포인트는 서버가 센다.** 폰에 담아두면 개발자 도구로 고쳐지고,
+ * 이 앱은 로그인 없이도 도는 게 원칙이라 **포인트는 로그인한 사람만** 갖는다.
+ * 그래서 로컬 저장소(IndexedDB) 쪽에는 짝이 없다 — 여기 하나뿐이다.
+ *
+ * `my_points()`는 셈하기 전에 **안 준 것부터 채운다.** 앱이 `포인트 주세요`를
+ * 따로 부를 자리가 없는 까닭이다.
+ */
+export async function pullGomdori(): Promise<Gomdori> {
+  const client = await supabase();
+
+  const [points, owned, worn] = await Promise.all([
+    client.rpc('my_points'),
+    client.from('costume_owned').select('item_key'),
+    client.from('gomdori').select('worn_bear, worn_room').maybeSingle(),
+  ]);
+  if (points.error) throw points.error;
+  if (owned.error) throw owned.error;
+  if (worn.error) throw worn.error;
+
+  const row = worn.data as { worn_bear?: string; worn_room?: string } | null;
+  return {
+    points: Number(points.data ?? 0),
+    owned: ((owned.data ?? []) as Row[]).map((r) => String(r.item_key)),
+    // 아직 한 번도 안 갈아입었으면 줄이 없다 — 그때는 기본 모습이다
+    wornBear: row?.worn_bear ?? DEFAULT_BEAR,
+    wornRoom: row?.worn_room ?? DEFAULT_ROOM,
+  };
+}
+
+/**
+ * 산다. **값은 서버가 값표에서 찾는다** —
+ * 앱이 값을 같이 보내면 `이 옷 0원이요`를 막을 수가 없다.
+ * 남은 포인트를 돌려주고, 모자라면 던진다.
+ */
+export async function buyCostume(itemKey: string): Promise<number> {
+  const client = await supabase();
+  const { data, error } = await client.rpc('buy_costume', { item: itemKey });
+  if (error) throw error;
+  return Number(data ?? 0);
+}
+
+/** 입거나 깐다. 곰과 포즈는 곰 자리에, 방은 방 자리에 앉는다. */
+export async function wearCostume(
+  me: string,
+  worn: { bear: string; room: string },
+): Promise<void> {
+  const client = await supabase();
+  const { error } = await client.from('gomdori').upsert(
+    {
+      user_id: me,
+      worn_bear: worn.bear,
+      worn_room: worn.room,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'user_id' },
+  );
+  if (error) throw error;
 }

@@ -143,6 +143,12 @@ export interface Task {
   rotate: Rotate;
   done: boolean;
   doneOn: DateStr | null;
+  /**
+   * 누가 체크했나 — **계정으로**. 아래 `doneBy`는 화면에 적는 이름이고 이건 **세는 것**이다.
+   * 이름으로 세면 상대가 별명을 바꾼 순간 옛 점수가 남의 것이 된다.
+   * 포인트는 이 칸을 보고 붙는다(schema.sql의 `stamp_points`).
+   */
+  doneById: string | null;
   /** 누가 했나 — 표시 이름. `누가 할까`(assigneeId)와 한 자리를 나눠 쓴다 */
   doneBy: string | null;
   createdAt: string;
@@ -254,6 +260,7 @@ export interface Trashed {
  */
 export type ViewKind =
   | 'home'
+  | 'store'
   | 'day'
   | 'month'
   | 'log'
