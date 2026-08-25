@@ -113,10 +113,11 @@ body{
   padding:14px; margin-bottom:12px;
 }
 .stage{
-  position:relative; height:196px; border-radius:16px; background:var(--sunk);
+  position:relative; aspect-ratio:1/1; border-radius:16px; background:var(--sunk);
   display:grid; place-items:end center; overflow:hidden;
 }
-.stage .room{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+/* **홈 칸과 같은 정사각.** 납작하게 두면 방 그림 위쪽의 전등과 선반이 썰린다 */
+.stage .room{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:bottom}
 .stage .bear{position:relative; z-index:1; max-height:74%; max-width:46%; width:auto; height:auto; display:block; margin-bottom:6%}
 .stage > svg{position:relative; z-index:1; height:66%; width:auto; display:block; margin-bottom:6%}
 /* 지금 쓰는 것이 아니라 **걸쳐만 본 것**이라고 알린다. 안 알리면 산 줄 안다. */

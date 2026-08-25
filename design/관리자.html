@@ -154,7 +154,7 @@ body{
 .mini .foot.gift{font-family:inherit; background:var(--sunk); box-shadow:none; padding:4px 10px; color:var(--cycle)}
 .mini .foot.gift img{width:12px; height:12px; display:block}
 .stage{
-  position:relative; width:233px; aspect-ratio:5/3; border-radius:14px; background:var(--sunk);
+  position:relative; width:233px; aspect-ratio:1/1; border-radius:14px; background:var(--sunk);
   display:grid; place-items:end center; overflow:hidden;
 }
 /* **아래를 맞춰 자른다.** 가운데로 자르면 바닥이 먹혀 곰돌이가 벽에 붙어 선다 */
@@ -493,7 +493,7 @@ table.list tr:last-child td{border-bottom:0}
               </div>
             </div>
             <div class="pv">
-              <div class="cap">걸쳐보는 칸</div>
+              <div class="cap">걸쳐보는 칸 · 홈 칸</div>
               <div class="stage js-stage"></div>
             </div>
           </div>
@@ -716,7 +716,7 @@ table.list tr:last-child td{border-bottom:0}
                 </div>
               </div>
               <div class="pv grow">
-                <div class="cap">걸쳐보는 칸</div>
+                <div class="cap">걸쳐보는 칸 · 홈 칸</div>
                 <div class="stage js-stage"></div>
               </div>
             </div>
@@ -939,7 +939,7 @@ var ART = {
 };
 var KIND_HINT = {
   bear: '앞모습 <b>한 장</b>이면 된다. 자는 모습은 안 쓴다.',
-  room: '<b>정사각 한 장.</b> 걸쳐보는 칸에서 <b>위 40%가 잘린다</b> — 천장 쪽에 중요한 걸 두지 않는다.',
+  room: '<b>정사각 한 장.</b> 홈·상점 어디서든 통째로 뜬다. 비뚤어진 비율로 올리면 위가 잘린다.',
   pose: '그 옷을 입고 <b>소품까지 든 한 장</b>이다. 옷 위에 얹는 조각이 아니라 다른 한 장이다.'
 };
 var GROUP_HINT = {
@@ -949,7 +949,7 @@ var GROUP_HINT = {
 };
 var CROP = {
   bear: '칸 안에 <b>88%로 앉는다</b> — 그림 둘레의 여백은 그대로 여백이 된다.',
-  room: '칸을 꽉 채우되 <b>아래를 맞춰 자른다 — 위만 잘린다.</b> 걸쳐보는 칸에서 위 40%가 없어진다. 홈은 정사각이라 안 잘린다.',
+  room: '칸을 꽉 채운다. <b>방이 서는 자리는 넷 다 정사각이라 안 잘린다</b> — 정사각으로 그려 올리면 통째로 보인다.',
   pose: '칸 안에 88%로 앉고, 가격 자리에 <b>선물 표</b>가 대신 선다.'
 };
 

@@ -35,7 +35,8 @@ export default function SetDetail({
         <span className="mt-1 block text-[12.5px] text-ink3">{set.note}</span>
       </div>
 
-      <div className="mb-4 grid aspect-[4/3] w-full place-items-center overflow-hidden rounded-[18px] bg-sunk">
+      {/* 홈과 같은 정사각 — 4:3이면 위 25%가 잘려 전등이 썰린다 */}
+      <div className="mb-4 grid aspect-square w-full place-items-center overflow-hidden rounded-[18px] bg-sunk">
         <Art src={set.room.img} cover />
       </div>
 
