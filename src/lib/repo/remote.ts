@@ -7,6 +7,7 @@ import type {
   CostumeSet,
   Gomdori,
   Memo,
+  Notice,
   Nudge,
   Preset,
   Priority,
@@ -725,6 +726,104 @@ export async function pullShop(): Promise<Shop> {
     sets,
     items,
   });
+}
+
+/**
+ * 지금 띄울 공지 — **켜진 것 중 제일 새것 하나.**
+ *
+ * 여러 개를 쌓아 띄우지 않는다. 앱을 열자마자 팝업이 둘 뜨면 첫째를 닫는 손이
+ * 둘째도 닫는다 — 읽히지도 않고 닫혔다는 셈만 남는다.
+ *
+ * **로그인 안 해도 읽힌다.** 공지는 로그인해야 볼 것이 아니다.
+ */
+export async function pullNotice(): Promise<Notice | null> {
+  const client = await supabase();
+  const { data, error } = await client
+    .from('notice')
+    .select('id, title, body, active, updated_at')
+    .eq('active', true)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? asNotice(data as Row) : null;
+}
+
+/** 관리자가 보는 목록 — **쓰다 만 것까지.** 값표 정책과 같은 얼개다. */
+export async function pullNotices(): Promise<Notice[]> {
+  const client = await supabase();
+  const { data, error } = await client
+    .from('notice')
+    .select('id, title, body, active, updated_at')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return ((data ?? []) as Row[]).map(asNotice);
+}
+
+const asNotice = (r: Row): Notice => ({
+  id: String(r.id),
+  title: String(r.title ?? ''),
+  body: String(r.body ?? ''),
+  active: Boolean(r.active),
+  // 판은 고친 때다. 초까지면 충분하다 — 같은 초에 두 번 고칠 일이 없다.
+  version: String(r.updated_at ?? ''),
+});
+
+/**
+ * 공지를 쓰거나 고친다. **새로 쓰는 것은 안 띄우고 들어온다**(`active` 기본 false) —
+ * 쓰다 만 것이 뜨는 사고를 막는다. 켜는 것은 목록의 스위치다.
+ */
+export async function saveNotice(notice: {
+  id?: string;
+  title: string;
+  body: string;
+}): Promise<string> {
+  const client = await supabase();
+  const row = { title: notice.title, body: notice.body };
+
+  if (notice.id) {
+    // 고친 줄이 돌아오는지 본다 — RLS가 막으면 오류 없이 `0줄`로 지나간다
+    const { data, error } = await client
+      .from('notice')
+      .update(row)
+      .eq('id', notice.id)
+      .select('id');
+    if (error) throw error;
+    if (!data?.length) throw new Error('못 고쳤어요 — 관리자 계정인지 확인해 주세요');
+    return notice.id;
+  }
+
+  const { data, error } = await client.from('notice').insert(row).select('id').single();
+  if (error) throw error;
+  return String((data as Row).id);
+}
+
+/**
+ * 띄우거나 내린다.
+ *
+ * **켜진 것이 하나여야 한다.** 여럿 켜두면 제일 새것만 뜨는데, 목록에서는 둘 다
+ * 켜져 보여서 **어느 것이 뜨는지 알 수가 없다.** 그래서 켤 때 나머지를 내린다.
+ */
+export async function setNoticeActive(id: string, active: boolean): Promise<void> {
+  const client = await supabase();
+  if (active) {
+    const { error } = await client.from('notice').update({ active: false }).neq('id', id);
+    if (error) throw error;
+  }
+  const { data, error } = await client
+    .from('notice')
+    .update({ active })
+    .eq('id', id)
+    .select('id');
+  if (error) throw error;
+  if (!data?.length) throw new Error('못 바꿨어요 — 관리자 계정인지 확인해 주세요');
+}
+
+/** 지운다. **공지는 아무도 가진 것이 아니라** 지워도 남의 줄이 가리킬 데를 잃지 않는다. */
+export async function removeNotice(id: string): Promise<void> {
+  const client = await supabase();
+  const { error } = await client.from('notice').delete().eq('id', id);
+  if (error) throw error;
 }
 
 /**

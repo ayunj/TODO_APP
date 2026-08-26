@@ -75,6 +75,9 @@ export default function SettingsScreen() {
             <Row value="옷과 방 올리기" onClick={() => pushView({ kind: 'shopAdmin' })}>
               상점 채우기
             </Row>
+            <Row value="열면 뜨는 팝업" onClick={() => pushView({ kind: 'notice' })}>
+              공지
+            </Row>
           </Group>
         </div>
       )}

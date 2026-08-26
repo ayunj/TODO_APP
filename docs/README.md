@@ -13,6 +13,7 @@ docs/
   memo/
   rooms/
   nudge/
+  notice/
   trash/
   account/    login  sync  database
   app/        architecture  navigation  design  prefs  notify  pwa  native
@@ -47,6 +48,12 @@ docs/
 | [admin](store/admin/기능.md) | **상점 채우기.** 값표의 주인이 넘어온 자리 (시안까지) |
 
 [장보기](shopping/list/기능.md)와 다른 것이다 — 저쪽은 우유 사는 목록이고 이쪽은 곰돌이 옷이다.
+
+## 공지 — [notice/](notice/)
+
+[기능.md](notice/기능.md) · [파일.md](notice/파일.md) — 앱을 열면 한 번 뜨는 팝업.
+★ **닫는 길이 둘인 까닭**(닫기 · 오늘 다시 열지 않기), 언제까지 안 뜨나를
+서버가 아니라 폰에 담는 까닭, 켜진 것을 하나로 두는 까닭
 
 ## 메모 — [memo/](memo/)
 

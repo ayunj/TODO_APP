@@ -7,6 +7,7 @@ import TabBar from './TabBar';
 import SlidePage from './SlidePage';
 import Toast from './Toast';
 import AskHost from './AskHost';
+import NoticePopup from './NoticePopup';
 import WelcomeScreen from './WelcomeScreen';
 import SheetHost from '@/sheets/SheetHost';
 import DayScreen from '@/screens/DayScreen';
@@ -17,6 +18,7 @@ import MemoScreen from '@/screens/MemoScreen';
 import NewPasswordScreen from '@/screens/NewPasswordScreen';
 import MonthScreen from '@/screens/MonthScreen';
 import ShopScreen from '@/screens/ShopScreen';
+import NoticeScreen from '@/screens/NoticeScreen';
 import ShopAdminScreen from '@/screens/ShopAdminScreen';
 import StoreScreen from '@/screens/StoreScreen';
 import AccountScreen from '@/screens/settings/AccountScreen';
@@ -149,6 +151,8 @@ export default function AppShell() {
           return <StoreScreen />;
         case 'shopAdmin':
           return <ShopAdminScreen />;
+        case 'notice':
+          return <NoticeScreen />;
         case 'settings':
           return <SettingsScreen />;
         case 'prefs':
@@ -221,6 +225,15 @@ export default function AppShell() {
       )}
       <SheetHost />
       <AskHost />
+      {/*
+        공지는 **로그인과 상관없이** 뜬다. 로그인해야 볼 것이 아니고,
+        이 앱은 로그인 없이도 도는 것이 원칙이다.
+
+        **묻는 말(`AskHost`)보다 아래다**(z 43·44 대 45·46). 공지는 받아오는 데
+        한 박자 걸려서 묻는 말이 떠 있는 동안 늦게 도착할 수 있는데, 그때 위로
+        올라오면 공지의 어둠이 묻는 말의 단추를 덮어 아무것도 누를 수 없게 된다.
+      */}
+      <NoticePopup />
       <Toast />
     </>
   );

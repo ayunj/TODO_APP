@@ -433,3 +433,22 @@ export interface Grave {
   kind: string;
   at: string;
 }
+
+/**
+ * 공지 — 앱을 열면 한 번 뜨는 팝업.
+ *
+ * **파는 것이 아니라 값표에 안 얹었다**(표를 따로 뒀다). 값도 분류도 그림도 없다.
+ * 언제까지 안 띄울지는 폰에 담는다 — [notice.ts](notice.ts).
+ */
+export interface Notice {
+  id: string;
+  title: string;
+  body: string;
+  /** 띄우는 중인가. **쓰다 만 것은 관리자에게만 내려온다** */
+  active: boolean;
+  /**
+   * 고친 때. **이 값이 판이다** — 바뀌면 `오늘 다시 열지 않기`를 눌러둔 사람에게도
+   * 다시 뜬다. 고쳐 올린 공지는 새 공지다.
+   */
+  version: string;
+}
