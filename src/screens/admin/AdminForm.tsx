@@ -1,13 +1,20 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Thumb from './Thumb';
 import Coin from '../store/Coin';
 import { shopPath } from '@/lib/costumes';
 import { DEFAULT_SCALE, fitBear, fitScene, type Fitted } from '@/lib/fit';
-import { saveShopItem, setShopItemActive, uploadShopImage } from '@/lib/repo/remote';
+import {
+  createSeason,
+  createShopFamily,
+  pullSeasons,
+  saveShopItem,
+  setShopItemActive,
+  uploadShopImage,
+} from '@/lib/repo/remote';
 import { toast } from '@/lib/toast';
-import type { Costume, Shop } from '@/lib/types';
+import type { Costume, CostumeSet, Shop } from '@/lib/types';
 
 /**
  * 채우기 — [시안](../../../design/관리자.html)의 앱 판 둘째 화면.
@@ -20,12 +27,19 @@ import type { Costume, Shop } from '@/lib/types';
  *
  * **저장은 바닥에 붙는다.** 폼이 스크롤이라 끝까지 내려야 나오면 안 된다.
  *
- * ─── 여기서 못 하는 것 ─────────────────────────────────────────
+ * ─── 시즌은 한 층 더 판다 ──────────────────────────────────────
  *
- * 시안에는 **중분류 늘리기**와 **세트 짓기**가 같이 있다. 아직 안 넣었다 —
- * 둘 다 표에 줄을 하나 더 만드는 일이라 값표를 채우는 것과 결이 다르고,
- * 지금은 새 중분류도 새 세트도 없다. 시즌 물건을 넣으려면 세트가 먼저 있어야 해서
- * **대분류는 `꾸미기`로 잠가뒀다.**
+ *   시즌 ─ 계절  ─ 봄꽃 세트 · 물놀이 세트
+ *        └ 기념일 ─ 할로윈 세트 · 크리스마스 세트
+ *
+ * **중분류도 세트도 여기서 늘린다.** 중분류는 이름과 폴더를 같이 받고
+ * (폴더는 한 번 정하면 안 바뀐다 — 그림이 그 이름 밑에 쌓인다), 세트는 이름만 받는다
+ * (열쇠는 `s000001`부터 번호표로 딴다).
+ *
+ * 시즌 물건은 **세트만 고르면 된다.** 중분류는 그 세트를 따라간다
+ * (서버의 `sync_catalog_family` 트리거) — 물건마다 고르게 두면 할로윈 곰은
+ * 기념일인데 할로윈 방은 계절인 일이 생긴다. 여기서 중분류를 먼저 묻는 건
+ * **세트를 좁히기 위해서**지 물건에 붙이려는 게 아니다.
  */
 export default function AdminForm({
   shop,
@@ -47,19 +61,45 @@ export default function AdminForm({
   const [price, setPrice] = useState(String(was?.price ?? 300));
   const [busy, setBusy] = useState(false);
 
+  const [group, setGroup] = useState(was?.season ? 'season' : 'deco');
+  const [season, setSeason] = useState(was?.season ?? '');
+  /** 세트는 덜 찬 것까지 봐야 한다 — `shop.sets`는 다 찬 것만 세운다 */
+  const [sets, setSets] = useState<CostumeSet[]>([]);
+  const [newFam, setNewFam] = useState(false);
+  const [newSet, setNewSet] = useState(false);
+
   const [file, setFile] = useState<File | null>(null);
   const [fitted, setFitted] = useState<Fitted | null>(null);
   const [scale, setScale] = useState(DEFAULT_SCALE);
   const pick = useRef<HTMLInputElement>(null);
 
-  /* 시즌 물건은 세트가 먼저 있어야 한다 — 여기서 세트를 못 지으니 꾸미기만 고른다 */
   const fams = useMemo(
-    () => shop.families.filter((f) => f.group === 'deco'),
-    [shop],
+    () => shop.families.filter((f) => f.group === group),
+    [shop, group],
   );
+  /* 대분류를 바꾸면 아래 중분류가 없는 것을 가리킨 채로 남는다 */
   useEffect(() => {
-    if (!fams.some((f) => f.key === family)) setFamily(fams[0]?.key ?? 'costume');
+    if (!fams.some((f) => f.key === family)) setFamily(fams[0]?.key ?? '');
   }, [fams, family]);
+
+  const loadSets = useCallback(async () => {
+    try {
+      setSets(await pullSeasons());
+    } catch {
+      /* 못 읽으면 세트를 못 고를 뿐이다 — 꾸미기 물건은 그대로 넣는다 */
+    }
+  }, []);
+  useEffect(() => {
+    void loadSets();
+  }, [loadSets]);
+
+  /** 고른 중분류에 든 세트만 — 세트가 열 몇 개로 늘면 한 줄 목록에서 못 찾는다 */
+  const mySets = useMemo(() => sets.filter((x) => x.family === family), [sets, family]);
+  useEffect(() => {
+    if (group === 'season' && !mySets.some((x) => x.key === season)) {
+      setSeason(mySets[0]?.key ?? '');
+    }
+  }, [group, mySets, season]);
 
   /*
     **경로를 손으로 안 적는다.** 종류와 중분류를 고르면 거기서 나온다
@@ -68,7 +108,15 @@ export default function AdminForm({
 
     새로 넣는 것은 코드가 아직 없다 — 저장할 때 번호표가 붙어서, 그 자리를 `?`로 둔다.
   */
-  const draft: Costume = { key: itemKey ?? '?', name, price: 0, kind, family };
+  const draft: Costume = {
+    key: itemKey ?? '?',
+    name,
+    price: 0,
+    kind,
+    // 시즌 물건의 중분류는 **세트가 정한다** — 그림 자리도 그걸 따라간다
+    family: group === 'season' ? (sets.find((x) => x.key === season)?.family ?? family) : family,
+    season: group === 'season' ? season || undefined : undefined,
+  };
   const at = shopPath(draft, shop.families);
 
   /* 손잡이를 밀면 다시 담는다 — 올리기 전에 보고 고르는 값이다 */
@@ -94,6 +142,7 @@ export default function AdminForm({
 
   const save = async (live: boolean) => {
     if (!name.trim()) return toast('이름을 적어주세요');
+    if (group === 'season' && !season) return toast('어느 세트인지 골라주세요');
     setBusy(true);
     try {
       /*
@@ -105,7 +154,8 @@ export default function AdminForm({
         kind,
         name: name.trim(),
         price: kind === 'pose' ? 0 : Number(price) || 0,
-        family,
+        family: draft.family ?? family,
+        season: draft.season,
       });
 
       if (fitted) {
@@ -144,29 +194,73 @@ export default function AdminForm({
         </Row>
 
         <Row label="대분류">
-          {/* 시즌은 세트가 먼저 있어야 한다 — 여기서 세트를 못 지으니 잠가둔다 */}
-          <div className="flex gap-1 rounded-[14px] bg-accent-tint p-1">
-            <span className="flex-1 rounded-[11px] bg-card py-[9px] text-center text-[12.5px] font-medium text-accent shadow-[0_2px_8px_rgba(97,89,83,.07)]">
-              꾸미기
-            </span>
-            <span className="flex-1 py-[9px] text-center text-[12.5px] text-ink3 opacity-40">
-              시즌
-            </span>
+          {/* **대분류는 못 늘린다.** 둘이 상점 칩의 뼈대여서 셋째가 생기면 화면부터 다시 그려야 한다 */}
+          <div className="flex gap-1 rounded-[14px] bg-sunk p-1">
+            {shop.groups.map((g) => (
+              <button
+                key={g.key}
+                type="button"
+                aria-pressed={group === g.key}
+                onClick={() => setGroup(g.key)}
+                className={`flex-1 rounded-[11px] py-[9px] text-[12.5px] ${
+                  group === g.key
+                    ? 'bg-card font-medium text-accent shadow-[0_2px_8px_rgba(97,89,83,.07)]'
+                    : 'text-ink2'
+                }`}
+              >
+                {g.name}
+              </button>
+            ))}
           </div>
-          <Hint>
-            시즌은 <b className="font-medium text-ink2">세트가 먼저 있어야</b> 해서 여기서 못 골라요.
-          </Hint>
         </Row>
 
-        <Row label="중분류" last>
+        <Row label="중분류" aside={<Add on={newFam} onToggle={() => setNewFam((v) => !v)} />}>
           <Select value={family} onChange={setFamily}>
+            {fams.length === 0 && <option value="">아직 없어요</option>}
             {fams.map((f) => (
               <option key={f.key} value={f.key}>
                 {f.name}
               </option>
             ))}
           </Select>
+          {newFam && <NewFamily group={group} onClose={() => setNewFam(false)} onDone={onDone} />}
         </Row>
+
+        {/*
+          시즌은 **한 층 더 판다** — 중분류 밑에 세트가 들어간다.
+          물건은 세트만 고르면 되고, 중분류는 그 세트를 따라간다.
+        */}
+        {group === 'season' ? (
+          <Row
+            label="어느 세트"
+            aside={<Add on={newSet} onToggle={() => setNewSet((v) => !v)} />}
+            last
+          >
+            <Select value={season} onChange={setSeason}>
+              {mySets.length === 0 && <option value="">아직 없어요</option>}
+              {mySets.map((x) => (
+                <option key={x.key} value={x.key}>
+                  {x.name}
+                </option>
+              ))}
+            </Select>
+            {newSet && (
+              <NewSeason
+                family={family}
+                famName={fams.find((f) => f.key === family)?.name ?? '중분류'}
+                onClose={() => setNewSet(false)}
+                onDone={async (key) => {
+                  await loadSets();
+                  setSeason(key);
+                }}
+              />
+            )}
+            <Hint>
+              곰 하나 · 방 하나 · 소품 하나가{' '}
+              <b className="font-medium text-ink2">다 차야</b> 세트가 열려요.
+            </Hint>
+          </Row>
+        ) : null}
       </section>
 
       {/* ── 그림 ── */}
@@ -391,18 +485,187 @@ function Preview({ shop, item, src }: { shop: Shop; item: Costume; src?: string 
 
 function Row({
   label,
+  aside,
   last,
   children,
 }: {
   label: string;
+  /** 이름 오른쪽에 붙는 것 — `+ 새로 만들기` 같은 것 */
+  aside?: React.ReactNode;
   last?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div className={last ? '' : 'mb-4'}>
-      <label className="mb-[7px] block text-[11.5px] font-medium text-ink2">{label}</label>
+      <label className="mb-[7px] flex items-baseline text-[11.5px] font-medium text-ink2">
+        <span className="flex-1">{label}</span>
+        {aside}
+      </label>
       {children}
     </div>
+  );
+}
+
+function Add({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  return (
+    <button type="button" onClick={onToggle} className="text-[11px] font-normal text-accent">
+      {on ? '접기' : '+ 새로 만들기'}
+    </button>
+  );
+}
+
+/**
+ * 중분류 짓기 — **이름과 폴더를 같이 받는다.**
+ *
+ * 폴더를 안 받으면 `기념일`을 무엇으로 적어 폴더를 만들지 정할 길이 없고,
+ * 이름을 그대로 쓰면 한글이 주소에 실린다.
+ *
+ * **폴더는 한 번 정하면 안 바뀐다** — 이미 쌓인 그림이 그 이름 밑에 있다.
+ * 이름은 언제든 고쳐도 된다.
+ *
+ * Storage에 폴더를 미리 만들 것은 없다. **경로 앞부분이 폴더 노릇을 해서**
+ * 첫 그림을 올리는 순간 그 자리가 생긴다.
+ */
+function NewFamily({
+  group,
+  onClose,
+  onDone,
+}: {
+  group: string;
+  onClose: () => void;
+  onDone: () => Promise<void>;
+}) {
+  const [name, setName] = useState('');
+  const [key, setKey] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const make = async () => {
+    if (!name.trim() || !key.trim()) return toast('이름과 폴더를 다 적어주세요');
+    setBusy(true);
+    try {
+      await createShopFamily({ key: key.trim(), group, name: name.trim() });
+      toast('중분류를 만들었어요');
+      await onDone();
+      onClose();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : '못 만들었어요');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-2.5 rounded-[14px] bg-sunk p-3">
+      <div className="grid grid-cols-2 gap-2.5">
+        <Small label="이름" value={name} onChange={setName} placeholder="기념일" />
+        <Small
+          label="폴더"
+          value={key}
+          onChange={(v) => setKey(v.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+          placeholder="holiday"
+          mono
+        />
+      </div>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => void make()}
+        className="mt-2.5 rounded-[11px] bg-accent px-4 py-2.5 text-[12px] font-medium text-white disabled:opacity-60"
+      >
+        {busy ? '만드는 중…' : '만들기'}
+      </button>
+      <p className="mt-2 text-[10.5px] leading-[1.5] text-ink3">
+        폴더는 <b className="font-medium text-ink2">한 번 정하면 안 바뀌어요</b> — 그림이 그 이름
+        밑에 쌓여요. 영어 소문자로 시작해 소문자·숫자·붙임표만.
+      </p>
+    </div>
+  );
+}
+
+/** 세트 짓기 — **열쇠는 안 받는다.** `s000001`부터 번호표로 딴다. */
+function NewSeason({
+  family,
+  famName,
+  onClose,
+  onDone,
+}: {
+  family: string;
+  famName: string;
+  onClose: () => void;
+  onDone: (key: string) => Promise<void>;
+}) {
+  const [name, setName] = useState('');
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const make = async () => {
+    if (!name.trim()) return toast('세트 이름을 적어주세요');
+    if (!family) return toast('중분류를 먼저 골라주세요');
+    setBusy(true);
+    try {
+      const key = await createSeason({ family, name: name.trim(), note: note.trim() });
+      toast('세트를 지었어요');
+      await onDone(key);
+      onClose();
+    } catch (e) {
+      toast(e instanceof Error ? e.message : '못 지었어요');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-2.5 rounded-[14px] bg-sunk p-3">
+      <Small label="이름" value={name} onChange={setName} placeholder="장마 세트" />
+      <div className="mt-2.5">
+        <Small
+          label="한 줄 설명"
+          value={note}
+          onChange={setNote}
+          placeholder="비 오는 날의 곰돌이"
+        />
+      </div>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => void make()}
+        className="mt-2.5 rounded-[11px] bg-accent px-4 py-2.5 text-[12px] font-medium text-white disabled:opacity-60"
+      >
+        {busy ? '짓는 중…' : '만들기'}
+      </button>
+      <p className="mt-2 text-[10.5px] leading-[1.5] text-ink3">
+        고른 <b className="font-medium text-ink2">{famName}</b> 밑에 서요. 이름은 언제든 고칠 수
+        있어요 — 열쇠가 이름과 상관없는 번호라서요.
+      </p>
+    </div>
+  );
+}
+
+function Small({
+  label,
+  value,
+  onChange,
+  placeholder,
+  mono,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  mono?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-[5px] block text-[10.5px] text-ink3">{label}</span>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={`w-full rounded-xl bg-card px-[11px] py-[9px] text-[12.5px] text-ink shadow-[0_0_0_1.4px_var(--line)] placeholder:text-faint focus:shadow-[0_0_0_1.6px_var(--accent-soft)] focus:outline-none ${
+          mono ? 'font-mono' : ''
+        }`}
+      />
+    </label>
   );
 }
 

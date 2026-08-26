@@ -1,11 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Switch from './Switch';
+import { GiftIcon } from '@/components/Icons';
 import Thumb from './Thumb';
-import { setShopItemActive } from '@/lib/repo/remote';
+import { pullSeasons, setShopItemActive } from '@/lib/repo/remote';
 import { toast } from '@/lib/toast';
-import type { Costume, Shop } from '@/lib/types';
+import type { Costume, CostumeSet, Shop } from '@/lib/types';
 
 /**
  * 올린 것 — **먼저 열리는 화면**([시안](../../../design/관리자.html)의 앱 판).
@@ -26,15 +27,22 @@ export default function AdminList({
   onOpen: (key: string) => void;
   onDone: () => Promise<void>;
 }) {
-  const [chip, setChip] = useState('all');
   const [busy, setBusy] = useState<string | null>(null);
+  const [sets, setSets] = useState<CostumeSet[]>([]);
 
-  /* 칩은 **물건이 실제로 든 중분류만** 세운다 — 눌러도 빈 칸인 칩은 고장으로 읽힌다 */
-  const fams = useMemo(
-    () => shop.families.filter((f) => shop.items.some((c) => c.family === f.key)),
-    [shop],
-  );
-  const list = shop.items.filter((c) => chip === 'all' || c.family === chip);
+  /*
+    세트는 **덜 찬 것까지** 봐야 한다. `shop.sets`는 다 찬 것만 세우니
+    짓다 만 세트가 바로 여기서 빠진다 — 채우는 쪽에서 알아야 할 것이 그 세트다.
+  */
+  useEffect(() => {
+    pullSeasons()
+      .then(setSets)
+      .catch(() => {
+        /* 못 읽으면 띠를 안 세운다 — 목록은 그대로 뜬다 */
+      });
+  }, []);
+
+  const list = shop.items;
 
   const flip = async (item: Costume) => {
     setBusy(item.key);
@@ -51,21 +59,32 @@ export default function AdminList({
 
   return (
     <>
-      <div className="-mx-4 mb-3 flex gap-[7px] overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {[{ key: 'all', name: '전체' }, ...fams].map((f) => (
-          <button
-            key={f.key}
-            type="button"
-            aria-pressed={chip === f.key}
-            onClick={() => setChip(f.key)}
-            className={`flex-none rounded-full px-3.5 py-[7px] text-[11.5px] ${
-              chip === f.key ? 'bg-accent text-white' : 'bg-sunk text-ink2'
-            }`}
-          >
-            {f.name}
-          </button>
-        ))}
-      </div>
+      {/*
+        세트 채움 띠 — **세트는 곰 하나 · 방 하나 · 소품 하나가 다 차야 열린다.**
+        몇 개 남았는지 여기서 센다. 값표를 세어 내는 것이라 어디에도 적어두지 않는다 —
+        적어두면 값표와 어긋날 자리가 하나 더 생긴다.
+      */}
+      {sets.length > 0 && (
+        <div className="-mx-4 mb-3 flex gap-1.5 overflow-x-auto px-4 pb-[3px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {sets.map((x) => {
+            const n = ['bear', 'room', 'pose'].filter((k) =>
+              shop.items.some((c) => c.season === x.key && c.kind === k),
+            ).length;
+            const full = n === 3;
+            return (
+              <span
+                key={x.key}
+                className={`flex flex-none items-center gap-1.5 rounded-full px-[11px] py-[5px] text-[11px] ${
+                  full ? 'bg-accent-tint text-accent' : 'bg-sunk text-ink2'
+                }`}
+              >
+                {full && <GiftIcon className="h-3 w-3" />}
+                {x.name.replace(' 세트', '')} <b className="font-mono font-medium">{n}/3</b>
+              </span>
+            );
+          })}
+        </div>
+      )}
 
       <div className="mb-4 flex flex-col gap-2">
         {list.map((c) => (

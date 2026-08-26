@@ -758,6 +758,107 @@ export async function uploadShopImage(
 }
 
 /**
+ * 세트 전부 — **덜 찬 것까지.**
+ *
+ * `pullShop()`은 곰·방·소품이 다 찬 세트만 세운다(상점에 `준비 중` 칸이 뜨면
+ * 파는 물건처럼 읽힌다). 채우는 쪽에서는 **그 반대가 필요하다** —
+ * 막 지은 빈 세트에 첫 물건을 넣어야 하니까.
+ */
+export async function pullSeasons(): Promise<CostumeSet[]> {
+  const client = await supabase();
+  const { data, error } = await client
+    .from('costume_season')
+    .select('season_key, name, note, family_key')
+    .order('ord');
+  if (error) throw error;
+  return ((data ?? []) as Row[]).map((r) => ({
+    key: String(r.season_key),
+    name: String(r.name),
+    note: String(r.note ?? ''),
+    family: r.family_key ? String(r.family_key) : undefined,
+    // 채우는 화면은 세트의 이름과 열쇠만 쓴다 — 안에 든 것은 값표를 세면 나온다
+    bear: EMPTY_SLOT,
+    room: EMPTY_SLOT,
+    pose: EMPTY_SLOT,
+  }));
+}
+
+const EMPTY_SLOT: Costume = { key: '', name: '', price: 0, kind: 'bear' };
+
+/**
+ * 중분류를 짓는다 — **이름과 폴더를 같이 받는다.**
+ *
+ * 폴더를 안 받으면 `기념일`을 무엇으로 적어 폴더를 만들지 정할 길이 없다.
+ * 그렇다고 이름을 그대로 폴더로 쓰면 한글이 주소에 실린다.
+ *
+ * **열쇠가 곧 폴더다.** 그래서 뒤엣것은 **한 번 정하면 안 바뀐다** —
+ * 이미 쌓인 그림이 그 이름 밑에 있다. 이름은 언제든 고쳐도 된다.
+ *
+ * Storage에 폴더를 미리 만들 것은 없다. **경로 앞부분이 폴더 노릇을 해서**
+ * `season/monsoon/gomdori/0000030.png`로 올리는 순간 그 자리가 생긴다.
+ */
+export async function createShopFamily(fam: {
+  key: string;
+  group: string;
+  name: string;
+}): Promise<void> {
+  if (!/^[a-z][a-z0-9-]{1,23}$/.test(fam.key)) {
+    throw new Error('폴더는 영어 소문자로 시작해 소문자·숫자·붙임표만, 2~24자');
+  }
+  const client = await supabase();
+  const { error } = await client.from('shop_family').insert({
+    family_key: fam.key,
+    group_key: fam.group,
+    name: fam.name,
+    // 맨 뒤에 세운다 — 차례를 바꾸는 것은 여기서 할 일이 아니다
+    ord: await nextOrd('shop_family'),
+    active: true,
+  });
+  if (error) throw error;
+}
+
+/**
+ * 세트를 짓는다 — **열쇠는 안 받는다.** `s000001`부터 번호표로 딴다.
+ *
+ * 물건 코드와 **번호표를 따로 쓴다.** 한 통에서 뽑으면 물건 스물아홉 개를 넣은 뒤
+ * 만든 세트가 `0000030`이 되어 물건 코드처럼 읽힌다.
+ *
+ * **중분류는 시즌 밑에 있는 것이어야 한다.** 꾸미기 밑의 것을 달면 그 세트의
+ * 물건들이 트리거를 타고 꾸미기로 끌려가 시즌 칩에서 사라진다 — 서버가 막는다
+ * (`season_family_guard`).
+ */
+export async function createSeason(set: {
+  family: string;
+  name: string;
+  note: string;
+}): Promise<string> {
+  const client = await supabase();
+  const { data, error } = await client
+    .from('costume_season')
+    .insert({
+      family_key: set.family,
+      name: set.name,
+      note: set.note,
+      ord: await nextOrd('costume_season'),
+    })
+    .select('season_key')
+    .single();
+  if (error) throw error;
+  return String((data as Row).season_key);
+}
+
+/**
+ * 차례의 맨 뒤 — **새로 지은 것은 뒤에 선다.**
+ * 다 같은 값을 주면 무엇이 먼저인지가 그때그때 달라진다.
+ */
+async function nextOrd(table: string): Promise<number> {
+  const client = await supabase();
+  const { data } = await client.from(table).select('ord').order('ord', { ascending: false }).limit(1);
+  const top = ((data ?? []) as Row[])[0];
+  return Number(top?.ord ?? 0) + 1;
+}
+
+/**
  * 파는 것을 넣거나 고친다.
  *
  * **열쇠를 안 보낸다.** 새로 넣는 것은 서버가 번호표로 딴다(`0000001`) —
@@ -773,13 +874,21 @@ export async function saveShopItem(item: {
   name: string;
   price: number;
   family: string;
+  /** 시즌 물건이면 어느 세트. **중분류는 안 보낸다** — 세트가 정한다. */
+  season?: string;
 }): Promise<string> {
   const client = await supabase();
+  /*
+    시즌 물건은 **세트만 보낸다.** 중분류는 서버 트리거가 세트에서 끌어온다
+    (`sync_catalog_family`) — 물건마다 따로 적게 두면 할로윈 곰은 기념일인데
+    할로윈 방은 계절인 일이 생긴다.
+  */
   const row = {
     kind: item.kind,
     name: item.name,
     price: item.price,
-    family_key: item.family,
+    season: item.season ?? null,
+    family_key: item.season ? undefined : item.family,
   };
 
   if (item.key) {
