@@ -10,6 +10,14 @@ interface Props {
   back?: boolean;
   /** 제목 오른쪽에 붙는 것 — 방 설정의 `내가 연 방` 칩 같은 것 */
   right?: React.ReactNode;
+  /**
+   * 화살표를 눌렀을 때 할 일. 안 주면 겹을 하나 벗는다(`popView`).
+   *
+   * **한 화면 안에서 층이 갈리는 자리**에 쓴다 — [상점 채우기](../screens/ShopAdminScreen.tsx)의
+   * `올린 것 → 채우기`가 그렇다. 그건 겹을 쌓은 것이 아니라 같은 겹 안에서 바뀌는 것이라
+   * `popView`를 부르면 화면을 통째로 나가버린다.
+   */
+  onBack?: () => void;
 }
 
 /**
@@ -18,7 +26,7 @@ interface Props {
  * 설정 갈래는 층이 셋까지 가는데(설정 → 같이 쓰기 → 방 설정),
  * 시트를 쌓으면 어디까지 왔는지가 안 보인다. 뒤로가기 하나로 층이 정리되는 쪽을 택했다.
  */
-export default function PageBar({ title, right, back = true }: Props) {
+export default function PageBar({ title, right, back = true, onBack }: Props) {
   const { popView } = useUi();
   const [stuck, setStuck] = useState(false);
 
@@ -38,7 +46,7 @@ export default function PageBar({ title, right, back = true }: Props) {
           <button
             type="button"
             aria-label="돌아가기"
-            onClick={popView}
+            onClick={onBack ?? popView}
             className="-ml-1.5 grid h-[38px] w-[38px] flex-none place-items-center rounded-full text-ink2 active:bg-sunk"
           >
             <BackIcon className="h-5 w-5" />
