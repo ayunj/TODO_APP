@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import PageBar from '@/components/PageBar';
 import AdminForm from './admin/AdminForm';
 import AdminList from './admin/AdminList';
+import { BUNDLED } from '@/lib/costumes';
 import { useGomdori } from '@/lib/gomdori';
 import { toast } from '@/lib/toast';
 import type { Shop } from '@/lib/types';
@@ -54,10 +55,17 @@ export default function ShopAdminScreen() {
     void load();
   }, [load]);
 
-  const live = useMemo(
-    () => (shop ? shop.items.filter((c) => c.active).length : 0),
-    [shop],
-  );
+  /*
+    **앱이 들고 나가는 둘은 안 센다** — 기본 곰돌이와 기본 룸.
+    값표에 줄이 없어서 채우는 사람이 손댈 것이 아니고, 세면 `올린 것`이 둘 늘어
+    목록에 보이는 수와 안 맞는다.
+  */
+  const mine = useMemo(() => {
+    if (!shop) return [];
+    const own = new Set(BUNDLED.map((c) => c.key));
+    return shop.items.filter((c) => !own.has(c.key));
+  }, [shop]);
+  const live = mine.filter((c) => c.active).length;
 
   if (!admin) {
     return (
@@ -88,7 +96,7 @@ export default function ShopAdminScreen() {
   */
   return editing === null ? (
     <>
-      <PageBar title="상점 채우기" right={<Crumb>{`올린 것 ${shop.items.length} · 파는 중 ${live}`}</Crumb>} />
+      <PageBar title="상점 채우기" right={<Crumb>{`올린 것 ${mine.length} · 파는 중 ${live}`}</Crumb>} />
       <AdminList shop={shop} onOpen={setEditing} onDone={load} />
     </>
   ) : (
