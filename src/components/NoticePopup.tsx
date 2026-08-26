@@ -69,10 +69,29 @@ export default function NoticePopup() {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={notice.title}
+        aria-label={notice.title || '공지'}
         className="fixed left-1/2 top-1/2 z-[44] w-[min(340px,calc(100vw-40px))] -translate-x-1/2 -translate-y-1/2 rounded-card bg-card p-5 shadow-[0_20px_50px_rgba(62,58,77,.25)]"
       >
-        <h2 className="font-round text-[17px] leading-[1.4]">{notice.title}</h2>
+        {/*
+          **사진이 먼저다.** 공지를 사진 한 장으로 내는 일이 있어서(띠·포스터),
+          그때는 글이 없거나 한 줄뿐이다 — 사진이 위에 있어야 그것이 본문으로 읽힌다.
+
+          높이를 묶는다. 세로로 긴 사진이 오면 팝업이 화면보다 길어져서
+          **아래 두 단추가 밖으로 나간다.**
+        */}
+        {notice.image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={notice.image}
+            alt=""
+            className="mb-3.5 block max-h-[42vh] w-full rounded-2xl object-contain"
+          />
+        )}
+
+        {/* 사진만으로 내는 공지가 있다 — 제목을 안 적었으면 자리를 안 만든다 */}
+        {notice.title && (
+          <h2 className="font-round text-[17px] leading-[1.4]">{notice.title}</h2>
+        )}
         {notice.body && (
           /*
             **줄바꿈을 그대로 살린다**(`whitespace-pre-line`). 관리자가 칸에서 엔터를
@@ -80,7 +99,11 @@ export default function NoticePopup() {
 
             길면 안에서 굴린다. 팝업이 화면보다 길어지면 아래 두 단추가 밖으로 나간다.
           */
-          <p className="mt-2.5 max-h-[46vh] overflow-y-auto whitespace-pre-line text-[13px] leading-[1.7] text-ink2">
+          <p
+            className={`max-h-[38vh] overflow-y-auto whitespace-pre-line text-[13px] leading-[1.7] text-ink2 ${
+              notice.title ? 'mt-2.5' : ''
+            }`}
+          >
             {notice.body}
           </p>
         )}

@@ -19,6 +19,15 @@ export const hasSupabase = Boolean(url && anonKey);
 export const shopImageUrl = (path: string): string =>
   `${url}/storage/v1/object/public/shop/${path}`;
 
+/**
+ * 공지 그림이 서는 주소 — `notice/<id>.png`.
+ *
+ * **자리를 표에 안 적는다.** `id`가 이미 있으니 지어 쓴다 — 상점 그림과 같은 규칙이다.
+ * 다시 올려도 주소가 같아서, 부르는 쪽이 `?v=<고친 때>`를 붙인다.
+ */
+export const noticeImageUrl = (id: string): string =>
+  `${url}/storage/v1/object/public/notice/${id}.png`;
+
 let pending: Promise<SupabaseClient> | null = null;
 
 /**

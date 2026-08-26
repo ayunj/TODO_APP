@@ -1,11 +1,19 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import PageBar from '@/components/PageBar';
 import Switch from './admin/Switch';
 import { ask } from '@/lib/ask';
 import { useGomdori } from '@/lib/gomdori';
-import { pullNotices, removeNotice, saveNotice, setNoticeActive } from '@/lib/repo/remote';
+import { fitScene, type Fitted } from '@/lib/fit';
+import {
+  pullNotices,
+  removeNotice,
+  saveNotice,
+  setNoticeActive,
+  setNoticeImage,
+  uploadNoticeImage,
+} from '@/lib/repo/remote';
 import { toast } from '@/lib/toast';
 import type { Notice } from '@/lib/types';
 
@@ -115,13 +123,22 @@ export default function NoticeScreen() {
               className="rounded-2xl bg-card px-3.5 py-3 shadow-[0_0_0_1.2px_var(--line)]"
             >
               <div className="flex items-center gap-2.5">
+                {n.image && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={n.image}
+                    alt=""
+                    aria-hidden="true"
+                    className="h-10 w-10 flex-none rounded-lg bg-sunk object-cover"
+                  />
+                )}
                 <button
                   type="button"
                   onClick={() => setEditing(n)}
                   className="min-w-0 flex-1 text-left"
                 >
                   <b className="block truncate text-[13.5px] font-medium text-ink">
-                    {n.title || '이름 없는 공지'}
+                    {n.title || (n.image ? '사진 공지' : '이름 없는 공지')}
                   </b>
                   {n.body && (
                     <span className="mt-0.5 block truncate text-[11.5px] text-ink3">{n.body}</span>
@@ -175,11 +192,48 @@ function Editor({
   const [body, setBody] = useState(notice?.body ?? '');
   const [busy, setBusy] = useState(false);
 
+  const pick = useRef<HTMLInputElement>(null);
+  /** 새로 고른 사진 — 저장할 때 올린다 */
+  const [shot, setShot] = useState<Fitted | null>(null);
+  /** 올려둔 사진을 쓸까. 지우기를 누르면 꺼진다 */
+  const [keep, setKeep] = useState(Boolean(notice?.image));
+
+  const shown = shot?.url ?? (keep ? notice?.image : undefined);
+
+  const take = async (f: File) => {
+    try {
+      /*
+        방 배경과 같은 손으로 담는다 — 자르지 않고 1000까지 줄인다.
+        공지 사진은 세로로 길 수도 가로로 길 수도 있어서 **비를 안 건드린다.**
+      */
+      setShot(await fitScene(f));
+      setKeep(true);
+    } catch {
+      toast('사진을 못 읽었어요');
+    }
+  };
+
   const save = async () => {
-    if (!title.trim()) return toast('제목을 적어주세요');
+    /*
+      **제목이 없어도 사진만으로 낸다.** 띠 한 장을 공지로 내는 일이 있어서다.
+      둘 다 없으면 뜰 것이 없으니 그때만 막는다.
+    */
+    if (!title.trim() && !shown) return toast('제목이나 사진 하나는 있어야 해요');
     setBusy(true);
     try {
-      await saveNotice({ id: notice?.id, title: title.trim(), body: body.trim() });
+      /*
+        **쓰는 것이 먼저다.** 사진 자리가 `notice/<id>.png`라서, 새 공지는
+        `id`를 받아야 어디에 올릴지 정할 수 있다.
+      */
+      const id = await saveNotice({ id: notice?.id, title: title.trim(), body: body.trim() });
+      if (shot) await uploadNoticeImage(id, shot.blob);
+      /*
+        표에는 **있나 없나**만 적는다. 새로 올렸으면 참, 지우기를 눌렀으면 거짓 —
+        고른 것도 없고 지우지도 않았으면 건드릴 것이 없다.
+      */
+      const has = Boolean(shot) || keep;
+      if (has !== Boolean(notice?.image)) await setNoticeImage(id, has);
+
       toast(notice ? '고쳤어요' : '썼어요. 켜면 떠요');
       await onDone();
       onClose();
@@ -193,6 +247,61 @@ function Editor({
   return (
     <>
       <PageBar title={notice ? '공지 고치기' : '새 공지'} onBack={onClose} />
+
+      {/*
+        **사진이 맨 위다.** 팝업에서도 위에 뜨고, 사진 한 장으로 내는 공지가 있어서
+        먼저 고르는 것이 순서에 맞다.
+      */}
+      <div className="mb-4">
+        <span className="mb-[7px] flex items-baseline text-[11.5px] font-medium text-ink2">
+          <span className="flex-1">사진</span>
+          {shown && (
+            <button
+              type="button"
+              onClick={() => {
+                if (shot) URL.revokeObjectURL(shot.url);
+                setShot(null);
+                setKeep(false);
+              }}
+              className="text-[11px] font-normal text-accent"
+            >
+              지우기
+            </button>
+          )}
+        </span>
+        <button
+          type="button"
+          onClick={() => pick.current?.click()}
+          className={`grid w-full place-items-center overflow-hidden rounded-[18px] ${
+            shown
+              ? 'bg-sunk shadow-[0_0_0_1.4px_var(--line)]'
+              : 'aspect-[5/2] border-[1.6px] border-dashed border-edge bg-sunk p-5 text-center'
+          }`}
+        >
+          {shown ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={shown} alt="" aria-hidden="true" className="max-h-[40vh] w-full object-contain" />
+          ) : (
+            <span>
+              <span className="block text-[12.5px] text-ink2">앨범에서 고르기</span>
+              <span className="mt-[5px] block text-[11px] text-ink3">
+                없어도 돼요. 사진만으로 공지를 낼 수도 있어요
+              </span>
+            </span>
+          )}
+        </button>
+        <input
+          ref={pick}
+          type="file"
+          accept="image/png,image/webp,image/jpeg"
+          hidden
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void take(f);
+            e.target.value = '';
+          }}
+        />
+      </div>
 
       <label className="mb-4 block">
         <span className="mb-[7px] block text-[11.5px] font-medium text-ink2">제목</span>
@@ -223,9 +332,26 @@ function Editor({
       {/* ── 이렇게 떠요 ── */}
       <p className="mb-2 text-[11px] font-medium text-ink3">이렇게 떠요</p>
       <div className="mb-5 rounded-card bg-card p-5 shadow-card">
-        <h2 className="font-round text-[17px] leading-[1.4]">{title || '제목'}</h2>
+        {shown && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={shown}
+            alt=""
+            aria-hidden="true"
+            className="mb-3.5 block max-h-[42vh] w-full rounded-2xl object-contain"
+          />
+        )}
+        {(title || !shown) && (
+          <h2 className="font-round text-[17px] leading-[1.4]">{title || '제목'}</h2>
+        )}
         {body && (
-          <p className="mt-2.5 whitespace-pre-line text-[13px] leading-[1.7] text-ink2">{body}</p>
+          <p
+            className={`whitespace-pre-line text-[13px] leading-[1.7] text-ink2 ${
+              title || !shown ? 'mt-2.5' : ''
+            }`}
+          >
+            {body}
+          </p>
         )}
         <div className="mt-5 flex gap-2">
           <span className="flex-1 rounded-2xl bg-sunk py-[13px] text-center text-[12.5px] font-medium text-ink2">

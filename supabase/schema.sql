@@ -1827,3 +1827,46 @@ create policy "관리자가 고친다" on notice for update using (is_shop_admin
  */
 create policy "관리자가 지운다" on notice for delete using (is_shop_admin());
 
+alter table notice add column if not exists image boolean not null default false;
+
+-- ─── 그림 두는 곳 ───────────────────────────────────────────────
+/*
+ * 통을 따로 둔다. `shop` 통에 `notice/` 앞머리를 붙여 넣을 수도 있었는데,
+ * 그 통은 **`<대분류>/<중분류>/<종류>/<코드>.png` 한 가지 생김새**로 쌓기로 해뒀다
+ * ([assets/shop/README.md](../assets/shop/README.md)). 거기 다른 것을 섞으면
+ * 그 규칙이 `대체로 그렇다`가 된다.
+ *
+ * 통은 열어둔다(public). 공지 그림은 숨길 것이 아니고, 닫아두면 앱이 볼 때마다
+ * 서명한 주소를 받아와야 한다.
+ *
+ * 쓰는 것은 **상점 채우는 사람**이다 — 공지 표와 같은 명단(`is_shop_admin()`).
+ *
+ * Storage는 우리 표가 아니라 **Supabase 것**이라 권한이 모자랄 수 있다.
+ * 막히면 멈추지 않고 넘어간다 — 대시보드에서 손으로 만들면 되는 일이다.
+ */
+do $$
+begin
+  insert into storage.buckets (id, name, public) values ('notice', 'notice', true)
+  on conflict (id) do nothing;
+
+  drop policy if exists "공지 그림은 누구나 본다"   on storage.objects;
+  drop policy if exists "공지 그림은 관리자가 올린다" on storage.objects;
+  drop policy if exists "공지 그림은 관리자가 바꾼다" on storage.objects;
+  drop policy if exists "공지 그림은 관리자가 지운다" on storage.objects;
+
+  create policy "공지 그림은 누구나 본다" on storage.objects
+    for select using (bucket_id = 'notice');
+  create policy "공지 그림은 관리자가 올린다" on storage.objects
+    for insert with check (bucket_id = 'notice' and is_shop_admin());
+  create policy "공지 그림은 관리자가 바꾼다" on storage.objects
+    for update using (bucket_id = 'notice' and is_shop_admin());
+  /*
+   * 지우는 것도 열어둔다. 공지는 아무도 `가진` 것이 아니라, 지운 공지의 그림이
+   * 통에 남아 있을 까닭이 없다.
+   */
+  create policy "공지 그림은 관리자가 지운다" on storage.objects
+    for delete using (bucket_id = 'notice' and is_shop_admin());
+exception when insufficient_privilege then
+  raise notice 'notice 통은 대시보드 Storage에서 만들어 주세요 — public, 관리자만 쓰기';
+end $$;
+

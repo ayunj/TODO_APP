@@ -1,5 +1,5 @@
 import { DEFAULT_BEAR, DEFAULT_ROOM, builtinImg, shopPath, withBundled } from '../costumes';
-import { shopImageUrl, supabase } from '../supabase';
+import { noticeImageUrl, shopImageUrl, supabase } from '../supabase';
 import type { Snapshot } from '../repository';
 import type {
   Category,
@@ -740,7 +740,7 @@ export async function pullNotice(): Promise<Notice | null> {
   const client = await supabase();
   const { data, error } = await client
     .from('notice')
-    .select('id, title, body, active, updated_at')
+    .select('id, title, body, active, image, updated_at')
     .eq('active', true)
     .order('created_at', { ascending: false })
     .limit(1)
@@ -754,20 +754,32 @@ export async function pullNotices(): Promise<Notice[]> {
   const client = await supabase();
   const { data, error } = await client
     .from('notice')
-    .select('id, title, body, active, updated_at')
+    .select('id, title, body, active, image, updated_at')
     .order('created_at', { ascending: false });
   if (error) throw error;
   return ((data ?? []) as Row[]).map(asNotice);
 }
 
-const asNotice = (r: Row): Notice => ({
-  id: String(r.id),
-  title: String(r.title ?? ''),
-  body: String(r.body ?? ''),
-  active: Boolean(r.active),
+const asNotice = (r: Row): Notice => {
+  const id = String(r.id);
   // 판은 고친 때다. 초까지면 충분하다 — 같은 초에 두 번 고칠 일이 없다.
-  version: String(r.updated_at ?? ''),
-});
+  const version = String(r.updated_at ?? '');
+  const at = Date.parse(version);
+  return {
+    id,
+    title: String(r.title ?? ''),
+    body: String(r.body ?? ''),
+    active: Boolean(r.active),
+    version,
+    /*
+      **자리는 `id`로 짓고, 판을 주소 끝에 붙인다.** 다시 올려도 주소가 같아서
+      안 붙이면 브라우저가 물고 있던 옛 사진을 그대로 다시 쓴다.
+    */
+    image: r.image
+      ? noticeImageUrl(id) + (Number.isNaN(at) ? '' : `?v=${Math.floor(at / 1000)}`)
+      : undefined,
+  };
+};
 
 /**
  * 공지를 쓰거나 고친다. **새로 쓰는 것은 안 띄우고 들어온다**(`active` 기본 false) —
@@ -819,9 +831,53 @@ export async function setNoticeActive(id: string, active: boolean): Promise<void
   if (!data?.length) throw new Error('못 바꿨어요 — 관리자 계정인지 확인해 주세요');
 }
 
-/** 지운다. **공지는 아무도 가진 것이 아니라** 지워도 남의 줄이 가리킬 데를 잃지 않는다. */
+/**
+ * 공지 사진을 올린다 — 자리는 `notice/<id>.png`.
+ *
+ * **공지를 먼저 써야** 부를 수 있다. `id`가 자리를 정하기 때문이다.
+ * `upsert`로 올린다 — 지웠다 올리면 그 사이에 앱을 켠 사람에게 빈 자리가 뜬다.
+ */
+export async function uploadNoticeImage(id: string, body: Blob): Promise<void> {
+  const client = await supabase();
+  const { error } = await client.storage.from('notice').upload(`${id}.png`, body, {
+    contentType: 'image/png',
+    upsert: true,
+    // 주소 끝에 판이 붙으니(`asNotice`) 오래 물려도 된다
+    cacheControl: '3600',
+  });
+  if (error) throw error;
+}
+
+/**
+ * 사진이 있다고/없다고 적는다.
+ *
+ * **표에는 참·거짓만 담는다.** 자리는 `id`로 짓는 것이라 적어둘 것이 없고,
+ * 있나 없나는 지어서 알 수가 없다 — 글만 있는 공지가 많아서, 없는 것을 부르러
+ * 가면 열 때마다 404를 먹는다.
+ */
+export async function setNoticeImage(id: string, has: boolean): Promise<void> {
+  const client = await supabase();
+  const { data, error } = await client
+    .from('notice')
+    .update({ image: has })
+    .eq('id', id)
+    .select('id');
+  if (error) throw error;
+  if (!data?.length) throw new Error('못 바꿨어요 — 관리자 계정인지 확인해 주세요');
+}
+
+/**
+ * 지운다. **공지는 아무도 가진 것이 아니라** 지워도 남의 줄이 가리킬 데를 잃지 않는다.
+ *
+ * 통에 있는 사진도 같이 치운다 — 가리키는 데가 없는 사진이 쌓일 까닭이 없다.
+ * 사진 지우기가 막혀도 공지는 지운다(**둘 중 하나는 되어야** 목록이 정리된다).
+ */
 export async function removeNotice(id: string): Promise<void> {
   const client = await supabase();
+  await client.storage
+    .from('notice')
+    .remove([`${id}.png`])
+    .catch(() => {});
   const { error } = await client.from('notice').delete().eq('id', id);
   if (error) throw error;
 }
