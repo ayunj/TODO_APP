@@ -160,7 +160,7 @@ function Art({ src, cover }: { src?: string; cover?: boolean }) {
       className={
         cover
           ? 'h-full w-full select-none object-cover object-bottom'
-          : 'h-auto max-h-[88%] w-auto max-w-[88%] select-none'
+          : 'h-auto max-h-full w-auto max-w-full select-none'
       }
     />
   );

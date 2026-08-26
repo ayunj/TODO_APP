@@ -36,15 +36,19 @@ export const DAILY: Costume[] = [
 /**
  * 코스튬 — **딴 사람이 된다.** 공주·마법사처럼 통째로 변신하는 것.
  *
- * **넷 다 그림이 있다.** 요리사 곰과 탐정 곰은 이름만 있던 줄이라 위와 같이 걷어냈고,
- * 여기 남은 것은 `public/gomdori/`에 그림이 들어 있는 것뿐이다.
- * 원본은 `assets/gomdori/`에 있고 `npm run gomdori`이 눌러 담는다.
+ * **여기 `img`가 없다.** 파는 옷의 그림은 앱이 아니라 Storage의 `shop` 통에 있고
+ * (`npm run shop`이 올린다), 값표의 `img`가 그걸 가리킨다. 넷은 이름과 값만 —
+ * **서버를 못 읽었을 때 이름이라도 뜨게** 남겨둔 것이다.
+ *
+ * 앱이 그림까지 들고 나가는 것은 **기본 곰돌이와 기본 룸 둘뿐**이다.
+ * 그 둘은 로그인 전에도 서버를 못 읽어도 서 있어야 한다 —
+ * 파는 옷은 안 뜨면 안 뜨는 대로 되지만, 곰돌이가 없으면 홈이 빈다.
  */
 export const COSTUMES: Costume[] = [
-  { key: 'rabbit', name: '곰토끼', price: 300, kind: 'bear', family: 'costume', img: '/gomdori/rabbit.png' },
-  { key: 'dragon', name: '곰드래곤', price: 350, kind: 'bear', family: 'costume', img: '/gomdori/dragon.png' },
-  { key: 'princess', name: '공주 곰', price: 400, kind: 'bear', family: 'costume', img: '/gomdori/princess.png' },
-  { key: 'wizard', name: '마법사 곰', price: 400, kind: 'bear', family: 'costume', img: '/gomdori/wizard.png' },
+  { key: 'rabbit', name: '곰토끼', price: 300, kind: 'bear', family: 'costume' },
+  { key: 'dragon', name: '곰드래곤', price: 350, kind: 'bear', family: 'costume' },
+  { key: 'princess', name: '공주 곰', price: 400, kind: 'bear', family: 'costume' },
+  { key: 'wizard', name: '마법사 곰', price: 400, kind: 'bear', family: 'costume' },
 ];
 
 /** 곰 옷 전부 — 옷장에서 한 줄로 볼 때 쓴다 */

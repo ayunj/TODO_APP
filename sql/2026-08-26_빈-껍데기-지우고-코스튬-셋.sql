@@ -16,13 +16,14 @@
 --
 -- 대시보드 Storage → `shop` 통에 손으로 올려도 같다. 자리는 아래 셋이다 —
 --
+--   shop/deco/costume/gomdori/rabbit.png
 --   shop/deco/costume/gomdori/dragon.png
 --   shop/deco/costume/gomdori/princess.png
 --   shop/deco/costume/gomdori/wizard.png
 --
--- 순서가 바뀌어도 상점은 안 깨진다. 값표만 먼저 채워지면 앱이 **앱에 든 그림으로
--- 물러선다**([Art.tsx](../src/screens/store/Art.tsx)) — 그래도 올린 것이 진짜니
--- 올리고 돌리는 쪽이 맞다.
+-- 순서가 바뀌면 그 사이에 상점 칸이 빈다. 깨진 그림은 안 뜨고 조용히 사라지지만
+-- ([Art.tsx](../src/screens/store/Art.tsx)) 빈 칸도 보기 좋지는 않다 —
+-- **올리고 돌린다.**
 --
 -- ─── 왜 지우나 ─────────────────────────────────────────────────
 --
@@ -192,15 +193,17 @@ update costume_catalog set active = true, family_key = 'room'    where item_key 
  */
 update costume_catalog
    set img = shop_folder(item_key) || '/' || item_key || '.png'
- where item_key in ('dragon', 'princess', 'wizard')
+ where item_key in ('rabbit', 'dragon', 'princess', 'wizard')
    and shop_folder(item_key) is not null;
 
 /*
- * **기본 곰돌이·곰토끼·기본 룸은 비워둔 채로 둔다.**
+ * **기본 곰돌이와 기본 룸만 비워둔 채로 둔다.**
  *
- * 로그인 전에도 서버를 못 읽어도 곰돌이는 서 있어야 하는데, `img`를 채우면
+ * 로그인 전에도 서버를 못 읽어도 그 둘은 서 있어야 하는데, `img`를 채우면
  * 그 자리에서 **Storage를 부르러 갔다가 못 부르고 빈다.** 비워두면 앱이
- * 제 안의 그림으로 곧장 선다 — 이 셋만 일부러 다르다.
+ * 제 안의 그림(`public/gomdori/`)으로 곧장 선다 — 이 둘만 일부러 다르다.
+ *
+ * 파는 옷은 안 뜨면 안 뜨는 대로 된다. 곰돌이가 없으면 홈이 빈다.
  */
 
 -- ─── 안 사도 갖는 것 ────────────────────────────────────────────
@@ -273,7 +276,7 @@ on conflict (user_id, item_key) do nothing;
 -- 여섯 줄이 나와야 한다 —
 --
 --   base       기본 곰돌이     0  daily     t  (비어 있음)
---   rabbit     곰토끼        300  costume   t  (비어 있음)
+--   rabbit     곰토끼        300  costume   t  deco/costume/gomdori/rabbit.png
 --   dragon     곰드래곤      350  costume   t  deco/costume/gomdori/dragon.png
 --   princess   공주 곰       400  costume   t  deco/costume/gomdori/princess.png
 --   wizard     마법사 곰     400  costume   t  deco/costume/gomdori/wizard.png

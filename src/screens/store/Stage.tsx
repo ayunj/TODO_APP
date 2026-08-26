@@ -26,6 +26,11 @@ import { useGomdori } from '@/lib/gomdori';
  *
  * `object-bottom`은 그대로 둔다 — 관리자가 정사각이 아닌 그림을 올렸을 때
  * 잘리는 쪽이 바닥이 아니라 천장이어야 한다.
+ *
+ * **곰이 차지하는 폭이 46%에서 58%로 늘었다.** 그림 쪽에서 옷마다 크기를 맞추면서
+ * (`scripts/bears.mjs`의 `FIT`) 정사각 안에 **머리 위 여백이 생겼기** 때문이다 —
+ * 곰토끼 귀가 들어갈 자리를 비워둔 것이라, 그만큼 칸을 키워야 곰돌이가 전과 같은
+ * 크기로 선다. 46%로 두면 기본 곰돌이가 20% 작아진다.
  */
 export default function Stage({
   bear,
@@ -42,7 +47,7 @@ export default function Stage({
       <Art item={item(room)} className="absolute inset-0 h-full w-full object-cover object-bottom" />
       <Art
         item={item(bear)}
-        className="relative z-[1] mb-[6%] block h-auto max-h-[74%] w-auto max-w-[46%]"
+        className="relative z-[1] mb-[6%] block h-auto max-h-[74%] w-auto max-w-[58%]"
       />
       {flag && (
         <span className="absolute left-3 top-3 z-[2] rounded-full bg-card px-3 py-[5px] text-[11.5px] font-medium text-ink2 shadow-card">

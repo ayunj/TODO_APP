@@ -16,7 +16,8 @@
     "tomato": "node scripts/cut-tomato.mjs",
     "logo": "node scripts/trim-logo.mjs",
     "gomdori": "node scripts/gomdori.mjs",
-    "shop": "node --env-file-if-exists=.env.local scripts/shop.mjs"
+    "shop": "node --env-file-if-exists=.env.local scripts/shop.mjs",
+    "canvas": "node scripts/canvas.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.0",

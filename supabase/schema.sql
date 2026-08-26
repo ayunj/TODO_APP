@@ -1069,18 +1069,19 @@ create table if not exists costume_owned (
  */
 insert into costume_catalog (item_key, kind, price, season, name, img, active) values
   /*
-   * **`img`가 비어 있는 셋.** 로그인 전에도 서버를 못 읽어도 곰돌이는 서 있어야 해서
+   * **`img`가 비어 있는 둘.** 로그인 전에도 서버를 못 읽어도 이 둘은 서 있어야 해서
    * 일부러 안 올린다 — 채우면 그 자리에서 Storage를 부르러 갔다가 못 부르고 빈다.
+   * 파는 옷은 안 뜨면 안 뜨는 대로 되지만, 곰돌이가 없으면 홈이 빈다.
    */
   ('base',      'bear',   0, null, '기본 곰돌이', null, true),
-  ('rabbit',    'bear', 300, null, '곰토끼',     null, true),
   ('room-base', 'room',   0, null, '기본 룸',    null, true),
 
   /*
-   * **`shop` 통에 올려 파는 셋.** 자리는 `<대분류>/<중분류>/<종류>/<열쇠>.png`이고
+   * **`shop` 통에 올려 파는 넷.** 자리는 `<대분류>/<중분류>/<종류>/<열쇠>.png`이고
    * 통 이름은 안 적는다. 파일은 `npm run shop`이 올린다 — 값표만 있고 파일이 없으면
    * 앱이 제 안의 그림으로 물러선다(`src/screens/store/Art.tsx`).
    */
+  ('rabbit',    'bear', 300, null, '곰토끼',     'deco/costume/gomdori/rabbit.png',   true),
   ('dragon',    'bear', 350, null, '곰드래곤',   'deco/costume/gomdori/dragon.png',   true),
   ('princess',  'bear', 400, null, '공주 곰',    'deco/costume/gomdori/princess.png', true),
   ('wizard',    'bear', 400, null, '마법사 곰',  'deco/costume/gomdori/wizard.png',   true)
