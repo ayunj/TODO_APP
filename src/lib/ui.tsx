@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { todayStr } from './date';
 import type { DateStr, TrashScope, ViewKind } from './types';
 
@@ -119,6 +119,12 @@ interface UiValue {
 
 const UiContext = createContext<UiValue | null>(null);
 
+/**
+ * 그리기 **전에** 스크롤을 옮겨야 한다 — 그리고 난 뒤면 새 화면이 한 칸 번짝하고
+ * 제자리로 뛰는 게 보인다. 서버에서는 레이아웃 효과가 안 돌아 경고만 뜨니 바꿔 끼운다.
+ */
+const useIsoLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+
 export function UiProvider({ children }: { children: React.ReactNode }) {
   const [tab, setTabState] = useState<Tab>('home');
   const [stack, setStack] = useState<Route[]>([]);
@@ -130,6 +136,33 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
 
   const route = stack.length ? stack[stack.length - 1] : null;
 
+  /*
+    **화면을 옮기면 스크롤도 같이 옮긴다.**
+    안 그러면 목록을 한참 내려가다가 상점을 누를 때 상점이 맨 위가 아니라
+    내려놓은 그 지점에서 뜬다 — 창은 하나라 스크롤 자리가 그대로 남아서다.
+
+    들어갈 때는 맨 위, 나올 때는 **두고 간 자리**로 돌려놓는다.
+    돌아가기까지 맨 위로 보내면 보던 자리를 잃는다.
+  */
+  const parked = useRef<number[]>([]); // 겹마다 두고 온 스크롤 자리
+  const goal = useRef(0); // 다음에 그릴 화면이 앉을 자리
+  const [nav, setNav] = useState(0); // 옮긴 횟수 — 같은 자리로 갈아끼워도 다시 눈치챌 신호
+
+  const jump = (to: number) => {
+    goal.current = to;
+    setNav((n) => n + 1);
+  };
+
+  const landed = useRef(false);
+  useIsoLayoutEffect(() => {
+    // 처음 뜨는 한 번은 건드리지 않는다 — 새로고침이 돌려둔 자리까지 지우게 된다
+    if (!landed.current) {
+      landed.current = true;
+      return;
+    }
+    window.scrollTo(0, goal.current);
+  }, [nav]);
+
   const value = useMemo<UiValue>(
     () => ({
       view: (route?.kind ?? tab) as ViewKind,
@@ -137,12 +170,26 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
       route,
       depth: stack.length,
       setTab: (t) => {
+        parked.current = [];
+        jump(0);
         setStack([]);
         setTabState(t);
       },
-      pushView: (r) => setStack((s) => [...s, r]),
-      popView: () => setStack((s) => s.slice(0, -1)),
-      replaceView: (r) => setStack((s) => [...s.slice(0, -1), r]),
+      pushView: (r) => {
+        parked.current.push(window.scrollY);
+        jump(0);
+        setStack((s) => [...s, r]);
+      },
+      popView: () => {
+        jump(parked.current.pop() ?? 0);
+        setStack((s) => s.slice(0, -1));
+      },
+      // 갈아끼는 것도 새 화면이다 — 맨 위에서 시작한다.
+      // 단 두고 온 자리는 그대로 둔다. 그 겹을 벗으면 가야 할 곳은 같다.
+      replaceView: (r) => {
+        jump(0);
+        setStack((s) => [...s.slice(0, -1), r]);
+      },
       cursor,
       setCursor,
       scope,

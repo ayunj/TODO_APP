@@ -14,7 +14,7 @@ import type { Task } from '@/lib/types';
  * **방 그림과 곰돌이는 따로 얹는다.** 합쳐 그리면 옷을 못 갈아입힌다 —
  * 방은 칸을 통째로 덮고 곰돌이가 그 위에 선다.
  *
- * 오늘 숫자는 **그림 밖 아랫 줄**에 앉는다. 그림 위에 얻으면
+ * 오늘 숫자는 **그림 밖 아랫줄**에 앉는다. 그림 위에 얻으면
  * 모자를 쓴 곰돌이가 숫자를 덮는다 — 방 그림은 이제 오른쪽 위를 비울 이유가 없다.
  */
 export default function RoomCard({ done, total }: { done: number; total: number }) {
