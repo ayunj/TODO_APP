@@ -10,6 +10,7 @@ import {
   itemOf,
   onSale,
   shopPath,
+  standing,
   withBundled,
 } from './costumes';
 import type { Shop } from './types';
@@ -149,5 +150,42 @@ describe('숨긴 것 걷어내기', () => {
 
     const shop = onSale({ ...NOTHING, items, sets: [full, half] });
     expect(shop.sets.map((x) => x.key)).toEqual(['full']);
+  });
+});
+
+describe('내린 것을 입고 있으면', () => {
+  const bear = { key: 'b', name: 'b', price: 100, kind: 'bear' as const, active: true };
+  const room = { key: 'r', name: 'r', price: 100, kind: 'room' as const, active: true };
+  const pose = { key: 'p', name: 'p', price: 0, kind: 'pose' as const, active: true };
+  const shop = onSale(withBundled({ ...NOTHING, items: [bear, room, pose] }));
+
+  it('걸려 있으면 그대로 선다', () => {
+    expect(standing(shop, 'b', 'bear')).toBe('b');
+    expect(standing(shop, 'r', 'room')).toBe('r');
+  });
+
+  /* 포즈는 곰돌이 그림 한 장이라 곰 자리에 앉는다 */
+  it('포즈는 곰 자리에 선다', () => {
+    expect(standing(shop, 'p', 'bear')).toBe('p');
+  });
+
+  /*
+    관리자가 내리면 상점에서는 빠지는데 입고 있던 사람의 줄에는 그 열쇠가 남는다.
+    담아둔 값을 안 건드리는 까닭은 **다시 켜면 제 옷으로 돌아와야** 해서다 —
+    내린 것은 잠깐 안 보이는 것이고 산 것을 빼앗는 일이 아니다.
+  */
+  it('내려간 것은 기본으로 갈음한다', () => {
+    const hidden = onSale(withBundled({ ...NOTHING, items: [{ ...bear, active: false }] }));
+    expect(standing(hidden, 'b', 'bear')).toBe(DEFAULT_BEAR);
+  });
+
+  /*
+    **자리를 가려서 준다.** 종류를 안 보고 주면 방이 내려갔을 때 그 자리에 곰이 깔린다 —
+    `object-cover`로 늘어난 곰돌이가 배경이 된다.
+  */
+  it('방 자리에 곰을 앉히지 않는다', () => {
+    expect(standing(shop, 'b', 'room')).toBe(DEFAULT_ROOM);
+    expect(standing(shop, '없는열쇠', 'room')).toBe(DEFAULT_ROOM);
+    expect(standing(shop, 'r', 'bear')).toBe(DEFAULT_BEAR);
   });
 });

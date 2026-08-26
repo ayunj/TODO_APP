@@ -228,6 +228,29 @@ export function itemOf(shop: Shop, key: string): Costume {
   return BUILTIN_BY_KEY.get(key) ?? BEARS[0];
 }
 
+/**
+ * **지금 세울 수 있는 것인가** — 아니면 기본으로 돌려준다.
+ *
+ * 관리자가 파는 것을 내리면(`active = false`) 상점에서는 빠지는데
+ * (`onSale`), **그걸 입고 있던 사람의 `gomdori`에는 그 열쇠가 그대로 남아 있다.**
+ * 그 줄을 서버에서 되돌리지 않는 까닭은, 되돌려버리면 관리자가 다시 켰을 때
+ * **입고 있던 옷이 안 돌아오기** 때문이다 — 내린 것은 잠깐 안 보이는 것이고
+ * 산 것을 빼앗는 일이 아니다.
+ *
+ * 그래서 **세울 때만 기본으로 갈음한다.** 다시 켜지면 저절로 제 옷으로 돌아온다.
+ *
+ * **자리를 가려서 준다.** 곰 자리에는 곰(과 포즈), 방 자리에는 방이다 —
+ * 종류를 안 보고 주면 방이 내려갔을 때 그 자리에 곰이 깔린다
+ * (`object-cover`로 늘어난 곰돌이가 배경이 된다).
+ */
+export function standing(shop: Shop, key: string, slot: 'bear' | 'room'): string {
+  const found = shop.items.find((c) => c.key === key);
+  // 포즈는 곰돌이 그림 한 장이라 곰 자리에 앉는다
+  const fits = slot === 'room' ? found?.kind === 'room' : found?.kind !== 'room';
+  if (found && fits) return key;
+  return slot === 'room' ? DEFAULT_ROOM : DEFAULT_BEAR;
+}
+
 /** 대분류 하나에 드는 중분류들 — 꺼둔 것은 뺀다 */
 export function familiesOf(shop: Shop, group: string): ShopFamily[] {
   return shop.families.filter((f) => f.group === group && f.active);

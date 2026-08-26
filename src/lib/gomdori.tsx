@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from './auth';
-import { BUILTIN, DEFAULT_BEAR, DEFAULT_ROOM, FREEBIES, itemOf } from './costumes';
+import { BUILTIN, DEFAULT_BEAR, DEFAULT_ROOM, FREEBIES, itemOf, standing } from './costumes';
 import {
   amShopAdmin,
   buyCostume as buyRemote,
@@ -61,7 +61,12 @@ interface GomdoriValue {
    * 여기밖에 없다. 그 두 자리에서 옷장이 통째로 비면 고장으로 읽힌다.
    */
   has: (key: string) => boolean;
-  /** 지금 입은 곰(포즈도 여기 앉는다)과 깐 방 */
+  /**
+   * 지금 입은 곰(포즈도 여기 앉는다)과 깐 방.
+   *
+   * **내려간 것을 입고 있으면 기본으로 선다**(`standing`). 담아둔 값은 안 건드린다 —
+   * 관리자가 다시 켜면 제 옷으로 돌아온다.
+   */
   wornBear: string;
   wornRoom: string;
   /**
@@ -262,8 +267,8 @@ export function GomdoriProvider({ children }: { children: React.ReactNode }) {
       points: state.points,
       owned: state.owned,
       has: (key: string) => state.owned.includes(key) || FREEBIES.includes(key),
-      wornBear: state.wornBear,
-      wornRoom: state.wornRoom,
+      wornBear: standing(shop, state.wornBear, 'bear'),
+      wornRoom: standing(shop, state.wornRoom, 'room'),
       buy,
       wear,
       refresh,

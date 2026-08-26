@@ -916,8 +916,16 @@ export async function saveShopItem(item: {
   };
 
   if (item.key) {
-    const { error } = await client.from('costume_catalog').update(row).eq('item_key', item.key);
+    // 고친 줄이 돌아오는지 본다 — RLS가 막으면 오류 없이 `0줄`로 지나간다
+    const { data, error } = await client
+      .from('costume_catalog')
+      .update(row)
+      .eq('item_key', item.key)
+      .select('item_key');
     if (error) throw error;
+    if (!data?.length) {
+      throw new Error('못 고쳤어요 — 상점을 채울 수 있는 계정인지 확인해 주세요');
+    }
     return item.key;
   }
 
@@ -930,11 +938,23 @@ export async function saveShopItem(item: {
   return String((data as Row).item_key);
 }
 
-/** 상점에 걸거나 내린다. **지우는 길은 없다** — 산 사람의 옷이 이름을 잃는다. */
+/**
+ * 상점에 걸거나 내린다. **지우는 길은 없다** — 산 사람의 옷이 이름을 잃는다.
+ *
+ * **고친 줄이 돌아오는지 본다.** RLS가 막으면 Postgres는 오류를 안 낸다 —
+ * `0줄 고쳤다`고 조용히 성공한다. 그대로 두면 스위치를 눌러도 아무 일이 안 나는데
+ * 화면은 바뀐 것처럼 보이고, 다음에 받아오면 도로 켜져 있다.
+ * **막힌 것을 막혔다고 말해야** 왜 안 되는지 알 수 있다.
+ */
 export async function setShopItemActive(key: string, active: boolean): Promise<void> {
   const client = await supabase();
-  const { error } = await client.from('costume_catalog').update({ active }).eq('item_key', key);
+  const { data, error } = await client
+    .from('costume_catalog')
+    .update({ active })
+    .eq('item_key', key)
+    .select('item_key');
   if (error) throw error;
+  if (!data?.length) throw new Error('못 바꿨어요 — 상점을 채울 수 있는 계정인지 확인해 주세요');
 }
 
 /**
