@@ -7,6 +7,24 @@ import { GiftIcon, LockIcon } from '@/components/Icons';
 import type { Costume } from '@/lib/types';
 
 /**
+ * 카드 안의 곰돌이 — **칸보다 크게 그려 위를 잘라낸다.**
+ *
+ * 그림 한 장은 정사각인데 **위쪽 34%가 비어 있다.** 모자와 귀가 들어갈 자리로
+ * 비워둔 칸이라([stage.ts](../../lib/stage.ts)), 한 장을 통째로 칸에 맞추면
+ * 곰돌이가 칸의 3분의 2만 쓰고 위가 훵하다 — 103px 칸에서는 그게 그대로 `작다`로 읽힌다.
+ *
+ * 그래서 `ZOOM`만큼 키워 **아래를 맞춰 붙인다.** 발은 제자리에 두고 빈 위만 잘려 나간다.
+ *
+ * **모자가 아주 높은 옷은 위가 아슬아슬하다.** 잘려 나가는 것은 위 12%다 —
+ * 지금 걸린 것들은 제일 높은 토끼 귀도 그 아래에 있지만, 여백을 꽉 채워 그린 옷이
+ * 올라오면 끝이 깎인다. **더 키울 때는 제일 높은 모자를 상점에 걸어놓고 눈으로 보고 키운다.**
+ *
+ * 여기는 **카드에서만** 자르는 자리다. 홈과 걸쳐보는 칸은 한 장이 다 보여야 하는
+ * 자리라 안 걸린다 — 거기 크기는 [stage.ts](../../lib/stage.ts)가 따로 쥐고 있다.
+ */
+const BEAR_IN_CARD = 'absolute bottom-0 left-1/2 h-auto w-[112%] max-w-none -translate-x-1/2';
+
+/**
  * 카드는 **고르는 자리**다. 아래 알약은 상태를 말할 뿐 그 자체로 눌리지 않는다 —
  * 103px 안에 누를 곳이 둘이면 잘못 눌러 포인트가 날아간다.
  *
@@ -51,11 +69,7 @@ export default function StoreCard({
         {/* 방과 세트는 칸을 꽉 채운다 — 장면 전체가 그 물건이다 */}
         <Art
           item={item}
-          className={
-            roomly
-              ? 'h-full w-full object-cover object-bottom'
-              : 'h-auto max-h-full w-auto max-w-full'
-          }
+          className={roomly ? 'h-full w-full object-cover object-bottom' : BEAR_IN_CARD}
         />
         {item.kind === 'pose' && (
           <span className="absolute left-[3px] top-[3px] grid h-[19px] w-[19px] place-items-center rounded-full bg-white/90 text-cycle">
