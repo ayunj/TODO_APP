@@ -33,6 +33,15 @@ import type { Costume, Shop } from '@/lib/types';
 type Chip = string;
 
 /**
+ * 내 옷장의 칸 셋 — **종류 그대로다.**
+ *
+ * 소품을 곰 스타일에 같이 두었더니 `옷`이라기엔 곰 한 마리가 통째로 다른 것이
+ * 옷들 사이에 끼어 있었다. 세트를 다 모아야 딸려오는 것이라 모으는 재미가
+ * 걸린 자리인데, 옷 스무 벌 뒤에 묻혔다.
+ */
+type Shelf = 'bear' | 'room' | 'pose';
+
+/**
  * 상점 — [design/상점.html](../../design/상점.html) 그대로.
  *
  * 뼈대는 한 줄이다 — **카드는 고르는 자리, 위 칸은 하는 자리.**
@@ -65,7 +74,7 @@ export default function StoreScreen() {
   const [chip, setChip] = useState<Chip>('all');
   /** 아래층 칩. `all`이면 그 대분류를 통째로 본다. */
   const [sub, setSub] = useState<string>('all');
-  const [tab, setTab] = useState<'bear' | 'room'>('bear');
+  const [tab, setTab] = useState<Shelf>('bear');
   const [trying, setTrying] = useState<string>(wornBear);
   const [open, setOpen] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -395,6 +404,13 @@ function Preview({
   );
 }
 
+/** 칸마다 뭐라고 부르나. 세 군데에서 같은 이름을 써서 표로 뺀다. */
+const SHELF: Record<Shelf, { head: string; what: string }> = {
+  bear: { head: '가진 옷', what: '옷' },
+  room: { head: '가진 테마', what: '테마' },
+  pose: { head: '가진 소품', what: '소품' },
+};
+
 function Wardrobe({
   shop,
   tab,
@@ -403,13 +419,13 @@ function Wardrobe({
   trying,
 }: {
   shop: Shop;
-  tab: 'bear' | 'room';
-  setTab: (t: 'bear' | 'room') => void;
+  tab: Shelf;
+  setTab: (t: Shelf) => void;
   pick: (key: string) => void;
   trying: string;
 }) {
   const { has } = useGomdori();
-  const all = shop.items.filter((c) => (tab === 'room' ? c.kind === 'room' : c.kind !== 'room'));
+  const all = shop.items.filter((c) => c.kind === tab);
   const list = all.filter((c) => has(c.key));
 
   return (
@@ -419,7 +435,8 @@ function Wardrobe({
           [
             ['bear', '곰 스타일'],
             ['room', '방 테마'],
-          ] as ['bear' | 'room', string][]
+            ['pose', '소품'],
+          ] as [Shelf, string][]
         ).map(([k, label]) => (
           <button
             key={k}
@@ -435,16 +452,20 @@ function Wardrobe({
         ))}
       </div>
 
-      <Head title={tab === 'room' ? '가진 테마' : '가진 옷'} />
+      <Head title={SHELF[tab].head} />
       <div className="mb-4 grid grid-cols-3 gap-[9px]">
         {list.map((c) => (
           <StoreCard key={c.key} item={c} onPick={() => pick(c.key)} trying={trying === c.key} />
         ))}
-        {/* 빈 옷걸이 한 칸 — 다 모으면 사라진다 */}
-        {list.length < all.length && (
+        {/*
+          빈 옷걸이 한 칸 — 다 모으면 사라진다.
+          **아직 아무것도 없는 칸에도 세운다.** 소품처럼 통째로 빌 수 있는 칸에서
+          제목만 남으면 뭔가 빠진 것으로 읽힌다.
+        */}
+        {(list.length < all.length || list.length === 0) && (
           <span className="flex flex-col items-center justify-center gap-2 rounded-2xl border-[1.5px] border-dashed border-edge p-3 text-center text-[10px] leading-[1.5] text-ink3">
             <HomeIcon className="h-8 w-8 text-line" />
-            더 많은 {tab === 'room' ? '테마' : '옷'}을<br />
+            더 많은 {SHELF[tab].what}을<br />
             모아보세요
           </span>
         )}
@@ -476,6 +497,7 @@ function Sets({
           <StoreCard
             key={s.key}
             item={s.room}
+            bear={s.bear}
             label={s.name}
             step={[s.bear, s.room, s.pose].filter((x) => has(x.key)).length}
             onPick={() => onOpen(s.key)}
@@ -528,12 +550,12 @@ function Head({ title, aside }: { title: string; aside?: string }) {
   );
 }
 
-function Tip({ chip, tab }: { chip: Chip; tab: 'bear' | 'room' }) {
+function Tip({ chip, tab }: { chip: Chip; tab: Shelf }) {
   // 곰 스타일 칸에는 아무 줄도 안 둔다 — 할 말이 없는 자리에 말을 만들지 않는다
   if (chip === 'mine' && tab === 'bear') return null;
 
   const [Icon, text] =
-    chip === 'season'
+    chip === 'season' || (chip === 'mine' && tab === 'pose')
       ? [GiftIcon, '곰과 방을 다 모으면 포즈가 딸려와요']
       : chip === 'room' || chip === 'mine'
         ? [HomeIcon, '테마를 바꾸면 홈 배경이 바뀌어요']

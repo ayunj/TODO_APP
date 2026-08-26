@@ -4,7 +4,7 @@ import Art from './Art';
 import Coin from './Coin';
 import { useGomdori } from '@/lib/gomdori';
 import { GiftIcon, LockIcon } from '@/components/Icons';
-import { BEAR_CARD } from '@/lib/stage';
+import { BEAR_ART, BEAR_CARD, ROOM_ART } from '@/lib/stage';
 import type { Costume } from '@/lib/types';
 
 /**
@@ -16,12 +16,18 @@ import type { Costume } from '@/lib/types';
  */
 export default function StoreCard({
   item,
+  bear,
   label,
   step,
   trying,
   onPick,
 }: {
   item: Costume;
+  /**
+   * 세트 카드는 **방 위에 곰돌이가 선다.** 이것이 오면 장면 한 칸으로 그린다 —
+   * 세트는 곰과 방이 한 벌이라 방만 세우면 무엇을 사는 것인지가 안 보인다.
+   */
+  bear?: Costume;
   /** 세트 카드는 방 그림에 세트 이름을 단다 */
   label?: string;
   /** 세트가 셋 중 몇 개 모였나 — 값 대신 이걸 적는다 */
@@ -30,6 +36,8 @@ export default function StoreCard({
   onPick: () => void;
 }) {
   const { points, has, wornBear, wornRoom } = useGomdori();
+  /** 방 위에 곰돌이가 선 한 칸 — 세트 카드다 */
+  const scene = Boolean(bear);
   const own = has(item.key);
   const roomly = item.kind === 'room';
   const here = item.key === (roomly ? wornRoom : wornBear);
@@ -48,12 +56,23 @@ export default function StoreCard({
         {label ?? item.name}
       </span>
 
-      <span className="relative grid aspect-square w-full place-items-center overflow-hidden rounded-xl bg-sunk">
+      {/*
+        세트는 **홈 칸을 그대로 줄인 것**이라 곰돌이를 세로 아래에 맞춰 세운다.
+        가운데에 두면 곰돌이가 바닥에서 뜬 채로 방 한가운데 붕 뜬다.
+      */}
+      <span
+        className={`relative grid aspect-square w-full overflow-hidden rounded-xl bg-sunk ${
+          scene ? 'items-end justify-items-center' : 'place-items-center'
+        }`}
+      >
         {/* 방과 세트는 칸을 꽉 채운다 — 장면 전체가 그 물건이다 */}
-        <Art
-          item={item}
-          className={roomly ? 'h-full w-full object-cover object-bottom' : BEAR_CARD}
-        />
+        <Art item={item} className={roomly || scene ? ROOM_ART : BEAR_CARD} />
+        {/*
+          **여기서는 안 자른다.** 곰돌이 한 마리만 있는 칸은 위 여백을 잘라 키우지만
+          (`BEAR_CARD`), 세트는 방에 견준 크기가 그 자체로 볼 것이라
+          홈·걸쳐보는 칸과 같은 자를 쓴다.
+        */}
+        {bear && <Art item={bear} className={BEAR_ART} />}
         {item.kind === 'pose' && (
           <span className="absolute left-[3px] top-[3px] grid h-[19px] w-[19px] place-items-center rounded-full bg-white/90 text-cycle">
             <GiftIcon className="h-3 w-3" />
