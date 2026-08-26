@@ -63,6 +63,30 @@ export const BEAR_FLOOR = 8;
  */
 export const BEAR_ART = 'relative z-[1] mb-[8%] block h-auto max-h-[92%] w-auto max-w-[92%]';
 
+/**
+ * 격자 칸 안의 곰돌이 — **칸보다 크게 그려 위를 잘라낸다.**
+ *
+ * 그림 한 장은 정사각인데 **위쪽 34%가 비어 있다.** 모자와 귀가 들어갈 자리로
+ * 비워둔 칸이라, 한 장을 통째로 칸에 맞추면 곰돌이가 칸의 3분의 2만 쓰고 위가 훵하다 —
+ * 103px 칸에서는 그게 그대로 `작다`로 읽힌다.
+ *
+ * 그래서 112%로 키워 **아래를 맞춰 붙인다.** 발은 제자리에 두고 빈 위만 잘려 나간다.
+ *
+ * **작은 칸에서만 자른다.** 홈과 걸쳐보는 칸은 한 장이 다 보여야 하는 자리라
+ * `BEAR_ART`를 그대로 쓴다 — 거기서 잘리면 걸쳐본 것과 다른 것을 사게 된다.
+ *
+ * **모자가 아주 높은 옷은 위가 아슬아슬하다.** 잘려 나가는 것은 위 12%다.
+ * 여백을 꽉 채워 그린 옷이 올라오면 끝이 깎이니,
+ * 더 키울 때는 **제일 높은 모자를 걸어놓고 눈으로 보고** 키운다.
+ *
+ * 상점 격자([StoreCard](../screens/store/StoreCard.tsx))와 상점 채우기의
+ * 작은 그림([Thumb](../screens/admin/Thumb.tsx))이 **같은 것을 본다** —
+ * 채우면서 본 칸이 상점에서 그대로 서야 왕복이 안 생긴다.
+ *
+ * 담는 칸에 `relative`가 있어야 한다.
+ */
+export const BEAR_CARD = 'absolute bottom-0 left-1/2 h-auto w-[112%] max-w-none -translate-x-1/2';
+
 /** 방 한 장 — 칸을 꽉 채운다. **아래를 맞춰 자른다** */
 export const ROOM_ART = 'absolute inset-0 h-full w-full object-cover object-bottom';
 

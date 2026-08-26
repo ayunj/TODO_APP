@@ -1,14 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import { BEAR_CARD } from '@/lib/stage';
 import type { Costume } from '@/lib/types';
 
 /**
  * 목록의 작은 그림.
  *
- * **자르는 규칙이 종류마다 다르다** — 곰은 칸 안에 84%로 앉고, 방은 칸을 꽉 채운다
- * (`object-fit: cover`, 아래를 맞춰). 상점에서 그렇게 서니 여기서도 그렇게 보여야
- * 올리고 나서 상점에 들어가 확인하는 왕복이 안 생긴다.
+ * **자르는 규칙이 종류마다 다르다** — 곰은 위 여백을 잘라 칸을 채우고(`BEAR_CARD`),
+ * 방은 칸을 꽉 채운다(`object-fit: cover`, 아래를 맞춰). 상점 격자와 **같은 것을 본다** —
+ * 여기서 본 칸이 상점에서 그대로 서야 올리고 나서 확인하러 가는 왕복이 안 생긴다.
  *
  * 아직 안 올린 것은 **`없음`이라고 적는다.** 빈 칸으로 두면 그림이 없는 건지
  * 안 불러온 건지 구별이 안 된다.
@@ -34,7 +35,7 @@ export default function Thumb({
 
   return (
     <span
-      className={`grid place-items-center overflow-hidden rounded-[11px] bg-sunk ${className}`}
+      className={`relative grid place-items-center overflow-hidden rounded-[11px] bg-sunk ${className}`}
     >
       {url && !gone ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -43,9 +44,7 @@ export default function Thumb({
           alt=""
           aria-hidden="true"
           onError={() => setGone(true)}
-          className={
-            roomly ? 'h-full w-full object-cover object-bottom' : 'max-h-[84%] max-w-[84%]'
-          }
+          className={roomly ? 'h-full w-full object-cover object-bottom' : BEAR_CARD}
         />
       ) : (
         <em className="text-[9.5px] not-italic text-ink3">없음</em>
