@@ -1067,14 +1067,23 @@ create table if not exists costume_owned (
  * 부딪히면 **안 덮는다.** 값표의 주인이 이 파일에서 관리자 화면으로 넘어갔고,
  * 덮으면 관리자가 고쳐놓은 값과 이름이 schema.sql을 한 번 돌릴 때마다 되돌아간다.
  */
-insert into costume_catalog (item_key, kind, price, season, name, active) values
-  ('base',      'bear',   0, null, '기본 곰돌이', true),
-  ('rabbit',    'bear', 300, null, '곰토끼',     true),
-  ('dragon',    'bear', 350, null, '곰드래곤',   true),
-  ('princess',  'bear', 400, null, '공주 곰',    true),
-  ('wizard',    'bear', 400, null, '마법사 곰',  true),
+insert into costume_catalog (item_key, kind, price, season, name, img, active) values
+  /*
+   * **`img`가 비어 있는 셋.** 로그인 전에도 서버를 못 읽어도 곰돌이는 서 있어야 해서
+   * 일부러 안 올린다 — 채우면 그 자리에서 Storage를 부르러 갔다가 못 부르고 빈다.
+   */
+  ('base',      'bear',   0, null, '기본 곰돌이', null, true),
+  ('rabbit',    'bear', 300, null, '곰토끼',     null, true),
+  ('room-base', 'room',   0, null, '기본 룸',    null, true),
 
-  ('room-base', 'room',   0, null, '기본 룸',    true)
+  /*
+   * **`shop` 통에 올려 파는 셋.** 자리는 `<대분류>/<중분류>/<종류>/<열쇠>.png`이고
+   * 통 이름은 안 적는다. 파일은 `npm run shop`이 올린다 — 값표만 있고 파일이 없으면
+   * 앱이 제 안의 그림으로 물러선다(`src/screens/store/Art.tsx`).
+   */
+  ('dragon',    'bear', 350, null, '곰드래곤',   'deco/costume/gomdori/dragon.png',   true),
+  ('princess',  'bear', 400, null, '공주 곰',    'deco/costume/gomdori/princess.png', true),
+  ('wizard',    'bear', 400, null, '마법사 곰',  'deco/costume/gomdori/wizard.png',   true)
 on conflict (item_key) do nothing;
 
 /*

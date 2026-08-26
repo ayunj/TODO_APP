@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import Art from './Art';
 import Coin from './Coin';
 import { useGomdori } from '@/lib/gomdori';
 import { GiftIcon, LockIcon } from '@/components/Icons';
@@ -48,7 +48,15 @@ export default function StoreCard({
       </span>
 
       <span className="relative grid aspect-square w-full place-items-center overflow-hidden rounded-xl bg-sunk">
-        <Art src={item.img} scene={roomly} />
+        {/* 방과 세트는 칸을 꽉 채운다 — 장면 전체가 그 물건이다 */}
+        <Art
+          item={item}
+          className={
+            roomly
+              ? 'h-full w-full object-cover object-bottom'
+              : 'h-auto max-h-[88%] w-auto max-w-[88%]'
+          }
+        />
         {item.kind === 'pose' && (
           <span className="absolute left-[3px] top-[3px] grid h-[19px] w-[19px] place-items-center rounded-full bg-white/90 text-cycle">
             <GiftIcon className="h-3 w-3" />
@@ -85,25 +93,5 @@ export default function StoreCard({
         </span>
       )}
     </button>
-  );
-}
-
-/** 방과 세트는 칸을 꽉 채운다 — 장면 전체가 그 물건이다 */
-function Art({ src, scene }: { src?: string; scene: boolean }) {
-  const [gone, setGone] = useState(false);
-  if (!src || gone) return null;
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt=""
-      aria-hidden="true"
-      onError={() => setGone(true)}
-      className={
-        scene
-          ? 'h-full w-full select-none object-cover object-bottom'
-          : 'h-auto max-h-[88%] w-auto max-w-[88%] select-none'
-      }
-    />
   );
 }

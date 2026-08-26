@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import Art from './Art';
 import { useGomdori } from '@/lib/gomdori';
 
 /**
  * 곰돌이가 서는 칸 — **방과 곰이 따로 얹힌다.**
  * 합쳐 그리면 옷을 못 갈아입힌다(발주서 1-2절).
  *
- * 그림이 아직 없는 옷이 많다. 못 불러오면 조용히 사라진다 —
- * 깨진 그림이 뜨는 자리를 만들지 않는다.
+ * 그림은 [Art](Art.tsx)가 세운다 — **올린 것이 먼저, 안 되면 앱이 가진 것.**
+ * 둘 다 안 되면 조용히 사라진다. 깨진 그림이 뜨는 자리를 만들지 않는다.
  *
  * **그림은 상점에서 찾는다.** 앱에 박혀 나온 목록에서 찾으면
  * 나중에 올린 옷이 여기서만 기본 곰돌이로 선다.
@@ -39,9 +39,9 @@ export default function Stage({
   const { item } = useGomdori();
   return (
     <div className="relative grid aspect-square w-full items-end justify-items-center overflow-hidden rounded-2xl bg-sunk">
-      <Art src={item(room).img} className="absolute inset-0 h-full w-full object-cover object-bottom" />
+      <Art item={item(room)} className="absolute inset-0 h-full w-full object-cover object-bottom" />
       <Art
-        src={item(bear).img}
+        item={item(bear)}
         className="relative z-[1] mb-[6%] block h-auto max-h-[74%] w-auto max-w-[46%]"
       />
       {flag && (
@@ -50,20 +50,5 @@ export default function Stage({
         </span>
       )}
     </div>
-  );
-}
-
-function Art({ src, className }: { src?: string; className: string }) {
-  const [gone, setGone] = useState(false);
-  if (!src || gone) return null;
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt=""
-      aria-hidden="true"
-      onError={() => setGone(true)}
-      className={`select-none ${className}`}
-    />
   );
 }

@@ -4,7 +4,25 @@
 --
 --   1. **그림 없는 줄을 값표에서 지운다** — 옷 열, 방 넷, 시즌 세트 다섯(열다섯 줄). 스물아홉 줄
 --   2. **코스튬 셋을 켠다** — 곰드래곤 · 공주 곰 · 마법사 곰
---   3. **기본 곰돌이와 기본 룸은 안 사도 갖는다**
+--   3. **그 셋의 그림 자리를 `shop` 통으로 잡아준다**
+--   4. **기본 곰돌이와 기본 룸은 안 사도 갖는다**
+--
+-- ─── 그림을 먼저 올린다 ────────────────────────────────────────
+--
+-- **파일을 올리고 나서 이걸 돌린다.**
+--
+--   $env:SUPABASE_SECRET_KEY = 'sb_secret_...'
+--   npm run shop
+--
+-- 대시보드 Storage → `shop` 통에 손으로 올려도 같다. 자리는 아래 셋이다 —
+--
+--   shop/deco/costume/gomdori/dragon.png
+--   shop/deco/costume/gomdori/princess.png
+--   shop/deco/costume/gomdori/wizard.png
+--
+-- 순서가 바뀌어도 상점은 안 깨진다. 값표만 먼저 채워지면 앱이 **앱에 든 그림으로
+-- 물러선다**([Art.tsx](../src/screens/store/Art.tsx)) — 그래도 올린 것이 진짜니
+-- 올리고 돌리는 쪽이 맞다.
 --
 -- ─── 왜 지우나 ─────────────────────────────────────────────────
 --
@@ -135,6 +153,34 @@ update costume_catalog set active = true, family_key = 'daily'   where item_key 
 update costume_catalog set active = true, family_key = 'costume' where item_key = 'rabbit';
 update costume_catalog set active = true, family_key = 'room'    where item_key = 'room-base';
 
+-- ─── 그림이 어디 있나 ──────────────────────────────────────────
+/*
+ * **올린 그림 자리를 값표에 적는다.** `<대분류>/<중분류>/<종류>/<열쇠>.png`이고
+ * 통 이름(`shop`)은 안 적는다 — 통을 옮기면 줄마다 다 고쳐야 한다.
+ *
+ * 서버의 `shop_folder()`가 짓는 것과 **같은 문자열**이라 거기서 받아 쓴다.
+ * 손으로 `deco/costume/gomdori/…`를 세 번 적으면 나중에 이 셋을 다른 중분류로
+ * 옮길 때 폴더와 값표가 어긋난다 — 함수가 지으면 늘 지금 중분류를 따라간다.
+ *
+ * **파일 이름은 열쇠 그대로다.** 표의 열쇠와 파일 이름이 같아야 어느 그림이
+ * 어느 물건인지 대조할 일이 없다.
+ *
+ * 앱에도 같은 그림이 들어 있다(`public/gomdori/`). 그건 **못 읽었을 때 물러설 자리**다 —
+ * `img`가 채워져 있으면 앱은 늘 올린 쪽을 먼저 본다.
+ */
+update costume_catalog
+   set img = shop_folder(item_key) || '/' || item_key || '.png'
+ where item_key in ('dragon', 'princess', 'wizard')
+   and shop_folder(item_key) is not null;
+
+/*
+ * **기본 곰돌이·곰토끼·기본 룸은 비워둔 채로 둔다.**
+ *
+ * 로그인 전에도 서버를 못 읽어도 곰돌이는 서 있어야 하는데, `img`를 채우면
+ * 그 자리에서 **Storage를 부르러 갔다가 못 부르고 빈다.** 비워두면 앱이
+ * 제 안의 그림으로 곧장 선다 — 이 셋만 일부러 다르다.
+ */
+
 -- ─── 안 사도 갖는 것 ────────────────────────────────────────────
 /*
  * **기본 곰돌이와 기본 룸은 그냥 준다.**
@@ -201,13 +247,19 @@ commit;
 
 -- ─── 돌린 뒤 눈으로 보는 것 ─────────────────────────────────────
 --
---   select item_key, name, price, family_key, active from costume_catalog order by family_key, price;
+--   select item_key, name, price, family_key, active, img
+--     from costume_catalog order by family_key, price;
 --
 -- 여섯 줄이 나와야 한다 —
 --
---   base       기본 곰돌이     0  daily     t
---   rabbit     곰토끼        300  costume   t
---   dragon     곰드래곤      350  costume   t
---   princess   공주 곰       400  costume   t
---   wizard     마법사 곰     400  costume   t
---   room-base  기본 룸         0  room      t
+--   base       기본 곰돌이     0  daily     t  (비어 있음)
+--   rabbit     곰토끼        300  costume   t  (비어 있음)
+--   dragon     곰드래곤      350  costume   t  deco/costume/gomdori/dragon.png
+--   princess   공주 곰       400  costume   t  deco/costume/gomdori/princess.png
+--   wizard     마법사 곰     400  costume   t  deco/costume/gomdori/wizard.png
+--   room-base  기본 룸         0  room      t  (비어 있음)
+--
+-- 그림이 진짜로 올라갔는지는 통에서 본다 —
+--
+--   select name, metadata->>'size' as bytes
+--     from storage.objects where bucket_id = 'shop' order by name;
