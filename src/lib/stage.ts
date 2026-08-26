@@ -24,11 +24,17 @@
  * 여백을 174px에서 257px로 늘리면서 이 값도 72%에서 85%로 같이 키웠다 —
  * **화면에 뜨는 크기는 그대로다.** 여백이 없던 시절의 46%로 두면 절반만 하다.
  *
+ * 그 뒤로 85 → 90%로 한 번 더 키웠다. 이번엔 여백 때문이 아니라
+ * **곰돌이가 방에 견줘 작아 보여서**다.
+ *
+ * **90%가 상한이다.** 바닥에서 `BEAR_FLOOR`만큼 떠 있으니 둘을 더해 100을 넘으면
+ * 칸 위로 삐져나가고, 칸이 잘라내는 자리라 머리 끝이 소리 없이 깎인다.
+ *
  * `max-h`도 같이 묶는다. **한쪽만 묶으면 그림 비가 바뀔 때 칸을 뚫는다.**
  */
 
 /** 곰돌이가 칸 폭의 몇 %로 뜨나 */
-export const BEAR_W = 85;
+export const BEAR_W = 90;
 /**
  * 발끝이 칸 바닥에서 몇 % 떠 있나.
  *
@@ -46,7 +52,7 @@ export const BEAR_FLOOR = 9;
  *
  * **`scripts/bears.mjs`의 `SLOT`이 이 값을 베껴 쓴다**(node에서는 이 파일을 못 읽는다).
  */
-export const BEAR_ART = 'relative z-[1] mb-[9%] block h-auto max-h-[85%] w-auto max-w-[85%]';
+export const BEAR_ART = 'relative z-[1] mb-[9%] block h-auto max-h-[90%] w-auto max-w-[90%]';
 
 /** 방 한 장 — 칸을 꽉 채운다. **아래를 맞춰 자른다** */
 export const ROOM_ART = 'absolute inset-0 h-full w-full object-cover object-bottom';
