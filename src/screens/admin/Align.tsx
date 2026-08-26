@@ -276,8 +276,14 @@ export default function Align({
           )}
         </span>
 
+        {/*
+          **끌기를 여기서 끊는다.** 안 끊으면 눌러도 아무 일이 안 일어난다 —
+          누르는 순간 칸이 손가락을 통째로 잡아채고(`setPointerCapture`),
+          그러면 뗄 때 나는 누름이 단추가 아니라 칸에 가서 붙는다.
+        */}
         <button
           type="button"
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={() => pick.current?.click()}
           className="absolute right-2.5 top-2.5 z-[4] rounded-full bg-white/92 px-2.5 py-[5px] text-[11px] text-ink2 shadow-card"
         >
