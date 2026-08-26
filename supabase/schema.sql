@@ -1052,55 +1052,30 @@ create table if not exists costume_owned (
 
 -- ─── 값표의 씨앗 ────────────────────────────────────────────────
 /*
- * 앱의 costumes.ts에 있던 스물아홉 줄. **여기서 심고, 다시는 안 덮는다.**
+ * **앱이 그림을 갖고 있는 여섯 줄.** 여기서 심고, 다시는 안 덮는다.
  *
- * 전에는 두 번 돌려도 되게 `do update`로 값을 다시 밀어 넣었다. 지금은 안 된다 —
- * **값표의 주인이 이 파일에서 [상점 채우기](../design/관리자.html)로 넘어갔다.**
- * 그대로 두면 관리자가 고쳐놓은 값과 이름이 schema.sql을 한 번 돌릴 때마다 되돌아간다.
+ * 한때 스물아홉 줄이 여기 있었다 — 모자 곰·피크닉 룸·할로윈 세트 …. 다 걷어냈다.
+ * **이름과 값만 있고 그림이 없는 줄**이었고, 그런 줄은 상점 격자에 회색 네모로 떠서
+ * `아직 안 그렸어요`가 아니라 **파는 물건으로 읽힌다** — 걸쳐봐도 안 바뀌고
+ * 300P를 치른 뒤에도 안 바뀐다([2026-08-26](../sql/2026-08-26_빈-껍데기-지우고-코스튬-셋.sql)).
  *
- * 그래서 부딪히면 **이름 칸이 비어 있는 줄만** 채운다. 이름 칸이 생기기 전에 심긴 줄이라는
- * 뜻이고, 그런 줄은 이미 앱이 팔고 있던 것이니 파는 중으로 같이 켠다.
+ * 그래서 **여기 심는 것은 앱과 같이 나가는 그림이 있는 것뿐이다.**
+ * `public/gomdori/`에 파일이 있는 여섯이고, `img`를 비워두면 앱이 제 그림으로 선다.
+ * 앞으로 늘어나는 것은 여기가 아니라 [상점 채우기](../design/관리자.html)에서 들어온다 —
+ * 그림을 Storage에 올리고 코드는 번호표로 딴다.
+ *
+ * 부딪히면 **안 덮는다.** 값표의 주인이 이 파일에서 관리자 화면으로 넘어갔고,
+ * 덮으면 관리자가 고쳐놓은 값과 이름이 schema.sql을 한 번 돌릴 때마다 되돌아간다.
  */
 insert into costume_catalog (item_key, kind, price, season, name, active) values
-  ('base',        'bear',   0, null, '기본 곰돌이', true),
-  ('hat',         'bear', 100, null, '모자 곰', true),
-  ('ribbon',      'bear', 100, null, '리본 곰', true),
-  ('scarf',       'bear', 100, null, '목도리 곰', true),
-  ('apron',       'bear', 150, null, '앞치마 곰', true),
-  ('glasses',     'bear', 200, null, '안경 곰', true),
-  ('overall',     'bear', 200, null, '멜빵 곰', true),
-  ('chef',        'bear', 200, null, '요리사 곰', true),
-  ('rabbit',      'bear', 300, null, '곰토끼', true),
+  ('base',      'bear',   0, null, '기본 곰돌이', true),
+  ('rabbit',    'bear', 300, null, '곰토끼',     true),
+  ('dragon',    'bear', 350, null, '곰드래곤',   true),
+  ('princess',  'bear', 400, null, '공주 곰',    true),
+  ('wizard',    'bear', 400, null, '마법사 곰',  true),
 
-  ('room-base',   'room',   0, null, '기본 룸', true),
-  ('room-picnic', 'room', 300, null, '피크닉 룸', true),
-  ('room-cafe',   'room', 400, null, '카페 룸', true),
-  ('room-plant',  'room', 400, null, '식물 가득 룸', true),
-  ('room-bed',    'room', 500, null, '포근한 침실', true),
-
-  ('b-swim',      'bear', 300, 's-swim', '물놀이 곰', true),
-  ('r-sea',       'room', 400, 's-swim', '여름 바다', true),
-  ('pose-tube',   'pose',   0, 's-swim', '튜브 포즈', true),
-
-  ('b-hall',      'bear', 300, 's-hall', '할로윈 곰', true),
-  ('r-hall',      'room', 400, 's-hall', '할로윈 룸', true),
-  ('pose-pump',   'pose',   0, 's-hall', '호박 포즈', true),
-
-  ('b-xmas',      'bear', 350, 's-xmas', '산타 곰', true),
-  ('r-xmas',      'room', 450, 's-xmas', '크리스마스 룸', true),
-  ('pose-tree',   'pose',   0, 's-xmas', '트리 포즈', true),
-
-  ('b-bloom',     'bear', 300, 's-bloom', '봄꽃 곰', true),
-  ('r-bloom',     'room', 400, 's-bloom', '봄꽃 룸', true),
-  ('pose-petal',  'pose',   0, 's-bloom', '꽃잎 포즈', true),
-
-  ('b-vac',       'bear', 350, 's-vac', '여름휴가 곰', true),
-  ('r-beach',     'room', 450, 's-vac', '해변 룸', true),
-  ('pose-parcel', 'pose',   0, 's-vac', '파라솔 포즈', true)
-on conflict (item_key) do update
-  -- **덮지 않는다.** 이름이 비어 있는 줄(칸이 생기기 전에 심긴 줄)만 채워 켠다.
-  set name   = coalesce(costume_catalog.name, excluded.name),
-      active = costume_catalog.active or costume_catalog.name is null;
+  ('room-base', 'room',   0, null, '기본 룸',    true)
+on conflict (item_key) do nothing;
 
 /*
  * 시즌 세트 — **관리자가 짓고 이름 붙인다.**
@@ -1126,13 +1101,13 @@ create table if not exists costume_season (
   created_at timestamptz not null default now()
 );
 
-insert into costume_season (season_key, name, ord, note) values
-  ('s-swim',  '물놀이 세트',   1, '여름 바다에서 신나게!'),
-  ('s-hall',  '할로윈 세트',   2, '한 밤의 사탕 사냥'),
-  ('s-xmas',  '크리스마스 세트', 3, '눈 오는 밤의 곰돌이'),
-  ('s-bloom', '봄꽃 세트',     4, '꽃잎이 날리는 날'),
-  ('s-vac',   '여름휴가 세트',  5, '느긋한 바닷가 하루')
-on conflict (season_key) do nothing;   -- 값표와 같은 까닭 — 고쳐놓은 이름을 안 덮는다
+/*
+ * **씨앗을 안 심는다.** 물놀이·할로윈·크리스마스·봄꽃·여름휴가 다섯이 여기 있었는데
+ * 셋씩 열다섯 줄이 다 이름뿐이라 값표와 같이 걷어냈다.
+ *
+ * 세트는 이제 관리자가 짓는다 — 새로 짓는 것은 `s000001`부터 번호표로 딴다.
+ * 옛 `s-swim` 같은 손으로 적은 열쇠는 그걸로 마지막이다.
+ */
 
 -- ─── 대분류와 중분류 ────────────────────────────────────────────
 /*
@@ -1193,17 +1168,6 @@ insert into shop_family (family_key, group_key, name, ord, active) values
   ('holiday',  'season', '기념일', 2, true)
 on conflict (family_key) do nothing;
 
--- ─── 새로 파는 것 ──────────────────────────────────────────────
--- 코스튬 칩이 요리사·곰토끼 둘뿐이면 눌렀을 때 허전하다. 다섯을 더 심는다.
--- 위 씨앗과 같은 규칙이다 — **심고, 다시는 안 덮는다.**
-insert into costume_catalog (item_key, kind, price, season, name, active) values
-  ('knit',       'bear', 150, null, '니트 곰', false),
-  ('shirt',      'bear', 150, null, '셔츠 곰', false),
-  ('detective',  'bear', 350, null, '탐정 곰', false),
-  ('princess',   'bear', 400, null, '공주 곰', false),
-  ('wizard',     'bear', 400, null, '마법사 곰', false)
-on conflict (item_key) do nothing;
-
 -- ─── 물건이 어느 중분류인가 ─────────────────────────────────────
 alter table costume_catalog add column if not exists family_key text references shop_family;
 
@@ -1223,10 +1187,7 @@ end $$;
  */
 alter table costume_season add column if not exists family_key text references shop_family;
 
-update costume_season set family_key = v.f
-  from (values ('s-swim','seasonal'), ('s-bloom','seasonal'), ('s-vac','seasonal'),
-               ('s-hall','holiday'),  ('s-xmas','holiday')) as v(k, f)
- where costume_season.season_key = v.k and costume_season.family_key is null;
+-- 심어두는 세트가 없어 여기서 채울 것도 없다. 관리자가 지을 때 같이 고른다.
 
 /*
  * 중분류는 **한 번만** 정해준다. 이미 값이 든 줄은 안 건드린다 —
@@ -1234,11 +1195,11 @@ update costume_season set family_key = v.f
  */
 update costume_catalog set family_key = 'daily'
  where kind = 'bear' and season is null and family_key is null
-   and item_key in ('base', 'hat', 'ribbon', 'scarf', 'knit', 'shirt', 'apron', 'glasses', 'overall');
+   and item_key in ('base');
 
 update costume_catalog set family_key = 'costume'
  where kind = 'bear' and season is null and family_key is null
-   and item_key in ('chef', 'rabbit', 'detective', 'princess', 'wizard');
+   and item_key in ('rabbit', 'dragon', 'princess', 'wizard');
 
 update costume_catalog set family_key = 'room'
  where kind = 'room' and season is null and family_key is null;
@@ -1494,6 +1455,34 @@ begin
 end $fn$;
 
 /*
+ * **안 사도 갖는 것** — 값이 0인 것.
+ *
+ * 기본 곰돌이와 기본 룸이다. 값이 0이라 사려면 살 수는 있었는데, 그러면 갓 가입한
+ * 사람의 옷장이 **비어 있고** 자기가 지금 입고 있는 곰이 상점에 `구매하기`로 떠 있다 —
+ * **입고 있는 것을 사라고 하는 꼴**이라 0P라도 말이 안 된다.
+ *
+ * 열쇠 둘을 여기 적지 않고 **`값이 0인 것`으로 고른다.** 적어두면 나중에 기본 룸을
+ * 다른 것으로 바꿀 때 이 함수도 같이 고쳐야 하는데, 그 날 잊는다.
+ * 값이 0이라는 것이 곧 `안 받고 준다`는 뜻이라 규칙과 뜻이 같다.
+ *
+ * 포즈는 뺀다. 포즈도 값이 0이지만 **세트를 다 모아야 오는 것**이라
+ * 여기 들면 아무나 그냥 갖게 된다 — 그건 `grant_poses()`가 따로 본다.
+ *
+ * 앱에도 같은 것이 있다(`FREEBIES`). 거기 한 번 더 두는 까닭은 **로그인 전과
+ * 서버를 못 읽었을 때**를 메우기 위해서다 — 그 두 자리에서도 옷장은 안 비어야 한다.
+ */
+create or replace function grant_free()
+returns void language sql security definer set search_path = public as $fn$
+  insert into costume_owned (user_id, item_key, price)
+  select auth.uid(), c.item_key, 0
+    from costume_catalog c
+   where c.price = 0
+     and c.kind <> 'pose'
+     and c.active
+  on conflict (user_id, item_key) do nothing;
+$fn$;
+
+/*
  * 지금 얼마 있나 — **가입 100P + 받은 것 − 산 값의 합.**
  *
  * 셈하기 전에 안 준 것부터 채운다. 앱이 따로 부를 자리를 안 만들어도
@@ -1505,6 +1494,8 @@ create or replace function my_points()
 returns int language plpgsql security definer set search_path = public as $fn$
 begin
   perform stamp_points();
+  -- 안 사도 갖는 것부터. 세트를 세기 전에 넣어야 값이 0인 시즌 물건도 제대로 센다.
+  perform grant_free();
   /*
    * 세트도 여기서 본다. 전에는 **살 때만** 봤는데, 그러면 소품이 숨김인 채로 세트를
    * 다 모은 사람은 관리자가 켜준 뒤에도 **뭔가 하나 더 사기 전까지** 못 받는다.

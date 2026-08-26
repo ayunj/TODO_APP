@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAuth } from './auth';
-import { BUILTIN, DEFAULT_BEAR, DEFAULT_ROOM, itemOf } from './costumes';
+import { BUILTIN, DEFAULT_BEAR, DEFAULT_ROOM, FREEBIES, itemOf } from './costumes';
 import {
   buyCostume as buyRemote,
   pullGomdori,
@@ -42,6 +42,11 @@ interface GomdoriValue {
   points: number;
   /** 가진 것들의 열쇠 */
   owned: string[];
+  /**
+   * 갖고 있나. **기본 곰돌이와 기본 룸은 늘 참이다**(`FREEBIES`) —
+   * 서버도 그 둘을 그냥 넣어주지만(`grant_free()`), 로그인 전과 못 받아왔을 때는
+   * 여기밖에 없다. 그 두 자리에서 옷장이 통째로 비면 고장으로 읽힌다.
+   */
   has: (key: string) => boolean;
   /** 지금 입은 곰(포즈도 여기 앉는다)과 깐 방 */
   wornBear: string;
@@ -184,7 +189,7 @@ export function GomdoriProvider({ children }: { children: React.ReactNode }) {
       loading,
       points: state.points,
       owned: state.owned,
-      has: (key: string) => state.owned.includes(key),
+      has: (key: string) => state.owned.includes(key) || FREEBIES.includes(key),
       wornBear: state.wornBear,
       wornRoom: state.wornRoom,
       buy,

@@ -5,7 +5,7 @@ import Coin from './store/Coin';
 import SetDetail from './store/SetDetail';
 import StoreCard from './store/StoreCard';
 import Stage from './store/Stage';
-import { familiesOf } from '@/lib/costumes';
+import { familiesOf, groupOf } from '@/lib/costumes';
 import { useGomdori } from '@/lib/gomdori';
 import { useUi } from '@/lib/ui';
 import { BackIcon, GiftIcon, HomeIcon, StarIcon } from '@/components/Icons';
@@ -61,6 +61,20 @@ export default function StoreScreen() {
   const decoOf = (fam: string) =>
     shop.items.filter((c) => !c.season && c.kind !== 'room' && c.family === fam);
   const sets = shop.sets.filter((x) => sub === 'all' || x.family === sub);
+  /*
+    **아무것도 안 든 대분류는 칩을 안 세운다.** 시즌 세트를 다 걷어낸 뒤 `시즌`을
+    그대로 두면 눌렀을 때 빈 화면이 뜨는데, 그건 파는 것이 없는 게 아니라
+    **화면이 고장 난 것**으로 읽힌다. 관리자가 세트를 하나 지으면 칩도 같이 돌아온다.
+  */
+  const groups = useMemo(
+    () =>
+      shop.groups.filter((g) =>
+        g.key === 'season'
+          ? shop.sets.length > 0
+          : shop.items.some((c) => groupOf(c) === g.key),
+      ),
+    [shop],
+  );
 
   const set = shop.sets.find((x) => x.key === open) ?? null;
   const it = item(trying);
@@ -141,7 +155,7 @@ export default function StoreScreen() {
           <div className="-mx-4 mb-3 flex gap-[7px] overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {[
               { key: 'all', name: '전체' },
-              ...shop.groups,
+              ...groups,
               { key: 'room', name: '방' },
               { key: 'mine', name: '내 옷장' },
             ].map((g) => (
@@ -212,8 +226,13 @@ export default function StoreScreen() {
             )
           ) : (
             <>
-              <Head title="시즌 세트" aside="때가 있는 것" />
-              <Sets list={shop.sets} has={has} onOpen={setOpen} bare />
+              {/* 세트가 하나도 없으면 머리글까지 뺀다 — 빈 격자 위의 제목은 빠진 자리로 읽힌다 */}
+              {shop.sets.length > 0 && (
+                <>
+                  <Head title="시즌 세트" aside="때가 있는 것" />
+                  <Sets list={shop.sets} has={has} onOpen={setOpen} bare />
+                </>
+              )}
               {decoFams.map((f) => (
                 <Group key={f.key} title={f.name} list={decoOf(f.key)} pick={pick} trying={trying} />
               ))}
@@ -381,6 +400,9 @@ function Sets({
   onOpen: (key: string) => void;
   bare?: boolean;
 }) {
+  // 세트가 없으면 아무것도 안 세운다. 위 `Group`과 같은 까닭이다.
+  if (list.length === 0) return null;
+
   return (
     <>
       {!bare && <Head title="시즌 세트" />}
@@ -417,6 +439,9 @@ function Group({
   pick: (key: string) => void;
   trying: string;
 }) {
+  // 빈 무더기는 통째로 안 세운다 — 제목만 남은 자리는 뭔가 빠진 것으로 읽힌다
+  if (list.length === 0) return null;
+
   return (
     <>
       <Head title={title} aside={aside} />

@@ -23,44 +23,40 @@ import type { Costume, CostumeSet, Shop, ShopFamily, ShopGroup } from './types';
 
 /**
  * 꾸미기 — **곰돌이 그대로 옷만 바뀐다.** 니트·셔츠·모자 같은 일상 옷.
- * 값이 싼 쪽이라 들어오자마자 하나는 살 수 있다.
+ *
+ * **지금은 기본 곰돌이 하나뿐이다.** 모자·리본·목도리 …는 이름과 값만 있고 그림이 없어서
+ * 상점에 회색 네모로 떠 있었다 — 파는 물건처럼 보이는데 걸쳐봐도 아무것도 안 바뀌는 칸이라
+ * [빈 껍데기 지우기](../../sql/2026-08-26_빈-껍데기-지우고-코스튬-셋.sql)에서 값표째 걷어냈다.
+ * **그림이 그려지면 그때 한 줄씩 돌아온다.**
  */
 export const DAILY: Costume[] = [
   { key: 'base', name: '기본 곰돌이', price: 0, kind: 'bear', family: 'daily', img: '/gomdori/front.png' },
-  { key: 'hat', name: '모자 곰', price: 100, kind: 'bear', family: 'daily' },
-  { key: 'ribbon', name: '리본 곰', price: 100, kind: 'bear', family: 'daily' },
-  { key: 'scarf', name: '목도리 곰', price: 100, kind: 'bear', family: 'daily' },
-  { key: 'knit', name: '니트 곰', price: 150, kind: 'bear', family: 'daily' },
-  { key: 'shirt', name: '셔츠 곰', price: 150, kind: 'bear', family: 'daily' },
-  { key: 'apron', name: '앞치마 곰', price: 150, kind: 'bear', family: 'daily' },
-  { key: 'glasses', name: '안경 곰', price: 200, kind: 'bear', family: 'daily' },
-  { key: 'overall', name: '멜빵 곰', price: 200, kind: 'bear', family: 'daily' },
 ];
 
 /**
- * 코스튬 — **딴 사람이 된다.** 공주·탐정·마법사처럼 통째로 변신하는 것.
+ * 코스튬 — **딴 사람이 된다.** 공주·마법사처럼 통째로 변신하는 것.
  *
- * 요리사 곰과 곰토끼는 원래 꾸미기에 섞여 있던 것을 옮겨온 것이다 —
- * **값은 안 건드렸다.** 값표의 주인은 [상점 채우기](../../design/관리자.html)다.
+ * **넷 다 그림이 있다.** 요리사 곰과 탐정 곰은 이름만 있던 줄이라 위와 같이 걷어냈고,
+ * 여기 남은 것은 `public/gomdori/`에 그림이 들어 있는 것뿐이다.
+ * 원본은 `assets/gomdori/`에 있고 `npm run gomdori`이 눌러 담는다.
  */
 export const COSTUMES: Costume[] = [
-  { key: 'chef', name: '요리사 곰', price: 200, kind: 'bear', family: 'costume' },
   { key: 'rabbit', name: '곰토끼', price: 300, kind: 'bear', family: 'costume', img: '/gomdori/rabbit.png' },
-  { key: 'detective', name: '탐정 곰', price: 350, kind: 'bear', family: 'costume' },
-  { key: 'princess', name: '공주 곰', price: 400, kind: 'bear', family: 'costume' },
-  { key: 'wizard', name: '마법사 곰', price: 400, kind: 'bear', family: 'costume' },
+  { key: 'dragon', name: '곰드래곤', price: 350, kind: 'bear', family: 'costume', img: '/gomdori/dragon.png' },
+  { key: 'princess', name: '공주 곰', price: 400, kind: 'bear', family: 'costume', img: '/gomdori/princess.png' },
+  { key: 'wizard', name: '마법사 곰', price: 400, kind: 'bear', family: 'costume', img: '/gomdori/wizard.png' },
 ];
 
 /** 곰 옷 전부 — 옷장에서 한 줄로 볼 때 쓴다 */
 export const BEARS: Costume[] = [...DAILY, ...COSTUMES];
 
-/** 방 테마 — 곰이 아니라 배경이라 칩을 따로 쓴다. 한 장이면 끝이라 그리는 값이 싸다. */
+/**
+ * 방 테마 — 곰이 아니라 배경이라 칩을 따로 쓴다. 한 장이면 끝이라 그리는 값이 싸다.
+ *
+ * **기본 룸 하나뿐이다.** 피크닉·카페·식물·침실도 그림 없는 줄이라 같이 걷어냈다.
+ */
 export const ROOMS: Costume[] = [
   { key: 'room-base', name: '기본 룸', price: 0, kind: 'room', family: 'room', img: '/gomdori/room.png' },
-  { key: 'room-picnic', name: '피크닉 룸', price: 300, kind: 'room', family: 'room' },
-  { key: 'room-cafe', name: '카페 룸', price: 400, kind: 'room', family: 'room' },
-  { key: 'room-plant', name: '식물 가득 룸', price: 400, kind: 'room', family: 'room' },
-  { key: 'room-bed', name: '포근한 침실', price: 500, kind: 'room', family: 'room' },
 ];
 
 /**
@@ -73,54 +69,13 @@ export const ROOMS: Costume[] = [
  *
  * 포즈에 값이 없는 까닭도 같다. 값이 붙는 순간 **못 산 것**이 되고,
  * 그러면 받는 것이 아니라 안 사면 못 갖는 것으로 읽힌다.
+ *
+ * **지금은 비어 있다.** 물놀이·할로윈·크리스마스·봄꽃·여름휴가 다섯이 있었는데
+ * 열다섯 줄이 다 이름뿐인 것이라 세트째 걷어냈다. 세트는 이제
+ * [상점 채우기](../../design/관리자.html)에서 관리자가 짓는다 — **여기 다시 적을 일은 없다.**
+ * 서버에서 내려온 것이 그대로 선다.
  */
-export const SETS: CostumeSet[] = [
-  {
-    key: 's-bloom',
-    name: '봄꽃 세트',
-    note: '꽃잎이 날리는 날',
-    family: 'seasonal',
-    bear: { key: 'b-bloom', name: '봄꽃 곰', price: 300, kind: 'bear', season: 's-bloom', family: 'seasonal' },
-    room: { key: 'r-bloom', name: '봄꽃 룸', price: 400, kind: 'room', season: 's-bloom', family: 'seasonal' },
-    pose: { key: 'pose-petal', name: '꽃잎 포즈', price: 0, kind: 'pose', season: 's-bloom', family: 'seasonal' },
-  },
-  {
-    key: 's-swim',
-    name: '물놀이 세트',
-    note: '여름 바다에서 신나게!',
-    family: 'seasonal',
-    bear: { key: 'b-swim', name: '물놀이 곰', price: 300, kind: 'bear', season: 's-swim', family: 'seasonal' },
-    room: { key: 'r-sea', name: '여름 바다', price: 400, kind: 'room', season: 's-swim', family: 'seasonal' },
-    pose: { key: 'pose-tube', name: '튜브 포즈', price: 0, kind: 'pose', season: 's-swim', family: 'seasonal' },
-  },
-  {
-    key: 's-vac',
-    name: '여름휴가 세트',
-    note: '느긋한 바닷가 하루',
-    family: 'seasonal',
-    bear: { key: 'b-vac', name: '여름휴가 곰', price: 350, kind: 'bear', season: 's-vac', family: 'seasonal' },
-    room: { key: 'r-beach', name: '해변 룸', price: 450, kind: 'room', season: 's-vac', family: 'seasonal' },
-    pose: { key: 'pose-parcel', name: '파라솔 포즈', price: 0, kind: 'pose', season: 's-vac', family: 'seasonal' },
-  },
-  {
-    key: 's-hall',
-    name: '할로윈 세트',
-    note: '한 밤의 사탕 사냥',
-    family: 'holiday',
-    bear: { key: 'b-hall', name: '할로윈 곰', price: 300, kind: 'bear', season: 's-hall', family: 'holiday' },
-    room: { key: 'r-hall', name: '할로윈 룸', price: 400, kind: 'room', season: 's-hall', family: 'holiday' },
-    pose: { key: 'pose-pump', name: '호박 포즈', price: 0, kind: 'pose', season: 's-hall', family: 'holiday' },
-  },
-  {
-    key: 's-xmas',
-    name: '크리스마스 세트',
-    note: '눈 오는 밤의 곰돌이',
-    family: 'holiday',
-    bear: { key: 'b-xmas', name: '산타 곰', price: 350, kind: 'bear', season: 's-xmas', family: 'holiday' },
-    room: { key: 'r-xmas', name: '크리스마스 룸', price: 450, kind: 'room', season: 's-xmas', family: 'holiday' },
-    pose: { key: 'pose-tree', name: '트리 포즈', price: 0, kind: 'pose', season: 's-xmas', family: 'holiday' },
-  },
-];
+export const SETS: CostumeSet[] = [];
 
 /** 열쇠 하나로 찾는다 — 가진 것 목록에는 열쇠만 들어 있다 */
 export const CATALOG: Costume[] = [
@@ -186,6 +141,19 @@ export const groupOf = (c: Costume): string => (c.season ? 'season' : 'deco');
 /** 기본으로 입고 있는 것. 아무것도 안 샀어도 곰돌이는 서 있다. */
 export const DEFAULT_BEAR = 'base';
 export const DEFAULT_ROOM = 'room-base';
+
+/**
+ * **안 사도 갖고 있는 것** — 기본 곰돌이와 기본 룸 둘.
+ *
+ * 값이 0이라 사려면 살 수는 있었다. 그런데 그러면 갓 가입한 사람의 옷장이 **비어 있고**,
+ * 자기가 지금 입고 있는 곰이 상점에 `구매하기`로 떠 있다 —
+ * **입고 있는 것을 사라고 하는 꼴**이라 0P라도 말이 안 된다.
+ *
+ * 서버도 같은 것을 준다(`grant_free()`). 여기 한 번 더 두는 까닭은
+ * **로그인 전과 서버를 못 읽었을 때**를 메우기 위해서다 — 그 두 자리에서도
+ * 옷장에 곰돌이와 기본 룸은 서 있어야 한다.
+ */
+export const FREEBIES: string[] = [DEFAULT_BEAR, DEFAULT_ROOM];
 
 /**
  * 점수표 — **화면에 적는 값이다.** 진짜로 얼마가 붙을지는 늘 서버가 정한다
