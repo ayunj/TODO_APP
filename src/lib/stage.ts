@@ -19,21 +19,34 @@
  *
  * 정사각 그림 안에 **머리 위 여백이 있다.** 곰토끼 귀나 마법사 고깔이 들어갈
  * 자리를 비워둔 것이라(`scripts/bears.mjs`의 `FIT`), 그만큼 칸을 키워야
- * 곰돌이가 제 크기로 선다. 여백이 없던 시절의 46%로 두면 20% 작아 보인다.
+ * 곰돌이가 제 크기로 선다.
+ *
+ * 여백을 174px에서 257px로 늘리면서 이 값도 72%에서 85%로 같이 키웠다 —
+ * **화면에 뜨는 크기는 그대로다.** 여백이 없던 시절의 46%로 두면 절반만 하다.
  *
  * `max-h`도 같이 묶는다. **한쪽만 묶으면 그림 비가 바뀔 때 칸을 뚫는다.**
  */
 
 /** 곰돌이가 칸 폭의 몇 %로 뜨나 */
-export const BEAR_W = 72;
-/** 발끝이 칸 바닥에서 몇 % 떠 있나 */
-export const BEAR_FLOOR = 6;
+export const BEAR_W = 85;
+/**
+ * 발끝이 칸 바닥에서 몇 % 떠 있나.
+ *
+ * **러그 가운데에 선다.** 6%로 두면 발이 러그 아래쪽 테두리에 걸쳐서
+ * 방 앞에 나와 선 것처럼 보였다 — 곰돌이는 러그를 밟고 서 있어야 한다.
+ */
+export const BEAR_FLOOR = 9;
 
 /**
  * 곰돌이 한 마리 — 방 위에 얹는다.
+ *
+ * **위의 두 값과 같은 값을 적는다.** `mb`는 `BEAR_FLOOR`, `max-w`는 `BEAR_W`다 —
+ * 클래스 이름은 지어 쓸 수가 없어서(테일윈드가 훑어 담는다) 한 번 더 적는다.
+ * 하나만 고치면 홈·상점과 맞추는 칸이 어긋난다.
+ *
  * **`scripts/bears.mjs`의 `SLOT`이 이 값을 베껴 쓴다**(node에서는 이 파일을 못 읽는다).
  */
-export const BEAR_ART = 'relative z-[1] mb-[6%] block h-auto max-h-[74%] w-auto max-w-[72%]';
+export const BEAR_ART = 'relative z-[1] mb-[9%] block h-auto max-h-[74%] w-auto max-w-[72%]';
 
 /** 방 한 장 — 칸을 꽉 채운다. **아래를 맞춰 자른다** */
 export const ROOM_ART = 'absolute inset-0 h-full w-full object-cover object-bottom';
