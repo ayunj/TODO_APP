@@ -76,6 +76,19 @@ export default function StoreScreen() {
   const [sub, setSub] = useState<string>('all');
   const [tab, setTab] = useState<Shelf>('bear');
   const [trying, setTrying] = useState<string>(wornBear);
+  /*
+    **밖에서 갈아입으면 걸쳐보는 칸도 따라간다.**
+
+    걸쳐보는 것은 입은 것과 따로 논다 — 안 산 옷도 걸쳐볼 수 있어야 해서다.
+    그래서 열 때 한 번만 입은 것을 베껴 왔는데, **세트 칸에서 입고 나오면**
+    입기 전 곰돌이를 그대로 들고 서 있었다. 새로고침해야 바뀌었다.
+
+    입은 것이 바뀌는 길은 `입기`를 눌렀을 때뿐이라(사면 그 자리에서 입는다)
+    따라가도 걸쳐보던 것을 뺏지 않는다 — 그 순간엔 둘이 같은 것이다.
+  */
+  useEffect(() => {
+    setTrying(wornBear);
+  }, [wornBear]);
   const [open, setOpen] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
