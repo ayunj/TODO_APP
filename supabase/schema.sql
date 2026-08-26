@@ -1018,11 +1018,11 @@ create table if not exists costume_catalog (
   -- 상점 카드에 그대로 뜨는 이름. 여덟 자를 넘기면 103px 칸에서 잘린다.
   name       text,
   /*
-   * 올린 그림이 Storage 어디에 있나 — `<대분류>/<중분류>/<종류>/<코드>.png`.
-   * 통 이름(`shop`)은 안 적는다. 통을 옮기면 스물아홉 줄을 다 고쳐야 한다.
-   * **비어 있으면 앱이 가진 그림으로 선다.**
+   * **그림 자리를 적어두는 칸은 없다.** 한때 `img`가 있었는데 걷어냈다 —
+   * `<대분류>/<중분류>/<종류>/<코드>.png`의 **네 토막이 다 이미 이 표에 있다.**
+   * 적어두면 관리자 화면이 경로를 물어보거나, 넣는 자리마다 같은 문자열을
+   * 다시 지어 넣게 된다. 앱이 짓는다(`src/lib/costumes.ts`의 `shopPath`).
    */
-  img        text,
   /*
    * **올리자마자 팔지 않는다.** 새로 넣는 것은 숨김으로 들어오고,
    * 관리자가 켜야 상점에 뜬다 — 반쯤 그린 것이 상점에 뜨는 사고를 막는다.
@@ -1034,7 +1034,8 @@ create table if not exists costume_catalog (
 
 -- 이미 값표가 있는 DB에도 같은 칸을 단다
 alter table costume_catalog add column if not exists name       text;
-alter table costume_catalog add column if not exists img        text;
+-- 옛 DB에 남아 있는 그림 자리 칸을 걷어낸다 — 위 주석을 볼 것
+alter table costume_catalog drop column if exists img;
 alter table costume_catalog add column if not exists active     boolean not null default false;
 alter table costume_catalog add column if not exists created_at timestamptz not null default now();
 alter table costume_catalog add column if not exists updated_at timestamptz not null default now();
@@ -1060,31 +1061,30 @@ create table if not exists costume_owned (
  * 300P를 치른 뒤에도 안 바뀐다([2026-08-26](../sql/2026-08-26_빈-껍데기-지우고-코스튬-셋.sql)).
  *
  * 그래서 **여기 심는 것은 앱과 같이 나가는 그림이 있는 것뿐이다.**
- * `public/gomdori/`에 파일이 있는 여섯이고, `img`를 비워두면 앱이 제 그림으로 선다.
+ * 그림이 있는 여섯뿐이고, 그림 자리는 적어두지 않는다 — 분류와 열쇠로 짓는다.
  * 앞으로 늘어나는 것은 여기가 아니라 [상점 채우기](../design/관리자.html)에서 들어온다 —
  * 그림을 Storage에 올리고 코드는 번호표로 딴다.
  *
  * 부딪히면 **안 덮는다.** 값표의 주인이 이 파일에서 관리자 화면으로 넘어갔고,
  * 덮으면 관리자가 고쳐놓은 값과 이름이 schema.sql을 한 번 돌릴 때마다 되돌아간다.
  */
-insert into costume_catalog (item_key, kind, price, season, name, img, active) values
+insert into costume_catalog (item_key, kind, price, season, name, active) values
   /*
-   * **`img`가 비어 있는 둘.** 로그인 전에도 서버를 못 읽어도 이 둘은 서 있어야 해서
-   * 일부러 안 올린다 — 채우면 그 자리에서 Storage를 부르러 갔다가 못 부르고 빈다.
+   * **앱이 그림까지 들고 나가는 둘.** 로그인 전에도 서버를 못 읽어도 이 둘은
+   * 서 있어야 해서 `public/gomdori/`에 넣어 같이 내보낸다. 통에는 안 올린다 —
    * 파는 옷은 안 뜨면 안 뜨는 대로 되지만, 곰돌이가 없으면 홈이 빈다.
    */
-  ('base',      'bear',   0, null, '기본 곰돌이', null, true),
-  ('room-base', 'room',   0, null, '기본 룸',    null, true),
+  ('base',      'bear',   0, null, '기본 곰돌이', true),
+  ('room-base', 'room',   0, null, '기본 룸',    true),
 
   /*
-   * **`shop` 통에 올려 파는 넷.** 자리는 `<대분류>/<중분류>/<종류>/<열쇠>.png`이고
-   * 통 이름은 안 적는다. 파일은 `npm run shop`이 올린다 — 값표만 있고 파일이 없으면
-   * 앱이 제 안의 그림으로 물러선다(`src/screens/store/Art.tsx`).
+   * **`shop` 통에 올려 파는 넷.** `npm run shop`이 올린다.
+   * 자리는 `deco/costume/gomdori/<열쇠>.png` — 적어두지 않고 분류와 열쇠로 짓는다.
    */
-  ('rabbit',    'bear', 300, null, '곰토끼',     'deco/costume/gomdori/rabbit.png',   true),
-  ('dragon',    'bear', 350, null, '곰드래곤',   'deco/costume/gomdori/dragon.png',   true),
-  ('princess',  'bear', 400, null, '공주 곰',    'deco/costume/gomdori/princess.png', true),
-  ('wizard',    'bear', 400, null, '마법사 곰',  'deco/costume/gomdori/wizard.png',   true)
+  ('rabbit',    'bear', 300, null, '곰토끼',     true),
+  ('dragon',    'bear', 350, null, '곰드래곤',   true),
+  ('princess',  'bear', 400, null, '공주 곰',    true),
+  ('wizard',    'bear', 400, null, '마법사 곰',  true)
 on conflict (item_key) do nothing;
 
 /*
@@ -1354,7 +1354,8 @@ end $$;
  * 중분류로 한 칩을 채우고, 종류로 그리는 사람이 다르다(곰은 캐릭터, 방은 배경).
  * 한 통에 다 부으면 스물아홉 장이 넘어가는 순간 무엇이 무엇인지 이름으로만 가려야 한다.
  *
- * 앱은 `img`에 적힌 것을 그대로 쓴다. 이 함수는 **관리자가 올릴 자리를 고를 때** 쓴다.
+ * **앱도 같은 규칙으로 자리를 짓는다**(`src/lib/costumes.ts`의 `shopPath`).
+ * 이 함수는 **관리자가 올릴 자리를 고를 때** 쓴다 — 규칙을 고치면 둘을 같이 고친다.
  */
 create or replace function shop_folder(item text)
 returns text language sql stable set search_path = public as $fn$

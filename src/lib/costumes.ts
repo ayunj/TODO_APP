@@ -121,6 +121,36 @@ const BUILTIN_BY_KEY = new Map(CATALOG.map((c) => [c.key, c]));
 export const builtinImg = (key: string): string | undefined => BUILTIN_BY_KEY.get(key)?.img;
 
 /**
+ * 종류가 어느 폴더에 쌓이나 — **서버의 `shop_folder()`와 같아야 한다.**
+ * 곰은 캐릭터를 그리는 사람이, 방은 배경을 그리는 사람이 따로 그린다.
+ */
+const KIND_DIR: Record<string, string> = { bear: 'gomdori', room: 'background' };
+
+/**
+ * 그림이 통 어디 있나 — **적어두지 않고 짓는다.**
+ *
+ * `<대분류>/<중분류>/<종류>/<열쇠>.png`
+ *
+ * 한때 이걸 `costume_catalog.img`에 적어뒀다. 걷어냈다 —
+ * **적어둘 것이 하나도 없는 값이다.** 관리자가 상점을 채울 때 고르는 것은
+ * 분류와 파일 둘뿐이고, 열쇠는 번호표로 저절로 딴다(`0000001`). 파일 이름은
+ * 그 열쇠 그대로고 폴더는 분류 그대로다 — **네 토막이 다 이미 값표에 있다.**
+ *
+ * 적어두면 관리자 화면이 경로를 물어야 하거나(물을 것이 아니다), 아니면 넣는 자리마다
+ * 같은 문자열을 다시 지어 넣어야 한다. 실제로 그래서 한 번 어긋났다 —
+ * 곰토끼를 통으로 옮겼는데 `img`가 비어서 그림이 안 떴다.
+ *
+ * **`shop_folder()`와 이 함수 둘이 같은 규칙을 안다.** 저쪽은 관리자가 올릴 자리를
+ * 고를 때, 이쪽은 앱이 볼 자리를 지을 때. 규칙을 고치면 둘을 같이 고친다.
+ */
+export function shopPath(item: Costume, families: ShopFamily[]): string | undefined {
+  if (!item.family) return undefined;
+  const fam = families.find((f) => f.key === item.family);
+  if (!fam) return undefined;
+  return `${fam.group}/${fam.key}/${KIND_DIR[item.kind] ?? 'prop'}/${item.key}.png`;
+}
+
+/**
  * 없는 열쇠면 기본 곰돌이를 준다.
  * **어느 자리에 앉힐지(`kind`)를 여기서 정하기 때문에** 비어 돌려주면 안 된다 —
  * 방인 줄 모르고 곰 자리에 앉히면 홈 화면에 방이 사람처럼 선다.

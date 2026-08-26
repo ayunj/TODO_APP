@@ -426,7 +426,10 @@ end $$;
  * 중분류로 한 칩을 채우고, 종류로 그리는 사람이 다르다(곰은 캐릭터, 방은 배경).
  * 한 통에 다 부으면 스물아홉 장이 넘어가는 순간 무엇이 무엇인지 이름으로만 가려야 한다.
  *
- * 앱은 `img`에 적힌 것을 그대로 쓴다. 이 함수는 **관리자가 올릴 자리를 고를 때** 쓴다.
+ * **앱도 같은 규칙으로 자리를 짓는다**(`src/lib/costumes.ts`의 `shopPath`).
+ * 이 함수는 **관리자가 올릴 자리를 고를 때** 쓴다 — 규칙을 고치면 둘을 같이 고친다.
+ *
+ * (이 파일에 있는 `img` 칸은 [2026-08-26](2026-08-26_빈-껍데기-지우고-코스튬-셋.sql)에서 걷어냈다.)
  */
 create or replace function shop_folder(item text)
 returns text language sql stable set search_path = public as $fn$

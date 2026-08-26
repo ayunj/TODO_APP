@@ -1,4 +1,4 @@
-import { DEFAULT_BEAR, DEFAULT_ROOM, builtinImg } from '../costumes';
+import { DEFAULT_BEAR, DEFAULT_ROOM, builtinImg, shopPath } from '../costumes';
 import { shopImageUrl, supabase } from '../supabase';
 import type { Snapshot } from '../repository';
 import type {
@@ -15,6 +15,7 @@ import type {
   RoomPeek,
   Rotate,
   Shop,
+  ShopFamily,
   ShopItem,
   Task,
 } from '../types';
@@ -624,25 +625,42 @@ export async function pullShop(): Promise<Shop> {
     client.from('costume_season').select('season_key, name, note, family_key').order('ord'),
     client
       .from('costume_catalog')
-      .select('item_key, kind, price, season, name, img, family_key')
+      .select('item_key, kind, price, season, name, family_key')
       .order('created_at'),
   ]);
   for (const r of [g, f, s, c]) if (r.error) throw r.error;
 
   /*
-    그림은 **올린 것이 이기고, 없으면 앱에 박혀 나온 것으로 선다.**
-    기본 곰돌이와 기본 룸이 그렇다 — 그 둘은 오프라인에서도 서야 해서
-    올릴 일이 없고, 그래서 값표의 `img`가 늘 비어 있다.
+    중분류를 물건보다 먼저 세운다 — **그림 자리를 짓는 데 쓴다**(아래 `shopPath`).
   */
-  const items: Costume[] = ((c.data ?? []) as Row[]).map((r) => ({
-    key: String(r.item_key),
-    name: String(r.name ?? r.item_key),
-    price: Number(r.price ?? 0),
-    kind: (String(r.kind) as Costume['kind']) ?? 'bear',
-    family: r.family_key ? String(r.family_key) : undefined,
-    season: r.season ? String(r.season) : undefined,
-    img: r.img ? shopImageUrl(String(r.img)) : builtinImg(String(r.item_key)),
+  const families: ShopFamily[] = ((f.data ?? []) as Row[]).map((r) => ({
+    key: String(r.family_key),
+    group: String(r.group_key),
+    name: String(r.name),
+    active: Boolean(r.active),
   }));
+
+  /*
+    그림 자리는 **값표에 적혀 오지 않는다. 지어 쓴다** —
+    `<대분류>/<중분류>/<종류>/<열쇠>.png`([costumes.ts](../costumes.ts)의 `shopPath`).
+
+    **앱이 들고 나가는 것이 있으면 그게 먼저다.** 기본 곰돌이와 기본 룸 둘인데,
+    그 둘은 통에 올릴 일이 없어서 자리를 지어 봐야 없는 것을 부르러 간다 —
+    로그인 전에도 서버를 못 읽어도 서 있어야 하는 둘이라 헛걸음을 안 시킨다.
+  */
+  const items: Costume[] = ((c.data ?? []) as Row[]).map((r) => {
+    const item: Costume = {
+      key: String(r.item_key),
+      name: String(r.name ?? r.item_key),
+      price: Number(r.price ?? 0),
+      kind: (String(r.kind) as Costume['kind']) ?? 'bear',
+      family: r.family_key ? String(r.family_key) : undefined,
+      season: r.season ? String(r.season) : undefined,
+    };
+    const own = builtinImg(item.key);
+    const at = own ? undefined : shopPath(item, families);
+    return { ...item, img: own ?? (at ? shopImageUrl(at) : undefined) };
+  });
 
   const pick = (season: string, kind: Costume['kind']): Costume =>
     items.find((i) => i.season === season && i.kind === kind) ?? {
@@ -677,12 +695,7 @@ export async function pullShop(): Promise<Shop> {
       key: String(r.group_key),
       name: String(r.name),
     })),
-    families: ((f.data ?? []) as Row[]).map((r) => ({
-      key: String(r.family_key),
-      group: String(r.group_key),
-      name: String(r.name),
-      active: Boolean(r.active),
-    })),
+    families,
     sets,
     items,
   };

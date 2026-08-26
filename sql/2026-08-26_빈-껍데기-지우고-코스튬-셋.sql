@@ -4,7 +4,7 @@
 --
 --   1. **그림 없는 줄을 값표에서 지운다** — 옷 열, 방 넷, 시즌 세트 다섯(열다섯 줄). 스물아홉 줄
 --   2. **코스튬 셋을 켠다** — 곰드래곤 · 공주 곰 · 마법사 곰
---   3. **그 셋의 그림 자리를 `shop` 통으로 잡아준다**
+--   3. **`img` 칸을 걷어낸다** — 그림 자리는 적어두는 것이 아니라 짓는 것이다
 --   4. **기본 곰돌이와 기본 룸은 안 사도 갖는다**
 --
 -- ─── 그림을 먼저 올린다 ────────────────────────────────────────
@@ -21,9 +21,8 @@
 --   shop/deco/costume/gomdori/princess.png
 --   shop/deco/costume/gomdori/wizard.png
 --
--- 순서가 바뀌면 그 사이에 상점 칸이 빈다. 깨진 그림은 안 뜨고 조용히 사라지지만
--- ([Art.tsx](../src/screens/store/Art.tsx)) 빈 칸도 보기 좋지는 않다 —
--- **올리고 돌린다.**
+-- 순서는 아무래도 된다. **값표에 그림 자리를 안 적으니** 이 파일과 파일 올리기가
+-- 서로 기다릴 것이 없다 — 파일이 통에 있으면 그 자리에 뜨고, 없으면 빈다.
 --
 -- ─── 왜 지우나 ─────────────────────────────────────────────────
 --
@@ -71,23 +70,21 @@
 -- ─── 빈 껍데기를 걷어낸다 ──────────────────────────────────────
 /*
  * **한 문장이다.** 벗기고 · 가진 것에서 빼고 · 값표에서 지우는 셋을
- * `with`로 묶었다 — 지울 것을 **한 번만 고르고 셋이 같은 것을 본다.**
+ * `with`로 묶었다 — 지울 것을 **한 번만 적고 셋이 같은 것을 본다.**
  * 세 번 적으면 언젠가 하나만 고치는 날이 온다.
  *
  * `with` 안의 고치는 문장은 **본 문장이 읽든 안 읽든 반드시 다 돈다**(Postgres 규칙).
  * 그리고 셋이 **같은 스냅숏**을 보니 `doomed`가 중간에 흔들리지 않는다.
  *
- * ── 무엇이 빈 껍데기인가
+ * ── 왜 열쇠를 적어 두나
  *
- *   `img`가 비어 있고        — Storage에 올라간 그림이 없다
- *   앱도 안 갖고 있는 것      — `public/gomdori/`에 파일이 없다
+ * `그림 없는 것`으로 고르고 싶었다. 그런데 **그림이 있나 없나를 값표가 모른다** —
+ * 그림 자리는 적어두는 것이 아니라 분류와 열쇠로 짓는 것이라(아래에서 `img`를 걷어낸다),
+ * 통을 열어보기 전에는 알 길이 없다.
  *
- * 앱이 갖고 있는 여섯을 적는다. `public/gomdori/`의 파일 이름 그대로다 —
- * 기본 곰돌이만 `front.png`라 이름이 어긋나고 나머지는 열쇠와 같다.
- *
- * **`img`를 같이 보는 까닭**은 관리자가 이미 올려둔 것이 있을 수 있어서다.
- * `앱이 아는 여섯`만 남기면 관리자가 어제 그림까지 올려 넣은 물건이 같이 날아간다.
- * 지우는 것은 **빈 껍데기**뿐이다.
+ * 그래서 **옛 씨앗에 있던 스물아홉을 그대로 적는다.** 목록이 길지만 이게 맞다 —
+ * `여섯 말고 다`로 적으면 **관리자가 그 뒤에 넣은 것까지 같이 날아간다.**
+ * 여기 적힌 것은 2026-08-25 씨앗에서 온 줄뿐이고, 그 뒤에 들어온 것은 안 건드린다.
  *
  * ── 벗기는 것이 왜 먼저인가
  *
@@ -104,10 +101,18 @@
  * 같이 빠지니 **잔액이 저절로 그만큼 돌아온다** — 따로 넣어줄 것이 없다.
  * (`my_points()` = 100 + point_log 합 − costume_owned.price 합)
  */
-with doomed as (
-  select item_key from costume_catalog
-   where img is null
-     and item_key not in ('base', 'rabbit', 'dragon', 'princess', 'wizard', 'room-base')
+with doomed (item_key) as (values
+  -- 옷 열
+  ('hat'), ('ribbon'), ('scarf'), ('apron'), ('glasses'), ('overall'),
+  ('chef'), ('knit'), ('shirt'), ('detective'),
+  -- 방 넷
+  ('room-picnic'), ('room-cafe'), ('room-plant'), ('room-bed'),
+  -- 시즌 세트 다섯 × 셋
+  ('b-swim'), ('r-sea'), ('pose-tube'),
+  ('b-hall'), ('r-hall'), ('pose-pump'),
+  ('b-xmas'), ('r-xmas'), ('pose-tree'),
+  ('b-bloom'), ('r-bloom'), ('pose-petal'),
+  ('b-vac'), ('r-beach'), ('pose-parcel')
 ),
 undress as (
   update gomdori
@@ -176,35 +181,31 @@ update costume_catalog set active = true, family_key = 'daily'   where item_key 
 update costume_catalog set active = true, family_key = 'costume' where item_key = 'rabbit';
 update costume_catalog set active = true, family_key = 'room'    where item_key = 'room-base';
 
--- ─── 그림이 어디 있나 ──────────────────────────────────────────
+-- ─── 그림 자리는 적어두지 않는다 ────────────────────────────────
 /*
- * **올린 그림 자리를 값표에 적는다.** `<대분류>/<중분류>/<종류>/<열쇠>.png`이고
- * 통 이름(`shop`)은 안 적는다 — 통을 옮기면 줄마다 다 고쳐야 한다.
+ * **`img` 칸을 걷어낸다.**
  *
- * 서버의 `shop_folder()`가 짓는 것과 **같은 문자열**이라 거기서 받아 쓴다.
- * 손으로 `deco/costume/gomdori/…`를 세 번 적으면 나중에 이 셋을 다른 중분류로
- * 옮길 때 폴더와 값표가 어긋난다 — 함수가 지으면 늘 지금 중분류를 따라간다.
+ * 여기 `<대분류>/<중분류>/<종류>/<열쇠>.png`를 적어뒀었다. 적어둘 것이 아니다 —
+ * **네 토막이 다 이미 값표에 있다.** 관리자가 상점을 채울 때 고르는 것은
+ * 분류와 파일 둘뿐이고, 열쇠는 번호표로 저절로 딴다(`0000001`).
+ * 파일 이름은 그 열쇠 그대로, 폴더는 그 분류 그대로다.
  *
- * **파일 이름은 열쇠 그대로다.** 표의 열쇠와 파일 이름이 같아야 어느 그림이
- * 어느 물건인지 대조할 일이 없다.
+ * 그래도 적어두면 둘 중 하나가 된다 —
  *
- * 앱에도 같은 그림이 들어 있다(`public/gomdori/`). 그건 **못 읽었을 때 물러설 자리**다 —
- * `img`가 채워져 있으면 앱은 늘 올린 쪽을 먼저 본다.
+ *   * 관리자 화면이 **경로를 물어본다.** 물을 것이 아니다
+ *   * 아니면 넣는 자리마다 **같은 문자열을 다시 지어 넣는다.** 그러다 빠뜨린다
+ *
+ * 실제로 빠뜨렸다. 곰토끼를 통으로 옮겼는데 `img`가 비어서 상점에 그림이 안 떴다.
+ * 값표가 옳고 파일도 옳은데 **둘을 잇는 칸 하나가 안 맞아서** 안 뜬 것이다.
+ * 그 칸이 없으면 안 맞을 일도 없다.
+ *
+ * 이제 **앱이 짓는다**(`src/lib/costumes.ts`의 `shopPath`). 관리자가 올릴 자리를
+ * 고를 때 쓰는 `shop_folder()`와 같은 규칙이고, 규칙을 고치면 둘을 같이 고친다.
+ *
+ * **앱이 들고 나가는 둘**(기본 곰돌이·기본 룸)은 앱이 제 그림을 먼저 본다 —
+ * 통에 올릴 일이 없어서 자리를 지어 봐야 없는 것을 부르러 간다.
  */
-update costume_catalog
-   set img = shop_folder(item_key) || '/' || item_key || '.png'
- where item_key in ('rabbit', 'dragon', 'princess', 'wizard')
-   and shop_folder(item_key) is not null;
-
-/*
- * **기본 곰돌이와 기본 룸만 비워둔 채로 둔다.**
- *
- * 로그인 전에도 서버를 못 읽어도 그 둘은 서 있어야 하는데, `img`를 채우면
- * 그 자리에서 **Storage를 부르러 갔다가 못 부르고 빈다.** 비워두면 앱이
- * 제 안의 그림(`public/gomdori/`)으로 곧장 선다 — 이 둘만 일부러 다르다.
- *
- * 파는 옷은 안 뜨면 안 뜨는 대로 된다. 곰돌이가 없으면 홈이 빈다.
- */
+alter table costume_catalog drop column if exists img;
 
 -- ─── 안 사도 갖는 것 ────────────────────────────────────────────
 /*
@@ -270,19 +271,24 @@ on conflict (user_id, item_key) do nothing;
 
 -- ─── 돌린 뒤 눈으로 보는 것 ─────────────────────────────────────
 --
---   select item_key, name, price, family_key, active, img
+--   select item_key, name, price, family_key, active
 --     from costume_catalog order by family_key, price;
 --
 -- 여섯 줄이 나와야 한다 —
 --
---   base       기본 곰돌이     0  daily     t  (비어 있음)
---   rabbit     곰토끼        300  costume   t  deco/costume/gomdori/rabbit.png
---   dragon     곰드래곤      350  costume   t  deco/costume/gomdori/dragon.png
---   princess   공주 곰       400  costume   t  deco/costume/gomdori/princess.png
---   wizard     마법사 곰     400  costume   t  deco/costume/gomdori/wizard.png
---   room-base  기본 룸         0  room      t  (비어 있음)
+--   base       기본 곰돌이     0  daily     t
+--   rabbit     곰토끼        300  costume   t
+--   dragon     곰드래곤      350  costume   t
+--   princess   공주 곰       400  costume   t
+--   wizard     마법사 곰     400  costume   t
+--   room-base  기본 룸         0  room      t
 --
--- 그림이 진짜로 올라갔는지는 통에서 본다 —
+-- 그림이 어디로 갈지는 값표가 아니라 `shop_folder()`가 안다 —
+--
+--   select item_key, shop_folder(item_key) || '/' || item_key || '.png' as 자리
+--     from costume_catalog where item_key not in ('base', 'room-base');
+--
+-- 진짜로 올라갔는지는 통에서 본다. `npm run shop`이 열쇠 없이도 세어준다 —
 --
 --   select name, metadata->>'size' as bytes
 --     from storage.objects where bucket_id = 'shop' order by name;
