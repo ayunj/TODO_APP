@@ -45,72 +45,94 @@
 --
 -- `costume_catalog`에는 **지우는 정책이 없다**(RLS). 산 사람의 `costume_owned`에
 -- 열쇠가 남아서 그 사람 옷이 이름 없는 것이 되기 때문이다. 여기서는 그 짝까지
--- 같이 치우니 괜찮다 — 아래 순서가 그래서 셋이다.
+-- 같이 치우니 괜찮다 — 아래 첫 문장이 셋을 한꺼번에 한다.
 --
 --   입고 있던 사람을 기본으로 되돌리고 → 가진 것에서 빼고 → 값표에서 지운다
 --
 -- **SQL Editor에서 돌린다.** RLS를 안 타는 자리라 정책 없이도 지워진다.
 -- 앱에서는 여전히 못 지운다.
+--
+-- **두 번 돌려도 된다.** 문장이 서로 기대지 않아서 중간에 끊겨도
+-- 처음부터 다시 돌리면 된다.
 
-begin;
-
--- ─── 지울 것을 먼저 고른다 ──────────────────────────────────────
 /*
- * **그림이 없는 줄이 지울 줄이다.** 두 군데를 다 본다.
+ * ─── 트랜잭션으로 안 감싼다 ────────────────────────────────────
+ *
+ * 처음엔 `begin;`으로 묶고 임시 표(`drop_keys`)에 지울 것을 담아뒀다.
+ * **SQL Editor에서 `relation "drop_keys" does not exist`로 터진다** —
+ * 문장마다 따로 돌아서 임시 표가 만들어지자마자 사라진다.
+ *
+ * 그래서 **문장 하나하나가 혼자 서게** 고쳐 썼다. 지우는 일 넷은 한 문장으로 묶었고
+ * (아래 `with`), 나머지는 서로 기대지 않는다. 두 번 돌려도 되니 중간에 끊겨도
+ * 처음부터 다시 돌리면 된다.
+ */
+
+-- ─── 빈 껍데기를 걷어낸다 ──────────────────────────────────────
+/*
+ * **한 문장이다.** 벗기고 · 가진 것에서 빼고 · 값표에서 지우는 셋을
+ * `with`로 묶었다 — 지울 것을 **한 번만 고르고 셋이 같은 것을 본다.**
+ * 세 번 적으면 언젠가 하나만 고치는 날이 온다.
+ *
+ * `with` 안의 고치는 문장은 **본 문장이 읽든 안 읽든 반드시 다 돈다**(Postgres 규칙).
+ * 그리고 셋이 **같은 스냅숏**을 보니 `doomed`가 중간에 흔들리지 않는다.
+ *
+ * ── 무엇이 빈 껍데기인가
  *
  *   `img`가 비어 있고        — Storage에 올라간 그림이 없다
  *   앱도 안 갖고 있는 것      — `public/gomdori/`에 파일이 없다
  *
- * 앱이 갖고 있는 여섯을 여기 적는다. `public/gomdori/`의 파일 이름 그대로다 —
+ * 앱이 갖고 있는 여섯을 적는다. `public/gomdori/`의 파일 이름 그대로다 —
  * 기본 곰돌이만 `front.png`라 이름이 어긋나고 나머지는 열쇠와 같다.
- *
- *   base · rabbit · dragon · princess · wizard · room-base
  *
  * **`img`를 같이 보는 까닭**은 관리자가 이미 올려둔 것이 있을 수 있어서다.
  * `앱이 아는 여섯`만 남기면 관리자가 어제 그림까지 올려 넣은 물건이 같이 날아간다.
- * 그림이 있는 것은 이 청소의 대상이 아니다 — 지우는 것은 **빈 껍데기**뿐이다.
+ * 지우는 것은 **빈 껍데기**뿐이다.
  *
- * 한 번만 골라 임시 표에 담아두고 아래 네 문장이 같은 것을 본다.
- * 네 번 적으면 언젠가 하나만 고치는 날이 온다.
- */
-create temp table drop_keys on commit drop as
-select item_key from costume_catalog
- where img is null
-   and item_key not in ('base', 'rabbit', 'dragon', 'princess', 'wizard', 'room-base');
-
--- ─── 1) 입고 있던 사람을 기본으로 ──────────────────────────────
-/*
- * **먼저 벗긴다.** 값표에서 먼저 지우면 `worn_bear`가 없는 것을 가리키고,
- * 그 사이에 앱을 켠 사람은 `itemOf()`가 못 찾아 기본 곰돌이로 서게 된다 —
- * 어차피 같은 자리로 가지만, 다음에 갈아입을 때 없는 열쇠가 저장으로 되돌아온다.
- */
-update gomdori set worn_bear = 'base', updated_at = now()
- where worn_bear in (select item_key from drop_keys);
-
-update gomdori set worn_room = 'room-base', updated_at = now()
- where worn_room in (select item_key from drop_keys);
-
--- ─── 2) 가진 것에서 뺀다 ────────────────────────────────────────
-/*
- * **치른 값은 안 돌려준다.** `costume_owned.price`가 빠지면서 `my_points()`의
- * 뺄셈에서도 같이 빠지니 **잔액이 저절로 그만큼 돌아온다** — 따로 넣어줄 것이 없다.
+ * ── 벗기는 것이 왜 먼저인가
  *
+ * 값표에서 먼저 지우면 `worn_bear`가 없는 것을 가리킨다. 그 사이에 앱을 켠 사람은
+ * `itemOf()`가 못 찾아 기본 곰돌이로 서지만, 다음에 갈아입을 때 **없는 열쇠가
+ * 저장으로 되돌아온다.** 한 문장이라 사이가 없지만 순서는 그대로 뒀다.
+ *
+ * **곰과 방을 한 번에 고친다.** 두 문장으로 나누면 곰도 방도 지울 것을 입고 있는
+ * 사람의 줄을 한 문장 안에서 두 번 고치는 꼴이 되고, 그때는 **한쪽만 먹는다.**
+ *
+ * ── 치른 값은
+ *
+ * **안 돌려준다.** `costume_owned.price`가 빠지면서 `my_points()`의 뺄셈에서도
+ * 같이 빠지니 **잔액이 저절로 그만큼 돌아온다** — 따로 넣어줄 것이 없다.
  * (`my_points()` = 100 + point_log 합 − costume_owned.price 합)
  */
-delete from costume_owned
- where item_key in (select item_key from drop_keys);
-
--- ─── 3) 값표에서 지운다 ─────────────────────────────────────────
--- 물건이 먼저다 — `costume_catalog.season`이 세트를 가리키고 있어서
--- 세트를 먼저 지우면 이음줄(`costume_catalog_season_fk`)에 걸린다.
+with doomed as (
+  select item_key from costume_catalog
+   where img is null
+     and item_key not in ('base', 'rabbit', 'dragon', 'princess', 'wizard', 'room-base')
+),
+undress as (
+  update gomdori
+     set worn_bear  = case when worn_bear in (select item_key from doomed)
+                           then 'base' else worn_bear end,
+         worn_room  = case when worn_room in (select item_key from doomed)
+                           then 'room-base' else worn_room end,
+         updated_at = now()
+   where worn_bear in (select item_key from doomed)
+      or worn_room in (select item_key from doomed)
+  returning user_id
+),
+unown as (
+  delete from costume_owned
+   where item_key in (select item_key from doomed)
+  returning user_id
+)
 delete from costume_catalog
- where item_key in (select item_key from drop_keys);
+ where item_key in (select item_key from doomed);
 
 /*
  * **텅 빈 세트를 지운다.** 물놀이·할로윈·크리스마스·봄꽃·여름휴가 다섯은
- * 셋씩 열다섯 줄이 다 이름뿐이라 위에서 통째로 빠졌고, 남은 것이 없는 세트는
- * 상점에 이름만 뜬다 — `pullShop()`이 곰·방·포즈가 다 찬 세트만 세우니
- * 화면에는 아예 안 뜨고 관리자 목록에만 남는다. 그게 더 헷갈린다.
+ * 셋씩 열다섯 줄이 다 이름뿐이라 위에서 통째로 빠졌다.
+ *
+ * **물건보다 나중이어야 한다** — `costume_catalog.season`이 세트를 가리키고 있어서
+ * 세트를 먼저 지우면 이음줄(`costume_catalog_season_fk`)에 걸린다.
  *
  * **하나라도 남은 세트는 안 건드린다.** 관리자가 그림까지 올려 짓던 세트라면
  * 물건이 남아 있을 것이고, 그건 짓다 만 것이지 빈 껍데기가 아니다.
@@ -242,8 +264,6 @@ select u.id, c.item_key, 0
   cross join costume_catalog c
  where c.price = 0 and c.kind <> 'pose' and c.active
 on conflict (user_id, item_key) do nothing;
-
-commit;
 
 -- ─── 돌린 뒤 눈으로 보는 것 ─────────────────────────────────────
 --
