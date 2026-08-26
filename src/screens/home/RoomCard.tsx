@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CalendarIcon } from '@/components/Icons';
 import { diffDays, todayStr } from '@/lib/date';
 import { useGomdori } from '@/lib/gomdori';
+import { BEAR_ART, ROOM_ART, ROOM_BOX } from '@/lib/stage';
 import { useStore } from '@/lib/store';
 import { useUi } from '@/lib/ui';
 import type { Task } from '@/lib/types';
@@ -13,6 +14,9 @@ import type { Task } from '@/lib/types';
  *
  * **방 그림과 곰돌이는 따로 얹는다.** 합쳐 그리면 옷을 못 갈아입힌다 —
  * 방은 칸을 통째로 덮고 곰돌이가 그 위에 선다.
+ *
+ * 서는 자리는 [stage.ts](../../lib/stage.ts)가 들고 있다 —
+ * **상점 걸쳐보는 칸과 같은 값이어야 한다.**
  *
  * 오늘 숫자는 **그림 밖 아랫줄**에 앉는다. 그림 위에 얻으면
  * 모자를 쓴 곰돌이가 숫자를 덮는다 — 방 그림은 이제 오른쪽 위를 비울 이유가 없다.
@@ -32,18 +36,13 @@ export default function RoomCard({ done, total }: { done: number; total: number 
   return (
     <section className="mb-[11px] overflow-hidden rounded-card bg-card shadow-card">
       {/*
-        세로는 아래, 가로는 **가운데**다. `place-items-end` 한 낱말로 쓰면
-        가로까지 끝으로 밀려서 곰돌이가 오른쪽 벽에 붙는다 — 둘을 갈라 적는다.
+        **상점 걸쳐보는 칸과 같은 자리다**([stage.ts](../../lib/stage.ts)).
+        걸쳐본 대로 홈에 서지 않으면 걸쳐보는 뜻이 없다 —
+        여기 따로 적어뒀다가 홈에서만 곰돌이가 훨씬 컸다.
       */}
-      <div className="relative grid aspect-square w-full items-end justify-items-center overflow-hidden bg-sunk">
-        <Art src={item(wornRoom).img} className="absolute inset-0 h-full w-full object-cover object-bottom" />
-        {/*
-          가로·세로를 **둘 다** 묶는다. 한쪽만 묶으면 그림 비가 바뀔 때 칸을 뚫는다.
-        */}
-        <Art
-          src={item(wornBear).img}
-          className="relative z-[1] mb-[7%] block h-auto max-h-full w-auto max-w-[92%]"
-        />
+      <div className={`${ROOM_BOX} bg-sunk`}>
+        <Art src={item(wornRoom).img} className={ROOM_ART} />
+        <Art src={item(wornBear).img} className={BEAR_ART} />
       </div>
 
       {/* 오늘 숫자 — 그림 **아래** 줄이다 */}

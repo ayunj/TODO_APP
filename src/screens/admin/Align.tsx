@@ -16,6 +16,7 @@ import {
   type Fitted,
   type Spec,
 } from '@/lib/fit';
+import { BEAR_FLOOR, BEAR_W } from '@/lib/stage';
 import { toast } from '@/lib/toast';
 
 /**
@@ -55,6 +56,8 @@ export default function Align({
 
   const pick = useRef<HTMLInputElement>(null);
   const box = useRef<HTMLDivElement>(null);
+  /** 760 칸이 화면에서 몇 px인가 — 끌어 옮길 때 이 폭으로 셈한다 */
+  const slot = useRef<HTMLSpanElement>(null);
   const drag = useRef<{ on: boolean; x: number; y: number }>({ on: false, x: 0, y: 0 });
 
   const room = BUNDLED.find((c) => c.key === DEFAULT_ROOM)?.img;
@@ -128,9 +131,9 @@ export default function Align({
   }, [art, spec, fit]);
 
   const move = useCallback((e: React.PointerEvent) => {
-    if (!drag.current.on || !box.current) return;
-    const r = box.current.getBoundingClientRect();
-    const k = BODY / r.width;
+    if (!drag.current.on || !slot.current) return;
+    /* 손가락이 움직인 화면 px을 760 칸의 px으로 바꾼다 — **슬롯 폭이 기준이다** */
+    const k = BODY / slot.current.getBoundingClientRect().width;
     setFit((f) => ({
       ...f,
       dx: Math.round(f.dx + (e.clientX - drag.current.x) * k),
@@ -172,8 +175,10 @@ export default function Align({
   return (
     <>
       {/*
-        맞추는 칸 — **상점 걸쳐보는 칸과 같은 비율**이다.
-        여기서 맞춘 대로 거기 선다. 칸 안을 끌면 옮겨진다 — 폰에서는 손잡이보다 이게 빠르다.
+        맞추는 칸 — **상점 걸쳐보는 칸과 홈 칸을 그대로 흉낸다.**
+        방을 깔고, 그 위에 760 칸을 같은 %로 얹는다. 여기서 맞춘 대로 거기 선다.
+
+        칸 안을 끌면 옮겨진다 — 폰에서는 손잡이보다 이게 빠르다.
       */}
       <div
         ref={box}
@@ -201,46 +206,60 @@ export default function Align({
         )}
 
         {/*
-          **기본 곰을 연하게 겹친다.** 담긴 그대로의 정사각 한 장이라 칸을 꽉 채워 얹으면
-          자와 딱 맞는다 — 따로 셈할 것이 없다. 위에 얹는 까닭은 밑에 두면
-          새 옷이 클 때 가려져서 견줄 수가 없어서다.
+          **760 칸은 방을 꽉 채우지 않는다.** 앱에서 방 폭의 `BEAR_W`%로 서고
+          바닥에서 `BEAR_FLOOR`% 떠 있다([stage.ts](../../lib/stage.ts)).
+          여기서도 그 자리에 놓아야 **맞춘 대로 상점과 홈에 선다** —
+          칸을 꽉 채워 보여주면 방에 견준 크기가 1.4배로 커 보인다.
+
+          눈금과 겹쳐 보는 곰도 이 안에 든다. 셋이 같은 칸을 봐야 자가 맞는다.
         */}
-        {ghost && baseArt && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={baseArt}
-            alt=""
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 z-[2] h-full w-full opacity-30"
-          />
-        )}
-
-        {pos && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={art.canvas.toDataURL()}
-            alt=""
-            aria-hidden="true"
-            className="pointer-events-none absolute z-[1]"
-            style={{ left: pc(pos.x), top: pc(pos.y), width: pc(pos.w), height: pc(pos.h) }}
-          />
-        )}
-
-        {lines && spec && (
-          <span className="pointer-events-none absolute inset-0 z-[3] block">
-            {/* 머리 끝 위는 모자와 귀 자리다 — 띠로 덮어 그 뜻을 보인다 */}
-            <i
-              className="absolute left-0 right-0 top-0 block bg-cycle/10"
-              style={{ height: pc(spec.head) }}
+        <span
+          ref={slot}
+          className="pointer-events-none absolute left-1/2 block aspect-square -translate-x-1/2"
+          style={{ width: `${BEAR_W}%`, bottom: `${BEAR_FLOOR}%` }}
+        >
+          {pos && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={art.canvas.toDataURL()}
+              alt=""
+              aria-hidden="true"
+              className="absolute z-[1]"
+              style={{ left: pc(pos.x), top: pc(pos.y), width: pc(pos.w), height: pc(pos.h) }}
             />
-            <Line y={pc(spec.head)} tone="border-cycle/70" label="모자 · 귀 자리" up />
-            <Line y={pc(spec.foot)} tone="border-accent/70" label="발바닥" />
-            <i
-              className="absolute bottom-0 left-1/2 top-0 block border-l border-dashed border-accent/40"
-              style={{ left: pc(spec.cx) }}
+          )}
+
+          {/*
+            **기본 곰을 연하게 겹친다.** 담긴 그대로의 정사각 한 장이라 칸을 꽉 채워
+            얹으면 자와 딱 맞는다 — 따로 셈할 것이 없다. 위에 얹는 까닭은 밑에 두면
+            새 옷이 클 때 가려져서 견줄 수가 없어서다.
+          */}
+          {ghost && baseArt && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={baseArt}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 z-[2] h-full w-full opacity-30"
             />
-          </span>
-        )}
+          )}
+
+          {lines && spec && (
+            <span className="absolute inset-0 z-[3] block">
+              {/* 머리 끝 위는 모자와 귀 자리다 — 띠로 덮어 그 뜻을 보인다 */}
+              <i
+                className="absolute left-0 right-0 top-0 block bg-cycle/10"
+                style={{ height: pc(spec.head) }}
+              />
+              <Line y={pc(spec.head)} tone="border-cycle/70" label="모자 · 귀 자리" up />
+              <Line y={pc(spec.foot)} tone="border-accent/70" label="발바닥" />
+              <i
+                className="absolute bottom-0 top-0 block border-l border-dashed border-accent/40"
+                style={{ left: pc(spec.cx) }}
+              />
+            </span>
+          )}
+        </span>
 
         <button
           type="button"

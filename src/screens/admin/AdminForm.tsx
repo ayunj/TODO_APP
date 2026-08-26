@@ -5,6 +5,7 @@ import Align from './Align';
 import Thumb from './Thumb';
 import Coin from '../store/Coin';
 import { shopPath } from '@/lib/costumes';
+import { BEAR_ART, ROOM_ART, ROOM_BOX } from '@/lib/stage';
 import { fitScene, type Fitted } from '@/lib/fit';
 import {
   createSeason,
@@ -17,11 +18,7 @@ import {
 import { toast } from '@/lib/toast';
 import type { Costume, CostumeSet, Shop } from '@/lib/types';
 
-/**
- * 곰돌이가 칸의 몇 %로 뜨나 — **앱의 `Stage`·`RoomCard`와 같은 값이어야 한다.**
- * 저쪽을 고치면 여기도 고친다. 다르면 맞춘 대로 안 서고, 그러면 맞추는 뜻이 없다.
- */
-const SLOT = { stage: 72 };
+
 
 /**
  * 채우기 — [시안](../../../design/관리자.html)의 앱 판 둘째 화면.
@@ -437,26 +434,21 @@ function Preview({ shop, item, src }: { shop: Shop; item: Costume; src?: string 
         <div className="min-w-0 flex-1">
           <p className="mb-1.5 text-center text-[10px] text-ink3">걸쳐보는 칸 · 홈 칸</p>
           {/* 아래를 맞춰 자른다 — 가운데로 자르면 바닥이 먹혀 곰돌이가 벽에 붙어 선다 */}
-          <div className="relative grid aspect-square w-full items-end justify-items-center overflow-hidden rounded-[14px] bg-sunk">
+          <div className={`${ROOM_BOX} rounded-[14px] bg-sunk`}>
             {roomly ? (
               src ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={src} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover object-bottom" />
+                <img src={src} alt="" aria-hidden="true" className={ROOM_ART} />
               ) : null
             ) : (
               worn?.img && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={worn.img} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover object-bottom" />
+                <img src={worn.img} alt="" aria-hidden="true" className={ROOM_ART} />
               )
             )}
             {!roomly && src && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={src}
-                alt=""
-                aria-hidden="true"
-                className="relative z-[1] mb-[6%] block h-auto max-h-[74%] w-auto max-w-[72%]"
-              />
+              <img src={src} alt="" aria-hidden="true" className={BEAR_ART} />
             )}
           </div>
         </div>
