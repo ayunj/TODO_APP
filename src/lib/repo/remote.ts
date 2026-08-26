@@ -1,4 +1,4 @@
-import { DEFAULT_BEAR, DEFAULT_ROOM, builtinImg, shopPath } from '../costumes';
+import { DEFAULT_BEAR, DEFAULT_ROOM, builtinImg, shopPath, withBundled } from '../costumes';
 import { shopImageUrl, supabase } from '../supabase';
 import type { Snapshot } from '../repository';
 import type {
@@ -692,7 +692,12 @@ export async function pullShop(): Promise<Shop> {
     })
     .filter((set) => [set.bear, set.room, set.pose].every((i) => i.name !== '준비 중'));
 
-  return {
+  /*
+    **앱이 들고 나가는 둘을 얹어서 돌려준다**(`withBundled`) — 기본 곰돌이와 기본 룸.
+    값표에 줄이 있든 없든 늘 서야 하는 것이라 여기서 한 번 챙긴다.
+    화면마다 챙기게 두면 어느 화면에서만 빠지는 날이 온다.
+  */
+  return withBundled({
     groups: ((g.data ?? []) as Row[]).map((r) => ({
       key: String(r.group_key),
       name: String(r.name),
@@ -700,7 +705,7 @@ export async function pullShop(): Promise<Shop> {
     families,
     sets,
     items,
-  };
+  });
 }
 
 /**

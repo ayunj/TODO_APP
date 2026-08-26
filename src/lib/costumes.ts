@@ -116,6 +116,54 @@ export const BUILTIN: Shop = {
   items: CATALOG,
 };
 
+/**
+ * **앱이 들고 나가는 둘** — 기본 곰돌이와 기본 룸.
+ *
+ * 이 둘은 `costume_catalog`에 줄이 있든 없든, 켜져 있든 꺼져 있든
+ * **늘 상점에 서고 늘 가진 것이다.** 값표에서 떼어냈다.
+ *
+ * 왜 떼어냈나 —
+ *
+ *   * 그림이 `public/gomdori/`에 있어서 **서버와 아무 상관이 없다**
+ *   * 열쇠를 못 바꾼다. `DEFAULT_BEAR`·`DEFAULT_ROOM`과 `gomdori.worn_bear`의
+ *     기본값이 이 글자를 가리킨다 — 번호표로 다시 딸 수 있는 것이 아니다
+ *   * 값이 0이라 **팔 것이 아니다.** 파는 것들 사이에 끼워두면 관리자 목록에서
+ *     지우거나 끌 수 있는 것처럼 보이는데, 지우면 홈이 빈다
+ *
+ * 실제로 값표를 비웠을 때 이 둘이 상점에서 같이 사라졌다. 곰돌이는 서 있었지만
+ * (앱이 그림을 들고 있으니) **옷장이 비고 방을 고를 수가 없었다.**
+ */
+export const BUNDLED: Costume[] = [...DAILY, ...ROOMS];
+
+const BUNDLED_KEYS = new Set(BUNDLED.map((c) => c.key));
+
+/**
+ * 서버에서 받아온 상점 위에 **앱이 들고 나가는 둘을 얹는다.**
+ *
+ * **앱 것이 이긴다.** 값표에 같은 열쇠가 있어도 앱 것으로 덮는다 —
+ * 그래야 관리자가 실수로 끄거나 값을 붙여도 기본 곰돌이가 그대로 선다.
+ * 맨 앞에 세운다. `일상` 무더기에서 기본 곰돌이가 첫 칸이어야 한다.
+ *
+ * **칩도 같이 챙긴다.** 물건만 얹고 중분류를 안 챙기면 `일상` 무더기가 아예
+ * 안 서서(`familiesOf`가 못 찾는다) 기본 곰돌이가 어디에도 안 뜬다.
+ */
+export function withBundled(shop: Shop): Shop {
+  const groups = shop.groups.some((g) => g.key === 'deco')
+    ? shop.groups
+    : [...GROUPS.filter((g) => g.key === 'deco'), ...shop.groups];
+
+  const need = FAMILIES.filter(
+    (f) => BUNDLED.some((c) => c.family === f.key) && !shop.families.some((x) => x.key === f.key),
+  );
+
+  return {
+    groups,
+    families: [...shop.families, ...need],
+    sets: shop.sets,
+    items: [...BUNDLED, ...shop.items.filter((c) => !BUNDLED_KEYS.has(c.key))],
+  };
+}
+
 const BUILTIN_BY_KEY = new Map(CATALOG.map((c) => [c.key, c]));
 
 /** 앱에 박혀 나온 그림. 서버가 그림을 안 갖고 있을 때 이걸로 선다. */
@@ -178,15 +226,14 @@ export const DEFAULT_BEAR = 'base';
 export const DEFAULT_ROOM = 'room-base';
 
 /**
- * **안 사도 갖고 있는 것** — 기본 곰돌이와 기본 룸 둘.
+ * **안 사도 갖고 있는 것** — 기본 곰돌이와 기본 룸 둘(`BUNDLED`와 같은 둘).
  *
  * 값이 0이라 사려면 살 수는 있었다. 그런데 그러면 갓 가입한 사람의 옷장이 **비어 있고**,
  * 자기가 지금 입고 있는 곰이 상점에 `구매하기`로 떠 있다 —
  * **입고 있는 것을 사라고 하는 꼴**이라 0P라도 말이 안 된다.
  *
- * 서버도 같은 것을 준다(`grant_free()`). 여기 한 번 더 두는 까닭은
- * **로그인 전과 서버를 못 읽었을 때**를 메우기 위해서다 — 그 두 자리에서도
- * 옷장에 곰돌이와 기본 룸은 서 있어야 한다.
+ * **여기가 주인이다.** 서버에 물어보지 않는다 — 값표에 줄이 없어도, 로그인을 안 해도,
+ * 서버를 못 읽어도 이 둘은 가진 것이다. 그림이 앱 안에 있어서 **서버가 알 것이 없다.**
  */
 export const FREEBIES: string[] = [DEFAULT_BEAR, DEFAULT_ROOM];
 
