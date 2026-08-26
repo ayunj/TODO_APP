@@ -8,6 +8,7 @@ import {
   builtinImg,
   familiesOf,
   itemOf,
+  onSale,
   shopPath,
   withBundled,
 } from './costumes';
@@ -103,5 +104,50 @@ describe('shopPath', () => {
   /* 앱이 들고 나가는 둘은 자리를 안 짓는다 — 통에 올릴 일이 없다 */
   it('앱이 들고 나가는 둘은 통을 안 부른다', () => {
     for (const c of BUNDLED) expect(builtinImg(c.key)).toBeDefined();
+  });
+});
+
+describe('숨긴 것 걷어내기', () => {
+  const one = (key: string, active: boolean, kind: 'bear' | 'room' | 'pose' = 'bear') => ({
+    key,
+    name: key,
+    price: 100,
+    kind,
+    active,
+  });
+
+  /*
+    채우는 사람에게는 숨긴 것까지 내려온다(값표 정책이 `active or is_shop_admin()`).
+    안 거르면 **그 사람 눈에만** 반쯤 그린 물건이 상점에 서서, 켜기 전에
+    눈으로 확인할 자리가 없어진다.
+  */
+  it('숨긴 물건은 상점에 안 선다', () => {
+    const shop = onSale({ ...NOTHING, items: [one('a', true), one('b', false)] });
+    expect(shop.items.map((c) => c.key)).toEqual(['a']);
+  });
+
+  /* 앱이 들고 나가는 둘은 `active`가 안 적혀 있다 — 안 적힌 것은 파는 중이다 */
+  it('안 적힌 것은 남는다', () => {
+    expect(onSale(withBundled(NOTHING)).items.map((c) => c.key)).toEqual([
+      DEFAULT_BEAR,
+      DEFAULT_ROOM,
+    ]);
+  });
+
+  it('한 조각이라도 숨어 있으면 세트째 안 선다', () => {
+    const set = (n: string, roomLive: boolean) => ({
+      key: n,
+      name: n,
+      note: '',
+      bear: one(`${n}-bear`, true),
+      room: one(`${n}-room`, roomLive, 'room'),
+      pose: one(`${n}-pose`, true, 'pose'),
+    });
+    const full = set('full', true);
+    const half = set('half', false);
+    const items = [full, half].flatMap((x) => [x.bear, x.room, x.pose]);
+
+    const shop = onSale({ ...NOTHING, items, sets: [full, half] });
+    expect(shop.sets.map((x) => x.key)).toEqual(['full']);
   });
 });

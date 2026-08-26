@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from './auth';
 import { BUILTIN, DEFAULT_BEAR, DEFAULT_ROOM, FREEBIES, itemOf } from './costumes';
 import {
@@ -45,6 +45,11 @@ interface GomdoriValue {
   shop: Shop;
   /** 열쇠 하나를 물건으로. **어느 자리에 앉힐지를 이걸로 정한다.** */
   item: (key: string) => Costume;
+  /**
+   * 상점 목록을 다시 받아온다. 채운 것이 바로 보여야 하는 자리에서 부른다
+   * (상점을 열 때, 상점 채우기에서 고친 뒤).
+   */
+  refreshShop: () => Promise<Shop>;
   loading: boolean;
   /** 지금 얼마 있나. 로그인 안 했으면 0이다. */
   points: number;
@@ -91,32 +96,39 @@ export function GomdoriProvider({ children }: { children: React.ReactNode }) {
     (파는 중인 것만), 로그인 뒤로 미루면 로그인 전 홈에 선 곰돌이가
     이미 산 옷을 못 찾아 기본 모습으로 바뀐다.
 
-    한 번만 받아온다. 값표는 관리자가 가끔 고치는 것이라
-    화면을 열 때마다 다시 물을 까닭이 없다 — 앱을 다시 켜면 새로 받는다.
-  */
-  useEffect(() => {
-    if (!hasSupabase) return;
-    let alive = true;
-    pullShop()
-      .then((next) => {
-        /*
-          **빈 상점도 그대로 받는다.** 전에는 `안 받은 것으로 치고` 박아둔 목록을
-          세웠는데, 그러면 **값표를 비운 뒤에도 옛 목록이 상점에 뜬다** —
-          서버에 없는 옷이 이름과 값을 달고 회색 네모로 선다.
-          그걸 누르면 `없는 코스튬입니다`가 뜨는데, 그건 파는 물건이 아니라 고장이다.
+    **로그인이 바뀌면 다시 받아온다.** 채우는 사람에게는 숨긴 것까지 내려오는데
+    (값표 정책이 `active or is_shop_admin()`), 앱을 켤 때 한 번만 받으면
+    그 한 번이 로그인 붙기 전이라 늘 남의 눈으로 본 상점이 남는다.
 
-          받아온 것이 비었다는 것은 **`모르겠다`가 아니라 `없다`는 답이다.**
-          못 받아온 것은 아래 `catch`가 따로 받는다.
-        */
-        if (alive) setShop(next);
-      })
-      .catch(() => {
-        /* 못 받아오면 박혀 나온 것으로 선다. 곰돌이는 오프라인에서도 서야 한다. */
-      });
-    return () => {
-      alive = false;
-    };
+    **상점을 열 때도 다시 받는다**(`refreshShop`). 한 번만 받아두면
+    방금 채운 것이 앱을 다시 켤 때까지 안 보인다 — 채우자마자 보러 가는 자리다.
+  */
+  const shopSeq = useRef(0);
+  const refreshShop = useCallback(async (): Promise<Shop> => {
+    if (!hasSupabase) return BUILTIN;
+    const mine = (shopSeq.current += 1);
+    const next = await pullShop();
+    /*
+      **빈 상점도 그대로 받는다.** 전에는 `안 받은 것으로 치고` 박아둔 목록을
+      세웠는데, 그러면 **값표를 비운 뒤에도 옛 목록이 상점에 뜬다** —
+      서버에 없는 옷이 이름과 값을 달고 회색 네모로 선다.
+      그걸 누르면 `없는 코스튬입니다`가 뜨는데, 그건 파는 물건이 아니라 고장이다.
+
+      받아온 것이 비었다는 것은 **`모르겠다`가 아니라 `없다`는 답이다.**
+      못 받아온 것은 부르는 쪽이 받는다 — 박혀 나온 것으로 그대로 선다.
+
+      늦게 온 옛 답이 새 답을 덮지 않게 번호를 하나 들려 보낸다.
+      로그인하는 순간 로그인 전 것과 뒤 것 둘이 겹쳐 난다.
+    */
+    if (mine === shopSeq.current) setShop(next);
+    return next;
   }, []);
+
+  useEffect(() => {
+    void refreshShop().catch(() => {
+      /* 못 받아오면 박혀 나온 것으로 선다. 곰돌이는 오프라인에서도 서야 한다. */
+    });
+  }, [myId, refreshShop]);
 
   /*
     관리자인지는 **로그인한 뒤에** 묻는다. `shop_admins`는 자기 줄만 보이게
@@ -226,6 +238,7 @@ export function GomdoriProvider({ children }: { children: React.ReactNode }) {
       admin,
       shop,
       item,
+      refreshShop,
       loading,
       points: state.points,
       owned: state.owned,
@@ -236,7 +249,7 @@ export function GomdoriProvider({ children }: { children: React.ReactNode }) {
       wear,
       refresh,
     }),
-    [myId, admin, shop, item, loading, state, buy, wear, refresh],
+    [myId, admin, shop, item, refreshShop, loading, state, buy, wear, refresh],
   );
 
   return <GomdoriContext.Provider value={value}>{children}</GomdoriContext.Provider>;

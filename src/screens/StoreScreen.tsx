@@ -1,11 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Coin from './store/Coin';
 import SetDetail from './store/SetDetail';
 import StoreCard from './store/StoreCard';
 import Stage from './store/Stage';
-import { familiesOf, groupOf } from '@/lib/costumes';
+import { familiesOf, groupOf, onSale } from '@/lib/costumes';
 import { useGomdori } from '@/lib/gomdori';
 import { useUi } from '@/lib/ui';
 import { BackIcon, GiftIcon, HomeIcon, StarIcon } from '@/components/Icons';
@@ -42,8 +42,25 @@ type Chip = string;
  * 부위를 나누는 순간 사람들은 겹쳐 입기를 기대한다.
  */
 export default function StoreScreen() {
-  const { enabled, shop, item, points, has, wornBear, wornRoom, buy, wear } = useGomdori();
+  const { enabled, shop: all, item, points, has, wornBear, wornRoom, buy, wear, refreshShop } =
+    useGomdori();
   const { popView } = useUi();
+
+  /*
+    **열 때마다 다시 받아온다.** 앱을 켤 때 한 번만 받으면 방금 채운 것이
+    앱을 다시 켤 때까지 안 보인다 — 채우고 바로 보러 오는 자리다.
+    못 받아오면 들고 있던 것으로 그대로 선다.
+  */
+  useEffect(() => {
+    void refreshShop().catch(() => {});
+  }, [refreshShop]);
+
+  /*
+    **파는 것만 고른다.** 채우는 사람에게는 숨긴 것까지 내려와서(값표 정책),
+    안 거르면 그 사람 눈에만 반쯤 그린 물건이 상점에 선다.
+    옷장은 아래에서 `all`을 그대로 쓴다 — 산 뒤에 내린 옷도 내 옷장에는 있어야 한다.
+  */
+  const shop = useMemo(() => onSale(all), [all]);
 
   const [chip, setChip] = useState<Chip>('all');
   /** 아래층 칩. `all`이면 그 대분류를 통째로 본다. */
@@ -215,7 +232,7 @@ export default function StoreScreen() {
           )}
 
           {chip === 'mine' ? (
-            <Wardrobe shop={shop} tab={tab} setTab={setTab} pick={pick} trying={trying} />
+            <Wardrobe shop={all} tab={tab} setTab={setTab} pick={pick} trying={trying} />
           ) : chip === 'room' ? (
             <>
               {/*

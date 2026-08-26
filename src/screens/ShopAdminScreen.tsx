@@ -5,7 +5,6 @@ import PageBar from '@/components/PageBar';
 import AdminForm from './admin/AdminForm';
 import AdminList from './admin/AdminList';
 import { useGomdori } from '@/lib/gomdori';
-import { pullShop } from '@/lib/repo/remote';
 import { toast } from '@/lib/toast';
 import type { Shop } from '@/lib/types';
 
@@ -31,7 +30,7 @@ import type { Shop } from '@/lib/types';
  * 안 보이게 하는 것뿐이다.
  */
 export default function ShopAdminScreen() {
-  const { admin } = useGomdori();
+  const { admin, refreshShop } = useGomdori();
   const [shop, setShop] = useState<Shop | null>(null);
   /** 채우는 중인 물건. `null`이면 목록, `''`이면 새로 넣는 중 */
   const [editing, setEditing] = useState<string | null>(null);
@@ -40,13 +39,16 @@ export default function ShopAdminScreen() {
     try {
       /*
         관리자에게는 **숨긴 것까지 내려온다**(값표 정책이 `active or is_shop_admin()`).
-        상점 화면이 쓰는 것과 같은 함수라 따로 부를 것이 없다.
+
+        상점 화면과 **같은 것을 본다.** 여기서만 따로 받아두면 채운 것이
+        상점에 안 뜨는 채로 남는다 — 받아온 것을 곰돌이가 같이 들게 하고
+        그걸 그대로 쓴다.
       */
-      setShop(await pullShop());
+      setShop(await refreshShop());
     } catch {
       toast('상점을 못 읽었어요');
     }
-  }, []);
+  }, [refreshShop]);
 
   useEffect(() => {
     void load();

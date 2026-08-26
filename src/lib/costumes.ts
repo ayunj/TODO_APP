@@ -164,6 +164,25 @@ export function withBundled(shop: Shop): Shop {
   };
 }
 
+/**
+ * 파는 것만 남긴 상점 — **숨긴 것을 걷어낸다.**
+ *
+ * 값표 정책이 `active or is_shop_admin()`이라 **채우는 사람에게는 숨긴 것까지 내려온다.**
+ * 안 거르면 그 사람 눈에만 반쯤 그린 물건이 상점에 서고, 그건
+ * `아직 안 걸었어요`가 아니라 파는 물건으로 읽힌다 — 켜기 전에 눈으로 확인할 자리가 없어진다.
+ *
+ * 세트는 **셋이 다 걸려 있어야** 선다. 하나가 숨어 있으면 열어봐야 못 채우는 세트다.
+ */
+export function onSale(shop: Shop): Shop {
+  const items = shop.items.filter((c) => c.active !== false);
+  const live = new Set(items.map((c) => c.key));
+  return {
+    ...shop,
+    items,
+    sets: shop.sets.filter((s) => [s.bear, s.room, s.pose].every((i) => live.has(i.key))),
+  };
+}
+
 const BUILTIN_BY_KEY = new Map(CATALOG.map((c) => [c.key, c]));
 
 /** 앱에 박혀 나온 그림. 서버가 그림을 안 갖고 있을 때 이걸로 선다. */
