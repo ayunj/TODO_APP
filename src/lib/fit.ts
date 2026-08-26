@@ -99,6 +99,33 @@ export async function fitBear(file: File, fit: Fit = NO_FIT): Promise<Fitted> {
   return pack(out.el, BODY, BODY);
 }
 
+/**
+ * **이미 담긴 그림에서 맞춘 값을 되읽는다.**
+ *
+ * 올려둔 것을 고칠 때 쓴다. 맞춘 값은 그림에 박혀 있고 어디에도 안 담아뒀으니
+ * (담아두면 그림과 어긋날 자리가 하나 더 생긴다) **그림에서 되읽는다.**
+ *
+ * 되읽은 값을 손잡이의 시작점으로 놓으면 **아무것도 안 밀었을 때 지금 그대로**다.
+ * 이걸 안 하면 칸을 열기만 해도 크기가 기본값으로 튀어서, 고치러 들어간 것이
+ * 고쳐지고 만다.
+ *
+ * `BODY × BODY`로 담긴 것만 되읽힌다. 그 크기가 아니면 우리가 담은 것이 아니라
+ * (앨범에서 막 고른 것이거나 손으로 올린 것) 되읽을 값이 없다.
+ */
+export async function readFit(file: File): Promise<Fit | null> {
+  const src = await draw(file);
+  if (src.canvas.width !== BODY || src.canvas.height !== BODY) return null;
+
+  const box = trim(src);
+  if (box.h === 0) return null;
+
+  return {
+    scale: box.h / (BODY * TALL),
+    dx: box.x - (BODY - box.w) / 2,
+    dy: box.y - (BODY - BODY * FLOOR - box.h),
+  };
+}
+
 /** 배경 한 장 — 자르지 않고 크기만 맞춘다 */
 export async function fitScene(file: File): Promise<Fitted> {
   const src = await draw(file);

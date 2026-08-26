@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Thumb from './Thumb';
 import Coin from '../store/Coin';
-import { BUNDLED, DEFAULT_ROOM, shopPath } from '@/lib/costumes';
-import { FLOOR, NO_FIT, fitBear, fitScene, type Fit, type Fitted } from '@/lib/fit';
+import { BUNDLED, DEFAULT_BEAR, DEFAULT_ROOM, shopPath } from '@/lib/costumes';
+import { FLOOR, NO_FIT, fitBear, fitScene, readFit, type Fit, type Fitted } from '@/lib/fit';
 import {
   createSeason,
   createShopFamily,
@@ -77,6 +77,10 @@ export default function AdminForm({
   const [file, setFile] = useState<File | null>(null);
   const [fitted, setFitted] = useState<Fitted | null>(null);
   const [fit, setFit] = useState<Fit>(NO_FIT);
+  /** 기본 곰을 연하게 겹쳐 볼까 — 크기를 견줄 자가 그것뿐이다 */
+  const [ghost, setGhost] = useState(true);
+  /** 올려둔 것을 못 불러왔나 — 통에서 막히면 앨범에서 다시 고르면 된다 */
+  const [stuck, setStuck] = useState(false);
   const pick = useRef<HTMLInputElement>(null);
 
   const fams = useMemo(
@@ -124,6 +128,42 @@ export default function AdminForm({
     season: group === 'season' ? season || undefined : undefined,
   };
   const at = shopPath(draft, shop.families);
+
+  /*
+    **고치러 들어왔으면 올려둔 그림을 원본으로 끌어온다.**
+
+    맞춘 값은 그림에 박혀 있고 어디에도 안 담아뒀다. 그래서 고칠 때는
+    **그 그림을 다시 원본으로 삼는다** — `fitBear`가 늘 둘레를 잘라내고 시작하니
+    한 번 담긴 것을 다시 담아도 곰돌이만 남는다.
+
+    그리고 **박혀 있는 값을 되읽어 손잡이의 시작점으로 놓는다**(`readFit`).
+    이걸 안 하면 칸을 열기만 해도 크기가 기본값으로 튀어서,
+    고치러 들어간 것이 고쳐지고 만다.
+  */
+  useEffect(() => {
+    if (file || !was?.img) return;
+    let dead = false;
+    fetch(was.img, { cache: 'reload' })
+      .then((r) => (r.ok ? r.blob() : Promise.reject(new Error('못 받았다'))))
+      .then(async (blob) => {
+        if (dead) return;
+        const now = new File([blob], 'now.png', { type: blob.type || 'image/png' });
+        const back = await readFit(now).catch(() => null);
+        if (dead) return;
+        if (back) setFit(back);
+        setFile(now);
+      })
+      .catch(() => {
+        /*
+          통이 막거나(CORS) 파일이 없으면 못 끌어온다. 그때는 **앨범에서 다시 고르면 된다** —
+          화면을 막지 않고 그렇게 적어둔다.
+        */
+        if (!dead) setStuck(true);
+      });
+    return () => {
+      dead = true;
+    };
+  }, [file, was?.img]);
 
   /* 손잡이를 밀면 다시 담는다 — 올리기 전에 보고 고르는 값이고, 담을 때 박힌다 */
   useEffect(() => {
@@ -186,8 +226,9 @@ export default function AdminForm({
   };
 
   const shown = fitted?.url ?? was?.img;
-  /* 맞추는 칸에 깔 방 — 기본 룸은 앱이 들고 나가니 늘 있다 */
+  /* 맞추는 칸에 깔 방과 겹쳐 볼 곰 — 둘 다 앱이 들고 나가니 늘 있다 */
   const room = BUNDLED.find((c) => c.key === DEFAULT_ROOM)?.img;
+  const base = BUNDLED.find((c) => c.key === DEFAULT_BEAR)?.img;
 
   return (
     <>
@@ -309,6 +350,23 @@ export default function AdminForm({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={shown} alt="" aria-hidden="true" className="h-full w-full" />
+              {/*
+                **기본 곰을 연하게 겹친다.** 견줄 자가 그것뿐이다 —
+                옷마다 여백이 다른 그림을 눈대중으로 맞추면 곰이 들쑥날쑥해진다.
+                얼굴과 발끝을 여기에 맞추면 갈아입어도 제자리에 선다.
+
+                기본 곰은 앱이 들고 나가니 **늘 있다.** 위에 얹는 까닭은
+                밑에 두면 새 옷이 클 때 가려져서 견줄 수가 없어서다.
+              */}
+              {ghost && base && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={base}
+                  alt=""
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 h-full w-full opacity-30"
+                />
+              )}
               {/* 발바닥 선과 가운데 — 맞췄나 아닌가는 이 둘로 본다 */}
               <i
                 className="absolute left-0 right-0 block border-t border-dashed border-accent/50"
@@ -387,14 +445,37 @@ export default function AdminForm({
             onChange={(v) => setFit((f) => ({ ...f, dy: v }))}
             show={`${fit.dy > 0 ? '+' : ''}${fit.dy}`}
           />
-          <button
-            type="button"
-            onClick={() => setFit(NO_FIT)}
-            className="mt-1 text-[11px] text-accent"
-          >
-            처음으로
-          </button>
+          <div className="mt-1.5 flex items-center gap-3">
+            <label className="flex items-center gap-1.5 text-[11px] text-ink3">
+              <input
+                type="checkbox"
+                checked={ghost}
+                onChange={(e) => setGhost(e.target.checked)}
+                className="accent-[var(--accent)]"
+              />
+              기본 곰 겹쳐 보기
+            </label>
+            <button
+              type="button"
+              onClick={() => setFit(NO_FIT)}
+              className="ml-auto text-[11px] text-accent"
+            >
+              처음으로
+            </button>
+          </div>
+          <p className="mt-1.5 text-[10.5px] leading-[1.5] text-ink3">
+            연하게 겹친 <b className="font-medium text-ink2">기본 곰의 얼굴과 발끝에 맞추면</b>{' '}
+            갈아입어도 제자리에 서요.
+          </p>
         </div>
+      )}
+
+      {/* 올려둔 것을 못 끌어왔을 때 — 화면을 막지 않고 무엇을 하면 되는지만 적는다 */}
+      {stuck && !fitted && (
+        <p className="mt-2.5 rounded-[12px] bg-sunk px-3 py-2.5 text-[11px] leading-[1.5] text-ink3">
+          올려둔 그림을 불러오지 못해 <b className="font-medium text-ink2">크기를 못 맞춥니다.</b>{' '}
+          <b className="font-medium text-ink2">바꾸기</b>를 눌러 앨범에서 다시 고르면 맞출 수 있어요.
+        </p>
       )}
 
       {/* ── 그림이 가는 자리 ── */}
