@@ -475,23 +475,48 @@ export default function AdminForm({
         z를 안 주면 뒤에 적힌 이 줄이 곰돌이 밑으로 깔린다 —
         DOM 차례가 아니라 z가 먼저다. 곰돌이 발이 단추를 덮고 있었다.
       */}
-      <div className="sticky bottom-0 z-10 -mx-4 mt-5 flex gap-2 border-t border-line bg-card px-4 pb-[calc(16px+env(safe-area-inset-bottom))] pt-3">
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void save(false)}
-          className="flex-1 rounded-[14px] bg-sunk py-[13px] text-[13.5px] font-medium text-ink2 disabled:opacity-60"
-        >
-          숨김
-        </button>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void save(true)}
-          className="flex-[2] rounded-[14px] bg-accent py-[13px] text-[13.5px] font-medium text-white disabled:opacity-60"
-        >
-          {busy ? '저장 중…' : '저장하고 팔기'}
-        </button>
+      <div className="sticky bottom-0 z-10 -mx-4 mt-5 border-t border-line bg-card px-4 pb-[calc(16px+env(safe-area-inset-bottom))] pt-2.5">
+        {/*
+          **지금 어느 쪽인지 적는다.**
+
+          고치러 들어온 물건은 이미 파는 중이거나 숨김이다. 그걸 안 적어두면
+          큰 단추가 늘 `저장하고 팔기`라서, **내려둔 것을 손보러 들어와 큰 단추를
+          누르는 순간 다시 팔린다** — 눌러본 사람은 저장만 한 줄로 안다.
+
+          적어두면 큰 단추가 `바꾸는 것`으로 읽힌다.
+        */}
+        {itemKey && (
+          <p className="mb-2 flex items-baseline gap-1.5 text-[11px] text-ink3">
+            지금
+            <b
+              className={`rounded-full px-2 py-[2px] text-[10.5px] font-medium ${
+                was?.active ? 'bg-accent-tint text-accent' : 'bg-sunk text-ink3'
+              }`}
+            >
+              {was?.active ? '파는 중' : '숨김'}
+            </b>
+            {was?.active ? '· 상점에 걸려 있어요' : '· 상점에 안 떠요. 산 사람 옷장에는 남아요'}
+          </p>
+        )}
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void save(false)}
+            className="flex-1 rounded-[14px] bg-sunk py-[13px] text-[13.5px] font-medium text-ink2 disabled:opacity-60"
+          >
+            {itemKey && !was?.active ? '숨긴 채로 저장' : '숨김'}
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void save(true)}
+            className="flex-[2] rounded-[14px] bg-accent py-[13px] text-[13.5px] font-medium text-white disabled:opacity-60"
+          >
+            {busy ? '저장 중…' : was?.active ? '저장' : '저장하고 팔기'}
+          </button>
+        </div>
       </div>
     </>
   );
