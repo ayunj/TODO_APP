@@ -625,7 +625,7 @@ export async function pullShop(): Promise<Shop> {
     client.from('costume_season').select('season_key, name, note, family_key').order('ord'),
     client
       .from('costume_catalog')
-      .select('item_key, kind, price, season, name, family_key, active')
+      .select('item_key, kind, price, season, name, family_key, active, updated_at')
       .order('created_at'),
   ]);
   for (const r of [g, f, s, c]) if (r.error) throw r.error;
@@ -648,6 +648,25 @@ export async function pullShop(): Promise<Shop> {
     그 둘은 통에 올릴 일이 없어서 자리를 지어 봐야 없는 것을 부르러 간다 —
     로그인 전에도 서버를 못 읽어도 서 있어야 하는 둘이라 헛걸음을 안 시킨다.
   */
+  /*
+    **주소 끝에 판을 붙인다** — `?v=<고친 때>`.
+
+    자리는 분류와 열쇠로 짓는 것이라 **다시 올려도 주소가 같다.** 그러면 브라우저가
+    물고 있던 옛 그림을 그대로 다시 쓴다 — 채우는 사람이 크기를 고쳐 올렸는데
+    화면이 안 바뀌어서 `저장이 안 됐나` 하게 된다.
+
+    판은 `updated_at`에서 낸다. **담아두는 칸을 새로 만들지 않는다** —
+    값표를 고칠 때마다 트리거가 이미 갱신하고 있고, 그림을 올리는 길은
+    [상점 채우기](../../screens/admin/AdminForm.tsx)뿐인데 거기서는 값표도 같이 고친다.
+
+    (`npm run shop`으로 통에만 올리면 판이 안 움직인다. 그때는 한 시간 기다리거나
+    관리자 화면에서 아무 것이나 한 번 고쳐주면 된다.)
+  */
+  const stamp = (r: Row) => {
+    const at = r.updated_at ? Date.parse(String(r.updated_at)) : NaN;
+    return Number.isNaN(at) ? '' : `?v=${Math.floor(at / 1000)}`;
+  };
+
   const items: Costume[] = ((c.data ?? []) as Row[]).map((r) => {
     const item: Costume = {
       key: String(r.item_key),
@@ -661,7 +680,7 @@ export async function pullShop(): Promise<Shop> {
     };
     const own = builtinImg(item.key);
     const at = own ? undefined : shopPath(item, families);
-    return { ...item, img: own ?? (at ? shopImageUrl(at) : undefined) };
+    return { ...item, img: own ?? (at ? shopImageUrl(at) + stamp(r) : undefined) };
   });
 
   const pick = (season: string, kind: Costume['kind']): Costume =>
@@ -753,10 +772,10 @@ export async function uploadShopImage(
     contentType: 'image/png',
     upsert: true,
     /*
-      **5분만 물려둔다.** 기본 한 시간이면 다시 그려 올린 그림이 그만큼 안 바뀐다 —
-      채우는 사람은 올리고 바로 확인하고 싶고, 사는 사람은 5분이면 충분히 오래다.
+      **오래 물려둔다.** 주소 끝에 `?v=<고친 때>`가 붙어서(`pullShop`) 다시 올리면
+      주소가 달라진다 — 물려둔 것과 새것이 서로 다른 주소라 짧게 둘 까닭이 없다.
     */
-    cacheControl: '300',
+    cacheControl: '3600',
   });
   if (error) throw error;
   return at;

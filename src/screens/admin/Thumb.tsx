@@ -1,9 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { shopPath } from '@/lib/costumes';
-import { shopImageUrl } from '@/lib/supabase';
-import type { Costume, ShopFamily } from '@/lib/types';
+import type { Costume } from '@/lib/types';
 
 /**
  * 목록의 작은 그림.
@@ -17,20 +15,21 @@ import type { Costume, ShopFamily } from '@/lib/types';
  */
 export default function Thumb({
   item,
-  families,
   src,
   className = '',
 }: {
   item: Costume;
-  /** 없으면 물건에 이미 실린 주소를 쓴다 */
-  families?: ShopFamily[];
   /** 막 고른 그림을 미리 볼 때 — 이게 있으면 이걸 먼저 쓴다 */
   src?: string;
   className?: string;
 }) {
   const [gone, setGone] = useState(false);
-  const at = families ? shopPath(item, families) : undefined;
-  const url = src ?? item.img ?? (at ? shopImageUrl(at) : undefined);
+  /*
+    **자리를 여기서 짓지 않는다.** `pullShop`이 지어 넣어준 것을 쓴다 —
+    거기서는 주소 끝에 `?v=<고친 때>`를 붙이는데, 여기서 다시 지으면 그 판이 빠져서
+    다시 올린 그림이 이 칸에서만 옛것으로 뜬다.
+  */
+  const url = src ?? item.img;
   const roomly = item.kind === 'room';
 
   return (

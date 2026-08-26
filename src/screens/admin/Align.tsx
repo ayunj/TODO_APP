@@ -53,6 +53,13 @@ export default function Align({
   const [lines, setLines] = useState(true);
   const [stuck, setStuck] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  /**
+   * 원본에서 온 것인가, 통에서 끌어온 것인가.
+   *
+   * 통에 있는 것은 **이미 760으로 눌러 담긴 것**이다. 그것을 크게 키우면
+   * 없는 점을 늘려 그리는 것이라 흐려진다 — 그때는 앨범에서 원본을 다시 고르는 것이 맞다.
+   */
+  const [fromAlbum, setFromAlbum] = useState(false);
 
   const pick = useRef<HTMLInputElement>(null);
   const box = useRef<HTMLDivElement>(null);
@@ -89,6 +96,7 @@ export default function Align({
         if (back) setFit(back);
         setArt(next);
         setWhite(false);
+        setFromAlbum(false);
       })
       .catch(() => {
         // 통이 막거나(CORS) 파일이 없으면 못 끌어온다 — 앨범에서 다시 고르면 된다
@@ -105,7 +113,9 @@ export default function Align({
     let dead = false;
     readArt(file, white)
       .then((next) => {
-        if (!dead) setArt(next);
+        if (dead) return;
+        setArt(next);
+        setFromAlbum(true);
       })
       .catch(() => {
         if (!dead) toast('그림을 못 읽었어요');
@@ -325,6 +335,18 @@ export default function Align({
             전체 되돌리기
           </button>
         </div>
+
+        {/*
+          **눌러 담긴 것을 크게 키우면 흐려진다.** 760으로 줄여 담은 그림에서
+          없는 점을 늘려 그리는 것이라 그렇다 — 원본이 있으면 그걸 다시 고르는 게 맞다.
+          막지는 않는다. 조금 흐려도 지금 맞추는 게 나을 때가 있다.
+        */}
+        {!fromAlbum && fit.scale > 1.1 && (
+          <p className="mt-2 rounded-xl bg-accent-tint px-3 py-2.5 text-[10.5px] leading-[1.5] text-accent">
+            올려둔 그림을 <b className="font-medium">{Math.round(fit.scale * 100)}%로 키우면 흐려져요.</b>{' '}
+            <b className="font-medium">바꾸기</b>로 앨범의 원본을 고르면 또렷하게 담겨요.
+          </p>
+        )}
 
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-line pt-2.5">
           <Toggle on={white} set={setWhite} label="흰 배경 지우기" />
