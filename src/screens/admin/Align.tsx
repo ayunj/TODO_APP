@@ -223,9 +223,14 @@ export default function Align({
 
           눈금과 겹쳐 보는 곰도 이 안에 든다. 셋이 같은 칸을 봐야 자가 맞는다.
         */}
+        {/*
+          **칸 밖은 잘라서 보여준다.** 캔버스가 칸 밖에 그린 것을 담지 않으니
+          여기서도 안 보여야 **보이는 그대로 담긴다.** 안 자르고 보여주면
+          모자가 잘린 채 올라간 것을 화면에서 알 길이 없다.
+        */}
         <span
           ref={slot}
-          className="pointer-events-none absolute left-1/2 block aspect-square -translate-x-1/2"
+          className="pointer-events-none absolute left-1/2 block aspect-square -translate-x-1/2 overflow-hidden"
           style={{ width: `${BEAR_W}%`, bottom: `${BEAR_FLOOR}%` }}
         >
           {pos && (
@@ -337,6 +342,17 @@ export default function Align({
         </div>
 
         {/*
+          **잘리는 것이 더 큰 사고다.** 흐린 것은 눈에 안 거슬릴 수도 있는데,
+          모자가 잘린 곰돌이는 고장으로 보인다. 그래서 이 줄이 위에 선다.
+        */}
+        {num?.cut && (
+          <p className="mt-2 rounded-xl bg-accent px-3 py-2.5 text-[11px] font-medium leading-[1.5] text-white">
+            칸을 벗어났어요 — <b>벗어난 만큼 잘려서 저장돼요.</b> 크기를 줄이거나
+            <b> 발바닥 · 중앙 자동 정렬</b>을 누르세요.
+          </p>
+        )}
+
+        {/*
           **눌러 담긴 것을 크게 키우면 흐려진다.** 760으로 줄여 담은 그림에서
           없는 점을 늘려 그리는 것이라 그렇다 — 원본이 있으면 그걸 다시 고르는 게 맞다.
           막지는 않는다. 조금 흐려도 지금 맞추는 게 나을 때가 있다.
@@ -381,10 +397,14 @@ export default function Align({
           </dl>
           <span
             className={`mt-2 inline-block rounded-full px-2.5 py-1 text-[10.5px] font-medium ${
-              num.ok ? 'bg-accent-tint text-accent' : 'bg-card text-ink3'
+              num.cut
+                ? 'bg-accent text-white'
+                : num.ok
+                  ? 'bg-accent-tint text-accent'
+                  : 'bg-card text-ink3'
             }`}
           >
-            {num.ok ? '✓ 자에 맞음' : '· 자동 정렬 필요'}
+            {num.cut ? '! 칸을 벗어나 잘림' : num.ok ? '✓ 자에 맞음' : '· 자동 정렬 필요'}
           </span>
         </div>
       )}

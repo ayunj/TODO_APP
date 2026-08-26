@@ -121,23 +121,41 @@ export function at(art: Art, spec: Spec, fit: Fit) {
 export function readout(art: Art, spec: Spec, fit: Fit) {
   const p = at(art, spec, fit);
   const foot = Math.round((art.box.y + art.box.h) * p.s + p.y);
+  const top = Math.round(art.box.y * p.s + p.y);
   const cx = Math.round((art.box.x + art.box.w / 2) * p.s + p.x);
+  const left = Math.round(art.box.x * p.s + p.x);
+  const w = Math.round(art.box.w * p.s);
+
   return {
     foot,
-    top: Math.round(art.box.y * p.s + p.y),
+    top,
     cx,
-    w: Math.round(art.box.w * p.s),
+    left,
+    w,
     h: Math.round(art.box.h * p.s),
     /** 발바닥과 중심이 자에 붙었나 — 2px까지는 붙은 것으로 본다 */
     ok: Math.abs(foot - spec.foot) <= 2 && Math.abs(cx - spec.cx) <= 2,
+    /**
+     * **칸을 벗어났나 — 벗어난 만큼 잘린다.**
+     *
+     * 캔버스는 칸 밖에 그린 것을 담지 않는다. 그래서 크게 키워 저장하면
+     * **모자와 어깨가 잘린 그림이 통에 올라간다** — 그걸 상점에서 보면
+     * 곰돌이가 칸을 뚫고 나온 것처럼 뜬다.
+     *
+     * 잘리는 것을 막지는 않는다. 막으면 손잡이가 어디선가 안 움직이고,
+     * 왜 안 움직이는지는 화면에 안 적힌다. **잘린다고 적어주는 쪽**을 골랐다.
+     */
+    cut: top < 0 || left < 0 || foot > BODY || left + w > BODY,
   };
 }
 
 /**
  * 정사각 칸에 세워 담는다 — **발바닥 가운데를 자에 맞춘다.**
  *
- * **칸을 벗어나도 자르지 않는다.** 손잡이를 끝까지 밀면 발끝이나 모자가 칸 밖으로
- * 나가는데, 잘라 버리면 무엇이 잘렸는지 화면에서 안 보인다.
+ * **칸을 벗어난 것은 잘린다.** 캔버스가 칸 밖에 그린 것을 담지 않아서다 —
+ * 크게 키워 저장하면 모자와 어깨가 잘린 그림이 올라간다.
+ * 그러니 잘리는지를 화면에서 보여줘야 한다 — `readout`의 `cut`과
+ * 맞추는 칸의 `overflow-hidden`이 그 일을 한다.
  */
 export async function fitBear(art: Art, spec: Spec, fit: Fit): Promise<Fitted> {
   const out = canvas(BODY, BODY);
