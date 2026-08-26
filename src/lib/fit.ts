@@ -41,6 +41,26 @@ export const SCENE = 1000;
  */
 export const DEFAULT_SCALE = 0.85;
 
+/**
+ * 맞춘 값 — **`scripts/bears.mjs`의 `FIT`과 같은 셋이다.**
+ *
+ * | | 무엇 | 기본 |
+ * |---|---|---|
+ * | `scale` | 키를 얼마나. 1이면 칸의 `TALL`만큼 찬다 | `DEFAULT_SCALE` |
+ * | `dx` | 가로로 몇 픽셀 (760 칸 기준) | `0` |
+ * | `dy` | 세로로 몇 픽셀. 양수면 아래로 | `0` |
+ *
+ * **담을 때 박힌다.** 손잡이로 맞춘 그대로 PNG에 구워져서, 올린 뒤에
+ * 앱이 다시 맞출 것이 없다 — 앱은 정사각 한 장을 그대로 세운다.
+ */
+export interface Fit {
+  scale: number;
+  dx: number;
+  dy: number;
+}
+
+export const NO_FIT: Fit = { scale: DEFAULT_SCALE, dx: 0, dy: 0 };
+
 /** 담은 결과 — 올릴 것과 눈으로 볼 것 */
 export interface Fitted {
   blob: Blob;
@@ -52,13 +72,16 @@ export interface Fitted {
 
 /**
  * 곰돌이 한 장을 정사각 칸에 세워 담는다.
- * `scale`이 1이면 잘라낸 그림이 칸의 `TALL`만큼 찬다.
+ *
+ * **칸을 벗어나도 자르지 않는다.** 손잡이를 끝까지 밀면 발끝이나 모자가 칸 밖으로
+ * 나가는데, 그때 잘라 버리면 무엇이 잘렸는지 화면에서 안 보인다 —
+ * 캔버스가 알아서 비워두니 그대로 두고 **눈금으로 보여준다.**
  */
-export async function fitBear(file: File, scale = DEFAULT_SCALE): Promise<Fitted> {
+export async function fitBear(file: File, fit: Fit = NO_FIT): Promise<Fitted> {
   const src = await draw(file);
   const box = trim(src);
 
-  const tall = Math.round(BODY * TALL * scale);
+  const tall = Math.round(BODY * TALL * fit.scale);
   const wide = Math.round((box.w * tall) / box.h);
 
   const out = canvas(BODY, BODY);
@@ -68,8 +91,8 @@ export async function fitBear(file: File, scale = DEFAULT_SCALE): Promise<Fitted
     box.y,
     box.w,
     box.h,
-    Math.round((BODY - wide) / 2),
-    Math.round(BODY - BODY * FLOOR - tall),
+    Math.round((BODY - wide) / 2 + fit.dx),
+    Math.round(BODY - BODY * FLOOR - tall + fit.dy),
     wide,
     tall,
   );

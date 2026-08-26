@@ -55,9 +55,19 @@ export default function StoreScreen() {
 
   /* 방은 대분류를 가로지른다 — 시즌 방도 여기서 보여야 한다 */
   const rooms = useMemo(() => shop.items.filter((c) => c.kind === 'room'), [shop]);
-  const decoRooms = useMemo(() => rooms.filter((c) => !c.season), [rooms]);
   const decoFams = useMemo(() => familiesOf(shop, 'deco'), [shop]);
   const seasonFams = useMemo(() => familiesOf(shop, 'season'), [shop]);
+  /*
+    **`방` 밑에도 대분류가 선다.** 방 테마가 꾸미기에도 시즌에도 있어서,
+    한 무더기로 늘어놓으면 기본 룸과 크리스마스 룸이 나란히 선다.
+
+    **든 것이 있는 대분류만 세운다.** 지금은 시즌 방이 없어 `꾸미기` 하나만 뜨고,
+    관리자가 시즌 방을 하나 올리면 `시즌`이 저절로 따라 선다 — 여기 적어둘 것이 없다.
+  */
+  const roomGroups = useMemo(
+    () => shop.groups.filter((g) => rooms.some((c) => groupOf(c) === g.key)),
+    [shop, rooms],
+  );
   const decoOf = (fam: string) =>
     shop.items.filter((c) => !c.season && c.kind !== 'room' && c.family === fam);
   const sets = shop.sets.filter((x) => sub === 'all' || x.family === sub);
@@ -104,9 +114,13 @@ export default function StoreScreen() {
   /* 위층을 바꾸면 아래층은 늘 `전체`로 돌아간다 — 안 그러면 없는 칩이 눌린 채로 남는다 */
   const goChip = (k: Chip) => {
     setChip(k);
-    setSub('all');
+    /* 방 밑의 칩은 `전체`가 없다 — 알약 둘 가운데 하나가 늘 눌려 있다 */
+    setSub(k === 'room' ? (roomGroups[0]?.key ?? 'all') : 'all');
   };
   const subs = chip === 'deco' ? decoFams : chip === 'season' ? seasonFams : [];
+  /* 방 밑의 칩은 중분류가 아니라 대분류다 — 알약 두 칸으로 세운다 */
+  const roomSub = roomGroups.some((g) => g.key === sub) ? sub : (roomGroups[0]?.key ?? '');
+  const roomList = rooms.filter((c) => groupOf(c) === roomSub);
 
   return (
     <>
@@ -203,12 +217,46 @@ export default function StoreScreen() {
           {chip === 'mine' ? (
             <Wardrobe shop={shop} tab={tab} setTab={setTab} pick={pick} trying={trying} />
           ) : chip === 'room' ? (
-            <Group title="방 테마" aside="홈 배경이 바뀐다" list={rooms} pick={pick} trying={trying} />
+            <>
+              {/*
+                **알약 두 칸.** 중분류 칩(밑줄)과 생김새를 다르게 뒀다 —
+                여기 서는 것은 중분류가 아니라 대분류라서, 같은 모양으로 두면
+                `일상`과 `꾸미기`가 같은 층으로 읽힌다.
+              */}
+              {roomGroups.length > 0 && (
+                <div className="mb-3 flex gap-1 rounded-2xl bg-sunk p-1">
+                  {roomGroups.map((g) => (
+                    <button
+                      key={g.key}
+                      type="button"
+                      aria-pressed={roomSub === g.key}
+                      onClick={() => setSub(g.key)}
+                      className={`flex-1 rounded-[14px] py-[9px] text-[12.5px] font-medium ${
+                        roomSub === g.key ? 'bg-card text-ink shadow-card' : 'text-ink3'
+                      }`}
+                    >
+                      {g.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <Group
+                title="방 테마"
+                aside="홈 배경이 바뀐다"
+                list={roomList}
+                pick={pick}
+                trying={trying}
+              />
+            </>
           ) : chip === 'season' ? (
             <Sets list={sets} has={has} onOpen={setOpen} />
           ) : chip === 'deco' ? (
             /* 중분류를 고르면 그것만, `전체`면 중분류마다 한 무더기씩 */
             sub === 'all' ? (
+              /*
+                **방 테마를 여기 안 세운다.** `방` 버튼이 따로 있어서 같은 것이 두 번 뜬다 —
+                꾸미기를 열면 옷만 보이고, 방은 `방`에서 본다.
+              */
               <>
                 {decoFams.map((f) => (
                   <Group
@@ -219,7 +267,6 @@ export default function StoreScreen() {
                     trying={trying}
                   />
                 ))}
-                <Group title="방 테마" list={decoRooms} pick={pick} trying={trying} />
               </>
             ) : (
               <Group title={nameOf(subs, sub)} list={decoOf(sub)} pick={pick} trying={trying} />
@@ -236,7 +283,8 @@ export default function StoreScreen() {
               {decoFams.map((f) => (
                 <Group key={f.key} title={f.name} list={decoOf(f.key)} pick={pick} trying={trying} />
               ))}
-              <Group title="방 테마" list={decoRooms} pick={pick} trying={trying} />
+              {/* 여기는 **다 보여주는 자리**라 방도 든다. 꾸미기 칩에서는 뺐다. */}
+              <Group title="방 테마" list={rooms} pick={pick} trying={trying} />
             </>
           )}
 

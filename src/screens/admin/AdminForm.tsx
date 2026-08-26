@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Thumb from './Thumb';
 import Coin from '../store/Coin';
-import { shopPath } from '@/lib/costumes';
-import { DEFAULT_SCALE, fitBear, fitScene, type Fitted } from '@/lib/fit';
+import { BUNDLED, DEFAULT_ROOM, shopPath } from '@/lib/costumes';
+import { FLOOR, NO_FIT, fitBear, fitScene, type Fit, type Fitted } from '@/lib/fit';
 import {
   createSeason,
   createShopFamily,
@@ -15,6 +15,12 @@ import {
 } from '@/lib/repo/remote';
 import { toast } from '@/lib/toast';
 import type { Costume, CostumeSet, Shop } from '@/lib/types';
+
+/**
+ * 곰돌이가 칸의 몇 %로 뜨나 — **앱의 `Stage`·`RoomCard`와 같은 값이어야 한다.**
+ * 저쪽을 고치면 여기도 고친다. 다르면 맞춘 대로 안 서고, 그러면 맞추는 뜻이 없다.
+ */
+const SLOT = { stage: 72 };
 
 /**
  * 채우기 — [시안](../../../design/관리자.html)의 앱 판 둘째 화면.
@@ -70,7 +76,7 @@ export default function AdminForm({
 
   const [file, setFile] = useState<File | null>(null);
   const [fitted, setFitted] = useState<Fitted | null>(null);
-  const [scale, setScale] = useState(DEFAULT_SCALE);
+  const [fit, setFit] = useState<Fit>(NO_FIT);
   const pick = useRef<HTMLInputElement>(null);
 
   const fams = useMemo(
@@ -119,11 +125,11 @@ export default function AdminForm({
   };
   const at = shopPath(draft, shop.families);
 
-  /* 손잡이를 밀면 다시 담는다 — 올리기 전에 보고 고르는 값이다 */
+  /* 손잡이를 밀면 다시 담는다 — 올리기 전에 보고 고르는 값이고, 담을 때 박힌다 */
   useEffect(() => {
     if (!file) return;
     let dead = false;
-    const job = kind === 'room' ? fitScene(file) : fitBear(file, scale);
+    const job = kind === 'room' ? fitScene(file) : fitBear(file, fit);
     void job.then((next) => {
       if (dead) URL.revokeObjectURL(next.url);
       else setFitted(next);
@@ -131,7 +137,7 @@ export default function AdminForm({
     return () => {
       dead = true;
     };
-  }, [file, scale, kind]);
+  }, [file, fit, kind]);
 
   const spec =
     kind === 'room'
@@ -180,6 +186,8 @@ export default function AdminForm({
   };
 
   const shown = fitted?.url ?? was?.img;
+  /* 맞추는 칸에 깔 방 — 기본 룸은 앱이 들고 나가니 늘 있다 */
+  const room = BUNDLED.find((c) => c.key === DEFAULT_ROOM)?.img;
 
   return (
     <>
@@ -265,34 +273,70 @@ export default function AdminForm({
 
       {/* ── 그림 ── */}
       <p className="mb-2 text-[11px] font-medium text-ink3">그림</p>
-      <button
-        type="button"
-        onClick={() => pick.current?.click()}
-        className={`grid aspect-[5/4] w-full place-items-center overflow-hidden rounded-[18px] text-center ${
-          shown
-            ? 'bg-card shadow-[0_0_0_1.6px_var(--line)]'
-            : 'border-[1.6px] border-dashed border-edge bg-sunk p-5'
-        }`}
-      >
-        {shown ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={shown}
-            alt=""
-            aria-hidden="true"
-            className={
-              kind === 'room'
-                ? 'h-full w-full object-cover object-bottom'
-                : 'max-h-[82%] max-w-[76%]'
-            }
-          />
-        ) : (
+      {shown ? (
+        /*
+          **맞추는 칸에 방을 깐다.** 배경 없이 곰돌이만 놓으면 크기가 맞는지 알 수가 없다 —
+          곰돌이는 방 위에 서는 것이라 **방을 깔아야 비로소 크다 작다가 보인다.**
+
+          칸이 상점의 걸쳐보는 칸과 같은 비율·같은 셈이다. 여기서 맞춘 대로 거기 선다.
+        */
+        <div className="relative aspect-square w-full overflow-hidden rounded-[18px] bg-sunk">
+          {room && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={room}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full object-cover object-bottom"
+            />
+          )}
+          {kind === 'room' ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={shown}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full object-cover object-bottom"
+            />
+          ) : (
+            /*
+              **정사각 한 장을 그대로 세운다.** `fitBear`가 담아준 것이 곧 이 칸이라
+              여기서 다시 맞추는 셈이 없다 — 화면과 파일이 어긋날 자리가 없다.
+            */
+            <span
+              className="absolute bottom-[6%] left-1/2 block aspect-square -translate-x-1/2"
+              style={{ width: `${SLOT.stage}%` }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={shown} alt="" aria-hidden="true" className="h-full w-full" />
+              {/* 발바닥 선과 가운데 — 맞췄나 아닌가는 이 둘로 본다 */}
+              <i
+                className="absolute left-0 right-0 block border-t border-dashed border-accent/50"
+                style={{ bottom: `${FLOOR * 100}%` }}
+              />
+              <i className="absolute bottom-0 left-1/2 top-0 block border-l border-dashed border-accent/30" />
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => pick.current?.click()}
+            className="absolute right-2.5 top-2.5 rounded-full bg-white/92 px-2.5 py-[5px] text-[11px] text-ink2 shadow-card"
+          >
+            바꾸기
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => pick.current?.click()}
+          className="grid aspect-[5/4] w-full place-items-center rounded-[18px] border-[1.6px] border-dashed border-edge bg-sunk p-5 text-center"
+        >
           <span>
             <span className="block text-[12.5px] text-ink2">앨범에서 고르기</span>
             <span className="mt-[5px] block font-mono text-[11px] text-ink3">{spec}</span>
           </span>
-        )}
-      </button>
+        </button>
+      )}
       <input
         ref={pick}
         type="file"
@@ -306,23 +350,51 @@ export default function AdminForm({
       />
 
       {/*
-        **크기 손잡이.** 그린 그림은 여백이 그때그때 달라서, 그대로 올리면
-        갈아입을 때 곰돌이가 커졌다 작아졌다 한다. 방은 통째로 한 장이라 안 뜬다.
+        **맞추는 손잡이 셋.** 그린 그림은 여백이 그때그때 달라서, 그대로 올리면
+        갈아입을 때 곰돌이가 커졌다 작아졌다 한다.
+
+        **맞춘 값은 그림에 박힌다.** `fitBear`가 담을 때 구워 넣어서 올린 뒤에
+        앱이 다시 맞출 것이 없다 — 손잡이를 어디에 뒀는지 따로 담아둘 데도 없다.
+
+        방은 통째로 한 장이라 안 뜬다.
       */}
       {fitted && kind !== 'room' && (
-        <label className="mt-2.5 flex items-center gap-2 text-[11px] text-ink3">
-          크기
-          <input
-            type="range"
+        <div className="mt-3 rounded-[14px] bg-card p-3">
+          <Knob
+            label="크기"
             min={0.5}
-            max={1}
+            max={1.15}
             step={0.01}
-            value={scale}
-            onChange={(e) => setScale(Number(e.target.value))}
-            className="min-w-0 flex-1 accent-[var(--accent)]"
+            value={fit.scale}
+            onChange={(v) => setFit((f) => ({ ...f, scale: v }))}
+            show={`${Math.round(fit.scale * 100)}%`}
           />
-          <span className="w-8 flex-none text-right font-mono">{scale.toFixed(2)}</span>
-        </label>
+          <Knob
+            label="좌우"
+            min={-120}
+            max={120}
+            step={1}
+            value={fit.dx}
+            onChange={(v) => setFit((f) => ({ ...f, dx: v }))}
+            show={`${fit.dx > 0 ? '+' : ''}${fit.dx}`}
+          />
+          <Knob
+            label="상하"
+            min={-120}
+            max={120}
+            step={1}
+            value={fit.dy}
+            onChange={(v) => setFit((f) => ({ ...f, dy: v }))}
+            show={`${fit.dy > 0 ? '+' : ''}${fit.dy}`}
+          />
+          <button
+            type="button"
+            onClick={() => setFit(NO_FIT)}
+            className="mt-1 text-[11px] text-accent"
+          >
+            처음으로
+          </button>
+        </div>
       )}
 
       {/* ── 그림이 가는 자리 ── */}
@@ -461,7 +533,7 @@ function Preview({ shop, item, src }: { shop: Shop; item: Costume; src?: string 
                 src={src}
                 alt=""
                 aria-hidden="true"
-                className="relative z-[1] mb-[6%] block h-auto max-h-[74%] w-auto max-w-[58%]"
+                className="relative z-[1] mb-[6%] block h-auto max-h-[74%] w-auto max-w-[72%]"
               />
             )}
           </div>
@@ -665,6 +737,41 @@ function Small({
           mono ? 'font-mono' : ''
         }`}
       />
+    </label>
+  );
+}
+
+/** 손잡이 한 줄 — 이름 · 막대 · 지금 값 */
+function Knob({
+  label,
+  min,
+  max,
+  step,
+  value,
+  onChange,
+  show,
+}: {
+  label: string;
+  min: number;
+  max: number;
+  step: number;
+  value: number;
+  onChange: (v: number) => void;
+  show: string;
+}) {
+  return (
+    <label className="flex items-center gap-2.5 py-1 text-[11px] text-ink3">
+      <span className="w-7 flex-none">{label}</span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="min-w-0 flex-1 accent-[var(--accent)]"
+      />
+      <span className="w-10 flex-none text-right font-mono text-ink2">{show}</span>
     </label>
   );
 }

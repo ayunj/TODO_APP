@@ -34,12 +34,12 @@ export const FLOOR = 0.03;
 /**
  * 앱에서 이 정사각이 칸의 몇 %로 뜨나 — **[곰 맞추기](../design/곰-맞추기.html)가 쓴다.**
  *
- * 진짜 값은 앱에 있다(`Stage.tsx`의 `max-w-[58%]`, `RoomCard.tsx`의 `max-w-[78%]`).
+ * 진짜 값은 앱에 있다(`Stage.tsx`의 `max-w-[72%]`, `RoomCard.tsx`의 `max-w-[92%]`).
  * 여기 적힌 것은 **미리 보여주려고 베껴 온 것**이라, 저쪽을 고치면 여기도 고친다.
  *
  * 두 자리가 다른 것은 홈이 상점보다 곰돌이를 크게 세우기 때문이다.
  */
-export const SLOT = { stage: 58, home: 78 };
+export const SLOT = { stage: 72, home: 92 };
 
 /**
  * 옷마다 손으로 맞춘 값 — **[곰 맞추기](../design/곰-맞추기.html)에서 고른다.**

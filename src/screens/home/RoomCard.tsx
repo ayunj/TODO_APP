@@ -42,7 +42,7 @@ export default function RoomCard({ done, total }: { done: number; total: number 
         */}
         <Art
           src={item(wornBear).img}
-          className="relative z-[1] mb-[7%] block h-auto max-h-full w-auto max-w-[78%]"
+          className="relative z-[1] mb-[7%] block h-auto max-h-full w-auto max-w-[92%]"
         />
 
         <div className="absolute right-[15px] top-3.5 z-[3] w-[44%] text-right">
