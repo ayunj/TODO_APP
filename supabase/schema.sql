@@ -1512,6 +1512,24 @@ begin
    * 다 모은 사람은 관리자가 켜준 뒤에도 **뭔가 하나 더 사기 전까지** 못 받는다.
    */
   perform grant_poses();
+
+  /*
+   * **상점을 채우는 사람은 값을 안 치른다.** 올린 것을 사서 입어보는 것까지
+   * 해봐야 제대로 섰는지 안다 — 그러려고 할 일을 백 개 체크하게 둘 수는 없다.
+   *
+   * **잔액 칸을 만들어 넣어주는 길은 안 골랐다.** 그러면 관리자가 아닌 사람에게도
+   * 넣어줄 수 있는 자리가 생기고, 그 자리는 반드시 언젠가 쓰인다.
+   * 담아두는 것 없이 여기서 갈라지니 **명단에서 빠지는 순간 원래 잔액으로 돌아온다.**
+   *
+   * `buy_costume`이 이 함수로 잔액을 보니 여기 한 줄이면 사는 것도 같이 열린다 —
+   * 사는 쪽에 예외를 따로 두면 한쪽만 고치는 날이 온다.
+   *
+   * 무한이 아니라 큰 수 하나다. `int`에 무한이 없고 화면의 동전 칸이 여섯 자리다.
+   */
+  if is_shop_admin() then
+    return 999999;
+  end if;
+
   return 100
     + coalesce((select sum(amount)::int from point_log     where user_id = auth.uid()), 0)
     - coalesce((select sum(price)::int  from costume_owned where user_id = auth.uid()), 0);

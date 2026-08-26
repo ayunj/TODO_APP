@@ -99,11 +99,19 @@ export function GomdoriProvider({ children }: { children: React.ReactNode }) {
     let alive = true;
     pullShop()
       .then((next) => {
-        // 빈 상점이 내려오면 안 받은 것으로 친다 — 박아둔 목록이 낫다
-        if (alive && next.items.length) setShop(next);
+        /*
+          **빈 상점도 그대로 받는다.** 전에는 `안 받은 것으로 치고` 박아둔 목록을
+          세웠는데, 그러면 **값표를 비운 뒤에도 옛 목록이 상점에 뜬다** —
+          서버에 없는 옷이 이름과 값을 달고 회색 네모로 선다.
+          그걸 누르면 `없는 코스튬입니다`가 뜨는데, 그건 파는 물건이 아니라 고장이다.
+
+          받아온 것이 비었다는 것은 **`모르겠다`가 아니라 `없다`는 답이다.**
+          못 받아온 것은 아래 `catch`가 따로 받는다.
+        */
+        if (alive) setShop(next);
       })
       .catch(() => {
-        /* 못 받아오면 박혀 나온 것으로 선다. 상점은 오프라인에서도 떠야 한다. */
+        /* 못 받아오면 박혀 나온 것으로 선다. 곰돌이는 오프라인에서도 서야 한다. */
       });
     return () => {
       alive = false;
