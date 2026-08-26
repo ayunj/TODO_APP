@@ -94,10 +94,51 @@ export default function AdminForm({
     () => shop.families.filter((f) => f.group === group),
     [shop, group],
   );
-  /* 대분류를 바꾸면 아래 중분류가 없는 것을 가리킨 채로 남는다 */
+
+  /*
+    **`룸` 중분류와 `배경 — 방` 종류를 서로 묶는다.**
+
+    둘을 따로 물었더니 **중분류만 `룸`으로 고르고 종류는 `캐릭터`인 채로** 두는 일이
+    생겼다. 그러면 방 그림을 곰돌이 맞추는 칸에 놓고 발바닥 눈금에 맞추라고 하는 꼴이
+    되고, 자리도 `deco/room/gomdori/…`로 잡힌다 — 방인데 곰 폴더다.
+
+    꾸미기에서는 이 둘이 **한 짝이다.** `룸`은 방을 담으려고 만든 중분류이고,
+    방을 담을 다른 중분류는 없다. 그래서 한쪽을 고르면 다른 쪽이 따라간다.
+
+    **시즌은 안 묶는다.** 세트 하나가 곰·방·소품 셋을 다 갖고 있어서,
+    거기서는 같은 중분류 안에 종류 셋이 나란히 있어야 한다.
+  */
+  const ROOM_FAM = 'room';
+  const pickFamily = (next: string) => {
+    setFamily(next);
+    if (group !== 'deco') return;
+    if (next === ROOM_FAM) setKind('room');
+    else if (kind === 'room') setKind('bear');
+  };
+  const pickKind = (next: Costume['kind']) => {
+    setKind(next);
+    if (group !== 'deco') return;
+    if (next === 'room' && fams.some((f) => f.key === ROOM_FAM)) setFamily(ROOM_FAM);
+    else if (next !== 'room' && family === ROOM_FAM) {
+      setFamily(fams.find((f) => f.key !== ROOM_FAM)?.key ?? family);
+    }
+  };
+  /*
+    대분류를 바꾸면 **아래 둘이 없는 것을 가리킨 채로 남는다.**
+
+    중분류는 그 대분류에 있는 것으로 옮긴다 — **종류에 맞는 것이 있으면 그것으로.**
+    그냥 첫 칸으로 보내면 방을 고른 채 꾸미기로 넘어올 때 `일상`에 앉아
+    방이 곰 폴더로 가버린다.
+
+    소품은 시즌에만 있다(세트 보상이다). 꾸미기로 넘어오면 곰으로 되돌린다 —
+    안 되돌리면 고를 수 없는 값이 골라진 채로 남는다.
+  */
   useEffect(() => {
-    if (!fams.some((f) => f.key === family)) setFamily(fams[0]?.key ?? '');
-  }, [fams, family]);
+    if (group === 'deco' && kind === 'pose') setKind('bear');
+    if (fams.some((f) => f.key === family)) return;
+    const want = group === 'deco' && kind === 'room' ? ROOM_FAM : null;
+    setFamily((want && fams.some((f) => f.key === want) ? want : fams[0]?.key) ?? '');
+  }, [fams, family, group, kind]);
 
   const loadSets = useCallback(async () => {
     try {
@@ -202,11 +243,24 @@ export default function AdminForm({
       {/* ── 무엇인지 먼저 ── */}
       <section className="mb-4 rounded-[18px] bg-card p-3.5">
         <Row label="종류">
-          <Select value={kind} onChange={(v) => setKind(v as Costume['kind'])}>
+          <Select value={kind} onChange={(v) => pickKind(v as Costume['kind'])}>
             <option value="bear">캐릭터 — 곰</option>
             <option value="room">배경 — 방</option>
-            <option value="pose">소품 든 캐릭터</option>
+            {/* 소품은 세트 보상이라 시즌에만 있다 — 꾸미기에서 고르면 갈 데가 없다 */}
+            {group === 'season' && <option value="pose">소품 든 캐릭터</option>}
           </Select>
+          <Hint>
+            {kind === 'room' ? (
+              <>
+                방은 <b className="font-medium text-ink2">칸을 꽉 채우는 정사각 한 장</b>이에요 —
+                크기를 맞출 것이 없어요.
+              </>
+            ) : (
+              <>
+                곰은 <b className="font-medium text-ink2">기본 곰에 맞춰</b> 세워요.
+              </>
+            )}
+          </Hint>
         </Row>
 
         <Row label="대분류">
@@ -231,7 +285,7 @@ export default function AdminForm({
         </Row>
 
         <Row label="중분류" aside={<Add on={newFam} onToggle={() => setNewFam((v) => !v)} />}>
-          <Select value={family} onChange={setFamily}>
+          <Select value={family} onChange={pickFamily}>
             {fams.length === 0 && <option value="">아직 없어요</option>}
             {fams.map((f) => (
               <option key={f.key} value={f.key}>
@@ -278,6 +332,17 @@ export default function AdminForm({
           </Row>
         ) : null}
       </section>
+
+      {/*
+        묶어뒀지만 **이미 어긋나 있는 물건**이 있을 수 있다 — 묶기 전에 넣은 것이다.
+        고치러 들어오면 그 값이 그대로 뜨니, 그때는 적어서 알려준다.
+      */}
+      {group === 'deco' && family === 'room' && kind !== 'room' && (
+        <p className="mb-3 rounded-xl bg-accent px-3 py-2.5 text-[11px] font-medium leading-[1.5] text-white">
+          중분류가 <b>룸</b>인데 종류가 <b>배경 — 방</b>이 아니에요. 그림이 곰 폴더로 가고
+          크기도 곰에 맞춰져요.
+        </p>
+      )}
 
       {/* ── 그림 ── */}
       <p className="mb-2 text-[11px] font-medium text-ink3">그림</p>
