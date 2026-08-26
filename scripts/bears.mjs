@@ -39,7 +39,7 @@ export const FLOOR = 0.03;
  *
  * 홈과 상점이 **같은 값이어야 한다** — 걸쳐본 대로 홈에 서야 한다.
  */
-export const SLOT = { stage: 85, home: 85 };
+export const SLOT = { stage: 90, home: 90 };
 /** 발끝이 칸 바닥에서 몇 % 떠 있나 — `stage.ts`의 `BEAR_FLOOR` */
 export const SLOT_FLOOR = 9;
 

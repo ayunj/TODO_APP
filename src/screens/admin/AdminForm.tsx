@@ -405,7 +405,12 @@ export default function AdminForm({
       </div>
 
       {/* ── 바닥에 붙는 저장 ── */}
-      <div className="sticky bottom-0 -mx-4 mt-5 flex gap-2 border-t border-line bg-card px-4 pb-[calc(16px+env(safe-area-inset-bottom))] pt-3">
+      {/*
+        **`z-10`이 있어야 한다.** 곰돌이가 `z-[1]`로 서 있어서(`BEAR_ART`),
+        z를 안 주면 뒤에 적힌 이 줄이 곰돌이 밑으로 깔린다 —
+        DOM 차례가 아니라 z가 먼저다. 곰돌이 발이 단추를 덮고 있었다.
+      */}
+      <div className="sticky bottom-0 z-10 -mx-4 mt-5 flex gap-2 border-t border-line bg-card px-4 pb-[calc(16px+env(safe-area-inset-bottom))] pt-3">
         <button
           type="button"
           disabled={busy}
@@ -428,7 +433,10 @@ export default function AdminForm({
 }
 
 /**
- * 상점에서 어떻게 보이나 — **격자 칸과 걸쳐보는 칸 둘.**
+ * 상점에서 어떻게 보이나 — **격자 칸과 미리보기 둘.**
+ *
+ * 안에서는 `걸쳐보는 칸`이라 부르는데(상점에서 사기 전에 걸쳐보는 자리다)
+ * 화면에는 안 적는다 — 채우는 사람에게는 그냥 미리보기다.
  * 올리고 나서 상점에 들어가 확인하는 왕복이 생기면 서른 장을 서른 번 왕복하게 된다.
  */
 function Preview({ shop, item, src }: { shop: Shop; item: Costume; src?: string }) {
@@ -453,7 +461,7 @@ function Preview({ shop, item, src }: { shop: Shop; item: Costume; src?: string 
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="mb-1.5 text-center text-[10px] text-ink3">걸쳐보는 칸 · 홈 칸</p>
+          <p className="mb-1.5 text-center text-[10px] text-ink3">미리보기</p>
           {/* 아래를 맞춰 자른다 — 가운데로 자르면 바닥이 먹혀 곰돌이가 벽에 붙어 선다 */}
           <div className={`${ROOM_BOX} rounded-[14px] bg-sunk`}>
             {roomly ? (
