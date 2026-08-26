@@ -299,8 +299,18 @@ export interface Costume {
   family?: string;
   /** 어느 시즌 세트에 딸린 것인가. 없으면 늘 있는 것. */
   season?: string;
-  /** 아직 안 그린 것에는 없다 */
+  /**
+   * 그림 주소. **값표에 적혀 오는 것이 아니라 지어 넣는 것이다** —
+   * `<대분류>/<중분류>/<종류>/<열쇠>.png`(`costumes.ts`의 `shopPath`).
+   * 앱이 들고 나가는 둘(기본 곰돌이·기본 룸)만 앱 안의 자리를 가리킨다.
+   */
   img?: string;
+  /**
+   * 상점에 걸려 있나. **숨김인 것은 관리자에게만 내려온다**
+   * (값표 정책이 `active or is_shop_admin()`) — 그래서 보통은 늘 참이다.
+   * [상점 채우기](../screens/ShopAdminScreen.tsx)가 이걸로 켜고 끈다.
+   */
+  active?: boolean;
 }
 
 /**

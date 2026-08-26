@@ -34,6 +34,7 @@ export type Route =
   | { kind: 'shop' }
   /** 코스튬 상점. 장보기(`shop`)와 다른 자리라 이름을 갈라뒀다 */
   | { kind: 'store' }
+  | { kind: 'shopAdmin' }
   | { kind: 'memo' }
   | { kind: 'settings' }
   | { kind: 'prefs' }

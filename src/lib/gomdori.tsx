@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { useAuth } from './auth';
 import { BUILTIN, DEFAULT_BEAR, DEFAULT_ROOM, FREEBIES, itemOf } from './costumes';
 import {
+  amShopAdmin,
   buyCostume as buyRemote,
   pullGomdori,
   pullShop,
@@ -30,6 +31,13 @@ import type { Costume, Gomdori, Shop } from './types';
 interface GomdoriValue {
   /** 상점을 열 수 있는 상태인지 — 로그인해야 켜진다 */
   enabled: boolean;
+  /**
+   * **상점을 채울 수 있는 사람인가.** 설정에 `상점 채우기` 줄을 세울지 정한다.
+   *
+   * 이걸로 지키는 것이 아니다 — 통과 값표를 막는 것은 RLS(`is_shop_admin()`)다.
+   * 여기 참이 와도 서버가 아니라고 하면 아무것도 안 된다.
+   */
+  admin: boolean;
   /**
    * 상점에 걸린 것 전부 — **서버가 주인이다.**
    * 못 받아왔으면 앱에 박혀 나온 것(`BUILTIN`)이 대신 서 있다.
@@ -76,6 +84,7 @@ export function GomdoriProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<Gomdori>(EMPTY);
   const [shop, setShop] = useState<Shop>(BUILTIN);
   const [loading, setLoading] = useState(false);
+  const [admin, setAdmin] = useState(false);
 
   /*
     상점 목록은 **로그인과 상관없이** 받아온다. 값표는 누구나 읽는 것이고
@@ -100,6 +109,28 @@ export function GomdoriProvider({ children }: { children: React.ReactNode }) {
       alive = false;
     };
   }, []);
+
+  /*
+    관리자인지는 **로그인한 뒤에** 묻는다. `shop_admins`는 자기 줄만 보이게
+    열어둔 표라 로그인 전에는 물어봐도 늘 빈손이다.
+  */
+  useEffect(() => {
+    if (!myId) {
+      setAdmin(false);
+      return;
+    }
+    let alive = true;
+    amShopAdmin()
+      .then((yes) => {
+        if (alive) setAdmin(yes);
+      })
+      .catch(() => {
+        /* 못 물어봤으면 아닌 것으로 둔다 — 채우는 화면은 없어도 앱이 돈다 */
+      });
+    return () => {
+      alive = false;
+    };
+  }, [myId]);
 
   const item = useCallback((key: string) => itemOf(shop, key), [shop]);
 
@@ -184,6 +215,7 @@ export function GomdoriProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<GomdoriValue>(
     () => ({
       enabled: Boolean(myId),
+      admin,
       shop,
       item,
       loading,
@@ -196,7 +228,7 @@ export function GomdoriProvider({ children }: { children: React.ReactNode }) {
       wear,
       refresh,
     }),
-    [myId, shop, item, loading, state, buy, wear, refresh],
+    [myId, admin, shop, item, loading, state, buy, wear, refresh],
   );
 
   return <GomdoriContext.Provider value={value}>{children}</GomdoriContext.Provider>;

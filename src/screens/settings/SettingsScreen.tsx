@@ -3,6 +3,7 @@
 import PageBar from '@/components/PageBar';
 import { Group, Row } from '@/components/rows';
 import { useAuth } from '@/lib/auth';
+import { useGomdori } from '@/lib/gomdori';
 import { useRooms } from '@/lib/rooms';
 import { myCategories } from '@/lib/selectors';
 import { useStore } from '@/lib/store';
@@ -18,6 +19,7 @@ import { useUi } from '@/lib/ui';
 export default function SettingsScreen() {
   const { presets, categories, resetAll } = useStore();
   const { enabled, account } = useAuth();
+  const { admin } = useGomdori();
   const { enabled: roomsEnabled, rooms } = useRooms();
   const { depth, pushView, popView } = useUi();
 
@@ -59,6 +61,23 @@ export default function SettingsScreen() {
           </Row>
         )}
       </Group>
+
+      {/*
+        상점 채우기 — **`shop_admins`에 든 계정에만 뜬다.**
+        한 칸 떼어 둔다. 쓰는 사람이 하나뿐인 줄이라 위 다섯과 같은 무게로 읽히면 안 된다.
+
+        여기서 감추는 것이 지키는 것은 아니다 — 통과 값표를 막는 것은
+        RLS(`is_shop_admin()`)다. 이 줄은 **안 쓸 사람에게 안 보이게** 할 뿐이다.
+      */}
+      {admin && (
+        <div className="mt-4">
+          <Group>
+            <Row value="옷과 방 올리기" onClick={() => pushView({ kind: 'shopAdmin' })}>
+              상점 채우기
+            </Row>
+          </Group>
+        </div>
+      )}
 
       {/* 한 칸 떼어 둔다 — 나머지 줄과 같은 무게로 읽히면 안 되는 것이다 */}
       <div className="mt-4">

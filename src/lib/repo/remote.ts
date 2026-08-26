@@ -625,7 +625,7 @@ export async function pullShop(): Promise<Shop> {
     client.from('costume_season').select('season_key, name, note, family_key').order('ord'),
     client
       .from('costume_catalog')
-      .select('item_key, kind, price, season, name, family_key')
+      .select('item_key, kind, price, season, name, family_key, active')
       .order('created_at'),
   ]);
   for (const r of [g, f, s, c]) if (r.error) throw r.error;
@@ -656,6 +656,8 @@ export async function pullShop(): Promise<Shop> {
       kind: (String(r.kind) as Costume['kind']) ?? 'bear',
       family: r.family_key ? String(r.family_key) : undefined,
       season: r.season ? String(r.season) : undefined,
+      // 안 내려오면 참으로 둔다 — 우리에게 내려온 것은 파는 것이라는 뜻이다
+      active: r.active === undefined ? true : Boolean(r.active),
     };
     const own = builtinImg(item.key);
     const at = own ? undefined : shopPath(item, families);
@@ -699,6 +701,107 @@ export async function pullShop(): Promise<Shop> {
     sets,
     items,
   };
+}
+
+/**
+ * **상점을 채울 수 있는 사람인가.**
+ *
+ * `shop_admins`는 `자기 줄만` 보이게 열어뒀다 — 그래서 한 줄이 오면 나다.
+ * 명단에 넣는 길은 **앱에 없다.** SQL Editor에서 손으로 넣는다
+ * (관리자 하나가 새면 상점 전체가 샌다).
+ *
+ *   insert into shop_admins (user_id)
+ *   select id from auth.users where email = '내메일@example.com'
+ *   on conflict do nothing;
+ *
+ * **이걸로 화면을 열고 말고를 정한다.** 진짜로 막는 것은 여기가 아니라
+ * RLS다(`is_shop_admin()`) — 앱이 뭐라고 하든 통과 값표는 서버가 막는다.
+ * 그러니 이 함수는 **안 보여줄 것을 안 보여주는 것**이지 지키는 것이 아니다.
+ */
+export async function amShopAdmin(): Promise<boolean> {
+  const client = await supabase();
+  const { data, error } = await client.from('shop_admins').select('user_id').maybeSingle();
+  if (error) throw error;
+  return Boolean(data);
+}
+
+/**
+ * 그림을 통에 올린다. **자리는 분류와 열쇠로 짓는다** — 적어둔 것을 쓰지 않는다
+ * ([costumes.ts](../costumes.ts)의 `shopPath`).
+ *
+ * `upsert`로 올린다. 다시 그려 올릴 때 지웠다 올리게 하면
+ * 지운 뒤 올리기 전에 상점을 연 사람에게 빈 칸이 뜬다.
+ *
+ * 막히면 그대로 던진다 — **거의 다 관리자가 아니라서 막힌 것**이고
+ * (`shop` 통은 `is_shop_admin()`만 쓴다), 그건 화면에 그대로 적어야 안다.
+ */
+export async function uploadShopImage(
+  item: Costume,
+  families: ShopFamily[],
+  body: Blob,
+): Promise<string> {
+  const at = shopPath(item, families);
+  if (!at) throw new Error('중분류가 없어 그림 자리를 정할 수 없습니다');
+
+  const client = await supabase();
+  const { error } = await client.storage.from('shop').upload(at, body, {
+    contentType: 'image/png',
+    upsert: true,
+    /*
+      **5분만 물려둔다.** 기본 한 시간이면 다시 그려 올린 그림이 그만큼 안 바뀐다 —
+      채우는 사람은 올리고 바로 확인하고 싶고, 사는 사람은 5분이면 충분히 오래다.
+    */
+    cacheControl: '300',
+  });
+  if (error) throw error;
+  return at;
+}
+
+/**
+ * 파는 것을 넣거나 고친다.
+ *
+ * **열쇠를 안 보낸다.** 새로 넣는 것은 서버가 번호표로 딴다(`0000001`) —
+ * 이름에서 지으면 이름을 고칠 때마다 코드를 고쳐야 하고, 고치면 이미 산 사람의
+ * 줄이 가리킬 데를 잃는다.
+ *
+ * **새로 넣는 것은 숨김으로 들어온다**(`active` 기본값 false).
+ * 반쯤 그린 것이 상점에 뜨는 사고를 막는다 — 그림을 올린 뒤 손으로 켠다.
+ */
+export async function saveShopItem(item: {
+  key?: string;
+  kind: Costume['kind'];
+  name: string;
+  price: number;
+  family: string;
+}): Promise<string> {
+  const client = await supabase();
+  const row = {
+    kind: item.kind,
+    name: item.name,
+    price: item.price,
+    family_key: item.family,
+  };
+
+  if (item.key) {
+    const { error } = await client.from('costume_catalog').update(row).eq('item_key', item.key);
+    if (error) throw error;
+    return item.key;
+  }
+
+  const { data, error } = await client
+    .from('costume_catalog')
+    .insert(row)
+    .select('item_key')
+    .single();
+  if (error) throw error;
+  return String((data as Row).item_key);
+}
+
+/** 상점에 걸거나 내린다. **지우는 길은 없다** — 산 사람의 옷이 이름을 잃는다. */
+export async function setShopItemActive(key: string, active: boolean): Promise<void> {
+  const client = await supabase();
+  const { error } = await client.from('costume_catalog').update({ active }).eq('item_key', key);
+  if (error) throw error;
 }
 
 /**
