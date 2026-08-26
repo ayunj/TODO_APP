@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BUNDLED, DEFAULT_BEAR, DEFAULT_ROOM } from '@/lib/costumes';
 import {
   BODY,
@@ -41,9 +41,19 @@ export default function Align({
   /** 고르기 전이면 `null`. 올려둔 것을 고치는 중이면 그 주소 */
   had,
   onFitted,
+  onComposer,
 }: {
   had?: string;
+  /** 미리보기용 — **조금 늦게 온다.** 손잡이를 놓고 나서 담는다 */
   onFitted: (f: Fitted | null) => void;
+  /**
+   * 저장용 — **부르면 그때 담아준다.**
+   *
+   * 미리보기를 늦게 담는 탓에, 손잡이를 밀고 바로 저장을 누르면 **한 발 늦은 것이
+   * 올라갈 수 있다.** 그래서 담는 손을 따로 넘긴다 — 저장할 때 이걸 부르면
+   * 그 순간 값으로 담긴다.
+   */
+  onComposer: (make: (() => Promise<Fitted>) | null) => void;
 }) {
   const [spec, setSpec] = useState<Spec | null>(null);
   const [art, setArt] = useState<Art | null>(null);
@@ -125,18 +135,38 @@ export default function Align({
     };
   }, [file, white]);
 
-  /* 맞춘 대로 담아 위로 올려준다 — 저장은 폼이 한다 */
+  /*
+    **담는 것은 늦춘다.**
+
+    담기는 760짜리 PNG를 새로 굽는 일이다. 손잡이를 미는 동안 tick마다 굽게 두면
+    **손잡이가 안 움직이는 것처럼 느껴진다** — 한 tick에 수십 ms가 붙고,
+    손잡이는 한 번 끄는 동안 수십 번 튄다.
+
+    그래서 손이 멈춘 뒤에 한 번만 굽는다. 미리보기가 반 박자 늦게 바뀌는데,
+    **끄는 동안 보이는 그림은 늦지 않는다** — 그건 굽지 않고 CSS로 옮겨 놓는 것이다.
+
+    저장은 이 늦음을 안 탄다. 담는 손을 따로 넘겨서(`onComposer`)
+    누르는 그 순간 값으로 굽는다.
+  */
   useEffect(() => {
-    if (!art || !spec) return;
+    if (!art || !spec) {
+      onComposer(null);
+      return;
+    }
+    onComposer(() => fitBear(art, spec, fit));
+
     let dead = false;
-    void fitBear(art, spec, fit).then((next) => {
-      if (dead) URL.revokeObjectURL(next.url);
-      else onFitted(next);
-    });
+    const timer = setTimeout(() => {
+      void fitBear(art, spec, fit).then((next) => {
+        if (dead) URL.revokeObjectURL(next.url);
+        else onFitted(next);
+      });
+    }, 180);
     return () => {
       dead = true;
+      clearTimeout(timer);
     };
-    // onFitted는 폼이 매번 새로 만들어 넘겨도 다시 담을 까닭이 없다
+    // 위로 넘기는 손 둘은 폼이 매번 새로 만들어도 다시 구울 까닭이 없다
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [art, spec, fit]);
 
@@ -177,6 +207,13 @@ export default function Align({
       </>
     );
   }
+
+  /*
+    **한 번만 만든다.** `toDataURL`은 캔버스를 통째로 base64로 푸는 일이라
+    앨범에서 고른 1024×1536짜리면 한 번에 수십 ms가 붙는다 —
+    그리는 자리마다 다시 만들면 손잡이가 그만큼 뻣뻣해진다.
+  */
+  const src = useMemo(() => art.canvas.toDataURL(), [art]);
 
   const pos = spec ? at(art, spec, fit) : null;
   const num = spec ? readout(art, spec, fit) : null;
@@ -236,7 +273,7 @@ export default function Align({
           {pos && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={art.canvas.toDataURL()}
+              src={src}
               alt=""
               aria-hidden="true"
               className="absolute z-[1]"

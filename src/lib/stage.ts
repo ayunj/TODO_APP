@@ -46,7 +46,7 @@ export const BEAR_FLOOR = 9;
  *
  * **`scripts/bears.mjs`의 `SLOT`이 이 값을 베껴 쓴다**(node에서는 이 파일을 못 읽는다).
  */
-export const BEAR_ART = 'relative z-[1] mb-[9%] block h-auto max-h-[74%] w-auto max-w-[72%]';
+export const BEAR_ART = 'relative z-[1] mb-[9%] block h-auto max-h-[85%] w-auto max-w-[85%]';
 
 /** 방 한 장 — 칸을 꽉 채운다. **아래를 맞춰 자른다** */
 export const ROOM_ART = 'absolute inset-0 h-full w-full object-cover object-bottom';

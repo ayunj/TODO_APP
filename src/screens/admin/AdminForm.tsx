@@ -78,6 +78,14 @@ export default function AdminForm({
    * 이 폼에 섞으면 무엇이 무엇인지 못 가린다.
    */
   const [fitted, setFitted] = useState<Fitted | null>(null);
+  /**
+   * 곰을 담는 손 — [Align](Align.tsx)이 넘겨준다.
+   *
+   * 미리보기(`fitted`)는 손잡이가 멈춘 뒤에 굽는 것이라 **반 박자 늦다.**
+   * 밀고 바로 저장을 누르면 한 발 늦은 것이 올라갈 수 있어서,
+   * **저장할 때는 이 손으로 그 순간 값을 굽는다.**
+   */
+  const compose = useRef<null | (() => Promise<Fitted>)>(null);
   /** 방은 자를 맞출 것이 없다 — 정사각 한 장을 통째로 쓴다 */
   const [sceneFile, setSceneFile] = useState<File | null>(null);
   const scenePick = useRef<HTMLInputElement>(null);
@@ -162,8 +170,14 @@ export default function AdminForm({
         season: draft.season,
       });
 
-      // 맞춘 값은 이 blob에 이미 박혀 있다 — 올린 뒤에 앱이 다시 맞출 것이 없다
-      if (fitted) await uploadShopImage({ ...draft, key }, shop.families, fitted.blob);
+      /*
+        **누르는 그 순간 값으로 굽는다.** 미리보기는 반 박자 늦어서, 손잡이를 밀고
+        바로 누르면 한 발 늦은 것이 올라간다. 방은 담는 손이 없어 미리보기를 그대로 쓴다.
+
+        맞춘 값은 이 blob에 박혀 있다 — 올린 뒤에 앱이 다시 맞출 것이 없다.
+      */
+      const shot = compose.current ? await compose.current() : fitted;
+      if (shot) await uploadShopImage({ ...draft, key }, shop.families, shot.blob);
       /*
         **켜는 것이 맨 끝이다.** 그림을 올리기 전에 켜면 그 사이에 상점을 연 사람에게
         그림 없는 칸이 뜨고, 그건 `아직 안 그렸어요`가 아니라 파는 물건으로 읽힌다.
@@ -313,7 +327,14 @@ export default function AdminForm({
           곰과 소품은 **자에 맞춰 놓는다**([Align](Align.tsx)).
           `key`를 물건마다 갈라둔다 — 다른 물건으로 옮길 때 맞춘 값이 따라가면 안 된다.
         */
-        <Align key={itemKey ?? 'new'} had={was?.img} onFitted={setFitted} />
+        <Align
+          key={itemKey ?? 'new'}
+          had={was?.img}
+          onFitted={setFitted}
+          onComposer={(make) => {
+            compose.current = make;
+          }}
+        />
       )}
 
       {/* ── 그림이 가는 자리 ── */}
