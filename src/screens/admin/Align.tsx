@@ -170,6 +170,17 @@ export default function Align({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [art, spec, fit]);
 
+  /*
+    **한 번만 만든다.** `toDataURL`은 캔버스를 통째로 base64로 푸는 일이라
+    앨범에서 고른 1024×1536짜리면 한 번에 수십 ms가 붙는다 —
+    그리는 자리마다 다시 만들면 손잡이가 그만큼 뻣뻣해진다.
+
+    **아래 이른 `return`보다 위에 있어야 한다.** 훅은 render마다 같은 수로 같은
+    차례에 불려야 하는데, 그림을 고르기 전에는 그 `return`이 먼저 나가서
+    이 훅을 건너뛴다 — 그러면 고르는 순간 훅 수가 달라지고 화면이 통째로 죽는다.
+  */
+  const src = useMemo(() => art?.canvas.toDataURL(), [art]);
+
   const move = useCallback((e: React.PointerEvent) => {
     if (!drag.current.on || !slot.current) return;
     /* 손가락이 움직인 화면 px을 760 칸의 px으로 바꾼다 — **슬롯 폭이 기준이다** */
@@ -207,13 +218,6 @@ export default function Align({
       </>
     );
   }
-
-  /*
-    **한 번만 만든다.** `toDataURL`은 캔버스를 통째로 base64로 푸는 일이라
-    앨범에서 고른 1024×1536짜리면 한 번에 수십 ms가 붙는다 —
-    그리는 자리마다 다시 만들면 손잡이가 그만큼 뻣뻣해진다.
-  */
-  const src = useMemo(() => art.canvas.toDataURL(), [art]);
 
   const pos = spec ? at(art, spec, fit) : null;
   const num = spec ? readout(art, spec, fit) : null;
