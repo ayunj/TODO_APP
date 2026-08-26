@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Coin from './Coin';
 import { useGomdori } from '@/lib/gomdori';
 import { GiftIcon } from '@/components/Icons';
+import { BEAR_ART, ROOM_ART, ROOM_BOX } from '@/lib/stage';
 import type { Costume, CostumeSet } from '@/lib/types';
 
 /**
@@ -35,9 +36,18 @@ export default function SetDetail({
         <span className="mt-1 block text-[12.5px] text-ink3">{set.note}</span>
       </div>
 
-      {/* 홈과 같은 정사각 — 4:3이면 위 25%가 잘려 전등이 썰린다 */}
-      <div className="mb-4 grid aspect-square w-full place-items-center overflow-hidden rounded-[18px] bg-sunk">
-        <Art src={set.room.img} cover />
+      {/*
+        홈과 같은 정사각 — 4:3이면 위 25%가 잘려 전등이 썰린다.
+
+        **방만 세우지 않는다.** 세트는 곰과 방이 한 벌이라 방 한 장만 보여주면
+        무엇을 사는 것인지가 안 보인다 — 홈 칸을 그대로 옮겨 곰돌이를 세운다.
+
+        다 모았으면 **딸려온 포즈가 선다.** 받은 것이 어딘가 목록 안이 아니라
+        제일 큰 칸에서 바로 보여야 다 모은 값이 난다.
+      */}
+      <div className={`${ROOM_BOX} mb-4 rounded-[18px] bg-sunk`}>
+        <Art src={set.room.img} className={ROOM_ART} />
+        <Art src={(full && set.pose.img) || set.bear.img} className={BEAR_ART} />
       </div>
 
       <p className="mb-2.5 text-center text-[12.5px] text-ink2">곰과 방을 따로 살 수 있어요</p>
@@ -147,7 +157,8 @@ function Half({
   );
 }
 
-function Art({ src, cover }: { src?: string; cover?: boolean }) {
+/** `className`을 주면 그것을 쓴다 — 방 위에 곰돌이를 세우는 자리가 자를 따로 쥔다 */
+function Art({ src, cover, className }: { src?: string; cover?: boolean; className?: string }) {
   const [gone, setGone] = useState(false);
   if (!src || gone) return null;
   return (
@@ -157,11 +168,12 @@ function Art({ src, cover }: { src?: string; cover?: boolean }) {
       alt=""
       aria-hidden="true"
       onError={() => setGone(true)}
-      className={
-        cover
-          ? 'h-full w-full select-none object-cover object-bottom'
-          : 'h-auto max-h-full w-auto max-w-full select-none'
-      }
+      className={`select-none ${
+        className ??
+        (cover
+          ? 'h-full w-full object-cover object-bottom'
+          : 'h-auto max-h-full w-auto max-w-full')
+      }`}
     />
   );
 }

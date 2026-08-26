@@ -213,23 +213,42 @@ export function GomdoriProvider({ children }: { children: React.ReactNode }) {
   const buy = useCallback(
     async (key: string) => {
       if (!myId) return;
+      const had = new Set(state.owned);
       const left = await buyRemote(key);
-      const bought = item(key);
-      const roomly = bought.kind === 'room';
-      setState((s) => ({
+      const roomly = item(key).kind === 'room';
+
+      /*
+        **세트를 채웠으면 포즈가 딸려 들어온다**(서버의 `grant_poses`).
+        그건 서버가 아니까 가진 것을 다시 받아와서, 방금 산 것 말고 하나가 더
+        들어와 있으면 그것이 보상이다.
+
+        **딸려온 것이 있으면 그것을 입힌다.** 마지막 한 조각을 산 사람에게
+        방금 산 방만 깔아주면 다 모았다는 것이 어디에도 안 보인다 —
+        받은 자세로 서 있는 것이 그 자체로 알림이다.
+      */
+      let owned = [...had, key];
+      let gift: string | undefined;
+      try {
+        const next = await pullGomdori();
+        owned = next.owned;
+        gift = next.owned.find((k) => !had.has(k) && k !== key && item(k).kind === 'pose');
+      } catch {
+        /* 못 받아왔으면 방금 산 것만 갖고 간다 — 포즈는 다음에 켤 때 따라온다 */
+      }
+
+      const bear = gift ?? (roomly ? state.wornBear : key);
+      const room = roomly ? key : state.wornRoom;
+      setState({
         points: left,
-        owned: s.owned.includes(key) ? s.owned : [...s.owned, key],
-        wornBear: roomly ? s.wornBear : key,
-        wornRoom: roomly ? key : s.wornRoom,
-      }));
-      // 세트를 채웠으면 포즈가 딸려 들어온다 — 그건 서버가 아니까 다시 받아온다
-      await refresh().catch(() => {});
-      await wearRemote(myId, {
-        bear: roomly ? state.wornBear : key,
-        room: roomly ? key : state.wornRoom,
-      }).catch(() => {});
+        owned: owned.includes(key) ? owned : [...owned, key],
+        wornBear: bear,
+        wornRoom: room,
+      });
+      // 조사를 안 붙인다 — 이름 끝 받침에 따라 `를`이 `을`이 된다([ko.ts](ko.ts))
+      if (gift) toast(`세트를 다 모았어요 — ${item(gift).name}`);
+      await wearRemote(myId, { bear, room }).catch(() => {});
     },
-    [myId, refresh, state.wornBear, state.wornRoom, item],
+    [myId, state, item],
   );
 
   const value = useMemo<GomdoriValue>(
