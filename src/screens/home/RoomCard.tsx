@@ -14,8 +14,8 @@ import type { Task } from '@/lib/types';
  * **방 그림과 곰돌이는 따로 얹는다.** 합쳐 그리면 옷을 못 갈아입힌다 —
  * 방은 칸을 통째로 덮고 곰돌이가 그 위에 선다.
  *
- * 오늘 숫자는 **그림 위 오른쪽**에 앉는다. 그래서 방 그림은 그 자리를 비워둬야 한다
- * (`design/g/그릴-것.md`의 1-2절).
+ * 오늘 숫자는 **그림 밖 아랫 줄**에 앉는다. 그림 위에 얻으면
+ * 모자를 쓴 곰돌이가 숫자를 덮는다 — 방 그림은 이제 오른쪽 위를 비울 이유가 없다.
  */
 export default function RoomCard({ done, total }: { done: number; total: number }) {
   const { tasks } = useStore();
@@ -44,19 +44,22 @@ export default function RoomCard({ done, total }: { done: number; total: number 
           src={item(wornBear).img}
           className="relative z-[1] mb-[7%] block h-auto max-h-full w-auto max-w-[92%]"
         />
+      </div>
 
-        <div className="absolute right-[15px] top-3.5 z-[3] w-[44%] text-right">
-          <h2 className="mb-1 text-[13px] font-bold">오늘 할 일</h2>
-          <div className="font-mono text-[34px] font-bold leading-none text-accent">
-            {done} <em className="text-[16px] font-medium not-italic text-ink3">/ {total}</em>
+      {/* 오늘 숫자 — 그림 **아래** 줄이다 */}
+      <div className="border-t border-line2 px-3.5 py-3">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-[13px] font-bold">오늘 할 일</h2>
+          <div className="font-mono text-[26px] font-bold leading-none text-accent">
+            {done} <em className="text-[15px] font-medium not-italic text-ink3">/ {total}</em>
           </div>
-          <span className="mt-[9px] block h-2 overflow-hidden rounded-full bg-track">
-            <i
-              className="block h-full rounded-full bg-accent transition-[width] duration-300"
-              style={{ width: `${pct}%` }}
-            />
-          </span>
         </div>
+        <span className="mt-[9px] block h-2 overflow-hidden rounded-full bg-track">
+          <i
+            className="block h-full rounded-full bg-accent transition-[width] duration-300"
+            style={{ width: `${pct}%` }}
+          />
+        </span>
       </div>
 
       {/* 주기가 언제 돌아오는지 — 없으면 줄째로 안 뜬다 */}
