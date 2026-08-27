@@ -71,7 +71,7 @@ interface GomdoriValue {
   wornRoom: string;
   /**
    * 산다. **값은 서버가 정한다** — 모자라면 던진다.
-   * 사고 나면 바로 입는다. 걸쳐보고 산 것이라 한 번 더 물을 것이 없다.
+   * 사고 나면 바로 입는다. 상점에서는 걸쳐보지 않으니 **사는 것이 곧 입는 것**이다.
    */
   buy: (key: string) => Promise<void>;
   /** 입거나 깐다 */
@@ -249,8 +249,18 @@ export function GomdoriProvider({ children }: { children: React.ReactNode }) {
         wornBear: bear,
         wornRoom: room,
       });
-      // 조사를 안 붙인다 — 이름 끝 받침에 따라 `를`이 `을`이 된다([ko.ts](ko.ts))
+      /*
+        **샀다는 말을 한 줄 남긴다.** 상점에서 곰돌이 칸을 걷어낸 뒤로
+        산 것이 그 화면에서 안 보인다 — 카드 알약이 `보유중`으로 바뀌고 잔액이 줄 뿐이라,
+        한마디 없으면 값만 나가고 아무 일도 안 일어난 것처럼 읽힌다.
+
+        **세트를 채웠으면 그 말이 이긴다.** 둘을 같이 띄우면 뒤엣것이 앞엣것을 덮는데,
+        더 특별한 소식이 덮이면 안 된다.
+
+        조사를 안 붙인다 — 이름 끝 받침에 따라 `를`이 `을`이 된다([ko.ts](ko.ts))
+      */
       if (gift) toast(`세트를 다 모았어요 — ${item(gift).name}`);
+      else toast(`샀어요 — 바로 ${roomly ? '깔았어요' : '입혔어요'}`);
       await wearRemote(myId, { bear, room }).catch(() => {});
     },
     [myId, state, item],

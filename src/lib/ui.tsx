@@ -67,6 +67,13 @@ export type Sheet =
   | { kind: 'task'; id: string | null }
   | { kind: 'preset'; id: string | null }
   | { kind: 'shopItem'; id: string }
+  /**
+   * 이거 살까요 — **상점에서 사는 자리는 여기 하나다.**
+   * 103px 카드 안에 사는 단추를 넣으면 잘못 눌러 300P가 날아가고,
+   * 화면 위에 사는 칸을 붙박아두면 그게 걸쳐보는 자리로 읽힌다
+   * (걸쳐보는 것은 [내 옷장](../screens/StoreScreen.tsx)에서만 한다).
+   */
+  | { kind: 'buy'; id: string }
   /** 같이 보기 — 이 메모를 어느 방들에 둘까 (메모만 여럿이다) */
   | { kind: 'memoRooms'; id: string }
   /** 누가 했나 — 이름만 갈아 끼운다 */

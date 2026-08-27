@@ -7,6 +7,7 @@ import StoreCard from './store/StoreCard';
 import Stage from './store/Stage';
 import { familiesOf, groupOf, onSale } from '@/lib/costumes';
 import { useGomdori } from '@/lib/gomdori';
+import { toast } from '@/lib/toast';
 import { useUi } from '@/lib/ui';
 import { BackIcon, GiftIcon, HomeIcon, StarIcon } from '@/components/Icons';
 import type { Costume, Shop } from '@/lib/types';
@@ -44,8 +45,22 @@ type Shelf = 'bear' | 'room' | 'pose';
 /**
  * 상점 — [design/상점.html](../../design/상점.html) 그대로.
  *
- * 뼈대는 한 줄이다 — **카드는 고르는 자리, 위 칸은 하는 자리.**
- * 103px 카드 안에 사는 단추까지 넣으면 잘못 눌러 300P가 날아간다.
+ * 뼈대는 한 줄이다 — **상점은 사는 자리, 내 옷장은 입어보는 자리.**
+ *
+ * 전에는 화면 맨 위에 곰돌이 칸이 붙박여 있어서 어느 칩에서든 걸쳐볼 수 있었다.
+ * 걷어냈다 — **안 산 옷을 걸쳐보는 자리와 값을 치르는 자리가 한 칸에 겹쳐 있으면
+ * 입어보다가 사게 된다.** 그리고 사고 나면 어차피 입혀지니, 상점에서 미리 걸쳐본
+ * 것은 대부분 그냥 지나가는 장면이었다.
+ *
+ * 그래서 갈랐다 —
+ *
+ * | 어디 | 카드를 누르면 | 알약 |
+ * |---|---|---|
+ * | 상점 | [사는 시트](../sheets/BuySheet.tsx)가 올라온다 | `보유중` · 값 |
+ * | 내 옷장 | 위 칸에 걸쳐본다. 한 번 더 누르면 입는다 | `입기` · `입는 중` |
+ *
+ * **카드는 여전히 고르는 자리다.** 103px 안에 사는 단추까지 넣으면
+ * 잘못 눌러 300P가 날아간다 — 값을 치르는 것은 시트가 한다.
  *
  * 갈래마다 칩이 하나씩 선다. 부위(머리·몸·악세사리)로는 안 가른다 —
  * 부위를 나누는 순간 사람들은 겹쳐 입기를 기대한다.
@@ -53,7 +68,7 @@ type Shelf = 'bear' | 'room' | 'pose';
 export default function StoreScreen() {
   const { enabled, shop: all, item, points, has, wornBear, wornRoom, buy, wear, refreshShop } =
     useGomdori();
-  const { popView } = useUi();
+  const { popView, openSheet } = useUi();
 
   /*
     **열 때마다 다시 받아온다.** 앱을 켤 때 한 번만 받으면 방금 채운 것이
@@ -131,19 +146,33 @@ export default function StoreScreen() {
   const worn = roomly ? wornRoom : wornBear;
 
   /*
-    카드를 누르면 걸쳐보기만 한다. 다만 **보고 있던 것을 한 번 더 누르면 그대로 쓴다** —
+    **내 옷장에서만** 걸쳐본다. 다만 **보고 있던 것을 한 번 더 누르면 그대로 쓴다** —
     탭바에서 보던 탭을 한 번 더 눌러 오늘로 돌아오는 손짓과 같다.
-    가진 것에만 걸린다. 안 산 것은 몇 번을 눌러도 미리보기다.
+    옷장에 선 것은 다 가진 것이라 여기서 `has`를 다시 물을 일이 없다.
   */
-  const pick = (key: string) => {
-    if (trying === key && has(key)) void wear(key);
+  const fit = (key: string) => {
+    if (trying === key) void wear(key);
     else setTrying(key);
   };
 
+  /*
+    **상점에서 카드를 누르면 사는 시트가 올라온다.** 그 자리에서 바로 사지 않는다 —
+    103px 칸을 잘못 스치면 300P가 날아간다. 가진 것도 연다:
+    눌러도 아무 일이 없으면 고장으로 읽힌다.
+  */
+  const openBuy = (key: string) => openSheet({ kind: 'buy', id: key });
+
+  /*
+    **세트 펼친 칸에서만 쓴다.** 격자에서 사는 것은 시트가 가져갔다.
+    서버가 막은 까닭(`포인트가 모자랍니다`)은 그대로 옮겨 적는다 —
+    안 그러면 눌렀는데 아무 일도 안 일어난 것으로 보인다.
+  */
   const doBuy = async (key: string) => {
     setBusy(true);
     try {
       await buy(key);
+    } catch (e) {
+      toast(e instanceof Error ? e.message : '사지 못했어요');
     } finally {
       setBusy(false);
     }
@@ -190,21 +219,9 @@ export default function StoreScreen() {
           할 일을 끝내면 포인트가 쌓이고, 그걸로 옷과 방을 사요.
         </div>
       ) : set ? (
-        <SetDetail set={set} busy={busy} onBuy={doBuy} onWear={wear} />
+        <SetDetail set={set} busy={busy} onBuy={doBuy} />
       ) : (
         <>
-          <Preview
-            item={it}
-            here={trying === worn}
-            own={has(trying)}
-            points={points}
-            busy={busy}
-            wornBear={wornBear}
-            wornRoom={wornRoom}
-            onWear={() => void wear(trying)}
-            onBuy={() => void doBuy(trying)}
-          />
-
           <div className="-mx-4 mb-3 flex gap-[7px] overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {[
               { key: 'all', name: '전체' },
@@ -254,7 +271,20 @@ export default function StoreScreen() {
           )}
 
           {chip === 'mine' ? (
-            <Wardrobe shop={all} tab={tab} setTab={setTab} pick={pick} trying={trying} />
+            <>
+              {/*
+                **걸쳐보는 칸은 칩 아래에 선다.** 위에 붙박아두면 상점 칩에서도
+                보이고, 옷장으로 옮길 때 칩 줄이 통째로 아래로 밀려난다.
+              */}
+              <Fitting
+                item={it}
+                here={trying === worn}
+                wornBear={wornBear}
+                wornRoom={wornRoom}
+                onWear={() => void wear(trying)}
+              />
+              <Wardrobe shop={all} tab={tab} setTab={setTab} pick={fit} trying={trying} />
+            </>
           ) : chip === 'room' ? (
             <>
               {/*
@@ -279,13 +309,7 @@ export default function StoreScreen() {
                   ))}
                 </div>
               )}
-              <Group
-                title="방 테마"
-                aside="홈 배경이 바뀐다"
-                list={roomList}
-                pick={pick}
-                trying={trying}
-              />
+              <Group title="방 테마" aside="홈 배경이 바뀐다" list={roomList} pick={openBuy} />
             </>
           ) : chip === 'season' ? (
             <Sets list={sets} has={has} onOpen={setOpen} />
@@ -298,17 +322,11 @@ export default function StoreScreen() {
               */
               <>
                 {decoFams.map((f) => (
-                  <Group
-                    key={f.key}
-                    title={f.name}
-                    list={decoOf(f.key)}
-                    pick={pick}
-                    trying={trying}
-                  />
+                  <Group key={f.key} title={f.name} list={decoOf(f.key)} pick={openBuy} />
                 ))}
               </>
             ) : (
-              <Group title={nameOf(subs, sub)} list={decoOf(sub)} pick={pick} trying={trying} />
+              <Group title={nameOf(subs, sub)} list={decoOf(sub)} pick={openBuy} />
             )
           ) : (
             <>
@@ -320,10 +338,10 @@ export default function StoreScreen() {
                 </>
               )}
               {decoFams.map((f) => (
-                <Group key={f.key} title={f.name} list={decoOf(f.key)} pick={pick} trying={trying} />
+                <Group key={f.key} title={f.name} list={decoOf(f.key)} pick={openBuy} />
               ))}
               {/* 여기는 **다 보여주는 자리**라 방도 든다. 꾸미기 칩에서는 뺐다. */}
-              <Group title="방 테마" list={rooms} pick={pick} trying={trying} />
+              <Group title="방 테마" list={rooms} pick={openBuy} />
             </>
           )}
 
@@ -335,39 +353,36 @@ export default function StoreScreen() {
   );
 }
 
-/** 지금 보고 있는 것 — 방과 곰이 따로 얹힌다 */
-function Preview({
+/**
+ * 걸쳐보는 칸 — **내 옷장에만 선다.** 방과 곰이 따로 얹힌다.
+ *
+ * 여기 서는 것은 다 가진 것이라 **값도 사는 단추도 없다.** 있던 것을 걷어냈다 —
+ * 걸쳐보는 칸에 사는 단추가 붙어 있으면 입어보다가 값을 치르게 된다.
+ * 사는 것은 [상점의 시트](../sheets/BuySheet.tsx)가 한다.
+ */
+function Fitting({
   item,
   here,
-  own,
-  points,
-  busy,
   wornBear,
   wornRoom,
   onWear,
-  onBuy,
 }: {
   item: Costume;
   here: boolean;
-  own: boolean;
-  points: number;
-  busy: boolean;
   wornBear: string;
   wornRoom: string;
   onWear: () => void;
-  onBuy: () => void;
 }) {
   const roomly = item.kind === 'room';
   // 옷은 입고, 방과 포즈는 적용한다. 방을 입는다고 하면 말이 안 된다.
   const verb = roomly || item.kind === 'pose' ? ['적용', '적용 중'] : ['입기', '입는 중'];
-  const short = item.price - points;
 
   return (
     <section className="mb-3 rounded-card bg-card p-3.5 shadow-card">
       <Stage
         bear={roomly ? wornBear : item.key}
         room={roomly ? item.key : wornRoom}
-        flag={here ? verb[1] : '미리보기'}
+        flag={here ? verb[1] : '걸쳐보는 중'}
       />
 
       <div className="mt-3.5 flex min-h-[34px] items-center gap-2">
@@ -376,7 +391,7 @@ function Preview({
           <span className="flex-none rounded-full bg-accent-tint px-4 py-[7px] text-[12.5px] font-medium text-accent">
             {verb[1]}
           </span>
-        ) : own ? (
+        ) : (
           <button
             type="button"
             onClick={onWear}
@@ -384,35 +399,8 @@ function Preview({
           >
             {verb[0]}
           </button>
-        ) : (
-          // 값은 여기 한 번만 적는다. 단추에 또 적으면 값을 치르라고 미는 말이 된다.
-          <span className="flex flex-none items-center gap-1.5 rounded-full bg-card py-[5px] pl-[5px] pr-3 font-mono text-[13px] font-medium text-ink2 shadow-[0_0_0_1.4px_var(--line)]">
-            <Coin />
-            {item.price}
-          </span>
         )}
       </div>
-
-      {!own &&
-        (short <= 0 ? (
-          // 사는 것만 폭을 다 쓴다 — 되돌릴 수 없는 일 하나만 이만큼 크다
-          <button
-            type="button"
-            disabled={busy}
-            onClick={onBuy}
-            className="mt-2.5 w-full rounded-[14px] bg-accent p-[15px] text-[14.5px] font-medium text-white shadow-fab disabled:opacity-60"
-          >
-            {busy ? '사는 중…' : '구매하기'}
-          </button>
-        ) : (
-          /*
-            못 누르는 단추를 흐리게 두지 않는다 — 회색으로 눕혀두면 언젠가 눌리는 것으로
-            보여 계속 눌러보게 된다. 그 자리에 얼마가 모자란지 한 줄로 적는다.
-          */
-          <div className="mt-2.5 rounded-[14px] bg-sunk p-3.5 text-center text-[12.5px] text-ink3">
-            {short}P 더 모으면 살 수 있어요
-          </div>
-        ))}
     </section>
   );
 }
@@ -468,7 +456,13 @@ function Wardrobe({
       <Head title={SHELF[tab].head} />
       <div className="mb-4 grid grid-cols-3 gap-[9px]">
         {list.map((c) => (
-          <StoreCard key={c.key} item={c} onPick={() => pick(c.key)} trying={trying === c.key} />
+          <StoreCard
+            key={c.key}
+            item={c}
+            mine
+            onPick={() => pick(c.key)}
+            trying={trying === c.key}
+          />
         ))}
         {/*
           빈 옷걸이 한 칸 — 다 모으면 사라진다.
@@ -526,18 +520,17 @@ function nameOf(list: { key: string; name: string }[], key: string): string {
   return list.find((f) => f.key === key)?.name ?? key;
 }
 
+/** 상점 격자 한 무더기 — 누르면 [사는 시트](../sheets/BuySheet.tsx)가 올라온다 */
 function Group({
   title,
   aside,
   list,
   pick,
-  trying,
 }: {
   title: string;
   aside?: string;
   list: Costume[];
   pick: (key: string) => void;
-  trying: string;
 }) {
   // 빈 무더기는 통째로 안 세운다 — 제목만 남은 자리는 뭔가 빠진 것으로 읽힌다
   if (list.length === 0) return null;
@@ -547,7 +540,7 @@ function Group({
       <Head title={title} aside={aside} />
       <div className="mb-4 grid grid-cols-3 gap-[9px]">
         {list.map((c) => (
-          <StoreCard key={c.key} item={c} onPick={() => pick(c.key)} trying={trying === c.key} />
+          <StoreCard key={c.key} item={c} onPick={() => pick(c.key)} />
         ))}
       </div>
     </>

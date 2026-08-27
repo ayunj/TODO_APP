@@ -1,5 +1,6 @@
 'use client';
 
+import BuySheet from './BuySheet';
 import DoneBySheet from './DoneBySheet';
 import MemoRoomsSheet from './MemoRoomsSheet';
 import NudgeSheet from './NudgeSheet';
@@ -26,6 +27,8 @@ export default function SheetHost() {
       return <DoneBySheet key={sheet.id} id={sheet.id} />;
     case 'nudge':
       return <NudgeSheet key={sheet.id} id={sheet.id} />;
+    case 'buy':
+      return <BuySheet key={sheet.id} id={sheet.id} />;
     case 'shopItem':
       return <ShopItemSheet key={sheet.id} id={sheet.id} />;
     case 'memoRooms':

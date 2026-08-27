@@ -14,19 +14,21 @@ import type { Costume, CostumeSet } from '@/lib/types';
  * 크리스마스 방만 갖고 싶은 사람이 곰까지 사게 된다.
  * **깎아주는 대신 하나 더 준다** — 둘을 다 모으면 포즈가 딸려온다.
  * 깎아주기는 산 다음에 남는 것이 없고 포즈는 남는다.
+ *
+ * **여기도 상점 안이라 입히지 않는다.** 곰·방 칸의 `입기`도, 딸려온 포즈의 `적용`도
+ * 걷어냈다 — 상점에 입는 단추가 한 자리라도 남아 있으면 어디서 입는 것인지가 흐려진다.
+ * 산 것은 그 자리에서 입혀지고, 갈아입는 것은 [내 옷장](../StoreScreen.tsx)에서 한다.
  */
 export default function SetDetail({
   set,
   busy,
   onBuy,
-  onWear,
 }: {
   set: CostumeSet;
   busy: boolean;
   onBuy: (key: string) => Promise<void>;
-  onWear: (key: string) => Promise<void>;
 }) {
-  const { has, wornBear } = useGomdori();
+  const { has } = useGomdori();
   const full = has(set.bear.key) && has(set.room.key);
 
   return (
@@ -53,8 +55,8 @@ export default function SetDetail({
       <p className="mb-2.5 text-center text-[12.5px] text-ink2">곰과 방을 따로 살 수 있어요</p>
 
       <div className="mb-2.5 grid grid-cols-2 gap-[9px]">
-        <Half item={set.bear} kind="곰 스타일" busy={busy} onBuy={onBuy} onWear={onWear} />
-        <Half item={set.room} kind="방 테마" busy={busy} onBuy={onBuy} onWear={onWear} />
+        <Half item={set.bear} kind="곰 스타일" busy={busy} onBuy={onBuy} />
+        <Half item={set.room} kind="방 테마" busy={busy} onBuy={onBuy} />
       </div>
 
       {/*
@@ -75,24 +77,16 @@ export default function SetDetail({
             세트 완성 보상
           </span>
           <b className="my-px block text-[13px] font-medium">{set.pose.name}</b>
+          {/*
+            **받았으면 어디서 꺼내 쓰는지까지 말한다.** 적용 단추가 있던 자리라,
+            `받았어요`만 남기면 받은 것이 어디로 갔는지 알 수가 없다.
+          */}
           <span className="block text-[10.5px] leading-[1.45] text-ink3">
-            {set.name}를 모두 {full ? '모아서 받았어요' : '모으면 받을 수 있어요'}
+            {full
+              ? `${set.name} 모두 모아서 받았어요 — 내 옷장 소품에 있어요`
+              : `${set.name}를 모두 모으면 받을 수 있어요`}
           </span>
         </span>
-        {full &&
-          (wornBear === set.pose.key ? (
-            <span className="flex-none rounded-full bg-accent-tint px-3 py-1.5 text-[11.5px] font-medium text-accent">
-              적용 중
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={() => void onWear(set.pose.key)}
-              className="flex-none rounded-full bg-accent px-3 py-1.5 text-[11.5px] font-medium text-white"
-            >
-              적용
-            </button>
-          ))}
       </div>
     </>
   );
@@ -103,41 +97,29 @@ function Half({
   kind,
   busy,
   onBuy,
-  onWear,
 }: {
   item: Costume;
   kind: string;
   busy: boolean;
   onBuy: (key: string) => Promise<void>;
-  onWear: (key: string) => Promise<void>;
 }) {
-  const { points, has, wornBear, wornRoom } = useGomdori();
+  const { points, has } = useGomdori();
   const own = has(item.key);
-  const roomly = item.kind === 'room';
-  const here = item.key === (roomly ? wornRoom : wornBear);
-  const verb = roomly ? ['적용', '적용 중'] : ['입기', '입는 중'];
   const short = item.price - points;
 
   return (
     <div className="flex flex-col gap-[7px] rounded-2xl bg-card p-[9px] pb-2.5 text-center shadow-[0_0_0_1.4px_var(--line)]">
       <span className="grid aspect-square w-full place-items-center overflow-hidden rounded-xl bg-sunk">
-        <Art src={item.img} cover={roomly} />
+        <Art src={item.img} cover={item.kind === 'room'} />
       </span>
       <span className="text-[9.5px] text-ink3">{kind}</span>
       <b className="text-[12.5px] font-medium">{item.name}</b>
 
-      {here ? (
-        <span className="mt-auto rounded-[11px] bg-accent-tint py-[9px] text-[12.5px] font-medium text-accent">
-          {verb[1]}
+      {own ? (
+        /* 값이 섰던 자리에 값 대신 이 한 마디가 선다 — 눌러도 다시 안 산다는 뜻이다 */
+        <span className="mt-auto rounded-[11px] bg-sunk py-[9px] text-[12.5px] font-medium text-ink3">
+          보유중
         </span>
-      ) : own ? (
-        <button
-          type="button"
-          onClick={() => void onWear(item.key)}
-          className="mt-auto rounded-[11px] bg-card py-[9px] text-[12.5px] font-medium text-accent shadow-[0_0_0_1.4px_var(--accent)]"
-        >
-          {verb[0]}
-        </button>
       ) : short <= 0 ? (
         <button
           type="button"

@@ -13,12 +13,17 @@ import type { Costume } from '@/lib/types';
  *
  * **못 사는 것도 그림은 그대로 보여준다.** 무엇인지 가려두면 뭘 모으는지
  * 모르는 채로 모으게 된다. 자물쇠 하나만 얹는다.
+ *
+ * **알약이 칸마다 다르다.** 상점에서는 `보유중` 아니면 값이고,
+ * 내 옷장에서만 `입기`가 뜬다 — 입어보는 것은 옷장에서만 하기 때문이다
+ * ([BuySheet](../../sheets/BuySheet.tsx)).
  */
 export default function StoreCard({
   item,
   bear,
   label,
   step,
+  mine,
   trying,
   onPick,
 }: {
@@ -32,6 +37,12 @@ export default function StoreCard({
   label?: string;
   /** 세트가 셋 중 몇 개 모였나 — 값 대신 이걸 적는다 */
   step?: number;
+  /**
+   * 내 옷장 칸인가. **입기는 여기서만 뜬다** — 상점 칸은 `보유중`이나 값을 적는다.
+   * 상점에서 입히면 안 산 옷을 걸쳐보다 사게 되고, 그러면 상점이
+   * 사는 자리인지 입어보는 자리인지가 흐려진다.
+   */
+  mine?: boolean;
   trying?: boolean;
   onPick: () => void;
 }) {
@@ -95,13 +106,22 @@ export default function StoreCard({
           {step}/3
         </span>
       ) : own ? (
-        <span
-          className={`rounded-full px-3 py-1 text-[10.5px] font-medium ${
-            here ? 'bg-accent text-white' : 'bg-card text-accent shadow-[0_0_0_1.3px_var(--accent-soft)]'
-          }`}
-        >
-          {here ? verb[1] : verb[0]}
-        </span>
+        mine ? (
+          <span
+            className={`rounded-full px-3 py-1 text-[10.5px] font-medium ${
+              here
+                ? 'bg-accent text-white'
+                : 'bg-card text-accent shadow-[0_0_0_1.3px_var(--accent-soft)]'
+            }`}
+          >
+            {here ? verb[1] : verb[0]}
+          </span>
+        ) : (
+          /* 값이 섰던 자리에 값 대신 이 한 마디가 선다 — 눌러도 다시 안 산다는 뜻이다 */
+          <span className="rounded-full bg-sunk px-3 py-1 text-[10.5px] font-medium text-ink3">
+            보유중
+          </span>
+        )
       ) : (
         <span className="inline-flex items-center gap-1 rounded-full bg-card py-1 pl-[5px] pr-2.5 font-mono text-[10.5px] font-medium text-ink2 shadow-[0_0_0_1.2px_var(--line)]">
           <Coin className="!h-[14px] !w-[14px] !text-[8.5px]" />
