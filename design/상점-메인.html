@@ -16,9 +16,19 @@
   **무엇부터 볼지를 화면이 안 말해준다.**
 
   그래서 메인을 **고르는 자리에서 보여주는 자리로** 바꾼다 —
-  세트 배너 하나 + 가로줄 몇. `더보기`로 격자에 들어간다.
+  배너 한 장 + 가로줄 몇. `더보기`로 격자에 들어간다.
 
   뼈대는 그대로다. **카드는 고르는 자리, 사는 것은 시트.**
+
+  ─── 칸 ────────────────────────────────────────────────────────
+  **안드로이드 한 대를 통째로 그린다.** 360 × 800dp(9:20)에 위 상태 표시줄과
+  아래 제스처 바까지 얹었다. 앱이 쓸 수 있는 세로는 그 둘을 뺀 **750dp**다 —
+  배너를 몇 dp로 할지가 이 숫자에서 나온다.
+
+  ─── 이름 ──────────────────────────────────────────────────────
+  이 아이 이름은 **도도**다. 시안은 도도로 적는다.
+  **앱은 아직 `곰돌이`라고 부른다**(값표의 `기본 곰돌이`, 폴더 `gomdori/`,
+  소스의 `useGomdori`) — 옆 글의 `이름이 두 군데다`를 볼 것.
 */
 :root{
   --bg:#faf6f0; --card:#ffffff; --sunk:#f5f0e9;
@@ -37,30 +47,55 @@ body{
 }
 :focus-visible{outline:2px solid var(--accent); outline-offset:-2px; border-radius:8px}
 
-.head{max-width:1040px; margin:0 auto 18px}
+.head{max-width:1080px; margin:0 auto 20px}
 .head h1{font-size:19px; margin:0 0 6px; font-weight:700}
 .head p{color:var(--ink2); font-size:13px; margin:0 0 4px; max-width:80ch}
 .head b{color:var(--accent); font-weight:500}
 .head a{color:var(--accent)}
-.head code{background:#fff; padding:1px 6px; border-radius:6px; font-size:12px}
+.head code{background:#fff; padding:1px 6px; border-radius:6px; font-size:12px; font-family:'IBM Plex Mono',monospace}
 
-.deck{display:flex; flex-wrap:wrap; gap:26px; justify-content:center; align-items:flex-start}
-.devname{text-align:center; margin:0 0 9px}
+.deck{display:flex; flex-wrap:wrap; gap:28px; justify-content:center; align-items:flex-start}
+.devname{text-align:center; margin:0 0 10px}
 .devname b{font-size:13.5px}
 .devname span{display:block; font-size:11px; color:var(--ink3); margin-top:1px; font-family:'IBM Plex Mono',monospace}
 
-/* ── 폰 ── */
-.phone{
-  position:relative; flex:none; width:360px; height:800px;
-  background:var(--bg); border-radius:30px; overflow:hidden;
-  box-shadow:0 10px 34px rgba(97,89,83,.14); display:flex; flex-direction:column;
+/* ─────────────────────────────────────────────────────────────
+   안드로이드 한 대 — 360 × 800dp (9:20)
+   테두리는 기기고, 그 안이 화면이다. 화면 안에서
+   위 26dp는 상태 표시줄, 아래 24dp는 제스처 바가 먹는다.
+   ───────────────────────────────────────────────────────────── */
+.dev{
+  flex:none; width:378px; padding:9px; border-radius:38px; background:#3f3934;
+  box-shadow:0 14px 40px rgba(63,57,52,.28), inset 0 0 0 1px rgba(255,255,255,.12);
 }
+.phone{
+  position:relative; width:360px; height:800px; background:var(--bg);
+  border-radius:30px; overflow:hidden; display:flex; flex-direction:column;
+}
+/* 상태 표시줄 — OS가 그린다. 앱은 이 높이만큼 안쪽으로 물러나 앉는다 */
+.sysbar{
+  flex:none; height:26px; display:flex; align-items:center; justify-content:space-between;
+  padding:0 14px; background:var(--bg); color:var(--ink2);
+  font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.02em;
+}
+.sysbar .icons{display:flex; align-items:center; gap:5px}
+.sysbar svg{width:12px; height:12px}
+.sysbar .batt{
+  width:19px; height:10px; border:1.2px solid currentColor; border-radius:2.5px;
+  position:relative; display:inline-block;
+}
+.sysbar .batt::before{content:''; position:absolute; inset:1.5px; right:5px; background:currentColor; border-radius:1px}
+.sysbar .batt::after{content:''; position:absolute; left:100%; top:2.5px; width:1.5px; height:4px; background:currentColor; border-radius:0 1px 1px 0}
+
 .scrollarea{flex:1; overflow-y:auto; overscroll-behavior:contain}
 .scrollarea::-webkit-scrollbar{width:0}
+/* 제스처 바 — 여기 아래로는 아무것도 안 놓는다 */
+.gesture{flex:none; height:24px; display:grid; place-items:center; background:var(--bg)}
+.gesture i{display:block; width:108px; height:4px; border-radius:99px; background:var(--edge)}
 
 .pbar{
   position:sticky; top:0; z-index:16; display:flex; align-items:center; gap:6px;
-  background:var(--bg); padding:14px 16px;
+  background:var(--bg); padding:12px 16px 14px;
 }
 .pbar .back{
   width:38px; height:38px; margin-left:-6px; flex:none; border:0; background:transparent;
@@ -79,7 +114,7 @@ body{
 .coin{width:19px; height:19px; flex:none; display:block; background:url(g/ic-coin.png) center/contain no-repeat}
 .wallet b{font-family:'IBM Plex Mono',monospace; font-size:13.5px; font-weight:500; color:var(--ink)}
 
-.screen{padding:0 16px 30px}
+.screen{padding:0 16px 26px}
 
 /* 칩 줄 — 지금 상점 그대로다. 이 시안이 바꾸는 것은 `전체` 아래뿐이다. */
 .chipbar{
@@ -95,56 +130,45 @@ body{
 .chipbar button[aria-pressed="true"]{background:var(--accent); color:#fff; box-shadow:none}
 
 /* ─────────────────────────────────────────────────────────────
-   세트 배너 — 메인의 맨 위 한 칸
-   **방 그림이 배경이고 곰돌이가 그 위에 선다.** 홈 칸과 같은 얹기라
-   세트를 다 모으면 홈이 저렇게 된다는 것이 그림 하나로 읽힌다.
+   배너 — **관리자가 올린 사진 한 장이 통째로 깔린다.**
+
+   `bn1.png`가 1774 × 887, 딱 **2:1**이다. 앱은 그 위에 아무것도 안 얹는다 —
+   제목·부제·동그라미가 이미 그림 안에 그려져 있어서, 앱이 또 얹으면 두 번 적힌다.
+   **328dp 폭에서 164dp 높이**로 선다.
    ───────────────────────────────────────────────────────────── */
 .hero{
   position:relative; display:block; width:100%; border:0; padding:0; cursor:pointer;
-  height:212px; border-radius:20px; overflow:hidden; margin:0 0 20px;
+  aspect-ratio:2/1; border-radius:20px; overflow:hidden; margin:0 0 20px;
   background:var(--sunk); text-align:left; font:inherit; color:var(--ink);
   box-shadow:0 8px 24px rgba(0,0,0,.05);
 }
-.hero .bg{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:bottom}
-/* 글씨가 하늘 위에 얹히는 자리 — 그림이 밝아서 왼쪽만 살짝 눕힌다 */
-.hero .veil{position:absolute; inset:0; background:linear-gradient(100deg,rgba(255,252,247,.93) 32%,rgba(255,252,247,.58) 54%,rgba(255,252,247,0) 72%)}
-.hero .who{position:absolute; right:4px; bottom:54px; height:128px; width:auto; z-index:1}
-/*
-  **글 뭉치는 흐름으로 놓는다.** 네 줄을 저마다 `top`으로 박아뒀더니
-  세트 이름이 두 줄이 되는 순간 아래 알약과 겹쳤다 — 이름 길이는 관리자가 정한다.
-*/
-.hero .txt{position:relative; z-index:2; padding:15px 140px 0 16px}
-.hero .kicker{display:block; font-size:10.5px; font-weight:500; color:var(--cycle); letter-spacing:.02em}
-.hero .ttl{
-  display:block; font-family:'Gowun Dodum',sans-serif; font-size:20px; line-height:1.28;
-  letter-spacing:-.02em; margin:1px 0 2px;
+.hero .shot{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block}
+
+/* ─────────────────────────────────────────────────────────────
+   진행 줄 — **배너 밖, 바로 아래.**
+   `1/3`은 사람마다 달라서 그림에 못 굽는다. 그림 안의 동그라미는 누구에게나
+   같은 그림이라 **아직 안 산 사람에게도 산 것처럼 보인다.**
+   ───────────────────────────────────────────────────────────── */
+.steps{
+  display:flex; align-items:center; gap:9px; margin:-12px 0 20px;
+  background:var(--card); border-radius:16px; padding:9px 12px 9px 10px;
+  box-shadow:0 0 0 1.4px var(--line);
 }
-.hero .sub{display:block; font-size:11px; color:var(--ink2); line-height:1.45}
-.hero .step{
-  display:inline-flex; align-items:center; gap:8px; margin-top:9px;
-  background:var(--card); border-radius:999px; padding:5px 5px 5px 12px; font-size:11.5px; font-weight:500;
-  box-shadow:0 6px 16px rgba(97,89,83,.12);
+.steps .trio{display:flex; gap:6px; flex:none}
+.steps .trio b{
+  display:grid; place-items:center; width:34px; height:34px; border-radius:999px;
+  background:var(--sunk); overflow:hidden; box-shadow:0 0 0 1.6px var(--line);
 }
-.hero .step i{
-  font-style:normal; font-family:'IBM Plex Mono',monospace; font-size:11px;
-  background:var(--accent); color:#fff; border-radius:999px; padding:2px 9px;
+.steps .trio b.off{opacity:.4}
+.steps .trio b img{width:100%; height:100%; object-fit:cover}
+.steps .trio b img.fit{object-fit:contain; transform:scale(1.16) translateY(7%)}
+.steps .who{flex:1; min-width:0; font-size:11.5px; font-weight:500; color:var(--ink2)}
+.steps .who em{display:block; font-style:normal; font-size:10px; color:var(--ink3); font-weight:400}
+.steps i{
+  flex:none; font-style:normal; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:500;
+  background:var(--accent); color:#fff; border-radius:999px; padding:3px 10px;
 }
-.hero .step i.done{background:var(--ok)}
-/* 셋이 무엇인지 — **동그라미 셋이 곧 3/3이다** */
-.hero .trio{position:absolute; left:14px; bottom:9px; z-index:2; display:flex; gap:9px}
-.hero .trio span{width:56px; text-align:center}
-.hero .trio b{
-  display:grid; place-items:center; width:52px; height:52px; margin:0 auto 3px;
-  border-radius:999px; background:var(--card); overflow:hidden;
-  box-shadow:0 0 0 2.5px var(--card), 0 4px 10px rgba(97,89,83,.16);
-}
-.hero .trio b.off{opacity:.45; box-shadow:0 0 0 2.5px rgba(255,255,255,.6)}
-.hero .trio b img{width:100%; height:100%; object-fit:cover}
-.hero .trio b img.fit{object-fit:contain; transform:scale(1.14) translateY(6%)}
-.hero .trio em{
-  display:block; font-style:normal; font-size:9px; color:var(--ink2); font-weight:500;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
+.steps i.done{background:var(--ok)}
 
 /* ── 줄 머리 — 아이콘 · 제목 · 더보기 ── */
 .rowhead{display:flex; align-items:center; gap:7px; margin:0 0 10px}
@@ -181,7 +205,7 @@ body{
   border-radius:12px; background:var(--sunk); overflow:hidden;
 }
 .item .art img{max-width:100%; max-height:100%; width:auto; height:auto}
-/* 곰돌이 한 마리인 칸은 **위 여백을 잘라 키운다** — 앱의 BEAR_CARD와 같은 자다 */
+/* 도도 한 마리인 칸은 **위 여백을 잘라 키운다** — 앱의 BEAR_CARD와 같은 자다 */
 .item .art img.bear{
   position:absolute; bottom:0; left:50%; transform:translateX(-50%);
   width:112%; max-width:none; height:auto; max-height:none;
@@ -198,7 +222,7 @@ body{
 /* 가진 것 — **상점에서는 상태만 말한다.** 입는 것은 내 옷장에서 한다 */
 .foot.own{background:var(--sunk); color:var(--ink3)}
 
-/* 딱지 — 왼쪽 위. NEW와 순위가 같은 자리를 나눠 쓴다 */
+/* 딱지 — 왼쪽 위. NEW와 등수가 같은 자리를 나눠 쓴다 */
 .tag{
   position:absolute; left:6px; top:5px; z-index:2; border-radius:999px;
   padding:2px 7px; font-size:9px; font-weight:700; letter-spacing:.03em;
@@ -209,6 +233,8 @@ body{
 
 /* ── 펼친 격자 — `더보기`로 들어간 자리 ── */
 .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin:0 0 20px}
+.lede{font-size:11.5px; color:var(--ink3); margin:0 0 12px; line-height:1.55}
+.lede b{color:var(--ink2)}
 
 /* ── 맨 아래 한 줄 ── */
 .tip{
@@ -217,17 +243,48 @@ body{
 }
 .tip svg{width:15px; height:15px; flex:none; color:var(--cycle)}
 
-/* 빈 자리 — 지금 상점에서 세트 배너가 설 수 없을 때 */
+/* 빈 자리 — 지금 상점에서 배너가 설 수 없을 때 */
 .blank{
   border:1.5px dashed var(--edge); border-radius:20px; padding:26px 18px; text-align:center;
   color:var(--ink3); font-size:11.5px; line-height:1.6; margin:0 0 20px;
 }
 .blank b{display:block; font-size:13px; color:var(--ink2); font-weight:500; margin-bottom:3px}
 
+/* ── 관리자 판 (앱) ── */
+.fld{margin:0 0 16px}
+.fld > label{display:block; font-size:11.5px; font-weight:500; color:var(--ink2); margin:0 0 6px}
+.fld input{
+  width:100%; border:0; border-radius:14px; background:var(--card); padding:13px 14px;
+  font:inherit; font-size:13px; color:var(--ink); box-shadow:0 0 0 1.4px var(--line);
+}
+.drop{
+  position:relative; width:100%; aspect-ratio:2/1; border-radius:16px; overflow:hidden;
+  background:var(--sunk); display:grid; place-items:center; margin:0 0 8px;
+}
+.drop img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover}
+.spec{margin:0 0 16px; padding-left:16px}
+.spec li{font-size:11px; color:var(--ink3); line-height:1.65}
+.spec li b{color:var(--ink2); font-weight:500}
+.ghost{
+  width:100%; border:0; border-radius:14px; background:var(--card); cursor:pointer;
+  padding:12px; font:inherit; font-size:12.5px; font-weight:500; color:var(--accent);
+  box-shadow:0 0 0 1.5px var(--accent-soft); margin:0 0 16px;
+}
+.save{
+  position:sticky; bottom:0; margin:8px -16px 0; padding:12px 16px;
+  background:linear-gradient(180deg,rgba(250,246,240,0),var(--bg) 34%);
+}
+.save button{
+  width:100%; border:0; border-radius:16px; background:var(--accent); color:#fff; cursor:pointer;
+  padding:15px; font:inherit; font-size:14.5px; font-weight:500;
+  box-shadow:0 10px 24px rgba(217,122,94,.32);
+}
+.seg{font-size:11.5px; font-weight:500; color:var(--ink2); margin:0 0 8px}
+
 /* ── 옆의 글 ── */
 .note{
-  flex:1; min-width:330px; max-width:520px; background:#fff; border-radius:20px;
-  padding:22px 24px 26px; box-shadow:0 8px 26px rgba(97,89,83,.09); align-self:stretch;
+  flex:1; min-width:340px; max-width:540px; background:#fff; border-radius:20px;
+  padding:22px 24px 26px; box-shadow:0 8px 26px rgba(97,89,83,.09);
 }
 .note h2{font-size:16px; margin:0 0 10px}
 .note h3{font-size:13.5px; margin:20px 0 6px}
@@ -240,6 +297,11 @@ body{
 .note table{width:100%; border-collapse:collapse; margin:8px 0 12px; font-size:12px}
 .note th,.note td{text-align:left; padding:6px 8px; border-bottom:1px solid var(--line)}
 .note th{color:var(--ink3); font-weight:500; font-size:11px}
+.note figure{margin:10px 0 12px}
+.note figure img{width:100%; border-radius:12px; display:block; box-shadow:0 0 0 1.4px var(--line)}
+/* **진짜 크기.** 폰에서 뜨는 328dp 그대로 — 줄이면 재는 뜻이 없다 */
+.note figure.real img{width:328px; max-width:100%; border-radius:14px}
+.note figcaption{font-size:11px; color:var(--ink3); margin-top:6px; line-height:1.55}
 .pick{background:var(--accent-tint); border-radius:12px; padding:11px 13px; font-size:12.5px; line-height:1.6; margin:0 0 12px}
 .warn{background:var(--sunk); border-left:3px solid var(--star); border-radius:0 12px 12px 0; padding:11px 13px; font-size:12.5px; line-height:1.6; margin:0 0 12px}
 </style>
@@ -250,32 +312,38 @@ body{
   <h1>상점 메인 — 보여주는 자리로</h1>
   <p>지금 <code>전체</code> 칩은 파는 것을 <b>무더기째 세로로 늘어놓는다.</b> 물건이 넷일 때는 그게 맞았다.
      스물이 되면 세 개씩 일곱 줄이 서고, <b>무엇부터 볼지를 화면이 안 말해준다.</b></p>
-  <p>그래서 메인만 다시 그린다 — <b>세트 배너 하나 + 가로줄 몇</b>, 그리고 <code>더보기</code>로 격자에 들어간다.
+  <p>그래서 메인만 다시 그린다 — <b>배너 한 장 + 가로줄 몇</b>, 그리고 <code>더보기</code>로 격자에 들어간다.
      칩 줄·격자·세트 상세·내 옷장은 <a href="상점.html">상점.html</a> 그대로다.
      뼈대도 그대로다 — <b>카드는 고르는 자리, 사는 것은 시트.</b></p>
+  <p>칸은 <b>안드로이드 한 대를 통째로</b> 그렸다 — <code>360 × 800dp (9:20)</code>.
+     위 상태 표시줄 26 · 아래 제스처 바 24를 빼면 <b>앱이 쓰는 세로는 750dp</b>다.</p>
 </div>
 
 <div class="deck">
   <div>
     <p class="devname"><b>상점 메인</b><span>물건이 늘면</span></p>
-    <div class="phone" data-view="main-later"></div>
+    <div class="dev"><div class="phone" data-view="main-later"></div></div>
   </div>
   <div>
     <p class="devname"><b>같은 화면</b><span>지금 파는 것으로</span></p>
-    <div class="phone" data-view="main-now"></div>
+    <div class="dev"><div class="phone" data-view="main-now"></div></div>
   </div>
   <div>
-    <p class="devname"><b>많이 산 것</b><span>더보기로 펼친 격자</span></p>
-    <div class="phone" data-view="more-hot"></div>
+    <p class="devname"><b>랭킹</b><span>더보기로 펼친 격자</span></p>
+    <div class="dev"><div class="phone" data-view="more-rank"></div></div>
+  </div>
+  <div>
+    <p class="devname"><b>상점 채우기</b><span>배너 올리는 자리</span></p>
+    <div class="dev"><div class="phone" data-view="admin"></div></div>
   </div>
 
   <div class="note">
     <h2>줄이 넷이다</h2>
     <table>
       <tr><th>줄</th><th>무엇으로 고르나</th><th>더보기</th></tr>
-      <tr><td><b>세트 배너</b></td><td>지금 열려 있는 시즌 세트 하나</td><td>세트 상세</td></tr>
+      <tr><td><b>배너</b></td><td><b>관리자가 올린 사진</b> 한 장</td><td>그 세트 상세</td></tr>
       <tr><td><b>새로 들어왔어요</b></td><td>상점에 <b>켜진 날</b>이 가까운 순</td><td>새 목록 화면</td></tr>
-      <tr><td><b>많이 산 것</b></td><td><code>costume_owned</code>를 센 순</td><td>새 목록 화면</td></tr>
+      <tr><td><b>랭킹</b></td><td><code>costume_owned</code>를 센 순</td><td>새 목록 화면</td></tr>
       <tr><td><b>중분류마다 한 줄</b></td><td>일상 · 코스튬 · 방 …</td><td><b>이미 있는 칩</b>으로</td></tr>
     </table>
     <p>중분류 줄의 <code>더보기</code>는 <b>새 화면을 안 연다.</b> <code>꾸미기 &gt; 코스튬</code> 칩이
@@ -289,7 +357,64 @@ body{
       세로 격자는 이 문제가 없었다(다 보였다). 가로줄은 <b>보여주는 대신 가리는 것</b>과 맞바꾸는 것이다.
     </div>
 
-    <h2 style="margin-top:24px">인기순은 무엇으로 세나</h2>
+    <h2 style="margin-top:24px">배너는 올린 사진 한 장</h2>
+    <div class="pick">
+      <b>그림 한 장이 통째로 깔린다. 앱은 그 위에 아무것도 안 얹는다.</b>
+      제목도 부제도 이미 그림 안에 그려져 있다 — 앱이 또 얹으면 두 번 적힌다.
+    </div>
+    <figure class="real">
+      <img src="g/bn1.png" alt="여름의 마지막 휴가 배너" />
+      <figcaption><b>폰에서 이만큼으로 뜬다</b> — <code>328 × 164dp</code>.
+        위 그림은 줄여 놓은 것이 아니라 <b>진짜 크기</b>다(원본 <code>1774 × 887</code>).</figcaption>
+    </figure>
+
+    <h3>제목은 살고, 작은 글씨는 안 산다</h3>
+    <p>원본 1774px이 328dp 폭으로 서니 <b>5.4배로 줄어든다.</b> 그 자로 재보면 —</p>
+    <table>
+      <tr><th>그림 속 글씨</th><th>원본</th><th>폰에서</th><th></th></tr>
+      <tr><td>여름의 마지막 휴가</td><td>118px</td><td><b>22px</b></td><td>읽힌다</td></tr>
+      <tr><td>시즌 컬렉션 (리본)</td><td>36px</td><td>7px</td><td><b>안 읽힌다</b></td></tr>
+      <tr><td>도도와 함께… (부제)</td><td>34px</td><td>6px</td><td><b>안 읽힌다</b></td></tr>
+      <tr><td>수영복 도도 (라벨)</td><td>27px</td><td><b>5px</b></td><td><b>안 읽힌다</b></td></tr>
+    </table>
+    <div class="warn">
+      앱에서 제일 작은 글씨가 <b>9px</b>(카드 딱지)이고 본문은 11.5px다.
+      <b>5px는 글씨가 아니라 무늬다.</b>
+    </div>
+    <p>고치는 길이 둘이다 —</p>
+    <ul>
+      <li><b>원본을 1080 폭으로 그린다.</b> 3.3배 축소라 36px 글씨가 11px로 선다.
+          1774는 폰에서 두 배로 촘촘해서 <b>안 보이는 데에 잉크를 쓰는 셈</b>이다</li>
+      <li><b>작은 글씨는 그림에서 뺀다.</b> 아래가 그 이야기다</li>
+    </ul>
+
+    <h3>동그라미 셋만은 앱이 그린다</h3>
+    <div class="warn">
+      그림 속 동그라미 셋은 <b>누구에게나 같은 그림</b>이다. 지금 배너는 수영복 도도와
+      해변 배경이 켜져 있고 포즈가 <code>?</code>인데 — <b>하나도 안 산 사람에게도
+      둘을 가진 것처럼 보이고</b>, 셋을 다 모은 사람에게도 포즈가 <code>?</code>로 남는다.
+      <code>1/3</code>은 <b>사람마다 다르다.</b>
+    </div>
+    <p>그래서 <b>배너 바로 아래에 얇은 줄 하나</b>를 앱이 그린다(첫 폰).
+       안 산 것은 흐리게, 산 것은 또렷하게, 오른쪽 끝에 <code>1/3</code>.
+       라벨은 글씨로 다시 안 적는다 — 동그라미 셋에 이름을 또 달면 <b>가로줄 카드와 같은 말</b>이 된다.</p>
+    <p>그러니 <b>다음 배너부터는 왼쪽 아래 카드를 빼고 그리는 것</b>이 좋다.
+       두 줄이 같은 것을 다르게 말하면 어느 쪽이 맞는지 알 수가 없다.
+       지금 시안은 그림을 <b>손대지 않고</b> 아래에 줄만 붙였다.</p>
+
+    <h3>배너는 세트에 딸린다</h3>
+    <p>배너를 <b>따로 관리하지 않는다.</b> <code>costume_season</code>에 그림 칸을 하나 달고,
+       <b>세트를 짓는 자리에서 같이 올린다.</b></p>
+    <ul>
+      <li>따로 두면 <b>끝난 세트의 배너가 남는다</b> — 두 군데를 같이 꺼야 한다</li>
+      <li>배너를 누르면 갈 곳도 <b>그 세트 상세</b> 하나뿐이라, 갈 곳을 물어볼 것이 없다</li>
+      <li>자리도 지어 쓴다 — <code>shop/season/&lt;세트 열쇠&gt;/banner.png</code>.
+          값표에 경로를 안 적는 규칙 그대로다</li>
+    </ul>
+    <p><b>세트가 아닌 배너</b>(공지·이벤트)가 필요해지면 그때 따로 만든다.
+       지금 만들면 켜진 배너와 켜진 세트가 어긋날 자리만 하나 는다.</p>
+
+    <h2 style="margin-top:24px">랭킹은 무엇으로 세나</h2>
     <div class="pick">
       <b>산 사람 수다.</b> <code>costume_owned</code>를 <code>item_key</code>로 세면 나온다 —
       새로 담아둘 칸이 없다.
@@ -298,7 +423,7 @@ body{
        (남이 뭘 샀는지 볼 수 있으면 안 된다), 앱에서 세면 늘 <code>내가 산 것</code>만 나온다.
        <b>서버가 세어 내려주는 자리가 하나 필요하다</b> — 수는 감추고 <b>차례만</b> 준다.</p>
 
-    <h3>숫자는 안 적는다. 차례만 적는다</h3>
+    <h3>숫자는 안 적는다. 등수만 적는다</h3>
     <div class="warn">
       <code>3명이 샀어요</code>는 <b>안 팔린다는 말</b>로 읽힌다. 쓰는 사람이 몇 안 되는 동안은
       숫자가 다 그렇게 읽힌다 — <b>1 · 2 · 3</b>만 적으면 몇 명이든 말이 된다.
@@ -309,41 +434,63 @@ body{
        어제 1등이 오늘 없어지면 순위가 아니라 <b>기분</b>이 된다. 누적으로 센다.</p>
     <p>누적이면 <b>오래된 것이 계속 1등</b>이라 새로 올린 것이 못 올라온다 —
        그래서 <b>바로 위 줄이 `새로 들어왔어요`다.</b> 두 줄이 서로 못 하는 일을 맡는다.</p>
+    <p><b>공짜 둘은 안 센다.</b> 기본 도도와 기본 룸은 계정을 만들면 그냥 들어오는 것이라
+       (<code>grant_free()</code>) 세면 <b>영원히 1·2등</b>이다. 세트 보상 소품도 뺀다 —
+       <b>산 것이 아니라 받은 것</b>이다.</p>
 
-    <h2 style="margin-top:24px">신상은 무엇으로 세나</h2>
-    <p>값표에 <code>created_at</code>이 이미 있다. 그런데 <b>그 날이 아니다</b> —
-       새로 넣는 것은 <b>숨김으로 들어와서</b> 관리자가 켜야 팔린다.
-       그림을 그리는 동안 값표에만 두 주쯤 앉아 있다가 켜지는데,
-       그러면 <b>켜자마자 신상이 아니게 된다.</b></p>
+    <h2 style="margin-top:24px">새로 들어왔어요 기준</h2>
+    <div class="pick"><b>상점에 처음 켜진 날</b>부터 <b>14일</b>이다.
+      값표에 줄이 생긴 날(<code>created_at</code>)이 아니다.</div>
+    <p>새로 넣는 것은 <b>숨김으로 들어온다</b>(<code>active = false</code>) — 반쯤 그린 것이
+       상점에 뜨는 사고를 막으려고 그렇게 해뒀다. 그림을 그리는 동안 값표에만
+       두 주쯤 앉아 있다가 켜지는데, <code>created_at</code>으로 세면
+       <b>켜자마자 신상이 아니게 된다.</b></p>
+    <p><code>updated_at</code>도 아니다 — <b>값이나 이름만 고쳐도 바뀐다.</b>
+       300P를 250P로 내린 옷이 그날 신상이 되면 안 된다.</p>
     <div class="pick">
-      <b>처음 켜진 때</b>를 적는 칸을 하나 단다(<code>opened_at</code>). <code>active</code>가
-      처음 참이 될 때만 찍히고, 그 뒤에 껐다 켜도 안 바뀐다 —
+      그래서 <b>처음 켜진 때</b>를 적는 칸을 하나 단다(<code>opened_at</code>).
+      <code>active</code>가 <b>처음</b> 참이 될 때만 찍히고, 그 뒤에 껐다 켜도 안 바뀐다 —
       <b>잠깐 내렸다 올린 것이 신상으로 돌아오면 안 된다.</b>
     </div>
-    <p><code>NEW</code> 딱지는 <b>14일</b>이다. 딱지가 한 달을 가면 딱지가 아니라 무늬가 된다.</p>
+    <p>딱지가 <b>14일</b>인 까닭은, 한 달을 가면 <b>딱지가 아니라 무늬</b>가 되기 때문이다.
+       줄에 서는 것과 딱지가 붙는 것은 같은 14일이다 — 둘을 다르게 두면
+       <b>줄에는 있는데 딱지가 없는 카드</b>가 생겨서 왜 거기 있는지 알 수가 없다.</p>
 
     <h2 style="margin-top:24px">지금 세우면 허전하다</h2>
     <div class="warn">
-      <b>이게 제일 큰 문제다.</b> 지금 파는 것은 <b>곰 넷(그리고 공짜 둘) · 방 하나 · 세트 없음</b>이다.
-      가운데 폰이 그 값으로 그린 것인데 — 세트 배너가 설 자리가 없고,
-      <code>많이 산 것</code>과 <code>특별한 날</code>에 <b>같은 넷이 차례만 바꿔 두 번 뜬다.</b>
+      <b>이게 제일 큰 문제다.</b> 지금 파는 것은 <b>도도 넷(그리고 공짜 둘) · 방 하나 · 세트 없음</b>이다.
+      두 번째 폰이 그 값으로 그린 것인데 — 배너가 설 자리가 없고,
+      <code>랭킹</code>과 <code>특별한 날</code>에 <b>같은 넷이 차례만 바꿔 두 번 뜬다.</b>
       줄을 넷 세워놓고 물건이 넷이면 화면이 <b>고른 것이 아니라 채운 것</b>으로 읽힌다.
     </div>
     <table>
       <tr><th></th><th>지금</th><th>이 화면이 사는 선</th></tr>
-      <tr><td>곰 스타일</td><td>5</td><td>12쯤</td></tr>
+      <tr><td>도도 스타일</td><td>5</td><td>12쯤</td></tr>
       <tr><td>방 테마</td><td>1</td><td>6쯤</td></tr>
       <tr><td>시즌 세트</td><td><b>0</b></td><td><b>1 이상</b></td></tr>
     </table>
     <p><b>줄은 빈 채로 안 세운다</b> — 지금 격자가 그렇듯(빈 무더기·빈 칩은 아예 안 뜬다),
-       카드가 <b>넷보다 적은 줄은 통째로 빠진다.</b> 그래서 가운데 폰에서
-       <code>새로 들어왔어요</code>·<code>매일 입는 옷</code>·<code>방 테마</code> 세 줄이 없다.
-       <b>겹치는 것까지는 못 막는다</b> — 넷뿐인 물건을 두 잣대로 고르면 같은 넷이 나온다.
+       카드가 <b>넷보다 적은 줄은 통째로 빠진다.</b> 그래서 두 번째 폰에
+       <code>새로 들어왔어요</code>·<code>매일 입는 옷</code>·<code>방 테마</code> 세 줄이 없다.</p>
+    <p><b>겹치는 것까지는 못 막는다</b> — 넷뿐인 물건을 두 잣대로 고르면 같은 넷이 나온다.
        막으려면 <b>위 줄에 뜬 것은 아래 줄에서 뺀다</b>는 규칙이 하나 더 붙어야 하는데,
        그러면 <code>코스튬</code> 줄에서 제일 인기 있는 옷이 빠진다. 규칙을 붙일 것이 아니라
        <b>물건을 늘릴 일이다.</b></p>
-    <p>그림은 오고 있다 — <code>g/8.png</code>(수영복 곰돌이) · <code>g/bg3~5.png</code>(방 셋)이
+    <p>그림은 오고 있다 — <code>g/8.png</code>(수영복 도도) · <code>g/bg3~5.png</code>(방 셋)이
        이미 폴더에 있다. <b>세트 하나가 차는 날 이 화면을 켜는 것</b>이 맞다.</p>
+
+    <h2 style="margin-top:24px">이 아이 이름은 도도다</h2>
+    <p>이 시안은 <b>도도</b>로 적었다. 그런데 <b>앱은 아직 `곰돌이`라고 부른다</b> —
+       값표의 <code>기본 곰돌이</code>, 소스의 <code>useGomdori</code>, 폴더 <code>gomdori/</code>.
+       홈의 상점 띠 그림에는 <code>Dodo</code>라고 구워져 있다.</p>
+    <figure>
+      <img src="../public/gomdori/store-banner.png" alt="홈의 상점 띠" />
+      <figcaption><code>public/gomdori/store-banner.png</code> — 그림은 <b>Dodo</b>, 앱은 <b>곰돌이</b>.
+        <b>이름이 두 군데 있으면 어긋난다</b>는 것이 이렇게 생겼다.</figcaption>
+    </figure>
+    <p>맞출 거리는 <b>사람이 읽는 이름</b>뿐이다 — 값표의 <code>기본 곰돌이</code>와 화면 문구.
+       <b>코드 이름과 폴더는 그대로 둔다.</b> <code>gomdori/</code> 밑에 그림이 이미 쌓여 있어서
+       바꾸면 Storage 자리까지 따라 움직여야 한다 — <b>보이지도 않는 것을 옮기는 일</b>이다.</p>
 
     <h2 style="margin-top:24px">안 바꾼 것</h2>
     <ul>
@@ -365,25 +512,30 @@ var SV = function (d, w) {
 var I_BACK  = SV('<path d="M15 5l-7 7 7 7"/>', 1.8);
 var I_NEXT  = SV('<path d="M9 5l7 7-7 7"/>', 1.8);
 var I_STAR  = SV('<path d="M12 4l2.4 5 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4L4.2 9.8 9.6 9z"/>');
-var I_FIRE  = SV('<path d="M12 3s4.5 3.6 4.5 8a4.5 4.5 0 0 1-9 0c0-1.4.6-2.6 1.3-3.5.2 1.3 1 2 1.8 2 1.2 0 1.6-1.2 1.4-2.6C11.8 5.7 12 3 12 3z"/><path d="M7.5 13a6 6 0 1 0 9 0"/>');
+var I_RANK  = SV('<path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4.6v1.2A3.4 3.4 0 0 0 8 10.6M17 6h2.4v1.2A3.4 3.4 0 0 1 16 10.6"/><path d="M12 14v3.4M8.7 20h6.6l-.8-2.6H9.5z"/>');
 var I_ROOM  = SV('<path d="M3.5 10.6 12 4l8.5 6.6"/><path d="M6 9.6V20h12V9.6"/>');
 var I_SHIRT = SV('<path d="M8.5 4 12 6l3.5-2L20 6.5l-2 3.5-2-1V20H8V9l-2 1-2-3.5z"/>');
 var I_GIFT  = SV('<rect x="4" y="10" width="16" height="10" rx="2"/><path d="M3.5 6.5h17V10h-17zM12 6.5V20"/>' +
   '<path d="M12 6.5S10.8 3.5 9 3.5a1.8 1.8 0 0 0 0 3.6zM12 6.5s1.2-3 3-3a1.8 1.8 0 0 1 0 3.6z"/>');
+var I_WIFI  = SV('<path d="M4 9a13 13 0 0 1 16 0M7 12.5a8.5 8.5 0 0 1 10 0M10 16a4 4 0 0 1 4 0"/><circle cx="12" cy="19" r=".8" fill="currentColor"/>', 1.8);
+var I_SIG   = SV('<path d="M4 20h2v-4H4zM9.5 20h2V12h-2zM15 20h2V8h-2zM20.5 20h2V4h-2z" fill="currentColor" stroke="none"/>');
 
 /*
   ─── 파는 것 ───────────────────────────────────────────────────
   `img`가 없는 줄은 **아직 안 그린 것**이라 그림자가 대신 선다.
   진짜 앱은 그림 없는 줄을 값표에 두지 않는다 — 시안에서만 세운다.
+
+  **이름은 도도로 적는다.** 값표에는 아직 `곰돌이`로 들어 있다 —
+  옆 글의 `이름이 두 군데다`가 그 이야기다.
 */
 var ITEMS = [
   /* 열쇠      이름            값   종류    중분류      그림 */
-  { k:'base',    n:'기본 곰돌이', p:0,   t:'bear', f:'daily',   img:'g/base-front.png' },
-  { k:'rabbit',  n:'곰토끼',      p:300, t:'bear', f:'costume', img:'g/rabbit-front-mock.png' },
-  { k:'dragon',  n:'곰드래곤',    p:350, t:'bear', f:'costume', img:'../assets/shop/deco/costume/gomdori/dragon.png' },
-  { k:'princess',n:'공주 곰',     p:400, t:'bear', f:'costume', img:'../assets/shop/deco/costume/gomdori/princess.png' },
-  { k:'wizard',  n:'마법사 곰',   p:400, t:'bear', f:'costume', img:'../assets/shop/deco/costume/gomdori/wizard.png' },
-  { k:'swim',    n:'수영복 곰돌이',p:350, t:'bear', f:'seasonal',img:'g/8.png', season:'s-summer' },
+  { k:'base',    n:'기본 도도',   p:0,   t:'bear', f:'daily',   img:'g/base-front.png' },
+  { k:'rabbit',  n:'토끼 도도',   p:300, t:'bear', f:'costume', img:'g/rabbit-front-mock.png' },
+  { k:'dragon',  n:'드래곤 도도', p:350, t:'bear', f:'costume', img:'../assets/shop/deco/costume/gomdori/dragon.png' },
+  { k:'princess',n:'공주 도도',   p:400, t:'bear', f:'costume', img:'../assets/shop/deco/costume/gomdori/princess.png' },
+  { k:'wizard',  n:'마법사 도도', p:400, t:'bear', f:'costume', img:'../assets/shop/deco/costume/gomdori/wizard.png' },
+  { k:'swim',    n:'수영복 도도', p:350, t:'bear', f:'seasonal',img:'g/8.png', season:'s-summer' },
 
   { k:'r-base',  n:'기본 룸',     p:0,   t:'room', f:'room', img:'g/main_room.png' },
   { k:'r-cafe',  n:'카페 룸',     p:400, t:'room', f:'room', img:'g/main_room_2.png' },
@@ -391,23 +543,31 @@ var ITEMS = [
   { k:'r-kitchen',n:'부엌 룸',    p:350, t:'room', f:'room', img:'g/bg3.png' },
   { k:'r-beach', n:'해변 배경',   p:400, t:'room', f:'seasonal', img:'g/bg4.png', season:'s-summer' },
 
-  /* 소품은 **파는 물건이 아니다** — 세트를 다 모으면 딸려온다 */
+  /* 소품은 **파는 물건이 아니다** — 세트를 다 모으면 딸려온다. 랭킹에서도 뺀다 */
   { k:'pose-tube', n:'튜브 포즈', p:0, t:'pose', f:'seasonal', season:'s-summer' },
 
   /* 아직 안 그린 것 — 줄이 어떻게 서는지 보려고 세운다 */
   { k:'check',   n:'체크 데이트', p:300, t:'bear', f:'daily' },
   { k:'walk',    n:'동네 한 바퀴',p:300, t:'bear', f:'daily' },
-  { k:'apron',   n:'앞치마 곰돌이',p:250, t:'bear', f:'daily' },
-  { k:'panda',   n:'판다 곰',     p:400, t:'bear', f:'costume' }
+  { k:'apron',   n:'앞치마 도도', p:250, t:'bear', f:'daily' },
+  { k:'panda',   n:'판다 도도',   p:400, t:'bear', f:'costume' }
 ];
 
-var SET = { k:'s-summer', n:'여름의 마지막 휴가', note:'곰돌이와 함께 시원한 바다로 떠나요!',
-            label:'여름휴가 세트', has:['swim','r-beach','pose-tube'] };
+/*
+  세트 하나. **배너는 여기 딸린다** — `banner`가 관리자가 올린 한 장이다.
+  자리는 지어 쓴다: `shop/season/<열쇠>/banner.png`.
+*/
+var SET = {
+  k:'s-summer', n:'여름의 마지막 휴가', note:'도도와 함께 시원한 바다로 떠나요!',
+  label:'여름휴가 세트', has:['swim','r-beach','pose-tube'],
+  /* 관리자가 올린 한 장. 1774 × 887 — 딱 2:1이다 */
+  banner:'g/bn1.png'
+};
 
-/* 산 사람 수 — **서버가 센 것.** 앱은 차례만 받는다(수는 안 내려온다) */
-var HOT = ['rabbit', 'r-cafe', 'princess', 'dragon', 'r-picnic', 'wizard'];
+/* 산 사람 수로 매긴 차례 — **서버가 센 것.** 앱에는 수가 안 내려온다 */
+var RANK = ['rabbit', 'r-cafe', 'princess', 'dragon', 'r-picnic', 'wizard'];
 /* 켜진 날이 가까운 순 — `opened_at` 차례 */
-var NEW = ['r-kitchen', 'swim', 'r-beach', 'panda', 'check'];
+var FRESH = ['r-kitchen', 'swim', 'r-beach', 'panda', 'check'];
 
 var owned = { base:true, 'r-base':true, rabbit:true, 'r-picnic':true };
 var pt = 999999;
@@ -431,16 +591,14 @@ function art(it, cls) {
 function card(k, tag) {
   var it = find(k);
   if (!it) return '';
-  var own = Boolean(owned[k]);
-  var roomly = it.t === 'room';
-  var foot = own
+  var foot = owned[k]
     ? '<span class="foot own">보유중</span>'
     : '<span class="foot price"><i class="coin"></i>' + it.p + '</span>';
 
   return '<button class="item" type="button">' +
     (tag || '') +
     '<span class="nm">' + it.n + '</span>' +
-    '<span class="art">' + art(it, roomly ? 'room' : 'bear') + '</span>' +
+    '<span class="art">' + art(it, it.t === 'room' ? 'room' : 'bear') + '</span>' +
     foot +
   '</button>';
 }
@@ -458,41 +616,43 @@ function rail(keys, tagOf) {
 }
 
 /*
-  세트 배너 — **방이 배경, 곰돌이가 그 위.** 홈 칸과 같은 얹기라
-  다 모으면 홈이 저렇게 된다는 것이 그림 하나로 읽힌다.
-  동그라미 셋이 곧 `몇/3`이라, 숫자와 그림이 같은 말을 두 번 한다.
+  배너 — **관리자가 올린 한 장이 통째로 깔린다. 앱은 아무것도 안 얹는다.**
+  제목도 부제도 이미 그림 안에 그려져 있다. 앱이 또 얹으면 두 번 적힌다.
 */
 function hero() {
-  var room = find(SET.has[1]), bear = find(SET.has[0]);
-  var step = SET.has.filter(function (k) { return owned[k]; }).length;
-
-  var trio = SET.has.map(function (k) {
-    var it = find(k);
-    var on = Boolean(owned[k]);
-    var inner = it && it.img
-      ? '<img class="' + (it.t === 'room' ? '' : 'fit') + '" src="' + it.img + '" alt="" onerror="this.outerHTML=SHADE" />'
-      : SHADE;
-    return '<span><b class="' + (on ? '' : 'off') + '">' + inner + '</b><em>' + (it ? it.n : '') + '</em></span>';
-  }).join('');
-
   return '<button class="hero" type="button">' +
-    (room && room.img ? '<img class="bg" src="' + room.img + '" alt="" />' : '') +
-    '<span class="veil"></span>' +
-    (bear && bear.img ? '<img class="who" src="' + bear.img + '" alt="" />' : '') +
-    '<span class="txt">' +
-      '<span class="kicker">시즌 컬렉션</span>' +
-      '<span class="ttl">' + SET.n + '</span>' +
-      '<span class="sub">' + SET.note + '</span>' +
-    '</span>' +
-    '<span class="step">' + SET.label +
-      '<i class="' + (step === 3 ? 'done' : '') + '">' + step + '/3</i></span>' +
-    '<span class="trio">' + trio + '</span>' +
+    '<img class="shot" src="' + SET.banner + '" alt="' + SET.n + '" />' +
   '</button>';
 }
 
-function tip(text) {
-  return '<div class="tip">' + I_STAR + text + '</div>';
+/*
+  진행 줄 — **배너 밖, 바로 아래 붙는 얇은 한 줄.**
+
+  `1/3`은 **사람마다 다르다.** 그림 안의 동그라미 셋은 누구에게나 같은 그림이라
+  아직 하나도 안 산 사람에게도 수영복 도도가 산 것처럼 보이고, 셋을 다 모은
+  사람에게도 세 번째가 `?`로 남는다. 그러니 그 셋만은 앱이 그려야 한다.
+
+  **글씨도 여기서 산다.** 원본 1774px 폭이 폰에서 328dp로 서니 5.4배로 줄어드는데,
+  그림 속 동그라미 라벨 27px는 **5px**가 된다 — 안 읽힌다.
+*/
+function steps() {
+  var got = SET.has.filter(function (k) { return owned[k]; }).length;
+  var trio = SET.has.map(function (k) {
+    var it = find(k);
+    var inner = it && it.img
+      ? '<img class="' + (it.t === 'room' ? '' : 'fit') + '" src="' + it.img + '" alt="" onerror="this.outerHTML=SHADE" />'
+      : SHADE;
+    return '<b class="' + (owned[k] ? '' : 'off') + '">' + inner + '</b>';
+  }).join('');
+
+  return '<div class="steps">' +
+    '<span class="trio">' + trio + '</span>' +
+    '<span class="who">' + SET.label + '<em>다 모으면 포즈가 딸려와요</em></span>' +
+    '<i class="' + (got === 3 ? 'done' : '') + '">' + got + '/3</i>' +
+  '</div>';
 }
+
+function tip(text) { return '<div class="tip">' + I_STAR + text + '</div>'; }
 
 function chips(on) {
   var one = function (k, label) {
@@ -502,13 +662,23 @@ function chips(on) {
     one('season','시즌') + one('room','방') + one('mine','내 옷장') + '</div>';
 }
 
-function pbar(title) {
+/* 안드로이드 상태 표시줄 — OS가 그린다. 앱은 이 아래에서 시작한다 */
+function sysbar() {
+  return '<div class="sysbar"><span>9:41</span>' +
+    '<span class="icons">' + I_SIG + I_WIFI + '<i class="batt"></i></span></div>';
+}
+function gesture() { return '<div class="gesture"><i></i></div>'; }
+
+function pbar(title, wallet) {
   return '<div class="pbar">' +
     '<button class="back" type="button" aria-label="돌아가기">' + I_BACK + '</button>' +
     '<h1>' + title + '</h1>' +
-    '<span class="wallet"><i class="coin"></i><b>' + pt.toLocaleString() + '</b></span>' +
+    (wallet === false ? '' : '<span class="wallet"><i class="coin"></i><b>' + pt.toLocaleString() + '</b></span>') +
   '</div>';
 }
+
+/* 폰 한 대로 감싼다 — 상태 표시줄 · 화면 · 제스처 바 */
+function device(inner) { return sysbar() + inner + gesture(); }
 
 /* 중분류 한 줄 — **넷보다 적으면 통째로 안 세운다**(빈 무더기와 같은 규칙) */
 function famRail(fam, icon, title, only) {
@@ -524,49 +694,78 @@ function main(now) {
   var pick = function (list) {
     return list.filter(function (k) { return !only || only.indexOf(k) >= 0; });
   };
-  var newList = pick(NEW), hotList = pick(HOT);
+  var fresh = pick(FRESH), rank = pick(RANK);
   var body = '';
 
-  /* 세트 배너 — **열린 세트가 있을 때만.** 지금은 하나도 없다 */
+  /* 배너 — **열린 세트가 있을 때만.** 지금은 하나도 없다 */
   body += now
-    ? '<div class="blank"><b>여기 시즌 세트 배너가 선다</b>' +
-      '곰·방·소품 셋이 다 찬 세트가 하나도 없어서<br />지금은 설 자리가 없어요</div>'
-    : hero();
+    ? '<div class="blank"><b>여기 배너가 선다</b>' +
+      '도도·방·소품 셋이 다 찬 세트가 하나도 없어서<br />올릴 배너도 걸 자리도 없어요</div>'
+    : hero() + steps();
 
   /* 줄마다 넷은 돼야 세운다 — 셋뿐인 줄은 격자보다 초라하다 */
-  if (newList.length >= 4) body += rowhead(I_STAR, '새로 들어왔어요') + rail(newList, function () {
+  if (fresh.length >= 4) body += rowhead(I_STAR, '새로 들어왔어요') + rail(fresh, function () {
     return '<span class="tag">NEW</span>';
   });
-  if (hotList.length >= 4) body += rowhead(I_FIRE, '많이 산 것') + rail(hotList, function (k, i) {
+  if (rank.length >= 4) body += rowhead(I_RANK, '랭킹') + rail(rank, function (k, i) {
     return '<span class="tag rank' + (i === 0 ? ' one' : '') + '">' + (i + 1) + '</span>';
   });
 
   body += famRail('daily', I_SHIRT, '매일 입는 옷', only);
-  body += famRail('costume', I_GIFT, '특별한 날, 곰돌이의 변신', only);
+  body += famRail('costume', I_GIFT, '특별한 날, 도도의 변신', only);
   body += famRail('room', I_ROOM, '방 테마', only);
 
-  body += tip(now
-    ? '물건이 늘면 줄이 하나씩 늘어나요'
-    : '포인트는 할 일을 끝내면 모을 수 있어요');
+  body += tip(now ? '물건이 늘면 줄이 하나씩 늘어나요' : '포인트는 할 일을 끝내면 모을 수 있어요');
 
-  return pbar('상점') + '<div class="scrollarea"><div class="screen">' +
-    chips('all') + body + '</div></div>';
+  return device(pbar('상점') + '<div class="scrollarea"><div class="screen">' +
+    chips('all') + body + '</div></div>');
 }
 
 /* 더보기로 들어간 자리 — **가로줄에서 밀어야 나오던 것이 다 보인다** */
-function moreHot() {
-  var body = '<p style="font-size:11.5px;color:var(--ink3);margin:0 0 12px;line-height:1.55">' +
-    '많이 산 차례로 서요. <b style="color:var(--ink2)">몇 명이 샀는지는 안 적어요.</b></p>' +
-    '<div class="grid">' + HOT.map(function (k, i) {
+function moreRank() {
+  var body = '<p class="lede">산 사람이 많은 차례로 서요. ' +
+    '<b>몇 명이 샀는지는 안 적어요.</b></p>' +
+    '<div class="grid">' + RANK.map(function (k, i) {
       return card(k, '<span class="tag rank' + (i === 0 ? ' one' : '') + '">' + (i + 1) + '</span>');
     }).join('') + '</div>' +
-    tip('차례는 산 사람 수로 매겨요');
-  return pbar('많이 산 것') + '<div class="scrollarea"><div class="screen">' + body + '</div></div>';
+    tip('공짜로 받은 것과 세트 보상은 안 세요');
+  return device(pbar('랭킹') + '<div class="scrollarea"><div class="screen">' + body + '</div></div>');
+}
+
+/*
+  상점 채우기 — **세트를 짓는 자리에 배너 칸이 하나 붙는다.**
+  올린 그림 위에 **글자가 앉을 자리**를 얹어 보여준다 — 규격을 글로만 적어두면
+  다 그린 뒤에 제목이 나무 위에 얹힌 걸 보게 된다.
+*/
+function admin() {
+  var body =
+    '<div class="fld"><label>세트 이름</label>' +
+      '<input value="여름의 마지막 휴가" readonly /></div>' +
+    '<div class="fld"><label>한 줄</label>' +
+      '<input value="도도와 함께 시원한 바다로 떠나요!" readonly /></div>' +
+
+    '<p class="seg">배너 그림</p>' +
+    '<div class="drop"><img src="' + SET.banner + '" alt="" /></div>' +
+    '<ul class="spec">' +
+      '<li><b>가로 2:1</b> · 1080 × 540을 권해요</li>' +
+      '<li><b>글씨는 원본에서 36px 이상.</b> 폰에서 딱 11px로 보여요</li>' +
+      '<li><b>진행도(1/3)는 넣지 마세요</b> — 사람마다 달라서 아래 줄이 그려요</li>' +
+    '</ul>' +
+    '<button class="ghost" type="button">다시 올리기</button>' +
+
+    '<p class="seg">상점에서 이렇게 보여요</p>' +
+    hero() + steps() +
+
+    '<div class="save"><button type="button">저장</button></div>';
+
+  return device(pbar('세트 짓기', false) + '<div class="scrollarea"><div class="screen">' + body + '</div></div>');
 }
 
 document.querySelectorAll('.phone').forEach(function (el) {
   var v = el.getAttribute('data-view');
-  el.innerHTML = v === 'more-hot' ? moreHot() : main(v === 'main-now');
+  el.innerHTML = v === 'more-rank' ? moreRank()
+    : v === 'admin' ? admin()
+    : main(v === 'main-now');
 });
 </script>
 </body>
