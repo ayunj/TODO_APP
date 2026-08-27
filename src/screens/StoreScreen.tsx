@@ -379,11 +379,22 @@ function Fitting({
 
   return (
     <section className="mb-3 rounded-card bg-card p-3.5 shadow-card">
-      <Stage
-        bear={roomly ? wornBear : item.key}
-        room={roomly ? item.key : wornRoom}
-        flag={here ? verb[1] : '걸쳐보는 중'}
-      />
+      {/*
+        **홈 칸보다 한 뼘 작다.** 홈에 서는 칸을 그대로 옮겨왔더니 옷장 격자가
+        통째로 접힌 아래로 밀려서, 옷 하나 걸쳐볼 때마다 스크롤을 내려야 했다.
+        홈은 그 칸이 화면의 주인공이지만 **여기서는 고르는 격자가 주인공이다.**
+
+        **비율은 그대로 두고 폭만 줄인다.** 곰돌이가 서는 자리는 칸에 대한 %라
+        ([stage.ts](../lib/stage.ts)) 칸이 통째로 줄면 걸쳐본 대로 홈에 선다 —
+        줄여도 되는 것은 크기뿐이고 비율은 아니다.
+      */}
+      <div className="mx-auto w-[80%]">
+        <Stage
+          bear={roomly ? wornBear : item.key}
+          room={roomly ? item.key : wornRoom}
+          flag={here ? verb[1] : '걸쳐보는 중'}
+        />
+      </div>
 
       <div className="mt-3.5 flex min-h-[34px] items-center gap-2">
         <span className="min-w-0 flex-1 truncate font-round text-[17px]">{item.name}</span>

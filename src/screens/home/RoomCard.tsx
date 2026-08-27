@@ -36,9 +36,12 @@ export default function RoomCard({ done, total }: { done: number; total: number 
   return (
     <section className="mb-[11px] overflow-hidden rounded-card bg-card shadow-card">
       {/*
-        **상점 걸쳐보는 칸과 같은 자리다**([stage.ts](../../lib/stage.ts)).
+        **내 옷장의 걸쳐보는 칸과 같은 자리다**([stage.ts](../../lib/stage.ts)).
         걸쳐본 대로 홈에 서지 않으면 걸쳐보는 뜻이 없다 —
         여기 따로 적어뒀다가 홈에서만 곰돌이가 훨씬 컸다.
+
+        **크기는 여기가 더 크다.** 옷장 칸은 카드 폭의 80%로 한 뼘 작은데,
+        묶이는 것은 비율이지 크기가 아니라 걸쳐본 대로 그대로 선다.
       */}
       <div className={`${ROOM_BOX} bg-sunk`}>
         <Art src={item(wornRoom).img} className={ROOM_ART} />
