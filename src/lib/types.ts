@@ -311,6 +311,13 @@ export interface Costume {
    * [상점 채우기](../screens/ShopAdminScreen.tsx)가 이걸로 켜고 끈다.
    */
   active?: boolean;
+  /**
+   * **상점에 처음 켜진 때**(ISO). `새로 들어왔어요` 줄이 이걸로 센다.
+   *
+   * 값표에 줄이 생긴 날이 아니다 — 새것은 숨김으로 들어와서 그림을 그리는 동안
+   * 값표에만 앉아 있다가 켜진다. 껐다 켜도 안 바뀐다.
+   */
+  openedAt?: string;
 }
 
 /**
@@ -349,6 +356,17 @@ export interface Shop {
   families: ShopFamily[];
   sets: CostumeSet[];
   items: Costume[];
+  /**
+   * 많이 산 차례 — **열쇠만 늘어놓은 줄.** 앞에 선 것이 1등이다.
+   *
+   * **수는 안 내려온다.** `3명이 샀어요`는 쓰는 사람이 몇 안 되는 동안
+   * 안 팔린다는 말로 읽힌다 — 차례만 있으면 몇 명이든 말이 된다.
+   *
+   * 서버가 센다(`shop_rank()`). `costume_owned`가 제 줄만 보이는 표라
+   * 앱에서 세면 늘 `내가 산 것`만 나온다.
+   * **못 받아오면 빈 줄이다** — 그러면 랭킹 줄이 아예 안 선다.
+   */
+  rank: string[];
 }
 
 /**
@@ -365,6 +383,13 @@ export interface CostumeSet {
   bear: Costume;
   room: Costume;
   pose: Costume;
+  /**
+   * 상점 맨 위에 서는 **배너 그림 주소.** 없으면 배너가 없는 세트다.
+   *
+   * **관리자가 올린 한 장이 통째로 깔린다** — 앱은 그 위에 아무것도 안 얹는다.
+   * 제목도 부제도 이미 그림 안에 그려져 있어서, 앱이 또 얹으면 두 번 적힌다.
+   */
+  banner?: string;
 }
 
 /**

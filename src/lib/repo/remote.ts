@@ -620,14 +620,23 @@ export async function pullGomdori(): Promise<Gomdori> {
 export async function pullShop(): Promise<Shop> {
   const client = await supabase();
 
-  const [g, f, s, c] = await Promise.all([
+  const [g, f, s, c, k] = await Promise.all([
     client.from('shop_group').select('group_key, name').order('ord'),
     client.from('shop_family').select('family_key, group_key, name, active').order('ord'),
-    client.from('costume_season').select('season_key, name, note, family_key').order('ord'),
+    client
+      .from('costume_season')
+      .select('season_key, name, note, family_key, banner_at')
+      .order('ord'),
     client
       .from('costume_catalog')
-      .select('item_key, kind, price, season, name, family_key, active, updated_at')
+      .select('item_key, kind, price, season, name, family_key, active, opened_at, updated_at')
       .order('created_at'),
+    /*
+      **랭킹은 못 받아와도 넘어간다.** 상점이 안 뜨는 것보다 줄 하나가 없는 편이
+      낫고, 옛 DB에는 이 함수가 아직 없다 — 그때 여기서 던지면 상점이 통째로
+      박혀둔 목록으로 물러선다.
+    */
+    client.rpc('shop_rank'),
   ]);
   for (const r of [g, f, s, c]) if (r.error) throw r.error;
 
@@ -678,6 +687,8 @@ export async function pullShop(): Promise<Shop> {
       season: r.season ? String(r.season) : undefined,
       // 안 내려오면 참으로 둔다 — 우리에게 내려온 것은 파는 것이라는 뜻이다
       active: r.active === undefined ? true : Boolean(r.active),
+      // 안 내려오면 **언제 켜졌는지 모르는 것**이다. 오늘 켜진 것이 아니다
+      openedAt: r.opened_at ? String(r.opened_at) : undefined,
     };
     const own = builtinImg(item.key);
     const at = own ? undefined : shopPath(item, families);
@@ -708,6 +719,13 @@ export async function pullShop(): Promise<Shop> {
         bear: pick(key, 'bear'),
         room: pick(key, 'room'),
         pose: pick(key, 'pose'),
+        /*
+          배너 자리도 **적어둔 것이 아니라 지은 것**이다 —
+          `season/<열쇠>/banner.png`. 올린 때가 없으면 배너가 없다.
+        */
+        banner: r.banner_at
+          ? shopImageUrl(bannerPath(key)) + stamp({ updated_at: r.banner_at })
+          : undefined,
       };
     })
     .filter((set) => [set.bear, set.room, set.pose].every((i) => i.name !== '준비 중'));
@@ -717,6 +735,17 @@ export async function pullShop(): Promise<Shop> {
     값표에 줄이 있든 없든 늘 서야 하는 것이라 여기서 한 번 챙긴다.
     화면마다 챙기게 두면 어느 화면에서만 빠지는 날이 온다.
   */
+  /*
+    많이 산 차례 — **열쇠만 늘어놓은 줄.** 수는 안 내려온다.
+    못 받아왔으면 빈 줄이고, 그러면 랭킹 줄이 아예 안 선다.
+  */
+  const rank = k.error
+    ? []
+    : ((k.data ?? []) as Row[])
+        .slice()
+        .sort((a, b) => Number(a.rank) - Number(b.rank))
+        .map((r) => String(r.item_key));
+
   return withBundled({
     groups: ((g.data ?? []) as Row[]).map((r) => ({
       key: String(r.group_key),
@@ -725,8 +754,19 @@ export async function pullShop(): Promise<Shop> {
     families,
     sets,
     items,
+    rank,
   });
 }
+
+/**
+ * 세트 배너가 통 어디 있나 — **적어두지 않고 짓는다.**
+ *
+ * `season/<세트 열쇠>/banner.png`. 파는 물건의 그림 자리(`shopPath`)와 같은 규칙인데,
+ * 배너는 **세트에 하나뿐**이라 종류도 번호표도 낄 자리가 없다.
+ *
+ * 올리는 쪽(`uploadSeasonBanner`)과 보는 쪽(`pullShop`)이 이 한 줄을 같이 본다.
+ */
+export const bannerPath = (season: string): string => `season/${season}/banner.png`;
 
 /**
  * 지금 띄울 공지 — **켜진 것 중 제일 새것 하나.**
@@ -947,19 +987,69 @@ export async function pullSeasons(): Promise<CostumeSet[]> {
   const client = await supabase();
   const { data, error } = await client
     .from('costume_season')
-    .select('season_key, name, note, family_key')
+    .select('season_key, name, note, family_key, banner_at')
     .order('ord');
   if (error) throw error;
-  return ((data ?? []) as Row[]).map((r) => ({
-    key: String(r.season_key),
-    name: String(r.name),
-    note: String(r.note ?? ''),
-    family: r.family_key ? String(r.family_key) : undefined,
-    // 채우는 화면은 세트의 이름과 열쇠만 쓴다 — 안에 든 것은 값표를 세면 나온다
-    bear: EMPTY_SLOT,
-    room: EMPTY_SLOT,
-    pose: EMPTY_SLOT,
-  }));
+  return ((data ?? []) as Row[]).map((r) => {
+    const key = String(r.season_key);
+    return {
+      key,
+      name: String(r.name),
+      note: String(r.note ?? ''),
+      family: r.family_key ? String(r.family_key) : undefined,
+      // 채우는 화면은 세트의 이름과 열쇠만 쓴다 — 안에 든 것은 값표를 세면 나온다
+      bear: EMPTY_SLOT,
+      room: EMPTY_SLOT,
+      pose: EMPTY_SLOT,
+      // **배너는 여기서도 봐야 한다** — 걸어둔 것을 다시 올리러 오는 자리다
+      banner: r.banner_at
+        ? shopImageUrl(bannerPath(key)) +
+          `?v=${Math.floor(Date.parse(String(r.banner_at)) / 1000)}`
+        : undefined,
+    };
+  });
+}
+
+/**
+ * 세트 배너를 올린다 — **한 세트에 한 장.**
+ *
+ * 자리를 지어 쓰니(`bannerPath`) 다시 올려도 주소가 같다. 그래서 **올린 때를
+ * 값표에 찍는다** — 그게 없으면 주소가 그대로라 브라우저가 옛 배너를 그냥 쓴다.
+ * 그 칸은 `null`이면 배너가 없다는 뜻이기도 해서, 찍는 일이 두 가지를 한다.
+ *
+ * **통에 먼저 올리고 값표를 찍는다.** 반대로 하면 값표에는 배너가 있다고 적혔는데
+ * 통이 비는 사이가 생기고, 그때 상점을 연 사람에게 **깨진 배너**가 뜬다.
+ */
+export async function uploadSeasonBanner(season: string, body: Blob): Promise<void> {
+  const client = await supabase();
+  const { error } = await client.storage.from('shop').upload(bannerPath(season), body, {
+    contentType: 'image/png',
+    upsert: true,
+    cacheControl: '3600',
+  });
+  if (error) throw error;
+
+  const { error: mark } = await client
+    .from('costume_season')
+    .update({ banner_at: new Date().toISOString() })
+    .eq('season_key', season);
+  if (mark) throw mark;
+}
+
+/**
+ * 배너를 내린다 — **값표의 찍힌 때만 지운다.**
+ *
+ * 통에서 파일까지 지우지 않는다. 지우는 길과 올리는 길이 따로 있으면
+ * 한쪽만 되고 한쪽은 막히는 날이 오는데(정책은 같지만 실패는 따로 난다),
+ * **없다고 치는 것은 값표 한 칸이면 된다.** 다시 올리면 그 자리를 덮는다.
+ */
+export async function clearSeasonBanner(season: string): Promise<void> {
+  const client = await supabase();
+  const { error } = await client
+    .from('costume_season')
+    .update({ banner_at: null })
+    .eq('season_key', season);
+  if (error) throw error;
 }
 
 const EMPTY_SLOT: Costume = { key: '', name: '', price: 0, kind: 'bear' };

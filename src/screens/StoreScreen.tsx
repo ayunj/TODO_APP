@@ -1,16 +1,25 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Banner from './store/Banner';
 import Coin from './store/Coin';
+import Rail, { RAIL_MIN } from './store/Rail';
 import SetDetail from './store/SetDetail';
 import StoreCard from './store/StoreCard';
 import Stage from './store/Stage';
-import { familiesOf, groupOf, onSale } from '@/lib/costumes';
+import { bannerSet, familiesOf, freshOf, groupOf, onSale, rankOf } from '@/lib/costumes';
 import { useGomdori } from '@/lib/gomdori';
 import { toast } from '@/lib/toast';
 import { useUi } from '@/lib/ui';
-import { BackIcon, GiftIcon, HomeIcon, StarIcon } from '@/components/Icons';
-import type { Costume, Shop } from '@/lib/types';
+import {
+  BackIcon,
+  GiftIcon,
+  HomeIcon,
+  ShirtIcon,
+  StarIcon,
+  TrophyIcon,
+} from '@/components/Icons';
+import type { Costume, CostumeSet, Shop } from '@/lib/types';
 
 /**
  * 칩이 **두 층이다.**
@@ -41,6 +50,28 @@ type Chip = string;
  * 걸린 자리인데, 옷 스무 벌 뒤에 묻혔다.
  */
 type Shelf = 'bear' | 'room' | 'pose';
+
+/**
+ * `더보기`로 펼치는 두 칸.
+ *
+ * **중분류 줄은 여기 없다.** `꾸미기 > 코스튬` 칩이 이미 그 목록이라
+ * 화면을 하나 더 만들면 같은 격자가 두 군데가 된다 — 그 줄의 `더보기`는
+ * 칩을 옮길 뿐이다. 갈 칩이 없는 둘만 여기 온다.
+ */
+type More = 'fresh' | 'rank';
+
+const MORE: Record<More, { name: string; lede: string; tip: string }> = {
+  fresh: {
+    name: '새로 들어왔어요',
+    lede: '상점에 걸린 지 2주 안 된 것들이에요.',
+    tip: '새로 걸린 차례로 서요',
+  },
+  rank: {
+    name: '랭킹',
+    lede: '산 사람이 많은 차례로 서요.',
+    tip: '공짜로 받은 것과 세트 보상은 안 세요',
+  },
+};
 
 /**
  * 상점 — [design/상점.html](../../design/상점.html) 그대로.
@@ -105,6 +136,8 @@ export default function StoreScreen() {
     setTrying(wornBear);
   }, [wornBear]);
   const [open, setOpen] = useState<string | null>(null);
+  /** 가로줄을 펼쳐 본 칸. `null`이면 메인이다 */
+  const [more, setMore] = useState<More | null>(null);
   const [busy, setBusy] = useState(false);
 
   /* 방은 대분류를 가로지른다 — 시즌 방도 여기서 보여야 한다 */
@@ -178,7 +211,12 @@ export default function StoreScreen() {
     }
   };
 
-  const title = chip === 'mine' ? '내 옷장' : '상점';
+  /* 상점 메인의 두 줄. 거르는 규칙이 한 군데에 있다([costumes.ts](../lib/costumes.ts)) */
+  const fresh = useMemo(() => freshOf(shop), [shop]);
+  const ranked = useMemo(() => rankOf(shop), [shop]);
+  const banner = useMemo(() => bannerSet(shop), [shop]);
+
+  const title = more ? MORE[more].name : chip === 'mine' ? '내 옷장' : '상점';
   /* 위층을 바꾸면 아래층은 늘 `전체`로 돌아간다 — 안 그러면 없는 칩이 눌린 채로 남는다 */
   const goChip = (k: Chip) => {
     setChip(k);
@@ -196,13 +234,14 @@ export default function StoreScreen() {
         <button
           type="button"
           aria-label="돌아가기"
-          onClick={() => (open ? setOpen(null) : popView())}
+          onClick={() => (open ? setOpen(null) : more ? setMore(null) : popView())}
           className="-ml-1.5 grid h-[38px] w-[38px] flex-none place-items-center rounded-full text-ink2 active:bg-sunk"
         >
           <BackIcon className="h-5 w-5" />
         </button>
         <h1 className="min-w-0 flex-1 truncate font-round text-[19px] leading-[1.2] tracking-[-.02em]">
           {open ? '상점' : title}
+
         </h1>
         {/* 격자를 내리는 동안에도 보여야 한다 — 값을 보면서 고르는 화면이다 */}
         <span className="flex flex-none items-center gap-1.5 rounded-full bg-card py-[7px] pl-2 pr-[13px] shadow-card">
@@ -220,6 +259,14 @@ export default function StoreScreen() {
         </div>
       ) : set ? (
         <SetDetail set={set} busy={busy} onBuy={doBuy} />
+      ) : more ? (
+        /* 가로줄에서 밀어야 나오던 것이 여기서는 다 보인다 */
+        <MoreList
+          what={more}
+          list={more === 'fresh' ? fresh : ranked}
+          rank={more === 'rank'}
+          onPick={openBuy}
+        />
       ) : (
         <>
           <div className="-mx-4 mb-3 flex gap-[7px] overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -329,26 +376,225 @@ export default function StoreScreen() {
               <Group title={nameOf(subs, sub)} list={decoOf(sub)} pick={openBuy} />
             )
           ) : (
-            <>
-              {/* 세트가 하나도 없으면 머리글까지 뺀다 — 빈 격자 위의 제목은 빠진 자리로 읽힌다 */}
-              {shop.sets.length > 0 && (
-                <>
-                  <Head title="시즌 세트" aside="때가 있는 것" />
-                  <Sets list={shop.sets} has={has} onOpen={setOpen} bare />
-                </>
-              )}
-              {decoFams.map((f) => (
-                <Group key={f.key} title={f.name} list={decoOf(f.key)} pick={openBuy} />
-              ))}
-              {/* 여기는 **다 보여주는 자리**라 방도 든다. 꾸미기 칩에서는 뺐다. */}
-              <Group title="방 테마" list={rooms} pick={openBuy} />
-            </>
+            <Main
+              banner={banner}
+              fresh={fresh}
+              ranked={ranked}
+              sets={shop.sets}
+              has={has}
+              fams={decoFams}
+              decoOf={decoOf}
+              rooms={rooms}
+              onPick={openBuy}
+              onSet={setOpen}
+              onMore={setMore}
+              goFam={(fam) => {
+                setChip('deco');
+                setSub(fam);
+              }}
+              goRoom={() => goChip('room')}
+            />
           )}
 
           {/* 맨 아래 한 줄 — 칸마다 다르다. 잔소리가 아니라 안내다. */}
           <Tip chip={chip} tab={tab} />
         </>
       )}
+    </>
+  );
+}
+
+/**
+ * 상점 메인 — **고르는 자리가 아니라 보여주는 자리다.**
+ *
+ * 전에는 파는 것을 무더기째 세로로 늘어놓았다. 넷일 때는 그게 맞았는데,
+ * 스물이 되면 세 개씩 일곱 줄이 서고 **무엇부터 볼지를 화면이 안 말해준다.**
+ *
+ * 그래서 줄을 세운다 — 배너 한 장, 그리고 가로줄 몇
+ * ([시안](../../design/상점-메인.html)).
+ *
+ * | 줄 | 무엇으로 고르나 | `더보기` |
+ * |---|---|---|
+ * | 배너 | 관리자가 올린 사진이 걸린 세트 | 그 세트 상세 |
+ * | 새로 들어왔어요 | **켜진 날**이 가까운 차례 | 펼친 격자 |
+ * | 랭킹 | 서버가 센 **산 사람 수** 차례 | 펼친 격자 |
+ * | 중분류마다 한 줄 | 일상 · 코스튬 · 방 | **이미 있는 칩**으로 |
+ *
+ * **배너에 걸린 세트는 세트 줄에서 뺀다.** 안 빼면 같은 세트가 맨 위에 크게 한 번,
+ * 아래 격자에 작게 한 번 뜬다.
+ *
+ * ─── 하나도 안 서면 옛 격자로 물러선다 ──────────────────────────
+ *
+ * 이 화면은 **물건이 열 개는 넘어야 산다.** 줄마다 넷은 있어야 서는데
+ * (`RAIL_MIN`), 지금처럼 파는 것이 넷뿐이면 줄이 하나도 못 서서
+ * **칩 줄 아래가 통째로 빈다.** 그건 파는 것이 없는 게 아니라 고장으로 읽힌다.
+ *
+ * 그래서 **아무 줄도 안 서면 무더기 격자를 그대로 세운다.** 물건이 늘면
+ * 저절로 줄이 서고 격자는 물러난다 — 어디에 스위치를 두지 않는다.
+ */
+function Main({
+  banner,
+  fresh,
+  ranked,
+  sets,
+  has,
+  fams,
+  decoOf,
+  rooms,
+  onPick,
+  onSet,
+  onMore,
+  goFam,
+  goRoom,
+}: {
+  banner: CostumeSet | null;
+  fresh: Costume[];
+  ranked: Costume[];
+  sets: Shop['sets'];
+  has: (key: string) => boolean;
+  fams: { key: string; name: string }[];
+  decoOf: (fam: string) => Costume[];
+  rooms: Costume[];
+  onPick: (key: string) => void;
+  onSet: (key: string) => void;
+  onMore: (what: More) => void;
+  goFam: (fam: string) => void;
+  goRoom: () => void;
+}) {
+  /* 배너에 걸린 세트는 여기 또 안 세운다 */
+  const rest = sets.filter((x) => x.key !== banner?.key);
+
+  /** 이 화면이 설 만한가 — 하나도 없으면 옛 격자로 물러선다 */
+  const standing =
+    Boolean(banner?.banner) ||
+    fresh.length >= RAIL_MIN ||
+    ranked.length >= RAIL_MIN ||
+    rest.length > 0 ||
+    rooms.length >= RAIL_MIN ||
+    fams.some((f) => decoOf(f.key).length >= RAIL_MIN);
+
+  if (!standing) {
+    return (
+      <>
+        {sets.length > 0 && (
+          <>
+            <Head title="시즌 세트" aside="때가 있는 것" />
+            <Sets list={sets} has={has} onOpen={onSet} bare />
+          </>
+        )}
+        {fams.map((f) => (
+          <Group key={f.key} title={f.name} list={decoOf(f.key)} pick={onPick} />
+        ))}
+        {/* 여기는 **다 보여주는 자리**라 방도 든다. 꾸미기 칩에서는 뺐다. */}
+        <Group title="방 테마" list={rooms} pick={onPick} />
+      </>
+    );
+  }
+
+  return (
+    <>
+      {banner && <Banner set={banner} onOpen={() => onSet(banner.key)} />}
+
+      <Rail
+        icon={<StarIcon className="h-4 w-4" />}
+        title="새로 들어왔어요"
+        list={fresh}
+        onPick={onPick}
+        onMore={() => onMore('fresh')}
+      />
+      <Rail
+        icon={<TrophyIcon className="h-4 w-4" />}
+        title="랭킹"
+        list={ranked}
+        onPick={onPick}
+        onMore={() => onMore('rank')}
+      />
+
+      {/*
+        세트는 가로줄이 아니라 격자다 — **칸 하나가 물건 하나가 아니라 세 개짜리 묶음**이라
+        옆 칸과 견주는 것이 아니라 하나씩 열어보는 것이다.
+      */}
+      {rest.length > 0 && (
+        <>
+          <Head title="시즌 세트" aside="때가 있는 것" />
+          <Sets list={rest} has={has} onOpen={onSet} bare />
+        </>
+      )}
+
+      {/*
+        중분류마다 한 줄. **아이콘을 하나로 둔다** — 중분류는 관리자가 늘리는 것이라
+        갈래마다 그림을 골라주면 새로 지은 중분류에는 붙일 것이 없다.
+      */}
+      {fams.map((f) => (
+        <Rail
+          key={f.key}
+          icon={<ShirtIcon className="h-4 w-4" />}
+          title={f.name}
+          list={decoOf(f.key)}
+          onPick={onPick}
+          onMore={() => goFam(f.key)}
+        />
+      ))}
+      <Rail
+        icon={<HomeIcon className="h-4 w-4" />}
+        title="방 테마"
+        list={rooms}
+        onPick={onPick}
+        onMore={goRoom}
+      />
+    </>
+  );
+}
+
+/**
+ * `더보기`로 펼친 격자 — **가로줄에서 밀어야 나오던 것이 다 보인다.**
+ *
+ * 밀고 들어가는 화면(`Route`)으로 안 만들었다. 세트 상세가 이미 이 얼개라
+ * (제목 줄은 그대로 두고 아래만 갈아 끼운다) 같은 자리를 둘로 만들 까닭이 없다 —
+ * 뒤로 화살표가 한 겹 벗어 메인으로 돌아온다.
+ *
+ * **랭킹에만 등수를 적는다.** 신상은 차례가 뜻을 갖는 줄이 아니다 —
+ * 어제 걸린 것이 그제 걸린 것보다 `1등`일 까닭이 없다.
+ */
+function MoreList({
+  what,
+  list,
+  rank,
+  onPick,
+}: {
+  what: More;
+  list: Costume[];
+  rank: boolean;
+  onPick: (key: string) => void;
+}) {
+  return (
+    <>
+      <p className="mb-3 text-[11.5px] leading-[1.55] text-ink3">
+        {MORE[what].lede}
+        {rank && <b className="ml-1 font-medium text-ink2">몇 명이 샀는지는 안 적어요.</b>}
+      </p>
+
+      {list.length === 0 ? (
+        <p className="rounded-2xl border-[1.5px] border-dashed border-edge px-3.5 py-10 text-center text-[11.5px] leading-[1.6] text-ink3">
+          아직 없어요
+        </p>
+      ) : (
+        <div className="mb-4 grid grid-cols-3 gap-[9px]">
+          {list.map((c, i) => (
+            <StoreCard
+              key={c.key}
+              item={c}
+              rank={rank ? i + 1 : undefined}
+              onPick={() => onPick(c.key)}
+            />
+          ))}
+        </div>
+      )}
+
+      <div className="mb-6 flex items-center gap-2 rounded-[14px] bg-sunk px-3.5 py-3 text-[11.5px] leading-[1.5] text-ink2">
+        <StarIcon className="h-[15px] w-[15px] flex-none text-cycle" />
+        {MORE[what].tip}
+      </div>
     </>
   );
 }

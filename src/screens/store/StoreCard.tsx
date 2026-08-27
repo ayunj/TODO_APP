@@ -24,6 +24,7 @@ export default function StoreCard({
   label,
   step,
   mine,
+  rank,
   trying,
   onPick,
 }: {
@@ -43,6 +44,12 @@ export default function StoreCard({
    * 사는 자리인지 입어보는 자리인지가 흐려진다.
    */
   mine?: boolean;
+  /**
+   * 몇 등인가 — **랭킹 격자에서만 붙는다.**
+   * 값이 서던 자리가 아니라 **왼쪽 위 딱지**로 얹는다. 알약을 등수로 갈아치우면
+   * 값이 안 보여서, 1등이 얼만지 보려고 눌러 열어봐야 한다.
+   */
+  rank?: number;
   trying?: boolean;
   onPick: () => void;
 }) {
@@ -63,6 +70,17 @@ export default function StoreCard({
         trying ? 'shadow-[0_0_0_2px_var(--accent)]' : 'shadow-[0_0_0_1.4px_var(--line)]'
       }`}
     >
+      {rank !== undefined && (
+        <span
+          className={`absolute left-1.5 top-1.5 z-[2] rounded-full px-[7px] py-0.5 font-mono text-[9px] font-medium ${
+            rank === 1
+              ? 'bg-accent text-white'
+              : 'bg-card text-accent shadow-[0_0_0_1.3px_var(--accent-soft)]'
+          }`}
+        >
+          {rank}
+        </span>
+      )}
       <span className="w-full truncate text-[11.5px] font-medium leading-[1.3] text-ink2">
         {label ?? item.name}
       </span>

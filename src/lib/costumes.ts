@@ -114,6 +114,8 @@ export const BUILTIN: Shop = {
   families: FAMILIES,
   sets: SETS,
   items: CATALOG,
+  /* 못 읽었을 때는 차례를 알 길이 없다 — 랭킹 줄이 통째로 안 선다 */
+  rank: [],
 };
 
 /**
@@ -157,6 +159,7 @@ export function withBundled(shop: Shop): Shop {
   );
 
   return {
+    ...shop,
     groups,
     families: [...shop.families, ...need],
     sets: shop.sets,
@@ -180,7 +183,57 @@ export function onSale(shop: Shop): Shop {
     ...shop,
     items,
     sets: shop.sets.filter((s) => [s.bear, s.room, s.pose].every((i) => live.has(i.key))),
+    /* 내린 물건이 랭킹에 남으면 **못 사는 칸**이 1등에 선다 */
+    rank: shop.rank.filter((k) => live.has(k)),
   };
+}
+
+/**
+ * 상점 메인의 두 줄 — **새로 들어온 것**과 **많이 산 것.**
+ *
+ * 둘 다 `상점 메인`에서만 쓴다. 화면에서 세지 않고 여기 모아둔 까닭은
+ * **거르는 규칙이 같아서**다 — 파는 것만, 값이 붙은 것만, 소품은 빼고.
+ * 화면 두 곳에 나눠 적었다가 한쪽만 고치면 랭킹에는 뜨는데 신상에는
+ * 안 뜨는 물건이 생긴다.
+ */
+
+/** 켜지고 며칠까지 `새로 들어왔어요`인가. 한 달을 가면 딱지가 아니라 무늬가 된다. */
+export const FRESH_DAYS = 14;
+
+/** 상점 줄에 설 수 있는 것 — **살 수 있는 것만.** */
+const sellable = (c: Costume): boolean => c.kind !== 'pose' && c.price > 0;
+
+/**
+ * 새로 들어온 것 — **켜진 날이 가까운 차례.**
+ *
+ * `openedAt`이 없는 줄은 안 센다. 서버가 옛 DB에서 채워 넣긴 하지만
+ * (`update … where active`), 그래도 비어 오는 줄이 있으면 **언제 켜졌는지
+ * 모르는 것**이지 오늘 켜진 것이 아니다.
+ */
+export function freshOf(shop: Shop, now: number = Date.now()): Costume[] {
+  const edge = now - FRESH_DAYS * 24 * 60 * 60 * 1000;
+  return shop.items
+    .filter((c) => sellable(c) && c.openedAt !== undefined)
+    .map((c) => ({ c, at: Date.parse(c.openedAt as string) }))
+    .filter((x) => !Number.isNaN(x.at) && x.at >= edge)
+    .sort((a, b) => b.at - a.at)
+    .map((x) => x.c);
+}
+
+/**
+ * 많이 산 것 — **서버가 매긴 차례 그대로.**
+ * 값표에 없는 열쇠가 차례에 끼어 있을 수 있다(내린 뒤에도 산 줄은 남는다).
+ */
+export function rankOf(shop: Shop): Costume[] {
+  const by = new Map(shop.items.map((c) => [c.key, c]));
+  return shop.rank
+    .map((k) => by.get(k))
+    .filter((c): c is Costume => c !== undefined && sellable(c));
+}
+
+/** 배너를 걸어둔 세트 — **하나만 세운다.** 둘이 뜨면 무엇이 이달의 것인지가 흐려진다 */
+export function bannerSet(shop: Shop): CostumeSet | null {
+  return shop.sets.find((s) => Boolean(s.banner)) ?? null;
 }
 
 const BUILTIN_BY_KEY = new Map(CATALOG.map((c) => [c.key, c]));

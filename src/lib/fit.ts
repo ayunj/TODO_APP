@@ -195,6 +195,36 @@ export async function fitScene(file: File): Promise<Fitted> {
   return pack(out.el, w, h);
 }
 
+/**
+ * 상점 배너 한 장 — **가로 2:1로 채워 자른다.**
+ *
+ * 방 그림(`fitScene`)은 안 자르고 크기만 맞춘다. 배너는 반대다 —
+ * **칸이 2:1로 고정**이라 안 자르면 위아래에 빈 띠가 생기고, 그 띠가
+ * 그림의 일부인지 앱의 여백인지 알 수가 없다.
+ *
+ * 가운데를 남기고 자른다. 곰돌이는 대개 가운데나 오른쪽에 서고 글자는 왼쪽에
+ * 있어서, 위아래(가로가 긴 그림이면 좌우)를 고르게 덜어내는 편이 덜 다친다.
+ *
+ * **1080 × 540이다.** 폰에서 328dp 폭으로 서니 3.3배 축소인데,
+ * 그림 속 글씨 36px이 딱 11px로 보이는 자리다 — 앱 본문과 같은 크기다.
+ * 더 크게 담아도 **안 보이는 데에 잉크를 쓰는 셈**이고, 배너 한 장이
+ * 상점을 열 때마다 실린다.
+ */
+export const BANNER_W = 1080;
+export const BANNER_H = 540;
+
+export async function fitBanner(file: File): Promise<Fitted> {
+  const art = await load(file);
+  const { width: W, height: H } = art.canvas;
+  const s = Math.max(BANNER_W / W, BANNER_H / H);
+  const w = W * s;
+  const h = H * s;
+
+  const out = canvas(BANNER_W, BANNER_H);
+  out.ctx.drawImage(art.canvas, (BANNER_W - w) / 2, (BANNER_H - h) / 2, w, h);
+  return pack(out.el, BANNER_W, BANNER_H);
+}
+
 function canvas(w: number, h: number) {
   const el = document.createElement('canvas');
   el.width = w;

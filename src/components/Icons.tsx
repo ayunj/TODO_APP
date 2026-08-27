@@ -68,6 +68,39 @@ export function BackIcon({ className }: Props) {
   );
 }
 
+/** 더보기 — 가려진 데로 가는 길. `BackIcon`을 뒤집은 것이다 */
+export function NextIcon({ className }: Props) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={1.8}>
+      <path d="M9.5 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+/**
+ * 랭킹 — 트로피 하나.
+ * **불꽃(`많이 산 것`)이 아니다.** 불꽃은 `지금 뜨는 것`으로 읽히는데
+ * 이 줄은 **누적**이라 어제 오늘과 상관이 없다.
+ */
+export function TrophyIcon({ className }: Props) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={1.5}>
+      <path d="M7 4h10v5a5 5 0 0 1-10 0z" />
+      <path d="M7 6H4.6v1.2A3.4 3.4 0 0 0 8 10.6M17 6h2.4v1.2A3.4 3.4 0 0 1 16 10.6" />
+      <path d="M12 14v3.4M9.5 17.4h5l.8 2.6H8.7z" />
+    </svg>
+  );
+}
+
+/** 매일 입는 옷 — 옷걸이에 걸린 한 벌 */
+export function ShirtIcon({ className }: Props) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={1.5}>
+      <path d="M8.5 4 12 6l3.5-2L20 6.5l-2 3.5-2-1V20H8V9l-2 1-2-3.5z" />
+    </svg>
+  );
+}
+
 export function CalendarIcon({ className }: Props) {
   return (
     <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={1.5}>

@@ -8,7 +8,9 @@ import {
   builtinImg,
   familiesOf,
   itemOf,
+  freshOf,
   onSale,
+  rankOf,
   shopPath,
   standing,
   withBundled,
@@ -16,7 +18,7 @@ import {
 import type { Shop } from './types';
 
 /** 서버가 아무것도 안 돌려준 상점 */
-const NOTHING: Shop = { groups: [], families: [], sets: [], items: [] };
+const NOTHING: Shop = { groups: [], families: [], sets: [], items: [], rank: [] };
 
 describe('기본 곰돌이와 기본 룸', () => {
   /*
@@ -187,5 +189,98 @@ describe('내린 것을 입고 있으면', () => {
     expect(standing(shop, 'b', 'room')).toBe(DEFAULT_ROOM);
     expect(standing(shop, '없는열쇠', 'room')).toBe(DEFAULT_ROOM);
     expect(standing(shop, 'r', 'bear')).toBe(DEFAULT_BEAR);
+  });
+});
+
+describe('새로 들어왔어요', () => {
+  const NOW = Date.parse('2026-08-27T09:00:00Z');
+  const days = (n: number) => new Date(NOW - n * 86400_000).toISOString();
+  const bear = (key: string, openedAt?: string) => ({
+    key,
+    name: key,
+    price: 300,
+    kind: 'bear' as const,
+    active: true,
+    openedAt,
+  });
+
+  it('켜진 날이 가까운 차례로 선다', () => {
+    const shop = { ...NOTHING, items: [bear('a', days(9)), bear('b', days(1)), bear('c', days(5))] };
+    expect(freshOf(shop, NOW).map((c) => c.key)).toEqual(['b', 'c', 'a']);
+  });
+
+  /* 한 달을 가면 딱지가 아니라 무늬가 된다 */
+  it('열나흘이 지나면 빠진다', () => {
+    const shop = { ...NOTHING, items: [bear('a', days(13)), bear('b', days(15))] };
+    expect(freshOf(shop, NOW).map((c) => c.key)).toEqual(['a']);
+  });
+
+  /*
+    **언제 켜졌는지 모르는 것**이지 오늘 켜진 것이 아니다.
+    빈 칸을 오늘로 치면 옛 DB를 얹은 날 상점 전체가 신상이 된다.
+  */
+  it('켜진 때를 모르는 것은 안 센다', () => {
+    const shop = { ...NOTHING, items: [bear('a'), bear('b', days(2))] };
+    expect(freshOf(shop, NOW).map((c) => c.key)).toEqual(['b']);
+  });
+
+  /* 살 수 있는 것만 선다 — 공짜와 세트 보상은 파는 물건이 아니다 */
+  it('공짜와 소품은 안 센다', () => {
+    const shop = {
+      ...NOTHING,
+      items: [
+        { ...bear('free', days(1)), price: 0 },
+        { ...bear('pose', days(1)), kind: 'pose' as const, price: 0 },
+        bear('sale', days(1)),
+      ],
+    };
+    expect(freshOf(shop, NOW).map((c) => c.key)).toEqual(['sale']);
+  });
+});
+
+describe('랭킹', () => {
+  const item = (key: string, extra = {}) => ({
+    key,
+    name: key,
+    price: 300,
+    kind: 'bear' as const,
+    active: true,
+    ...extra,
+  });
+
+  it('서버가 매긴 차례 그대로 선다', () => {
+    const shop = {
+      ...NOTHING,
+      items: [item('a'), item('b'), item('c')],
+      rank: ['c', 'a', 'b'],
+    };
+    expect(rankOf(shop).map((c) => c.key)).toEqual(['c', 'a', 'b']);
+  });
+
+  /*
+    내린 뒤에도 이미 산 줄은 `costume_owned`에 남아서 차례에 낀다.
+    값표에 없는 열쇠를 그대로 세우면 **이름도 그림도 없는 칸**이 1등에 선다.
+  */
+  it('값표에 없는 열쇠는 건너뛴다', () => {
+    const shop = { ...NOTHING, items: [item('a')], rank: ['없는것', 'a'] };
+    expect(rankOf(shop).map((c) => c.key)).toEqual(['a']);
+  });
+
+  /* 서버가 값 0인 줄을 안 세지만, 앱에서도 한 번 더 거른다 */
+  it('공짜와 소품은 안 센다', () => {
+    const shop = {
+      ...NOTHING,
+      items: [item('free', { price: 0 }), item('pose', { kind: 'pose' as const, price: 0 }), item('sale')],
+      rank: ['free', 'pose', 'sale'],
+    };
+    expect(rankOf(shop).map((c) => c.key)).toEqual(['sale']);
+  });
+
+  /* 내린 물건이 랭킹에 남으면 **못 사는 칸**이 1등에 선다 */
+  it('내린 것은 onSale이 차례에서도 뺀다', () => {
+    const shop = onSale(
+      withBundled({ ...NOTHING, items: [item('a', { active: false }), item('b')], rank: ['a', 'b'] }),
+    );
+    expect(shop.rank).toEqual(['b']);
   });
 });

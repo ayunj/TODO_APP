@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import BannerSlot from './BannerSlot';
 import Switch from './Switch';
 import { GiftIcon } from '@/components/Icons';
 import Thumb from './Thumb';
@@ -37,13 +38,15 @@ export default function AdminList({
     세트는 **덜 찬 것까지** 봐야 한다. `shop.sets`는 다 찬 것만 세우니
     짓다 만 세트가 바로 여기서 빠진다 — 채우는 쪽에서 알아야 할 것이 그 세트다.
   */
-  useEffect(() => {
+  const loadSets = useCallback(() => {
     pullSeasons()
       .then(setSets)
       .catch(() => {
         /* 못 읽으면 띠를 안 세운다 — 목록은 그대로 뜬다 */
       });
   }, []);
+
+  useEffect(loadSets, [loadSets]);
 
   /*
     **앱이 들고 나가는 둘은 여기 안 세운다** — 기본 곰돌이와 기본 룸.
@@ -116,6 +119,22 @@ export default function AdminList({
             전체 보기
           </button>
         </p>
+      )}
+
+      {/*
+        **배너는 고른 세트 밑에 붙는다.** 배너만 따로 손보는 화면을 안 만들었다 —
+        그러면 끝난 세트의 배너가 남아서 두 군데를 같이 꺼야 한다.
+        세트를 고르면 그 세트의 배너 칸이 열리는 것이 `배너는 세트에 딸린다`는
+        말과 같은 모양이다.
+      */}
+      {only && setOf(only) && (
+        <BannerSlot
+          key={only}
+          set={setOf(only) as CostumeSet}
+          onDone={async () => {
+            loadSets();
+          }}
+        />
       )}
 
       <div className="mb-4 flex flex-col gap-2">
