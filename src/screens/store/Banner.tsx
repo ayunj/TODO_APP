@@ -4,6 +4,18 @@ import { useState } from 'react';
 import type { CostumeSet } from '@/lib/types';
 
 /**
+ * **눈으로 보려고 잠깐 세워둔 배너.**
+ *
+ * 관리자가 [배너를 하나라도 올리면](../admin/BannerSlot.tsx) 그 순간부터 안 쓴다 —
+ * 올린 것이 늘 이긴다. 아무것도 안 올린 동안에만 **세트가 있는 자리**에 대신 선다.
+ *
+ * **치울 때는 세 군데를 지운다** — 이 줄, `assets/gomdori/banner-sample.png`,
+ * 그리고 `npm run gomdori`를 한 번 더. 남겨두면 세트가 열 개가 돼도
+ * 배너를 안 올린 세트마다 **여름 바다가 뜬다.**
+ */
+const SAMPLE_BANNER = '/gomdori/banner-sample.png';
+
+/**
  * 상점 맨 위 한 장 — **관리자가 올린 사진이 통째로 깔린다.**
  *
  * **앱은 그 위에 아무것도 안 얹는다.** 제목도 부제도 이미 그림 안에 그려져
@@ -23,7 +35,9 @@ import type { CostumeSet } from '@/lib/types';
  */
 export default function Banner({ set, onOpen }: { set: CostumeSet; onOpen: () => void }) {
   const [gone, setGone] = useState(false);
-  if (!set.banner || gone) return null;
+  /* 올린 것이 먼저, 없으면 세워둔 한 장 — [Art](Art.tsx)가 물러서는 차례와 같다 */
+  const shot = set.banner ?? SAMPLE_BANNER;
+  if (gone) return null;
 
   return (
     <button
@@ -33,7 +47,7 @@ export default function Banner({ set, onOpen }: { set: CostumeSet; onOpen: () =>
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={set.banner}
+        src={shot}
         alt={set.name}
         onError={() => setGone(true)}
         className="h-full w-full select-none object-cover"

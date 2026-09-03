@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { BANNER_H, BANNER_W, fitBanner } from '@/lib/fit';
+import { BANNER_H, BANNER_MIN_TEXT, BANNER_W, fitBanner } from '@/lib/fit';
 import { clearSeasonBanner, uploadSeasonBanner } from '@/lib/repo/remote';
 import { toast } from '@/lib/toast';
 import type { CostumeSet } from '@/lib/types';
@@ -20,12 +20,15 @@ import type { CostumeSet } from '@/lib/types';
  * **그림 속 글씨가 읽히는지는 여기서 보고 판단한다** — 규격을 글로만 적어두면
  * 다 그린 뒤에 5px짜리 글씨를 상점에서 처음 보게 된다.
  *
- * ─── 왜 2:1이고 왜 1080인가 ────────────────────────────────────
+ * ─── 왜 2:1이고 왜 1774인가 ────────────────────────────────────
  *
- * 폰에서 328dp 폭으로 선다. 원본이 1080이면 **3.3배 축소**라 그림 속 36px 글씨가
- * 딱 11px로 보인다 — 앱 본문과 같은 크기다. 1774로 그려 올린 첫 배너는
- * 5.4배로 줄어서 동그라미 라벨 27px가 **5px**가 됐다.
- * 앱에서 제일 작은 글씨가 9px이니 그건 글씨가 아니라 무늬다.
+ * **시즌 배너를 그린 크기에 맞췄다.** 앱이 정한 숫자에 그림을 맞추게 하지 않고
+ * 그림이 정한 숫자를 앱이 따라간다 — 그리는 자가 하나면 세트마다 다시 재지 않는다.
+ *
+ * 폰에서 328dp 폭으로 서니 **5.4배로 줄어든다.** 원본에서 59px은 돼야
+ * 폰에서 11px, 그러니까 앱 본문만 해진다. 첫 배너는 제목만 118px이라 살아남았고
+ * 동그라미 라벨 27px는 **5px**가 됐다 — 앱에서 제일 작은 글씨가 9px이니
+ * 그건 글씨가 아니라 무늬다.
  *
  * 어떤 크기로 올려도 여기서 **2:1로 채워 잘라 담는다**(`fitBanner`).
  * 그러니 규격은 `그보다 크게 그리지 마세요`가 아니라
@@ -147,7 +150,8 @@ export default function BannerSlot({
           로 담겨요. 다른 크기는 가운데를 남기고 잘려요
         </li>
         <li className="list-disc">
-          <b className="font-medium text-ink2">글씨는 원본에서 36px 이상.</b> 폰에서 11px로 보여요
+          <b className="font-medium text-ink2">글씨는 원본에서 {BANNER_MIN_TEXT}px 이상.</b> 폰에서
+          11px로 보여요 — 그림이 {(BANNER_W / 328).toFixed(1)}배로 줄어들어서요
         </li>
         <li className="list-disc">
           <b className="font-medium text-ink2">몇/3은 넣지 마세요</b> — 사람마다 달라서 그림에

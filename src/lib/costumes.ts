@@ -231,9 +231,15 @@ export function rankOf(shop: Shop): Costume[] {
     .filter((c): c is Costume => c !== undefined && sellable(c));
 }
 
-/** 배너를 걸어둔 세트 — **하나만 세운다.** 둘이 뜨면 무엇이 이달의 것인지가 흐려진다 */
+/**
+ * 맨 위에 걸 세트 — **하나만 세운다.** 둘이 뜨면 무엇이 이달의 것인지가 흐려진다.
+ *
+ * **올린 배너가 있는 세트가 먼저다.** 하나도 없으면 첫 세트를 세운다 —
+ * 그 자리에는 [세워둔 한 장](../screens/store/Banner.tsx)이 대신 선다.
+ * 세트가 아예 없으면 배너도 없다.
+ */
 export function bannerSet(shop: Shop): CostumeSet | null {
-  return shop.sets.find((s) => Boolean(s.banner)) ?? null;
+  return shop.sets.find((s) => Boolean(s.banner)) ?? shop.sets[0] ?? null;
 }
 
 const BUILTIN_BY_KEY = new Map(CATALOG.map((c) => [c.key, c]));

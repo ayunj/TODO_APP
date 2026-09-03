@@ -100,7 +100,7 @@ export const FIT = {
 };
 
 /** 곰돌이가 아닌 것 — 자리를 안 맞춘다. 방은 통째로 한 장이고 띠는 정사각이 아니다. */
-export const NOT_A_BEAR = new Set(['room', 'store-banner']);
+export const NOT_A_BEAR = new Set(['room', 'store-banner', 'banner-sample']);
 
 /**
  * 잘라낸 자리와 크기. **[곰 맞추기](../design/곰-맞추기.html)가 이걸 그대로 쓴다** —

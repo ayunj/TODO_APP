@@ -464,9 +464,14 @@ function Main({
   /* 배너에 걸린 세트는 여기 또 안 세운다 */
   const rest = sets.filter((x) => x.key !== banner?.key);
 
-  /** 이 화면이 설 만한가 — 하나도 없으면 옛 격자로 물러선다 */
+  /**
+   * 이 화면이 설 만한가 — 하나도 없으면 옛 격자로 물러선다.
+   *
+   * **세트가 있으면 배너는 늘 선다.** 아직 아무것도 안 올렸어도
+   * [세워둔 한 장](store/Banner.tsx)이 그 자리를 채운다.
+   */
   const standing =
-    Boolean(banner?.banner) ||
+    Boolean(banner) ||
     fresh.length >= RAIL_MIN ||
     ranked.length >= RAIL_MIN ||
     rest.length > 0 ||

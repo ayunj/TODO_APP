@@ -29,6 +29,16 @@ const OUT = new URL('../public/gomdori/', import.meta.url);
 const SIZES = {
   room: 1000,
   'store-banner': 1000,
+  /*
+    상점 배너 — **눈으로 보려고 잠깐 세워둔 한 장**이라 관리자가 하나라도 올리면
+    안 쓴다([Banner.tsx](../src/screens/store/Banner.tsx)의 `SAMPLE_BANNER`).
+
+    **올리는 배너는 1774로 담는데**(`fit.ts`의 `BANNER_W`) 이건 1080이다.
+    화면에서 328dp로 서니 3배 화면에서도 984px이면 되고, 1774로 담으면
+    **앱이 691KB를 더 지고 다닌다** — 잠깐 세워둘 것이 그만큼 무거울 까닭이 없다.
+    눈으로는 다르지 않다.
+  */
+  'banner-sample': 1080,
 };
 
 await mkdir(fileURLToPath(OUT), { recursive: true });

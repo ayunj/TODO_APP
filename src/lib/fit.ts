@@ -205,13 +205,19 @@ export async function fitScene(file: File): Promise<Fitted> {
  * 가운데를 남기고 자른다. 곰돌이는 대개 가운데나 오른쪽에 서고 글자는 왼쪽에
  * 있어서, 위아래(가로가 긴 그림이면 좌우)를 고르게 덜어내는 편이 덜 다친다.
  *
- * **1080 × 540이다.** 폰에서 328dp 폭으로 서니 3.3배 축소인데,
- * 그림 속 글씨 36px이 딱 11px로 보이는 자리다 — 앱 본문과 같은 크기다.
- * 더 크게 담아도 **안 보이는 데에 잉크를 쓰는 셈**이고, 배너 한 장이
- * 상점을 열 때마다 실린다.
+ * **1774 × 887이다.** 시즌 배너를 그린 크기에 맞췄다 —
+ * 앱이 정한 숫자에 그림을 맞추게 하지 않고 **그림이 정한 숫자를 앱이 따라간다.**
+ * 그리는 자가 하나면 세트마다 다시 재지 않아도 된다.
+ *
+ * **글씨는 5.4배로 줄어든다**(1774 → 328dp). 원본에서 60px은 돼야 폰에서 11px,
+ * 그러니까 앱 본문만 해진다. 그보다 작게 그린 글씨는 무늬가 된다 —
+ * 앱에서 제일 작은 글씨가 9px이다.
  */
-export const BANNER_W = 1080;
-export const BANNER_H = 540;
+export const BANNER_W = 1774;
+export const BANNER_H = 887;
+
+/** 원본에서 이만큼은 돼야 폰에서 11px로 읽힌다 — `BANNER_W / 328`을 곱한 값 */
+export const BANNER_MIN_TEXT = Math.round((11 * BANNER_W) / 328);
 
 export async function fitBanner(file: File): Promise<Fitted> {
   const art = await load(file);
