@@ -11,14 +11,7 @@ import { bannerSet, familiesOf, freshOf, groupOf, onSale, rankOf } from '@/lib/c
 import { useGomdori } from '@/lib/gomdori';
 import { toast } from '@/lib/toast';
 import { useUi } from '@/lib/ui';
-import {
-  BackIcon,
-  GiftIcon,
-  HomeIcon,
-  ShirtIcon,
-  StarIcon,
-  TrophyIcon,
-} from '@/components/Icons';
+import { BackIcon, HomeIcon, ShirtIcon, StarIcon, TrophyIcon } from '@/components/Icons';
 import type { Costume, CostumeSet, Shop } from '@/lib/types';
 
 /**
@@ -60,17 +53,16 @@ type Shelf = 'bear' | 'room' | 'pose';
  */
 type More = 'fresh' | 'rank';
 
-const MORE: Record<More, { name: string; lede: string; tip: string }> = {
-  fresh: {
-    name: '새로 들어왔어요',
-    lede: '상점에 걸린 지 2주 안 된 것들이에요.',
-    tip: '새로 걸린 차례로 서요',
-  },
-  rank: {
-    name: '랭킹',
-    lede: '산 사람이 많은 차례로 서요.',
-    tip: '공짜로 받은 것과 세트 보상은 안 세요',
-  },
+/**
+ * 제목 줄에 적을 이름. **그게 전부다.**
+ *
+ * 한때 무엇으로 고른 줄인지를 밑에 한 줄씩 적어뒀다(`상점에 걸린 지 2주 안 된
+ * 것들이에요`). 걷어냈다 — **줄 이름이 이미 그 말이다.** 같은 말을 두 번 하면
+ * 아래 것이 설명으로 읽혀서, 읽을 것이 하나 더 있는 화면이 된다.
+ */
+const MORE: Record<More, string> = {
+  fresh: '새로 들어왔어요',
+  rank: '랭킹',
 };
 
 /**
@@ -216,7 +208,7 @@ export default function StoreScreen() {
   const ranked = useMemo(() => rankOf(shop), [shop]);
   const banner = useMemo(() => bannerSet(shop), [shop]);
 
-  const title = more ? MORE[more].name : chip === 'mine' ? '내 옷장' : '상점';
+  const title = more ? MORE[more] : chip === 'mine' ? '내 옷장' : '상점';
   /* 위층을 바꾸면 아래층은 늘 `전체`로 돌아간다 — 안 그러면 없는 칩이 눌린 채로 남는다 */
   const goChip = (k: Chip) => {
     setChip(k);
@@ -262,7 +254,6 @@ export default function StoreScreen() {
       ) : more ? (
         /* 가로줄에서 밀어야 나오던 것이 여기서는 다 보인다 */
         <MoreList
-          what={more}
           list={more === 'fresh' ? fresh : ranked}
           rank={more === 'rank'}
           onPick={openBuy}
@@ -356,7 +347,7 @@ export default function StoreScreen() {
                   ))}
                 </div>
               )}
-              <Group title="방 테마" aside="홈 배경이 바뀐다" list={roomList} pick={openBuy} />
+              <Group title="방 테마" list={roomList} pick={openBuy} />
             </>
           ) : chip === 'season' ? (
             <Sets list={sets} has={has} onOpen={setOpen} />
@@ -396,8 +387,6 @@ export default function StoreScreen() {
             />
           )}
 
-          {/* 맨 아래 한 줄 — 칸마다 다르다. 잔소리가 아니라 안내다. */}
-          <Tip chip={chip} tab={tab} />
         </>
       )}
     </>
@@ -564,23 +553,16 @@ function Main({
  * 어제 걸린 것이 그제 걸린 것보다 `1등`일 까닭이 없다.
  */
 function MoreList({
-  what,
   list,
   rank,
   onPick,
 }: {
-  what: More;
   list: Costume[];
   rank: boolean;
   onPick: (key: string) => void;
 }) {
   return (
     <>
-      <p className="mb-3 text-[11.5px] leading-[1.55] text-ink3">
-        {MORE[what].lede}
-        {rank && <b className="ml-1 font-medium text-ink2">몇 명이 샀는지는 안 적어요.</b>}
-      </p>
-
       {list.length === 0 ? (
         <p className="rounded-2xl border-[1.5px] border-dashed border-edge px-3.5 py-10 text-center text-[11.5px] leading-[1.6] text-ink3">
           아직 없어요
@@ -598,11 +580,6 @@ function MoreList({
           ))}
         </div>
       )}
-
-      <div className="mb-6 flex items-center gap-2 rounded-[14px] bg-sunk px-3.5 py-3 text-[11.5px] leading-[1.5] text-ink2">
-        <StarIcon className="h-[15px] w-[15px] flex-none text-cycle" />
-        {MORE[what].tip}
-      </div>
     </>
   );
 }
@@ -821,21 +798,3 @@ function Head({ title, aside }: { title: string; aside?: string }) {
   );
 }
 
-function Tip({ chip, tab }: { chip: Chip; tab: Shelf }) {
-  // 곰 스타일 칸에는 아무 줄도 안 둔다 — 할 말이 없는 자리에 말을 만들지 않는다
-  if (chip === 'mine' && tab === 'bear') return null;
-
-  const [Icon, text] =
-    chip === 'season' || (chip === 'mine' && tab === 'pose')
-      ? [GiftIcon, '곰과 방을 다 모으면 포즈가 딸려와요']
-      : chip === 'room' || chip === 'mine'
-        ? [HomeIcon, '테마를 바꾸면 홈 배경이 바뀌어요']
-        : [StarIcon, '포인트는 할 일을 끝내면 모을 수 있어요'];
-
-  return (
-    <div className="mb-6 flex items-center gap-2 rounded-[14px] bg-sunk px-3.5 py-3 text-[11.5px] leading-[1.5] text-ink2">
-      <Icon className="h-[15px] w-[15px] flex-none text-cycle" />
-      {text}
-    </div>
-  );
-}
