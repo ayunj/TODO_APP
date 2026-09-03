@@ -111,6 +111,18 @@ export default function AdminList({
         </div>
       )}
 
+      {/*
+        **띠를 누르라고 한 줄 적어둔다.** 배너 올리는 자리가 세트를 고른 뒤에야
+        열려서, 안 눌러본 사람에게는 그 자리가 아예 없는 것과 같다.
+        고른 뒤에는 사라진다 — 이미 아는 것을 계속 말하지 않는다.
+      */}
+      {!only && sets.length > 0 && (
+        <p className="mb-2 text-[11px] leading-[1.55] text-ink3">
+          세트를 누르면 그 세트 것만 보이고, <b className="font-medium text-ink2">배너</b>를 올릴
+          수 있어요.
+        </p>
+      )}
+
       {only && (
         <p className="mb-2 flex items-baseline gap-2 text-[11px] text-ink3">
           <b className="font-medium text-accent">{setOf(only)?.name ?? only}</b>

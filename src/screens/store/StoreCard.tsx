@@ -25,6 +25,7 @@ export default function StoreCard({
   step,
   mine,
   rank,
+  fresh,
   trying,
   onPick,
 }: {
@@ -50,6 +51,12 @@ export default function StoreCard({
    * 가격이 안 보여서, 1등이 얼만지 보려고 눌러 열어봐야 한다.
    */
   rank?: number;
+  /**
+   * 새로 들어온 것인가 — **`새로 들어왔어요` 줄에서만 붙는다.**
+   * 등수와 **같은 자리를 나눠 쓴다.** 둘이 한 카드에 같이 뜰 일이 없어서
+   * (줄이 다르다) 자리를 둘로 벌리지 않는다.
+   */
+  fresh?: boolean;
   trying?: boolean;
   onPick: () => void;
 }) {
@@ -66,11 +73,17 @@ export default function StoreCard({
     <button
       type="button"
       onClick={onPick}
-      className={`relative flex flex-col items-center gap-1.5 rounded-2xl bg-card px-[7px] pb-2.5 pt-[9px] text-center active:scale-[.97] ${
+      /*
+        **`w-full`이 있어야 한다.** `<button>`은 폭을 안 주면 **속에 든 글자만큼만**
+        벌어진다(shrink-to-fit). 격자에서는 칸이 늘려줘서 여태 티가 안 났는데,
+        가로줄에 세우자마자 **이름이 긴 카드가 넓고 짧은 카드가 좁아졌다** —
+        칸이 정사각이라 폭이 다르면 높이도 달라져서 한 줄이 들쭉날쭉해진다.
+      */
+      className={`relative flex w-full flex-col items-center gap-1.5 rounded-2xl bg-card px-[7px] pb-2.5 pt-[9px] text-center active:scale-[.97] ${
         trying ? 'shadow-[0_0_0_2px_var(--accent)]' : 'shadow-[0_0_0_1.4px_var(--line)]'
       }`}
     >
-      {rank !== undefined && (
+      {rank !== undefined ? (
         <span
           className={`absolute left-1.5 top-1.5 z-[2] rounded-full px-[7px] py-0.5 font-mono text-[9px] font-medium ${
             rank === 1
@@ -80,7 +93,11 @@ export default function StoreCard({
         >
           {rank}
         </span>
-      )}
+      ) : fresh ? (
+        <span className="absolute left-1.5 top-1.5 z-[2] rounded-full bg-accent px-[7px] py-0.5 font-mono text-[8.5px] font-bold tracking-[.04em] text-white">
+          NEW
+        </span>
+      ) : null}
       <span className="w-full truncate text-[11.5px] font-medium leading-[1.3] text-ink2">
         {label ?? item.name}
       </span>

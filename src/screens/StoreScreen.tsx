@@ -499,6 +499,7 @@ function Main({
         icon={<StarIcon className="h-4 w-4" />}
         title="새로 들어왔어요"
         list={fresh}
+        fresh
         onPick={onPick}
         onMore={() => onMore('fresh')}
       />
@@ -506,6 +507,7 @@ function Main({
         icon={<TrophyIcon className="h-4 w-4" />}
         title="랭킹"
         list={ranked}
+        rank
         onPick={onPick}
         onMore={() => onMore('rank')}
       />
@@ -585,6 +587,7 @@ function MoreList({
               key={c.key}
               item={c}
               rank={rank ? i + 1 : undefined}
+              fresh={!rank}
               onPick={() => onPick(c.key)}
             />
           ))}

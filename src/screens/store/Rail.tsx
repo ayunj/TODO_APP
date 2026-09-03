@@ -28,12 +28,18 @@ export default function Rail({
   icon,
   title,
   list,
+  rank,
+  fresh,
   onPick,
   onMore,
 }: {
   icon: React.ReactNode;
   title: string;
   list: Costume[];
+  /** 등수 딱지를 붙이나 — **랭킹 줄에만.** 줄의 뜻이 차례라는 것을 칸마다 말해준다 */
+  rank?: boolean;
+  /** `NEW` 딱지를 붙이나 — **새로 들어왔어요 줄에만** */
+  fresh?: boolean;
   onPick: (key: string) => void;
   onMore: () => void;
 }) {
@@ -59,9 +65,14 @@ export default function Rail({
         더 있는지 없는지 알 수가 없어서, 넷째가 반쯤 걸쳐야 밀어보게 된다.
       */}
       <div className="-mx-4 mb-[22px] flex gap-[9px] overflow-x-auto px-4 pb-1 pt-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {list.map((c) => (
+        {list.map((c, i) => (
           <div key={c.key} className="w-[103px] flex-none">
-            <StoreCard item={c} onPick={() => onPick(c.key)} />
+            <StoreCard
+              item={c}
+              rank={rank ? i + 1 : undefined}
+              fresh={fresh}
+              onPick={() => onPick(c.key)}
+            />
           </div>
         ))}
       </div>
