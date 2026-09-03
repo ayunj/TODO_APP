@@ -83,21 +83,6 @@ export default function StoreCard({
         trying ? 'shadow-[0_0_0_2px_var(--accent)]' : 'shadow-[0_0_0_1.4px_var(--line)]'
       }`}
     >
-      {rank !== undefined ? (
-        <span
-          className={`absolute left-1.5 top-1.5 z-[2] rounded-full px-[7px] py-0.5 font-mono text-[9px] font-medium ${
-            rank === 1
-              ? 'bg-accent text-white'
-              : 'bg-card text-accent shadow-[0_0_0_1.3px_var(--accent-soft)]'
-          }`}
-        >
-          {rank}
-        </span>
-      ) : fresh ? (
-        <span className="absolute left-1.5 top-1.5 z-[2] rounded-full bg-accent px-[7px] py-0.5 font-mono text-[8.5px] font-bold tracking-[.04em] text-white">
-          NEW
-        </span>
-      ) : null}
       <span className="w-full truncate text-[11.5px] font-medium leading-[1.3] text-ink2">
         {label ?? item.name}
       </span>
@@ -113,12 +98,33 @@ export default function StoreCard({
       >
         {/* 방과 세트는 칸을 꽉 채운다 — 장면 전체가 그 물건이다 */}
         <Art item={item} className={roomly || scene ? ROOM_ART : BEAR_CARD} />
+
+        {/*
+          **딱지는 그림 칸 안에 얹는다.** 이름 줄 위에 절대 자리로 띄웠더니
+          `유치원 가는 날`이 `원 가는 날`이 됐다 — 103px짜리 칸에서 이름과
+          딱지가 같은 줄을 나눠 쓸 수가 없다. 자물쇠·선물 표와 같은 자리를 쓴다
+          (그 둘은 오른쪽 위, 이건 왼쪽 위라 겹치지 않는다).
+        */}
+        {rank !== undefined ? (
+          <span
+            className={`absolute left-[3px] top-[3px] z-[2] rounded-full px-[6px] py-px font-mono text-[9px] font-medium ${
+              rank === 1 ? 'bg-accent text-white' : 'bg-white/90 text-accent'
+            }`}
+          >
+            {rank}
+          </span>
+        ) : fresh ? (
+          <span className="absolute left-[3px] top-[3px] z-[2] rounded-full bg-accent px-[6px] py-px font-mono text-[8.5px] font-bold tracking-[.04em] text-white">
+            NEW
+          </span>
+        ) : null}
         {/*
           **여기서는 안 자른다.** 곰돌이 한 마리만 있는 칸은 위 여백을 잘라 키우지만
           (`BEAR_CARD`), 세트는 방에 견준 크기가 그 자체로 볼 것이라
           홈·걸쳐보는 칸과 같은 자를 쓴다.
         */}
         {bear && <Art item={bear} className={BEAR_ART} />}
+        {/* 세트 보상 표 — **딱지가 붙는 줄에는 포즈가 안 선다**(살 수 있는 것만 세운다) */}
         {item.kind === 'pose' && (
           <span className="absolute left-[3px] top-[3px] grid h-[19px] w-[19px] place-items-center rounded-full bg-white/90 text-cycle">
             <GiftIcon className="h-3 w-3" />
