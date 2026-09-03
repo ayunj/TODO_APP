@@ -18,6 +18,21 @@ import type { Costume } from '@/lib/types';
  * 내 옷장에서만 `입기`가 뜬다 — 입어보는 것은 옷장에서만 하기 때문이다
  * ([BuySheet](../../sheets/BuySheet.tsx)).
  */
+/**
+ * 메달이 붙는 카드 바탕 — **1·2·3만 다르게 칠한다.**
+ *
+ * 메달 그림만 얹으면 셋이 다 흰 카드라, 눈이 먼저 닿는 것이 카드고 메달은
+ * 그 위의 작은 표로 읽힌다. **바탕까지 금·은·동이면 카드째로 등수**가 된다.
+ *
+ * 그림은 [`npm run medals`](../../../scripts/medals.mjs)가 한 장에서 잘라 담는다.
+ * 파일 이름이 곧 등수라 여기 표를 또 만들지 않는다 — `medal-1.png`.
+ */
+const TINT: Record<number, string> = {
+  1: 'bg-[#fdf6e4]',
+  2: 'bg-[#f2f4f6]',
+  3: 'bg-[#fbeee5]',
+};
+
 export default function StoreCard({
   item,
   bear,
@@ -67,6 +82,12 @@ export default function StoreCard({
   const roomly = item.kind === 'room';
   const here = item.key === (roomly ? wornRoom : wornBear);
   const lock = step === undefined && !own && item.price > points;
+  /**
+   * 1·2·3만 메달이다. **넷째부터는 숫자만 붙는다** —
+   * 금·은·동은 셋뿐이라 넷째에 칠할 색이 없고, 억지로 칠하면 그게 몇 등인지가
+   * 색으로 안 읽힌다. 시상대에는 셋만 서고, 나머지는 `전체보기` 격자에 선다.
+   */
+  const tint = rank === undefined ? undefined : TINT[rank];
   const verb = roomly || item.kind === 'pose' ? ['적용', '적용 중'] : ['입기', '입는 중'];
 
   return (
@@ -79,12 +100,43 @@ export default function StoreCard({
         가로줄에 세우자마자 **이름이 긴 카드가 넓고 짧은 카드가 좁아졌다** —
         칸이 정사각이라 폭이 다르면 높이도 달라져서 한 줄이 들쭉날쭉해진다.
       */
-      className={`relative flex w-full flex-col items-center gap-1.5 rounded-2xl bg-card px-[7px] pb-2.5 pt-[9px] text-center active:scale-[.97] ${
-        trying ? 'shadow-[0_0_0_2px_var(--accent)]' : 'shadow-[0_0_0_1.4px_var(--line)]'
-      }`}
+      className={`relative flex w-full flex-col items-center gap-1.5 rounded-2xl px-[7px] pb-2.5 pt-[9px] text-center active:scale-[.97] ${
+        tint ?? 'bg-card'
+      } ${trying ? 'shadow-[0_0_0_2px_var(--accent)]' : 'shadow-[0_0_0_1.4px_var(--line)]'}`}
     >
-      <span className="w-full truncate text-[11.5px] font-medium leading-[1.3] text-ink2">
-        {label ?? item.name}
+      {/*
+        메달은 **카드 모서리에 걸린다.** 안에 넣으면 이름이나 그림 중 하나를
+        밀어내는데, 셋뿐인 자리라 밖으로 반쯤 내미는 편이 덜 다친다.
+      */}
+      {rank !== undefined &&
+        (tint ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={`/gomdori/medal-${rank}.png`}
+            alt=""
+            aria-hidden="true"
+            className="absolute -left-2 -top-2.5 z-[3] h-[38px] w-auto select-none drop-shadow-[0_2px_4px_rgba(97,89,83,.25)]"
+          />
+        ) : (
+          /* 넷째부터는 숫자만 — 금·은·동은 셋뿐이라 넷째에 칠할 색이 없다 */
+          <span className="absolute -left-1.5 -top-1.5 z-[3] grid h-[24px] w-[24px] place-items-center rounded-full bg-card font-mono text-[11px] font-bold leading-none text-ink3 shadow-[0_0_0_1.5px_var(--line)]">
+            {rank}
+          </span>
+        ))}
+      {/*
+        **딱지는 이름 옆에 선다.** 이름 위에 절대 자리로 띄웠더니
+        `유치원 가는 날`이 `원 가는 날`이 됐다 — 겹치는 대신 **밀어낸다.**
+        밀려난 만큼 이름이 줄지만, 줄어든 이름은 `…`으로 줄었다고 말이라도 한다.
+      */}
+      <span className="flex w-full items-center justify-center gap-1">
+        {fresh && rank === undefined && (
+          <b className="flex-none rounded-full bg-accent px-[6px] py-px font-mono text-[8.5px] font-bold tracking-[.04em] text-white">
+            NEW
+          </b>
+        )}
+        <span className="min-w-0 truncate text-[11.5px] font-medium leading-[1.3] text-ink2">
+          {label ?? item.name}
+        </span>
       </span>
 
       {/*
@@ -99,25 +151,6 @@ export default function StoreCard({
         {/* 방과 세트는 칸을 꽉 채운다 — 장면 전체가 그 물건이다 */}
         <Art item={item} className={roomly || scene ? ROOM_ART : BEAR_CARD} />
 
-        {/*
-          **딱지는 그림 칸 안에 얹는다.** 이름 줄 위에 절대 자리로 띄웠더니
-          `유치원 가는 날`이 `원 가는 날`이 됐다 — 103px짜리 칸에서 이름과
-          딱지가 같은 줄을 나눠 쓸 수가 없다. 자물쇠·선물 표와 같은 자리를 쓴다
-          (그 둘은 오른쪽 위, 이건 왼쪽 위라 겹치지 않는다).
-        */}
-        {rank !== undefined ? (
-          <span
-            className={`absolute left-[3px] top-[3px] z-[2] rounded-full px-[6px] py-px font-mono text-[9px] font-medium ${
-              rank === 1 ? 'bg-accent text-white' : 'bg-white/90 text-accent'
-            }`}
-          >
-            {rank}
-          </span>
-        ) : fresh ? (
-          <span className="absolute left-[3px] top-[3px] z-[2] rounded-full bg-accent px-[6px] py-px font-mono text-[8.5px] font-bold tracking-[.04em] text-white">
-            NEW
-          </span>
-        ) : null}
         {/*
           **여기서는 안 자른다.** 곰돌이 한 마리만 있는 칸은 위 여백을 잘라 키우지만
           (`BEAR_CARD`), 세트는 방에 견준 크기가 그 자체로 볼 것이라

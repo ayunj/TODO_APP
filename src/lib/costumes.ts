@@ -114,7 +114,8 @@ export const BUILTIN: Shop = {
   families: FAMILIES,
   sets: SETS,
   items: CATALOG,
-  /* 못 읽었을 때는 차례를 알 길이 없다 — 랭킹 줄이 통째로 안 선다 */
+  /* 못 읽었을 때는 짓다 만 것도 차례도 알 길이 없다 — 그 줄들이 통째로 안 선다 */
+  coming: [],
   rank: [],
 };
 

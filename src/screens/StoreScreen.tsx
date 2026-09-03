@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Banner from './store/Banner';
+import Coming from './store/Coming';
 import Coin from './store/Coin';
+import Podium, { PODIUM } from './store/Podium';
 import Rail, { RAIL_MIN } from './store/Rail';
 import SetDetail from './store/SetDetail';
 import StoreCard from './store/StoreCard';
@@ -369,6 +371,7 @@ export default function StoreScreen() {
           ) : (
             <Main
               banner={banner}
+              coming={shop.coming}
               fresh={fresh}
               ranked={ranked}
               sets={shop.sets}
@@ -423,6 +426,7 @@ export default function StoreScreen() {
  */
 function Main({
   banner,
+  coming,
   fresh,
   ranked,
   sets,
@@ -437,6 +441,8 @@ function Main({
   goRoom,
 }: {
   banner: CostumeSet | null;
+  /** 짓다 만 세트 — 하나만 세운다. 둘이 뜨면 어느 것이 다음인지가 흐려진다 */
+  coming: CostumeSet[];
   fresh: Costume[];
   ranked: Costume[];
   sets: Shop['sets'];
@@ -461,8 +467,9 @@ function Main({
    */
   const standing =
     Boolean(banner) ||
+    coming.length > 0 ||
     fresh.length >= RAIL_MIN ||
-    ranked.length >= RAIL_MIN ||
+    ranked.length >= PODIUM ||
     rest.length > 0 ||
     rooms.length >= RAIL_MIN ||
     fams.some((f) => decoOf(f.key).length >= RAIL_MIN);
@@ -497,11 +504,16 @@ function Main({
         onPick={onPick}
         onMore={() => onMore('fresh')}
       />
-      <Rail
+      {/*
+        **짓다 만 세트가 있으면 여기 한 줄.** 새로 들어온 것 바로 밑이다 —
+        둘 다 `무엇이 새로 오나`를 말하는 자리라 붙여 둔다.
+      */}
+      {coming[0] && <Coming set={coming[0]} />}
+
+      <Podium
         icon={<TrophyIcon className="h-4 w-4" />}
         title="랭킹"
         list={ranked}
-        rank
         onPick={onPick}
         onMore={() => onMore('rank')}
       />

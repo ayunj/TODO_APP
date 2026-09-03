@@ -708,7 +708,7 @@ export async function pullShop(): Promise<Shop> {
     세트는 **곰 하나 · 방 하나 · 소품 하나가 다 찬 것만** 세운다.
     덜 찬 세트를 세우면 상점에 `준비 중` 칸이 뜨고, 그건 파는 물건처럼 읽힌다.
   */
-  const sets: CostumeSet[] = ((s.data ?? []) as Row[])
+  const all: CostumeSet[] = ((s.data ?? []) as Row[])
     .map((r) => {
       const key = String(r.season_key);
       return {
@@ -727,8 +727,17 @@ export async function pullShop(): Promise<Shop> {
           ? shopImageUrl(bannerPath(key)) + stamp({ updated_at: r.banner_at })
           : undefined,
       };
-    })
-    .filter((set) => [set.bear, set.room, set.pose].every((i) => i.name !== '준비 중'));
+    });
+
+  /** 곰·방·소품이 다 찬 것만 판다 — `준비 중` 칸이 뜨면 파는 물건처럼 읽힌다 */
+  const full = (set: CostumeSet) =>
+    [set.bear, set.room, set.pose].every((i) => i.name !== '준비 중');
+  const sets = all.filter(full);
+  /*
+    **덜 찬 것도 버리지 않는다.** 팔지는 못해도 `오고 있다`는 말은 할 수 있다 —
+    그림 셋을 그리는 동안이 짧지 않아서, 그 사이를 예고 띠가 메운다.
+  */
+  const coming = all.filter((set) => !full(set));
 
   /*
     **앱이 들고 나가는 둘을 얹어서 돌려준다**(`withBundled`) — 기본 곰돌이와 기본 룸.
@@ -753,6 +762,7 @@ export async function pullShop(): Promise<Shop> {
     })),
     families,
     sets,
+    coming,
     items,
     rank,
   });

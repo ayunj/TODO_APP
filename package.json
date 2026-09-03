@@ -16,6 +16,7 @@
     "tomato": "node scripts/cut-tomato.mjs",
     "logo": "node scripts/trim-logo.mjs",
     "gomdori": "node scripts/gomdori.mjs",
+    "medals": "node scripts/medals.mjs",
     "shop": "node --env-file-if-exists=.env.local scripts/shop.mjs",
     "canvas": "node scripts/canvas.mjs"
   },

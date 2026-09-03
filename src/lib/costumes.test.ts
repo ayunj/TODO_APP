@@ -18,7 +18,7 @@ import {
 import type { Shop } from './types';
 
 /** 서버가 아무것도 안 돌려준 상점 */
-const NOTHING: Shop = { groups: [], families: [], sets: [], items: [], rank: [] };
+const NOTHING: Shop = { groups: [], families: [], sets: [], coming: [], items: [], rank: [] };
 
 describe('기본 곰돌이와 기본 룸', () => {
   /*

@@ -55,7 +55,7 @@ export default function Rail({
           onClick={onMore}
           className="flex flex-none items-center gap-px py-0.5 text-[11.5px] text-accent"
         >
-          더보기
+          전체보기
           <NextIcon className="h-[13px] w-[13px]" />
         </button>
       </div>
