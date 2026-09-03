@@ -24,7 +24,7 @@
 /**
  * 곰돌이 한 장이 앉는 정사각 칸.
  *
- * **`scripts/bears.mjs`에도 같은 값이 있다.** 저쪽은 node에서 sharp로, 이쪽은
+ * **`scripts/bears.mjs`에도 같은 가격이 있다.** 저쪽은 node에서 sharp로, 이쪽은
  * 브라우저에서 canvas로 도는 것이라 한 파일을 같이 못 쓴다.
  */
 export const BODY = 760;

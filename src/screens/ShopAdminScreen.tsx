@@ -26,7 +26,7 @@ import type { Shop } from '@/lib/types';
  *   select id from auth.users where email = '내메일@example.com'
  *   on conflict do nothing;
  *
- * **이 화면이 지키는 것은 없다.** 통과 값표를 막는 것은 RLS(`is_shop_admin()`)라
+ * **이 화면이 지키는 것은 없다.** 통과 가격표를 막는 것은 RLS(`is_shop_admin()`)라
  * 화면을 억지로 열어도 올리는 데서 막힌다. 여기서 감추는 것은 안 쓸 사람에게
  * 안 보이게 하는 것뿐이다.
  */
@@ -39,7 +39,7 @@ export default function ShopAdminScreen() {
   const load = useCallback(async () => {
     try {
       /*
-        관리자에게는 **숨긴 것까지 내려온다**(값표 정책이 `active or is_shop_admin()`).
+        관리자에게는 **숨긴 것까지 내려온다**(가격표 정책이 `active or is_shop_admin()`).
 
         상점 화면과 **같은 것을 본다.** 여기서만 따로 받아두면 채운 것이
         상점에 안 뜨는 채로 남는다 — 받아온 것을 곰돌이가 같이 들게 하고
@@ -57,7 +57,7 @@ export default function ShopAdminScreen() {
 
   /*
     **앱이 들고 나가는 둘은 안 센다** — 기본 곰돌이와 기본 룸.
-    값표에 줄이 없어서 채우는 사람이 손댈 것이 아니고, 세면 `올린 것`이 둘 늘어
+    가격표에 줄이 없어서 채우는 사람이 손댈 것이 아니고, 세면 `올린 것`이 둘 늘어
     목록에 보이는 수와 안 맞는다.
   */
   const mine = useMemo(() => {

@@ -77,7 +77,7 @@ body{
 /*
   제목 줄 — 앱 PageBar와 같다. 높이가 66px이고 칩 줄이 그 아래에 붙는다.
   포인트를 여기 둔 건 **격자를 내리는 동안에도 보여야** 하기 때문이다 —
-  값을 보면서 고르는 화면이라 위로 올라가 확인하게 만들면 안 된다.
+  가격을 보면서 고르는 화면이라 위로 올라가 확인하게 만들면 안 된다.
 */
 .pbar{
   position:sticky; top:0; z-index:16; display:flex; align-items:center; gap:6px;
@@ -137,7 +137,7 @@ body{
   flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   font-family:'Gowun Dodum',sans-serif; font-size:17px; color:var(--ink);
 }
-/* 값은 **여기 한 번만** 적는다. 단추에 또 적으면 값을 치르라고 미는 말이 된다. */
+/* 값은 **여기 한 번만** 적는다. 단추에 또 적으면 가격을 치르라고 미는 말이 된다. */
 .name .p{
   flex:none; display:inline-flex; align-items:center; gap:5px; border-radius:999px;
   background:var(--card); box-shadow:0 0 0 1.4px var(--line); padding:5px 12px 5px 5px;
@@ -323,7 +323,7 @@ body{
 .pcard .go.now{background:var(--accent-tint); color:var(--accent); cursor:default}
 .pcard .go.short{background:var(--sunk); color:var(--ink3); cursor:default; font-size:11px; font-weight:400}
 
-/* 보상 줄 — 파는 것이 아니라 **다 모으면 오는 것**이라 값이 없다 */
+/* 보상 줄 — 파는 것이 아니라 **다 모으면 오는 것**이라 가격이 없다 */
 .gift{
   display:flex; align-items:center; gap:11px; border-radius:16px; padding:12px 13px;
   background:var(--sunk); margin-bottom:16px;
@@ -438,7 +438,7 @@ body{
     <div class="warn">
       <b>이 시안은 걸쳐보기가 상점에 있던 때의 것이다.</b> 위 곰돌이 칸이 어느 칩에서든
       붙박여 있고, 카드를 누르면 거기 걸쳐 보고 그 아래 단추로 사거나 입었다.
-      <b>앱에서는 걷어냈다</b> — 안 산 옷을 걸쳐보는 자리와 값을 치르는 자리가 한 칸에
+      <b>앱에서는 걷어냈다</b> — 안 산 옷을 걸쳐보는 자리와 가격을 치르는 자리가 한 칸에
       겹쳐 있으면 <b>입어보다가 사게 된다.</b> 그리고 사고 나면 어차피 입혀지니,
       상점에서 미리 걸쳐본 것은 대부분 그냥 지나가는 장면이었다.
     </div>
@@ -498,10 +498,10 @@ body{
     <p>깎아주기는 <b>산 다음에 남는 것이 없다.</b> 소품은 남는다 —
        그리고 그게 <b>왜 둘을 다 모으는지</b>에 대한 답이 된다.</p>
     <div class="warn">
-      <b>소품에는 값을 안 붙인다.</b> 값이 붙는 순간 <b>못 산 것</b>이 되고,
+      <b>소품에는 값을 안 붙인다.</b> 가격이 붙는 순간 <b>못 산 것</b>이 되고,
       그러면 딸려오는 것이 아니라 <b>안 사면 못 갖는 것</b>으로 읽힌다.
     </div>
-    <p>그래서 <b>세트 카드에도 값이 없다.</b> 파는 물건이 아니라 <b>모으는 자리</b>라
+    <p>그래서 <b>세트 카드에도 가격이 없다.</b> 파는 물건이 아니라 <b>모으는 자리</b>라
        카드가 말할 것은 <code>1/3</code> — 셋 중 몇 개 모았나다.</p>
 
     <h3>보상은 소품이 아니라 <b>포즈</b>다</h3>
@@ -557,7 +557,7 @@ body{
 
     <h3>옷장 곰 스타일에는 안내 줄이 없다</h3>
     <p><b>할 말이 없는 자리에 말을 만들지 않는다.</b> 방 테마 칸에만 남겼다 —
-       <b>방은 홈에서만 보이니</b> 어디서 보게 되는지를 알려줄 값이 있다.</p>
+       <b>방은 홈에서만 보이니</b> 어디서 보게 되는지를 알려줄 가격이 있다.</p>
 
     <h2 style="margin-top:24px">그림이 얼마나 느나</h2>
     <table>
@@ -639,8 +639,8 @@ var ROOMS = [
 
 /*
   ── 포즈 ──
-  세트 완성 보상. **파는 물건이 아니라서 값이 없다** —
-  값이 붙는 순간 안 산 사람에게 `못 산 것`이 된다.
+  세트 완성 보상. **파는 물건이 아니라서 가격이 없다** —
+  가격이 붙는 순간 안 산 사람에게 `못 산 것`이 된다.
 
   포즈는 **곰돌이 그림 한 장**이다. 소품을 든 자세라 옷 위에 얹는 조각이 아니라
   그 옷을 입고 소품까지 든 **다른 한 장**이다. 그래서 적용하면 자세가 통째로 바뀐다.

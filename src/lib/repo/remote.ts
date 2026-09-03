@@ -611,7 +611,7 @@ export async function pullGomdori(): Promise<Gomdori> {
 /**
  * 상점에 걸린 것 전부 — 대분류 · 중분류 · 세트 · 물건.
  *
- * **로그인 안 해도 읽힌다.** 값표는 누구나 보는 것이고(파는 중인 것만),
+ * **로그인 안 해도 읽힌다.** 가격표는 누구나 보는 것이고(파는 중인 것만),
  * 여기서 막으면 로그인 전 상점이 통째로 빈다.
  *
  * 넷을 한꺼번에 부른다. 넷 다 작고 서로를 기다릴 까닭이 없다 —
@@ -651,7 +651,7 @@ export async function pullShop(): Promise<Shop> {
   }));
 
   /*
-    그림 자리는 **값표에 적혀 오지 않는다. 지어 쓴다** —
+    그림 자리는 **가격표에 적혀 오지 않는다. 지어 쓴다** —
     `<대분류>/<중분류>/<종류>/<열쇠>.png`([costumes.ts](../costumes.ts)의 `shopPath`).
 
     **앱이 들고 나가는 것이 있으면 그게 먼저다.** 기본 곰돌이와 기본 룸 둘인데,
@@ -666,8 +666,8 @@ export async function pullShop(): Promise<Shop> {
     화면이 안 바뀌어서 `저장이 안 됐나` 하게 된다.
 
     판은 `updated_at`에서 낸다. **담아두는 칸을 새로 만들지 않는다** —
-    값표를 고칠 때마다 트리거가 이미 갱신하고 있고, 그림을 올리는 길은
-    [상점 채우기](../../screens/admin/AdminForm.tsx)뿐인데 거기서는 값표도 같이 고친다.
+    가격표를 고칠 때마다 트리거가 이미 갱신하고 있고, 그림을 올리는 길은
+    [상점 채우기](../../screens/admin/AdminForm.tsx)뿐인데 거기서는 가격표도 같이 고친다.
 
     (`npm run shop`으로 통에만 올리면 판이 안 움직인다. 그때는 한 시간 기다리거나
     관리자 화면에서 아무 것이나 한 번 고쳐주면 된다.)
@@ -732,7 +732,7 @@ export async function pullShop(): Promise<Shop> {
 
   /*
     **앱이 들고 나가는 둘을 얹어서 돌려준다**(`withBundled`) — 기본 곰돌이와 기본 룸.
-    값표에 줄이 있든 없든 늘 서야 하는 것이라 여기서 한 번 챙긴다.
+    가격표에 줄이 있든 없든 늘 서야 하는 것이라 여기서 한 번 챙긴다.
     화면마다 챙기게 두면 어느 화면에서만 빠지는 날이 온다.
   */
   /*
@@ -789,7 +789,7 @@ export async function pullNotice(): Promise<Notice | null> {
   return data ? asNotice(data as Row) : null;
 }
 
-/** 관리자가 보는 목록 — **쓰다 만 것까지.** 값표 정책과 같은 얼개다. */
+/** 관리자가 보는 목록 — **쓰다 만 것까지.** 가격표 정책과 같은 얼개다. */
 export async function pullNotices(): Promise<Notice[]> {
   const client = await supabase();
   const { data, error } = await client
@@ -934,7 +934,7 @@ export async function removeNotice(id: string): Promise<void> {
  *   on conflict do nothing;
  *
  * **이걸로 화면을 열고 말고를 정한다.** 진짜로 막는 것은 여기가 아니라
- * RLS다(`is_shop_admin()`) — 앱이 뭐라고 하든 통과 값표는 서버가 막는다.
+ * RLS다(`is_shop_admin()`) — 앱이 뭐라고 하든 통과 가격표는 서버가 막는다.
  * 그러니 이 함수는 **안 보여줄 것을 안 보여주는 것**이지 지키는 것이 아니다.
  */
 export async function amShopAdmin(): Promise<boolean> {
@@ -997,7 +997,7 @@ export async function pullSeasons(): Promise<CostumeSet[]> {
       name: String(r.name),
       note: String(r.note ?? ''),
       family: r.family_key ? String(r.family_key) : undefined,
-      // 채우는 화면은 세트의 이름과 열쇠만 쓴다 — 안에 든 것은 값표를 세면 나온다
+      // 채우는 화면은 세트의 이름과 열쇠만 쓴다 — 안에 든 것은 가격표를 세면 나온다
       bear: EMPTY_SLOT,
       room: EMPTY_SLOT,
       pose: EMPTY_SLOT,
@@ -1014,10 +1014,10 @@ export async function pullSeasons(): Promise<CostumeSet[]> {
  * 세트 배너를 올린다 — **한 세트에 한 장.**
  *
  * 자리를 지어 쓰니(`bannerPath`) 다시 올려도 주소가 같다. 그래서 **올린 때를
- * 값표에 찍는다** — 그게 없으면 주소가 그대로라 브라우저가 옛 배너를 그냥 쓴다.
+ * 가격표에 찍는다** — 그게 없으면 주소가 그대로라 브라우저가 옛 배너를 그냥 쓴다.
  * 그 칸은 `null`이면 배너가 없다는 뜻이기도 해서, 찍는 일이 두 가지를 한다.
  *
- * **통에 먼저 올리고 값표를 찍는다.** 반대로 하면 값표에는 배너가 있다고 적혔는데
+ * **통에 먼저 올리고 가격표를 찍는다.** 반대로 하면 가격표에는 배너가 있다고 적혔는데
  * 통이 비는 사이가 생기고, 그때 상점을 연 사람에게 **깨진 배너**가 뜬다.
  */
 export async function uploadSeasonBanner(season: string, body: Blob): Promise<void> {
@@ -1037,11 +1037,11 @@ export async function uploadSeasonBanner(season: string, body: Blob): Promise<vo
 }
 
 /**
- * 배너를 내린다 — **값표의 찍힌 때만 지운다.**
+ * 배너를 내린다 — **가격표의 찍힌 때만 지운다.**
  *
  * 통에서 파일까지 지우지 않는다. 지우는 길과 올리는 길이 따로 있으면
  * 한쪽만 되고 한쪽은 막히는 날이 오는데(정책은 같지만 실패는 따로 난다),
- * **없다고 치는 것은 값표 한 칸이면 된다.** 다시 올리면 그 자리를 덮는다.
+ * **없다고 치는 것은 가격표 한 칸이면 된다.** 다시 올리면 그 자리를 덮는다.
  */
 export async function clearSeasonBanner(season: string): Promise<void> {
   const client = await supabase();
@@ -1203,8 +1203,8 @@ export async function setShopItemActive(key: string, active: boolean): Promise<v
 }
 
 /**
- * 산다. **값은 서버가 값표에서 찾는다** —
- * 앱이 값을 같이 보내면 `이 옷 0원이요`를 막을 수가 없다.
+ * 산다. **가격은 서버가 가격표에서 찾는다** —
+ * 앱이 가격을 같이 보내면 `이 옷 0원이요`를 막을 수가 없다.
  * 남은 포인트를 돌려주고, 모자라면 던진다.
  */
 export async function buyCostume(itemKey: string): Promise<number> {

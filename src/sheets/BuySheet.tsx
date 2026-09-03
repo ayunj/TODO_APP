@@ -18,11 +18,11 @@ const KIND: Record<string, string> = {
 };
 
 /**
- * 이거 살까요 — **상점에서 값을 치르는 자리는 여기 하나다.**
+ * 이거 살까요 — **상점에서 가격을 치르는 자리는 여기 하나다.**
  *
  * 전에는 상점 맨 위에 곰돌이 칸이 붙박여 있었다. 카드를 누르면 거기 걸쳐 보이고,
  * 그 아래 단추로 사거나 입었다. **걸쳐보기를 상점에서 걷어냈다** —
- * 안 산 옷을 입혀보는 자리와 값을 치르는 자리가 한 칸에 겹쳐 있으면
+ * 안 산 옷을 입혀보는 자리와 가격을 치르는 자리가 한 칸에 겹쳐 있으면
  * 입어보다가 사게 된다. 상점은 **사는 자리**고, 입어보는 것은 내 옷장에서 한다.
  *
  * 그렇다고 103px 카드에 사는 단추를 넣을 수는 없다 — 잘못 눌러 300P가 날아간다.
@@ -75,7 +75,7 @@ export default function BuySheet({ id }: { id: string }) {
 
       {own ? (
         /*
-          가진 것은 값을 안 적는다 — 이미 치른 값을 다시 보여줄 까닭이 없고,
+          가진 것은 가격을 안 적는다 — 이미 치른 가격을 다시 보여줄 까닭이 없고,
           여기서 할 일은 사는 것이 아니라 **어디서 입어보는지**를 아는 것이다.
         */
         <div className="rounded-2xl bg-sunk p-4 text-center text-[12.5px] leading-[1.6] text-ink2">
@@ -86,9 +86,9 @@ export default function BuySheet({ id }: { id: string }) {
         </div>
       ) : (
         <>
-          {/* 값은 한 번만 적는다. 단추에 또 적으면 값을 치르라고 미는 말이 된다. */}
+          {/* 가격은 한 번만 적는다. 단추에 또 적으면 가격을 치르라고 미는 말이 된다. */}
           <div className="mb-2.5 flex items-center justify-between rounded-2xl bg-sunk px-4 py-3.5 text-[12.5px]">
-            <span className="text-ink2">값</span>
+            <span className="text-ink2">가격</span>
             <span className="flex items-center gap-1.5 font-mono text-[14px] font-medium text-ink">
               <Coin />
               {it.price}

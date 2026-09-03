@@ -82,7 +82,7 @@ describe('readFit — 담긴 그림에서 되읽는다', () => {
     });
   }
 
-  it('우리가 담은 크기가 아니면 되읽을 값이 없다', () => {
+  it('우리가 담은 크기가 아니면 되읽을 가격이 없다', () => {
     expect(readFit(art({ x: 0, y: 0, w: 100, h: 200 }, 100, 200), SPEC)).toBeNull();
     expect(readFit(art({ x: 0, y: 0, w: BODY, h: 0 }, BODY, BODY), SPEC)).toBeNull();
   });

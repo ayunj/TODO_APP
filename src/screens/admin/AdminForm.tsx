@@ -448,7 +448,7 @@ export default function AdminForm({
           </Row>
           <Row label="가격" last>
             {kind === 'pose' ? (
-              // 값이 없는 물건 — 칸을 비워두지 않고 **왜 없는지**를 그 자리에 적는다
+              // 가격이 없는 물건 — 칸을 비워두지 않고 **왜 없는지**를 그 자리에 적는다
               <p className="rounded-xl bg-accent-tint px-3 py-[9px] text-[11.5px] leading-[1.4] text-accent">
                 <b className="font-medium">세트 보상</b>이라 가격이 없어요
               </p>

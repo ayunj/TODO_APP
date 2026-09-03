@@ -81,7 +81,7 @@ export function DateField({
 
   return (
     <div className="field-input relative flex items-center justify-between gap-2 focus-within:outline focus-within:outline-2 focus-within:outline-accent">
-      {/* 값이 없어도 칸 높이가 흔들리지 않게 빈 줄을 세워둔다 */}
+      {/* 가격이 없어도 칸 높이가 흔들리지 않게 빈 줄을 세워둔다 */}
       <span>{value ? longDate(value) : ' '}</span>
       <CalendarIcon className="h-[18px] w-[18px] flex-none text-ink3" />
       <input

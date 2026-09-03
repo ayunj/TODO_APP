@@ -60,4 +60,4 @@ end $$;
 --   select id, public from storage.buckets where id = 'notice';
 --
 -- 그림 자리는 `notice/<id>.png`다. 다시 올려도 주소가 같아서
--- 앱이 주소 끝에 `?v=<고친 때>`를 붙인다 — 값표의 `updated_at`이 그 판이다.
+-- 앱이 주소 끝에 `?v=<고친 때>`를 붙인다 — 가격표의 `updated_at`이 그 판이다.

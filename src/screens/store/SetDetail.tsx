@@ -10,7 +10,7 @@ import type { Costume, CostumeSet } from '@/lib/types';
 /**
  * 세트 상세 — **곰과 방을 각각 산다.** 묶어 팔지 않는다.
  *
- * 묶어 팔면 낱개 값과 묶음 값 둘을 관리해야 하고,
+ * 묶어 팔면 낱개 가격과 묶음 가격 둘을 관리해야 하고,
  * 크리스마스 방만 갖고 싶은 사람이 곰까지 사게 된다.
  * **깎아주는 대신 하나 더 준다** — 둘을 다 모으면 포즈가 딸려온다.
  * 깎아주기는 산 다음에 남는 것이 없고 포즈는 남는다.
@@ -116,7 +116,7 @@ function Half({
       <b className="text-[12.5px] font-medium">{item.name}</b>
 
       {own ? (
-        /* 값이 섰던 자리에 값 대신 이 한 마디가 선다 — 눌러도 다시 안 산다는 뜻이다 */
+        /* 가격이 섰던 자리에 가격 대신 이 한 마디가 선다 — 눌러도 다시 안 산다는 뜻이다 */
         <span className="mt-auto rounded-[11px] bg-sunk py-[9px] text-[12.5px] font-medium text-ink3">
           보유중
         </span>

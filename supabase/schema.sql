@@ -983,7 +983,7 @@ $$;
 -- tasks에서 파생시켜 그때그때 세면 체크를 풀면 저절로 도로 빠진다.
 --
 -- 담아두는 것은 둘뿐이다 — **가진 것**과 **지금 입은 것**.
--- 잔액은 `가입 100P + 번 것 − 산 값의 합`이라 이 둘만 있으면 나온다.
+-- 잔액은 `가입 100P + 번 것 − 산 가격의 합`이라 이 둘만 있으면 나온다.
 
 -- 누가 체크했나 — **계정으로**. done_by(표시 이름)는 화면에 적는 것이고 이건 세는 것이다.
 -- 이름으로 세면 상대가 별명을 바꾼 순간 옛 점수가 남의 것이 된다.
@@ -1006,7 +1006,7 @@ create table if not exists gomdori (
  *
  * **이름과 파는 중이 여기로 왔다**([상점 채우기](../design/관리자.html)).
  * 옷 한 벌 늘릴 때마다 이 파일을 고쳐 돌리는 건 파는 사람이 할 일이 아니다.
- * 앱은 아직 costumes.ts를 본다 — 값표를 읽어 덮는 것은 앱 쪽 일이고 여기서는 자리만 만든다.
+ * 앱은 아직 costumes.ts를 본다 — 가격표를 읽어 덮는 것은 앱 쪽 일이고 여기서는 자리만 만든다.
  */
 create table if not exists costume_catalog (
   item_key   text primary key,
@@ -1032,10 +1032,10 @@ create table if not exists costume_catalog (
    * **상점에 처음 켜진 때.** `새로 들어왔어요` 줄이 이걸로 센다.
    *
    * `created_at`으로는 못 센다 — 새것은 숨김으로 들어와서 그림을 그리는 동안
-   * 값표에만 두 주쯤 앉아 있다가 켜진다. 줄이 생긴 날로 세면
+   * 가격표에만 두 주쯤 앉아 있다가 켜진다. 줄이 생긴 날로 세면
    * **켜자마자 신상이 아니게 된다.**
    *
-   * `updated_at`도 아니다 — 값이나 이름만 고쳐도 밀린다.
+   * `updated_at`도 아니다 — 가격이나 이름만 고쳐도 밀린다.
    * 300P를 250P로 내린 옷이 그날 신상이 되면 안 된다.
    *
    * **처음 참이 될 때만 찍힌다**(`sync_catalog_family`). 껐다 켜도 안 바뀐다 —
@@ -1046,7 +1046,7 @@ create table if not exists costume_catalog (
   updated_at timestamptz not null default now()
 );
 
--- 이미 값표가 있는 DB에도 같은 칸을 단다
+-- 이미 가격표가 있는 DB에도 같은 칸을 단다
 alter table costume_catalog add column if not exists name       text;
 alter table costume_catalog add column if not exists opened_at  timestamptz;
 -- 이미 팔고 있던 것은 줄이 생긴 날로 친다 — 켠 날을 이제 와서 알 길이 없다
@@ -1058,7 +1058,7 @@ alter table costume_catalog add column if not exists created_at timestamptz not 
 alter table costume_catalog add column if not exists updated_at timestamptz not null default now();
 
 -- 가진 것 — 산 것과 받은 것.
--- **산 값을 같이 박아둔다.** 값이 나중에 바뀌어도 이미 산 것은 그때 값으로 남아야
+-- **산 가격을 같이 박아둔다.** 가격이 나중에 바뀌어도 이미 산 것은 그때 가격으로 남아야
 -- 잔액이 뒤늦게 흔들리지 않는다.
 create table if not exists costume_owned (
   user_id  uuid not null references auth.users on delete cascade,
@@ -1068,12 +1068,12 @@ create table if not exists costume_owned (
   primary key (user_id, item_key)
 );
 
--- ─── 값표의 씨앗 ────────────────────────────────────────────────
+-- ─── 가격표의 씨앗 ────────────────────────────────────────────────
 /*
  * **앱이 그림을 갖고 있는 여섯 줄.** 여기서 심고, 다시는 안 덮는다.
  *
  * 한때 스물아홉 줄이 여기 있었다 — 모자 곰·피크닉 룸·할로윈 세트 …. 다 걷어냈다.
- * **이름과 값만 있고 그림이 없는 줄**이었고, 그런 줄은 상점 격자에 회색 네모로 떠서
+ * **이름과 가격만 있고 그림이 없는 줄**이었고, 그런 줄은 상점 격자에 회색 네모로 떠서
  * `아직 안 그렸어요`가 아니라 **파는 물건으로 읽힌다** — 걸쳐봐도 안 바뀌고
  * 300P를 치른 뒤에도 안 바뀐다([2026-08-26](../sql/2026-08-26_빈-껍데기-지우고-코스튬-셋.sql)).
  *
@@ -1082,7 +1082,7 @@ create table if not exists costume_owned (
  * 앞으로 늘어나는 것은 여기가 아니라 [상점 채우기](../design/관리자.html)에서 들어온다 —
  * 그림을 Storage에 올리고 코드는 번호표로 딴다.
  *
- * 부딪히면 **안 덮는다.** 값표의 주인이 이 파일에서 관리자 화면으로 넘어갔고,
+ * 부딪히면 **안 덮는다.** 가격표의 주인이 이 파일에서 관리자 화면으로 넘어갔고,
  * 덮으면 관리자가 고쳐놓은 값과 이름이 schema.sql을 한 번 돌릴 때마다 되돌아간다.
  */
 insert into costume_catalog (item_key, kind, price, season, name, active) values
@@ -1116,8 +1116,8 @@ on conflict (item_key) do nothing;
  * 물건은 세트를 고르고, 중분류는 그 세트를 따라간다(아래 `catalog_family` 트리거) —
  * 물건마다 중분류를 고르게 두면 할로윈 곰은 기념일인데 할로윈 방은 계절인 일이 생긴다.
  *
- * 세트가 **열리는 조건은 여기 안 적는다.** 곰 하나·방 하나·소품 하나가 값표에 다 차면
- * 열린 것이고, 그건 값표를 세면 나온다. 적어두면 값표와 어긋날 자리가 하나 더 생긴다.
+ * 세트가 **열리는 조건은 여기 안 적는다.** 곰 하나·방 하나·소품 하나가 가격표에 다 차면
+ * 열린 것이고, 그건 가격표를 세면 나온다. 적어두면 가격표와 어긋날 자리가 하나 더 생긴다.
  */
 create table if not exists costume_season (
   season_key text primary key,
@@ -1147,7 +1147,7 @@ alter table costume_season add column if not exists banner_at timestamptz;
 
 /*
  * **씨앗을 안 심는다.** 물놀이·할로윈·크리스마스·봄꽃·여름휴가 다섯이 여기 있었는데
- * 셋씩 열다섯 줄이 다 이름뿐이라 값표와 같이 걷어냈다.
+ * 셋씩 열다섯 줄이 다 이름뿐이라 가격표와 같이 걷어냈다.
  *
  * 세트는 이제 관리자가 짓는다 — 새로 짓는 것은 `s000001`부터 번호표로 딴다.
  * 옛 `s-swim` 같은 손으로 적은 열쇠는 그걸로 마지막이다.
@@ -1320,7 +1320,7 @@ end $$;
  * 물건 코드와 **번호표를 따로 쓴다.** 한 통에서 뽑으면 물건 스물아홉 개를 넣은 뒤
  * 만든 세트가 `0000030`이 되어 물건 코드처럼 읽힌다. 앞에 `s`를 붙이는 것도 같은 까닭이다.
  *
- * **이미 있는 `s-swim`·`s-hall`은 안 바꾼다** — 값표의 `season`이 그걸 가리키고 있다.
+ * **이미 있는 `s-swim`·`s-hall`은 안 바꾼다** — 가격표의 `season`이 그걸 가리키고 있다.
  */
 create sequence if not exists costume_season_seq start 1;
 
@@ -1362,7 +1362,7 @@ create trigger season_family before insert or update on costume_season
   for each row execute function season_family_guard();
 
 /*
- * 값표의 `season`은 **있는 세트를 가리켜야 한다.** 없는 세트를 가리키면
+ * 가격표의 `season`은 **있는 세트를 가리켜야 한다.** 없는 세트를 가리키면
  * 트리거가 중분류를 못 찾아 비워버리고, 그 물건은 어느 칩에도 안 선다.
  *
  * 이미 어긋난 줄이 있는 DB에서는 걸지 않고 넘어간다 — 여기서 멈추면
@@ -1508,17 +1508,17 @@ begin
 end $fn$;
 
 /*
- * **안 사도 갖는 것** — 값이 0인 것.
+ * **안 사도 갖는 것** — 가격이 0인 것.
  *
- * 기본 곰돌이와 기본 룸이다. 값이 0이라 사려면 살 수는 있었는데, 그러면 갓 가입한
+ * 기본 곰돌이와 기본 룸이다. 가격이 0이라 사려면 살 수는 있었는데, 그러면 갓 가입한
  * 사람의 옷장이 **비어 있고** 자기가 지금 입고 있는 곰이 상점에 `구매하기`로 떠 있다 —
  * **입고 있는 것을 사라고 하는 꼴**이라 0P라도 말이 안 된다.
  *
- * 열쇠 둘을 여기 적지 않고 **`값이 0인 것`으로 고른다.** 적어두면 나중에 기본 룸을
+ * 열쇠 둘을 여기 적지 않고 **`가격이 0인 것`으로 고른다.** 적어두면 나중에 기본 룸을
  * 다른 것으로 바꿀 때 이 함수도 같이 고쳐야 하는데, 그 날 잊는다.
- * 값이 0이라는 것이 곧 `안 받고 준다`는 뜻이라 규칙과 뜻이 같다.
+ * 가격이 0이라는 것이 곧 `안 받고 준다`는 뜻이라 규칙과 뜻이 같다.
  *
- * 포즈는 뺀다. 포즈도 값이 0이지만 **세트를 다 모아야 오는 것**이라
+ * 포즈는 뺀다. 포즈도 가격이 0이지만 **세트를 다 모아야 오는 것**이라
  * 여기 들면 아무나 그냥 갖게 된다 — 그건 `grant_poses()`가 따로 본다.
  *
  * 앱에도 같은 것이 있다(`FREEBIES`). 거기 한 번 더 두는 까닭은 **로그인 전과
@@ -1536,7 +1536,7 @@ returns void language sql security definer set search_path = public as $fn$
 $fn$;
 
 /*
- * 지금 얼마 있나 — **가입 100P + 받은 것 − 산 값의 합.**
+ * 지금 얼마 있나 — **가입 100P + 받은 것 − 산 가격의 합.**
  *
  * 셈하기 전에 안 준 것부터 채운다. 앱이 따로 부를 자리를 안 만들어도
  * 잔액을 볼 때마다 그 사이 것이 들어온다.
@@ -1547,7 +1547,7 @@ create or replace function my_points()
 returns int language plpgsql security definer set search_path = public as $fn$
 begin
   perform stamp_points();
-  -- 안 사도 갖는 것부터. 세트를 세기 전에 넣어야 값이 0인 시즌 물건도 제대로 센다.
+  -- 안 사도 갖는 것부터. 세트를 세기 전에 넣어야 가격이 0인 시즌 물건도 제대로 센다.
   perform grant_free();
   /*
    * 세트도 여기서 본다. 전에는 **살 때만** 봤는데, 그러면 소품이 숨김인 채로 세트를
@@ -1613,7 +1613,7 @@ returns void language sql security definer set search_path = public as $fn$
 $fn$;
 
 /*
- * **값은 서버가 정한다.** 앱이 값을 같이 보내면 `이 옷 0원이요`를 막을 수가 없다.
+ * **가격은 서버가 정한다.** 앱이 가격을 같이 보내면 `이 옷 0원이요`를 막을 수가 없다.
  * 포즈는 파는 물건이 아니라 여기서 못 산다 — 세트를 다 모으면 위에서 저절로 들어온다.
  */
 create or replace function buy_costume(item text)
@@ -1683,8 +1683,8 @@ create table if not exists shop_admins (
  * 동안 **안 팔린다는 말**로 읽힌다. 1 · 2 · 3만 적으면 몇 명이든 말이 된다.
  *
  * **`price > 0`인 줄만 센다.** 공짜로 들어온 것(`grant_free`)과 세트 보상
- * (`grant_poses`)은 값 0으로 꽂히는데, 그걸 세면 기본 도도와 기본 룸이
- * **영원히 1·2등**이다. 산 값을 같이 박아둔 덕에 여기서 한 줄로 갈린다.
+ * (`grant_poses`)은 가격 0으로 꽂히는데, 그걸 세면 기본 도도와 기본 룸이
+ * **영원히 1·2등**이다. 산 가격을 같이 박아둔 덕에 여기서 한 줄로 갈린다.
  *
  * **누적이다.** 최근 7일로 세면 산 사람이 적은 동안 차례가 매일 뒤집혀서
  * 순위가 아니라 기분이 된다. 오래된 것이 계속 위에 서는 문제는
@@ -1772,8 +1772,8 @@ drop policy if exists "내 것만" on point_log;
 create policy "내 것만" on point_log for select using (user_id = auth.uid());
 
 /*
- * 값표 — **파는 것만 보인다.** 숨김으로 둔 것은 관리자에게만 보인다.
- * 전에는 누구나 다 봤다. 그때는 값표가 앱과 같은 목록이라 새로 들어올 것이 없었고,
+ * 가격표 — **파는 것만 보인다.** 숨김으로 둔 것은 관리자에게만 보인다.
+ * 전에는 누구나 다 봤다. 그때는 가격표가 앱과 같은 목록이라 새로 들어올 것이 없었고,
  * 지금은 **아직 안 그린 것이 여기 쌓인다** — 크리스마스 옷이 시월에 목록으로 새면
  * 시즌을 여는 재미가 그날로 없어진다.
  */
@@ -1789,7 +1789,7 @@ create policy "관리자가 고친다" on costume_catalog
   for update using (is_shop_admin());
 /*
  * **지우는 정책은 일부러 없다.** 산 사람의 `costume_owned`에 열쇠가 남아 있어서,
- * 값표에서 줄을 빼면 그 사람의 옷이 이름 없는 것이 된다.
+ * 가격표에서 줄을 빼면 그 사람의 옷이 이름 없는 것이 된다.
  * 그만 파는 길은 `active`를 끄는 것 하나다.
  */
 
@@ -1818,7 +1818,7 @@ create policy "관리자가 고친다" on shop_family for update using (is_shop_
 
 /*
  * 세트 — 누구나 읽고 **관리자가 짓는다.** 이름도 차례도 여기서 바꾼다.
- * 지우는 정책은 없다. 값표의 `season`이 가리키고 있어서,
+ * 지우는 정책은 없다. 가격표의 `season`이 가리키고 있어서,
  * 빼면 그 물건들이 어느 칩에도 안 선다.
  */
 drop policy if exists "누구나 본다"   on costume_season;
@@ -1837,7 +1837,7 @@ create policy "나인지만 본다" on shop_admins for select using (user_id = a
 
 -- ─────────────────────────── 공지 ───────────────────────────
 /*
- * 앱을 열면 한 번 뜨는 팝업. **파는 것이 아니라 값표에 안 얹었다** —
+ * 앱을 열면 한 번 뜨는 팝업. **파는 것이 아니라 가격표에 안 얹었다** —
  * 값도 분류도 그림도 없다. 얹으면 `kind`가 하나 더 늘고 그 종류만 칸을 다 비워 둔다.
  *
  * **언제까지 안 뜨나는 여기 안 담는다.** `오늘 다시 열지 않기`는 폰에 담는다
@@ -1849,7 +1849,7 @@ create table if not exists notice (
   title      text not null,
   body       text not null default '',
   /*
-   * **올리자마자 안 띄운다.** 값표와 같은 규칙이다 — 쓰다 만 것이 뜨는 사고를 막는다.
+   * **올리자마자 안 띄운다.** 가격표와 같은 규칙이다 — 쓰다 만 것이 뜨는 사고를 막는다.
    * 관리자가 켜야 뜬다.
    */
   active     boolean not null default false,
@@ -1878,7 +1878,7 @@ create index if not exists notice_live on notice (active, created_at desc);
 -- ─── 누가 보고 누가 쓰나 ────────────────────────────────────────
 /*
  * 보는 것은 **누구나.** 로그인 안 해도 뜬다 — 공지는 로그인해야 볼 것이 아니다.
- * 켜진 것만 보인다. 쓰다 만 것은 관리자에게만 보인다(값표와 같은 규칙).
+ * 켜진 것만 보인다. 쓰다 만 것은 관리자에게만 보인다(가격표와 같은 규칙).
  *
  * 쓰는 것은 **상점 채우는 사람**이다(`is_shop_admin()`). 명단을 따로 두지 않았다 —
  * 표를 하나 더 만들면 관리자를 두 군데에 넣어야 하고, 한 군데를 잊는 날이 온다.
@@ -1896,7 +1896,7 @@ create policy "켜진 것은 누구나" on notice
 create policy "관리자가 쓴다"   on notice for insert with check (is_shop_admin());
 create policy "관리자가 고친다" on notice for update using (is_shop_admin());
 /*
- * **지우는 것도 열어둔다.** 값표와 다른 자리다 — 공지는 아무도 `가진` 것이 아니라
+ * **지우는 것도 열어둔다.** 가격표와 다른 자리다 — 공지는 아무도 `가진` 것이 아니라
  * 지워도 남의 줄이 가리킬 데를 잃지 않는다. 쓰다 만 것을 치울 길이 있어야 한다.
  */
 create policy "관리자가 지운다" on notice for delete using (is_shop_admin());

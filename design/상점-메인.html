@@ -27,7 +27,7 @@
 
   ─── 이름 ──────────────────────────────────────────────────────
   이 아이 이름은 **도도**다. 시안은 도도로 적는다.
-  **앱은 아직 `곰돌이`라고 부른다**(값표의 `기본 곰돌이`, 폴더 `gomdori/`,
+  **앱은 아직 `곰돌이`라고 부른다**(가격표의 `기본 곰돌이`, 폴더 `gomdori/`,
   소스의 `useGomdori`) — 옆 글의 `이름이 두 군데다`를 볼 것.
 */
 :root{
@@ -380,7 +380,7 @@ body{
       <li>따로 두면 <b>끝난 세트의 배너가 남는다</b> — 두 군데를 같이 꺼야 한다</li>
       <li>배너를 누르면 갈 곳도 <b>그 세트 상세</b> 하나뿐이라, 갈 곳을 물어볼 것이 없다</li>
       <li>자리도 지어 쓴다 — <code>shop/season/&lt;세트 열쇠&gt;/banner.png</code>.
-          값표에 경로를 안 적는 규칙 그대로다</li>
+          가격표에 경로를 안 적는 규칙 그대로다</li>
     </ul>
     <p><b>세트가 아닌 배너</b>(공지·이벤트)가 필요해지면 그때 따로 만든다.
        지금 만들면 켜진 배너와 켜진 세트가 어긋날 자리만 하나 는다.</p>
@@ -411,9 +411,9 @@ body{
 
     <h2 style="margin-top:24px">새로 들어왔어요 기준</h2>
     <div class="pick"><b>상점에 처음 켜진 날</b>부터 <b>14일</b>이다.
-      값표에 줄이 생긴 날(<code>created_at</code>)이 아니다.</div>
+      가격표에 줄이 생긴 날(<code>created_at</code>)이 아니다.</div>
     <p>새로 넣는 것은 <b>숨김으로 들어온다</b>(<code>active = false</code>) — 반쯤 그린 것이
-       상점에 뜨는 사고를 막으려고 그렇게 해뒀다. 그림을 그리는 동안 값표에만
+       상점에 뜨는 사고를 막으려고 그렇게 해뒀다. 그림을 그리는 동안 가격표에만
        두 주쯤 앉아 있다가 켜지는데, <code>created_at</code>으로 세면
        <b>켜자마자 신상이 아니게 된다.</b></p>
     <p><code>updated_at</code>도 아니다 — <b>값이나 이름만 고쳐도 바뀐다.</b>
@@ -452,14 +452,14 @@ body{
 
     <h2 style="margin-top:24px">이 아이 이름은 도도다</h2>
     <p>이 시안은 <b>도도</b>로 적었다. 그런데 <b>앱은 아직 `곰돌이`라고 부른다</b> —
-       값표의 <code>기본 곰돌이</code>, 소스의 <code>useGomdori</code>, 폴더 <code>gomdori/</code>.
+       가격표의 <code>기본 곰돌이</code>, 소스의 <code>useGomdori</code>, 폴더 <code>gomdori/</code>.
        홈의 상점 띠 그림에는 <code>Dodo</code>라고 구워져 있다.</p>
     <figure>
       <img src="../public/gomdori/store-banner.png" alt="홈의 상점 띠" />
       <figcaption><code>public/gomdori/store-banner.png</code> — 그림은 <b>Dodo</b>, 앱은 <b>곰돌이</b>.
         <b>이름이 두 군데 있으면 어긋난다</b>는 것이 이렇게 생겼다.</figcaption>
     </figure>
-    <p>맞출 거리는 <b>사람이 읽는 이름</b>뿐이다 — 값표의 <code>기본 곰돌이</code>와 화면 문구.
+    <p>맞출 거리는 <b>사람이 읽는 이름</b>뿐이다 — 가격표의 <code>기본 곰돌이</code>와 화면 문구.
        <b>코드 이름과 폴더는 그대로 둔다.</b> <code>gomdori/</code> 밑에 그림이 이미 쌓여 있어서
        바꾸면 Storage 자리까지 따라 움직여야 한다 — <b>보이지도 않는 것을 옮기는 일</b>이다.</p>
 
@@ -494,9 +494,9 @@ var I_SIG   = SV('<path d="M4 20h2v-4H4zM9.5 20h2V12h-2zM15 20h2V8h-2zM20.5 20h2
 /*
   ─── 파는 것 ───────────────────────────────────────────────────
   `img`가 없는 줄은 **아직 안 그린 것**이라 그림자가 대신 선다.
-  진짜 앱은 그림 없는 줄을 값표에 두지 않는다 — 시안에서만 세운다.
+  진짜 앱은 그림 없는 줄을 가격표에 두지 않는다 — 시안에서만 세운다.
 
-  **이름은 도도로 적는다.** 값표에는 아직 `곰돌이`로 들어 있다 —
+  **이름은 도도로 적는다.** 가격표에는 아직 `곰돌이`로 들어 있다 —
   옆 글의 `이름이 두 군데다`가 그 이야기다.
 */
 var ITEMS = [
@@ -543,7 +543,7 @@ var FRESH = ['r-kitchen', 'swim', 'r-beach', 'panda', 'check'];
 var owned = { base:true, 'r-base':true, rabbit:true, 'r-picnic':true };
 var pt = 999999;
 
-/* 지금 진짜로 파는 것 — 그림이 있고 값표에 켜져 있는 것 */
+/* 지금 진짜로 파는 것 — 그림이 있고 가격표에 켜져 있는 것 */
 var NOW_KEYS = ['base','rabbit','dragon','princess','wizard','r-base'];
 
 var find = function (k) { return ITEMS.filter(function (i) { return i.k === k; })[0]; };
