@@ -127,7 +127,7 @@ function Half({
           onClick={() => void onBuy(item.key)}
           className="mt-auto flex items-center justify-center gap-1.5 rounded-[11px] bg-accent py-[9px] text-[12.5px] font-medium text-white disabled:opacity-60"
         >
-          <Coin className="!h-4 !w-4 !bg-white/35 !text-[9px]" />
+          <Coin className="!h-4 !w-4" />
           {item.price}
         </button>
       ) : (

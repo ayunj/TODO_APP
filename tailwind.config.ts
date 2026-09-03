@@ -26,7 +26,6 @@ const config: Config = {
         high: 'var(--high)',
         done: 'var(--done)',
         track: 'var(--track)',
-        star: 'var(--star)',
         edge: 'var(--edge)',
         faint: 'var(--faint)',
         'danger-soft': 'var(--danger-soft)',

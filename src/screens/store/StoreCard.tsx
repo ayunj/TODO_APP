@@ -165,7 +165,7 @@ export default function StoreCard({
         )
       ) : (
         <span className="inline-flex items-center gap-1 rounded-full bg-card py-1 pl-[5px] pr-2.5 font-mono text-[10.5px] font-medium text-ink2 shadow-[0_0_0_1.2px_var(--line)]">
-          <Coin className="!h-[14px] !w-[14px] !text-[8.5px]" />
+          <Coin className="!h-[14px] !w-[14px]" />
           {item.price}
         </span>
       )}

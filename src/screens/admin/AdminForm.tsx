@@ -455,7 +455,7 @@ export default function AdminForm({
             ) : (
               <span className="relative block">
                 <span className="pointer-events-none absolute left-3 top-1/2 -mt-[9px]">
-                  <Coin className="!h-[18px] !w-[18px] !text-[10px]" />
+                  <Coin className="!h-[18px] !w-[18px]" />
                 </span>
                 <input
                   value={price}
@@ -544,7 +544,7 @@ function Preview({ shop, item, src }: { shop: Shop; item: Costume; src?: string 
             </span>
             <Thumb item={item} src={src} className="aspect-square w-full !rounded-xl" />
             <span className="inline-flex items-center gap-1 rounded-full bg-card py-1 pl-[5px] pr-2.5 font-mono text-[10.5px] font-medium text-ink2 shadow-[0_0_0_1.2px_var(--line)]">
-              <Coin className="!h-[14px] !w-[14px] !text-[8px]" />
+              <Coin className="!h-[14px] !w-[14px]" />
               {item.price}
             </span>
           </div>
